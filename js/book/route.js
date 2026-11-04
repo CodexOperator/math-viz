@@ -3,8 +3,9 @@
 //   #chapter-4             an open chapter
 //   #chapter-4-4-1         that chapter, scrolled to section 4.1
 //   #chapter-4-4-1-3       that chapter, scrolled to exercise 4.1.3
-//   #chapter-1             the roadmap, scrolled to a later chapter
-// A leftover token on a later chapter is not a page.
+//   #chapter-1             Chapter 1
+//   #chapter-1-1-2         that chapter, scrolled to section 1.2
+// A leftover token on a chapter that is not open is not a page.
 
 import { OPEN_CHAPTERS } from '../data/book-path.js';
 

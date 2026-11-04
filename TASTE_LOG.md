@@ -1330,3 +1330,19 @@ Nothing. No slider, no scrubber, no spring, no second clock.
 Yes. One batch, then stop. It is the one cut above.
 
 The hold, the button, and the frame clock are the lesson, and they hold. Something real is left, and it is the frame a mouse drag draws around the square. A touch does not draw it. After that frame is gone, nothing real is left of this walk's touch.
+
+## Chapter 1, batch 1
+
+Branch `cursor/chapter-1`. Headless Chrome on `#chapter-1`, `#book`, and `#chapter-5`, at 1280 and at 390. No console errors. No sideways scroll. The three planes draw, then sit.
+
+### What the first screen holds
+
+The status says where you are. After stage 1.1 is marked, it reads “Next is stage 1.2. 1 of 3 stages,” and the flag on that stage is Done. The picture is on the phone’s first screen, under the reason you’d care. Times i, twice, puts a purple point on −1 and leaves a green point on i. The orange arc is the quarter between them. The sentence is “Two turns. i² landed on −1,” and it is false on the other three rests. Dragging the 1.2 point onto i makes the product sentence true. The 1.3 chip 4+3i presses only while the point is that point, and the length sentence becomes 5.
+
+### What this batch left closed
+
+Sections 1.4, 1.5, and 1.6 are titles, pages, and the book links. The polar and argument cards are in `data/practice/ch1.json` and are not on those stubs. The local card is one step at a time. The shared practice engine is not on this branch. A flashcard is one card, and the back stays closed until Show.
+
+### Another batch
+
+The 1.4 picture is the angle, on the plane this page already uses. Then the polar cards that are already written. Then 1.5 roots and 1.6 the disk. The memory sheet for 1.4–1.6 is still empty.

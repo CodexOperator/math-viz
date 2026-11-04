@@ -21,12 +21,12 @@ function deepFreeze(o) {
   return o;
 }
 
-// Chapters the router will open as their own page. 1–3 and 6–11 stay on the book.
-export const OPEN_CHAPTERS = Object.freeze([4, 5]);
+// Chapters the router will open as their own page. 2, 3, and 6–11 stay on the book.
+export const OPEN_CHAPTERS = Object.freeze([1, 4, 5]);
 
 export const BOOK_CHAPTERS = deepFreeze([
   {
-    n: 1, title: 'Complex Numbers', page: 1, open: false, door: 'addresses',
+    n: 1, title: 'Complex Numbers', page: 1, open: true, door: 'addresses',
     sections: [
       { id: '1.1', title: 'The Origin of Complex Numbers', page: 1 },
       { id: '1.2', title: 'The Algebra of Complex Numbers, Part I', page: 9 },

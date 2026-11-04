@@ -6,6 +6,9 @@ import { stationsForMap, stationForTopic, stationForProblem, stationById, thread
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
 import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, chapter4ExerciseIds, chapter5ExerciseIds } from '../js/data/book-path.js';
+import { CHAPTER_1, chapter1StageIds, turnClaim, timesIClaim, modulusClaim } from '../js/data/chapter1.js';
+import { generate as generateCh1, matches as matchesCh1 } from '../js/practice/gen/ch1-arithmetic.js';
+import practiceCh1 from '../data/practice/ch1.json' with { type: 'json' };
 import { chapterTally, sectionFinished, foldLegacyExercises, saveSharedTicks, toggleTick } from '../js/book/progress.js';
 import { EXP_DURATION, expFrame, finishedStops } from '../js/core/live-film.js';
 import { compile } from '../js/core/parse.js';
@@ -116,9 +119,47 @@ check('an unknown hash forces no map', mapForcedByRoute(null, parseRoute('#nope'
 check('the book is its own route', parseRoute('#book').station == null && parseRoute('#book').book.kind === 'roadmap' && mapForcedByRoute(null, parseRoute('#book')) == null);
 check('#chapter-4 opens chapter 4', parseRoute('#chapter-4').book.kind === 'chapter' && parseRoute('#chapter-4').book.chapter === 4 && parseRoute('#chapter-4').book.focus == null);
 check('#chapter-4-4-1-3 focuses exercise 4.1.3', parseRoute('#chapter-4-4-1-3').book.focus === '4.1.3');
-check('#chapter-1 stays on the roadmap', parseRoute('#chapter-1').book.kind === 'roadmap' && parseRoute('#chapter-1').book.chapter === 1);
-check('a junk token on a later chapter is not a page', parseRoute('#chapter-1-extra').station == null && parseRoute('#chapter-1-extra').book == null);
-check('eleven chapters, 4 and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_CHAPTERS.join() === '4,5' && BOOK_CHAPTERS.filter((ch) => ch.open).map((ch) => ch.n).join() === '4,5');
+check('#chapter-1 opens chapter 1', parseRoute('#chapter-1').book.kind === 'chapter' && parseRoute('#chapter-1').book.chapter === 1 && parseRoute('#chapter-1').book.focus == null);
+check('#chapter-1-1-2 focuses section 1.2', parseRoute('#chapter-1-1-2').book.kind === 'chapter' && parseRoute('#chapter-1-1-2').book.focus === '1.2');
+check('a junk token on a later chapter is not a page', parseRoute('#chapter-2-extra').station == null && parseRoute('#chapter-2-extra').book == null);
+check('eleven chapters, 1, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_CHAPTERS.join() === '1,4,5' && BOOK_CHAPTERS.filter((ch) => ch.open).map((ch) => ch.n).join() === '1,4,5');
+{
+  const walked = CHAPTER_1.sections.filter((s) => s.exercises.length);
+  const flashes = practiceCh1.filter((item) => item.kind === 'flash');
+  const refs = new Set(flashes.map((item) => item.cite.ref));
+  const need = ['Equation (1.1)', 'Equation (1.3)', 'Equation (1.6)', 'Equation (1.7)', 'Definition 1.1', 'Definition 1.2', 'Definition 1.3', 'Definition 1.4', 'Identity $i^2=-1$', 'Definition 1.5', 'Definition 1.6', 'Definition 1.7', 'Identity (1.12)', 'Identity (1.13)', 'Identity (1.14)', 'Identity (1.15)', 'Identity (1.16)', 'Identity (1.17)', 'Identity (1.18)', 'Identity (1.19)', 'Definition 1.8', 'Identity (1.21)', 'Distance formula', 'Identity (1.22)', 'Theorem 1.2', 'Identity (1.24)', 'Identity (1.25)', 'Identity (1.26)'];
+  check('chapter 1 walks 1.1 through 1.3 and stubs the rest',
+    walked.map((s) => s.id).join() === '1.1,1.2,1.3'
+    && CHAPTER_1.sections.filter((s) => !s.exercises.length).map((s) => `${s.id} ${s.page}`).join() === '1.4 22,1.5 29,1.6 35'
+    && chapter1StageIds().join() === '1.1,1.2,1.3');
+  check('chapter 1 flashes cover the definitions and identities of 1.1–1.3', need.every((ref) => refs.has(ref)));
+  check('chapter 1 practice has a proof in both forms and a generator',
+    practiceCh1.some((item) => item.kind === 'proof-blank' && item.section === '1.2')
+    && practiceCh1.some((item) => item.kind === 'proof-mc' && item.section === '1.2')
+    && practiceCh1.some((item) => item.kind === 'next-step-blank' && item.cite.page === 15)
+    && practiceCh1.some((item) => item.generator && item.generator.template === 'ch1-arithmetic' && item.generator.params.mode === 'polar'));
+  const made = generateCh1(7, { mode: 'div', re: [-4, 4], im: [-4, 4] });
+  const mod = generateCh1(1, { mode: 'mod' });
+  const polar = generateCh1(2, { mode: 'polar' });
+  check('the chapter 1 generator computes its answers',
+    matchesCh1(made.steps[0].answer, made.steps[0])
+    && matchesCh1('14/17+12/17i', made.steps[0])
+    && Number(mod.steps[0].answer) === mod.steps[0].value.real
+    && polar.steps.length === 3
+    && matchesCh1(polar.steps[1].answer, polar.steps[1]));
+  check('the chapter 1 sentences flip',
+    turnClaim(2).holds === true && turnClaim(0).holds === false && turnClaim(2).text !== turnClaim(0).text
+    && timesIClaim({ re: 0, im: 1 }).holds === true && timesIClaim({ re: 1, im: 0 }).holds === false
+    && modulusClaim({ re: 4, im: 3 }).holds === true && modulusClaim({ re: 1, im: 1 }).holds === false);
+  const mem = { 'progress.test2': { '4.1.3': true, '5.1.1': true } };
+  const store = {
+    get(key, fallback) { return Object.prototype.hasOwnProperty.call(mem, key) ? mem[key] : fallback; },
+    set(key, value) { mem[key] = value; },
+  };
+  saveSharedTicks(store, { '1.2': true });
+  check('a chapter 1 tick keeps the other chapters',
+    mem['progress.test2']['1.2'] === true && mem['progress.test2']['4.1.3'] === true && mem['progress.test2']['5.1.1'] === true);
+}
 check('chapter 4 sections follow the contents', CHAPTER_4.sections.map((s) => `${s.id} ${s.page}`).join() === '4.1 102,4.2 109,4.3 118,4.4 123');
 check('chapter 4 exercises are the homework set plus 4.4.6', chapter4ExerciseIds().join() === '4.1.3,4.1.13,4.2.3,4.2.4,4.2.5,4.3.1,4.3.2,4.4.6');
 {

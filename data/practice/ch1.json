@@ -1,0 +1,1089 @@
+[
+  {
+    "id": "ch1-1.1-eq16",
+    "chapter": 1,
+    "section": "1.1",
+    "cite": {
+      "ref": "Equation (1.6)",
+      "page": 3
+    },
+    "kind": "next-step-blank",
+    "prompt": "Equation (1.6), page 3. Simplify $(2+\\sqrt{-1})+(2-\\sqrt{-1})$, then test it in $x^3-15x-4$.",
+    "steps": [
+      {
+        "text": "The two square roots cancel. The sum is ___",
+        "answer": "4",
+        "accept": [
+          "4",
+          "+4"
+        ],
+        "why": "Equation (1.6), page 3."
+      },
+      {
+        "text": "$4^3-15\\cdot 4-4=$ ___",
+        "answer": "0",
+        "accept": [
+          "0"
+        ],
+        "why": "$64-60-4=0$, so $4$ is a root of the cubic."
+      }
+    ],
+    "generator": null,
+    "memory": "Add the conjugate pair first. Then substitute the real number you got."
+  },
+  {
+    "id": "ch1-1.2-comm-blank",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Proof of (P1)",
+      "page": 13
+    },
+    "kind": "proof-blank",
+    "prompt": "Prove that addition of complex numbers commutes. Let $z_1=(x_1,y_1)$ and $z_2=(x_2,y_2)$.",
+    "steps": [
+      {
+        "text": "By Definition 1.1, $z_1+z_2=$ ___",
+        "answer": "(x_1+x_2, y_1+y_2)",
+        "accept": [
+          "(x_1+x_2,y_1+y_2)",
+          "(x1+x2, y1+y2)",
+          "x_1+x_2, y_1+y_2"
+        ],
+        "why": "Definition 1.1, page 10, adds the two coordinates."
+      },
+      {
+        "text": "Real addition commutes, so that pair equals ___",
+        "answer": "(x_2+x_1, y_2+y_1)",
+        "accept": [
+          "(x_2+x_1,y_2+y_1)",
+          "(x2+x1, y2+y1)"
+        ],
+        "why": "Real addition commutes, so the coordinates may swap places."
+      },
+      {
+        "text": "Definition 1.1, read backwards, says the pair is ___",
+        "answer": "z_2+z_1",
+        "accept": [
+          "z2+z1",
+          "z_2 + z_1"
+        ],
+        "why": "Definition 1.1, read from the pair back to the sum, is $z_2+z_1$."
+      }
+    ],
+    "generator": null,
+    "memory": "Page 13: complex addition commutes because real addition does."
+  },
+  {
+    "id": "ch1-1.2-comm-mc",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Proof of (P1)",
+      "page": 13
+    },
+    "kind": "proof-mc",
+    "prompt": "The same proof. Pick the line the definition allows.",
+    "steps": [
+      {
+        "text": "By Definition 1.1, $z_1+z_2$ equals ___",
+        "answer": "$(x_1+x_2,\\, y_1+y_2)$",
+        "accept": [],
+        "choices": [
+          "$(x_1+x_2,\\, y_1+y_2)$",
+          "$(x_1+y_1,\\, x_2+y_2)$",
+          "$(x_1 x_2,\\, y_1 y_2)$",
+          "$(x_1-x_2,\\, y_1-y_2)$"
+        ],
+        "why": "Definition 1.1, page 10, adds the two coordinates."
+      },
+      {
+        "text": "After real addition commutes, the pair equals ___",
+        "answer": "$(x_2+x_1,\\, y_2+y_1)$",
+        "accept": [],
+        "choices": [
+          "$(x_2+x_1,\\, y_2+y_1)$",
+          "$(y_1+y_2,\\, x_1+x_2)$",
+          "$(x_1+x_2,\\, y_2+y_1)$",
+          "$(x_2-x_1,\\, y_2-y_1)$"
+        ],
+        "why": "Real addition commutes, so the coordinates may swap places."
+      },
+      {
+        "text": "That pair is ___",
+        "answer": "$z_2+z_1$",
+        "accept": [],
+        "choices": [
+          "$z_2+z_1$",
+          "$z_1 z_2$",
+          "$z_1-z_2$",
+          "$\\overline{z_1}+\\overline{z_2}$"
+        ],
+        "why": "Definition 1.1, read from the pair back to the sum, is $z_2+z_1$."
+      }
+    ],
+    "generator": null,
+    "memory": "Page 13: the three lines are definition, real commute, definition again."
+  },
+  {
+    "id": "ch1-1.2-ex1f",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "§1.2, Exercise 1(f)",
+      "page": 15
+    },
+    "kind": "next-step-blank",
+    "prompt": "Exercise 1(f), page 15. Compute $(7-2i)(3i+5)$.",
+    "steps": [
+      {
+        "text": "Write the second factor as $5+3i$. The four products are $35$, $21i$, $-10i$, and ___",
+        "answer": "-6i^2",
+        "accept": [
+          "-6i^2",
+          "-6i^{2}",
+          "-6\\,i^2"
+        ],
+        "why": "$(-2i)(3i)=-6i^2$. Definition 1.3, page 10."
+      },
+      {
+        "text": "Replace $i^2$ by $-1$. That product becomes ___",
+        "answer": "6",
+        "accept": [
+          "6",
+          "+6"
+        ],
+        "why": "$-6(-1)=6$. Page 13: $i^2=-1$."
+      },
+      {
+        "text": "Collect. The product is ___",
+        "answer": "41+11i",
+        "accept": [
+          "41+11i",
+          "41 + 11i"
+        ],
+        "why": "$35+6=41$ and $21i-10i=11i$."
+      }
+    ],
+    "generator": null,
+    "memory": "Multiply, then replace $i^2$ with $-1$, then collect."
+  },
+  {
+    "id": "ch1-1.2-ex1a",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "§1.2, Exercise 1(a)",
+      "page": 15
+    },
+    "kind": "next-step-mc",
+    "prompt": "Exercise 1(a), page 15. $i^{275}$.",
+    "steps": [
+      {
+        "text": "The powers of $i$ repeat every 4. $275=4\\cdot 68+3$, so $i^{275}=$ ___",
+        "answer": "$-i$",
+        "accept": [],
+        "choices": [
+          "$-i$",
+          "$i$",
+          "$-1$",
+          "$1$"
+        ],
+        "why": "$i^1=i$, $i^2=-1$, $i^3=-i$, $i^4=1$. Remainder 3 is $-i$."
+      }
+    ],
+    "generator": null,
+    "memory": "Divide the exponent by 4. The remainder 0, 1, 2, 3 means $1$, $i$, $-1$, $-i$."
+  },
+  {
+    "id": "ch1-1.3-ex1a",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "§1.3, Exercise 1(a)",
+      "page": 20
+    },
+    "kind": "next-step-blank",
+    "prompt": "Exercise 1(a), page 20. Evaluate $|(1+i)(2+i)|$.",
+    "steps": [
+      {
+        "text": "Identity (1.25) says this equals $|1+i|\\,|2+i|$. $|1+i|=$ ___",
+        "answer": "\\sqrt{2}",
+        "accept": [
+          "\\sqrt{2}",
+          "sqrt(2)",
+          "√2"
+        ],
+        "why": "$1^2+1^2=2$. Definition 1.8, page 17."
+      },
+      {
+        "text": "$|2+i|=$ ___",
+        "answer": "\\sqrt{5}",
+        "accept": [
+          "\\sqrt{5}",
+          "sqrt(5)",
+          "√5"
+        ],
+        "why": "$2^2+1^2=5$."
+      },
+      {
+        "text": "The product of the lengths is ___",
+        "answer": "\\sqrt{10}",
+        "accept": [
+          "\\sqrt{10}",
+          "sqrt(10)",
+          "√10"
+        ],
+        "why": "Identity (1.25), page 19: the moduli multiply, and $\\sqrt{2}\\sqrt{5}=\\sqrt{10}$."
+      }
+    ],
+    "generator": null,
+    "memory": "A modulus of a product is the product of the moduli. Identity (1.25)."
+  },
+  {
+    "id": "ch1-1.3-ex2a",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "§1.3, Exercise 2(a)",
+      "page": 20
+    },
+    "kind": "next-step-mc",
+    "prompt": "Exercise 2(a), page 20. $z_1=2+3i$ and $z_2=4+i$.",
+    "steps": [
+      {
+        "text": "The sum $z_1+z_2$ is ___",
+        "answer": "$6+4i$",
+        "accept": [],
+        "choices": [
+          "$6+4i$",
+          "$6+2i$",
+          "$8+4i$",
+          "$-2+2i$"
+        ],
+        "why": "Definition 1.1: $(2+4,\\, 3+1)=(6,4)$. The last choice is the difference."
+      }
+    ],
+    "generator": null,
+    "memory": "Add the pairs. The difference $z_1-z_2$ is a different arrow, page 17, Figure 1.9."
+  },
+  {
+    "id": "ch1-1.3-ex3b",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "§1.3, Exercise 3(b)",
+      "page": 20
+    },
+    "kind": "next-step-mc",
+    "prompt": "Exercise 3, page 20. Which points lie inside the circle $|z-i|=2$? Consider $\\sqrt{2}+i(\\sqrt{2}+1)$.",
+    "steps": [
+      {
+        "text": "The distance from this point to $i$ is ___",
+        "answer": "$2$, so the point is on the circle, not inside",
+        "accept": [],
+        "choices": [
+          "$2$, so the point is on the circle, not inside",
+          "less than $2$, so inside",
+          "greater than $2$, so outside",
+          "$0$, so it is the centre"
+        ],
+        "why": "$z-i=\\sqrt{2}+i\\sqrt{2}$, and that length is $\\sqrt{4}=2$. Inside means strictly less."
+      }
+    ],
+    "generator": null,
+    "memory": "Inside $|z-z_0|=R$ means $|z-z_0|<R$. Equal is the circle itself."
+  },
+  {
+    "id": "ch1-1.2-gen-add",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Definition 1.1",
+      "page": 10
+    },
+    "kind": "blank",
+    "prompt": "A fresh pair, from the same rule.",
+    "steps": [
+      {
+        "text": "The result is ___",
+        "answer": "",
+        "accept": [],
+        "why": ""
+      }
+    ],
+    "generator": {
+      "template": "ch1-arithmetic",
+      "params": {
+        "mode": "add",
+        "re": [
+          -5,
+          5
+        ],
+        "im": [
+          -5,
+          5
+        ]
+      }
+    },
+    "memory": "Add the real parts. Add the imaginary parts."
+  },
+  {
+    "id": "ch1-1.2-gen-mul",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Definition 1.3",
+      "page": 10
+    },
+    "kind": "blank",
+    "prompt": "A fresh pair, from the same rule.",
+    "steps": [
+      {
+        "text": "The result is ___",
+        "answer": "",
+        "accept": [],
+        "why": ""
+      }
+    ],
+    "generator": {
+      "template": "ch1-arithmetic",
+      "params": {
+        "mode": "mul",
+        "re": [
+          -5,
+          5
+        ],
+        "im": [
+          -5,
+          5
+        ]
+      }
+    },
+    "memory": "Four products, then $i^2=-1$."
+  },
+  {
+    "id": "ch1-1.2-gen-div",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Definition 1.4",
+      "page": 11
+    },
+    "kind": "blank",
+    "prompt": "A fresh pair, from the same rule.",
+    "steps": [
+      {
+        "text": "The result is ___",
+        "answer": "",
+        "accept": [],
+        "why": ""
+      }
+    ],
+    "generator": {
+      "template": "ch1-arithmetic",
+      "params": {
+        "mode": "div",
+        "re": [
+          -5,
+          5
+        ],
+        "im": [
+          -5,
+          5
+        ]
+      }
+    },
+    "memory": "Multiply by the conjugate. Divide by the sum of squares."
+  },
+  {
+    "id": "ch1-1.3-gen-mod",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "Definition 1.8",
+      "page": 17
+    },
+    "kind": "blank",
+    "prompt": "A fresh pair, from the same rule.",
+    "steps": [
+      {
+        "text": "The result is ___",
+        "answer": "",
+        "accept": [],
+        "why": ""
+      }
+    ],
+    "generator": {
+      "template": "ch1-arithmetic",
+      "params": {
+        "mode": "mod",
+        "re": [
+          -5,
+          5
+        ],
+        "im": [
+          -5,
+          5
+        ]
+      }
+    },
+    "memory": "Square, add, square root. The answer is a length."
+  },
+  {
+    "id": "ch1-1.4-gen-arg",
+    "chapter": 1,
+    "section": "1.4",
+    "cite": {
+      "ref": "Definition 1.11",
+      "page": 23
+    },
+    "kind": "blank",
+    "prompt": "A fresh pair, from the same rule.",
+    "steps": [
+      {
+        "text": "The result is ___",
+        "answer": "",
+        "accept": [],
+        "why": ""
+      }
+    ],
+    "generator": {
+      "template": "ch1-arithmetic",
+      "params": {
+        "mode": "arg",
+        "re": [
+          -5,
+          5
+        ],
+        "im": [
+          -5,
+          5
+        ]
+      }
+    },
+    "memory": "Arg is the one angle in $(-\\pi,\\pi]$, from the positive real axis."
+  },
+  {
+    "id": "ch1-1.4-gen-polar",
+    "chapter": 1,
+    "section": "1.4",
+    "cite": {
+      "ref": "Definition 1.9",
+      "page": 22
+    },
+    "kind": "blank",
+    "prompt": "A fresh pair, from the same rule.",
+    "steps": [
+      {
+        "text": "The result is ___",
+        "answer": "",
+        "accept": [],
+        "why": ""
+      }
+    ],
+    "generator": {
+      "template": "ch1-arithmetic",
+      "params": {
+        "mode": "polar",
+        "re": [
+          -5,
+          5
+        ],
+        "im": [
+          -5,
+          5
+        ]
+      }
+    },
+    "memory": "Polar form is the length times $e$ to the $i$ times the angle."
+  },
+  {
+    "id": "ch1-1.1-eq11",
+    "chapter": 1,
+    "section": "1.1",
+    "cite": {
+      "ref": "Equation (1.1)",
+      "page": 1
+    },
+    "kind": "flash",
+    "prompt": "The general cubic Cardano set out to solve.",
+    "steps": [
+      {
+        "text": "The general cubic Cardano set out to solve.",
+        "answer": "$z^3+a_2 z^2+a_1 z+a_0=0$",
+        "accept": [],
+        "why": "Equation (1.1), page 1: the general cubic."
+      }
+    ],
+    "generator": null,
+    "memory": "Equation (1.1), page 1: the general cubic."
+  },
+  {
+    "id": "ch1-1.1-eq13",
+    "chapter": 1,
+    "section": "1.1",
+    "cite": {
+      "ref": "Equation (1.3)",
+      "page": 2
+    },
+    "kind": "flash",
+    "prompt": "Ferro and Tartaglia’s solution of the depressed cubic $x^3+bx+c=0$.",
+    "steps": [
+      {
+        "text": "Ferro and Tartaglia’s solution of the depressed cubic $x^3+bx+c=0$.",
+        "answer": "$x=\\sqrt[3]{-c/2+\\sqrt{c^2/4+b^3/27}}+\\sqrt[3]{-c/2-\\sqrt{c^2/4+b^3/27}}$",
+        "accept": [],
+        "why": "Equation (1.3), page 2: one root of $x^3+bx+c=0$."
+      }
+    ],
+    "generator": null,
+    "memory": "Equation (1.3), page 2: one root of $x^3+bx+c=0$."
+  },
+  {
+    "id": "ch1-1.1-eq16",
+    "chapter": 1,
+    "section": "1.1",
+    "cite": {
+      "ref": "Equation (1.6)",
+      "page": 3
+    },
+    "kind": "flash",
+    "prompt": "Bombelli’s identity for the real root of $x^3-15x-4=0$.",
+    "steps": [
+      {
+        "text": "Bombelli’s identity for the real root of $x^3-15x-4=0$.",
+        "answer": "$(2+\\sqrt{-1})+(2-\\sqrt{-1})=4$",
+        "accept": [],
+        "why": "Equation (1.6), page 3: the imaginaries cancel and the root is 4."
+      }
+    ],
+    "generator": null,
+    "memory": "Equation (1.6), page 3: the imaginaries cancel and the root is 4."
+  },
+  {
+    "id": "ch1-1.2-eq17",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Equation (1.7)",
+      "page": 9
+    },
+    "kind": "flash",
+    "prompt": "What a complex number is, in this book.",
+    "steps": [
+      {
+        "text": "What a complex number is, in this book.",
+        "answer": "$z=(x,y)$ with $x$ and $y$ real. Equal iff both coordinates match.",
+        "accept": [],
+        "why": "Equation (1.7), page 9: an ordered pair, so $(2,3)\\neq(3,2)$."
+      }
+    ],
+    "generator": null,
+    "memory": "Equation (1.7), page 9: an ordered pair, so $(2,3)\\neq(3,2)$."
+  },
+  {
+    "id": "ch1-1.2-def11",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Definition 1.1",
+      "page": 10
+    },
+    "kind": "flash",
+    "prompt": "Addition.",
+    "steps": [
+      {
+        "text": "Addition.",
+        "answer": "$(x_1,y_1)+(x_2,y_2)=(x_1+x_2,\\, y_1+y_2)$",
+        "accept": [],
+        "why": "Definition 1.1, page 10: add the coordinates."
+      }
+    ],
+    "generator": null,
+    "memory": "Definition 1.1, page 10: add the coordinates."
+  },
+  {
+    "id": "ch1-1.2-def12",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Definition 1.2",
+      "page": 10
+    },
+    "kind": "flash",
+    "prompt": "Subtraction.",
+    "steps": [
+      {
+        "text": "Subtraction.",
+        "answer": "$(x_1,y_1)-(x_2,y_2)=(x_1-x_2,\\, y_1-y_2)$",
+        "accept": [],
+        "why": "Definition 1.2, page 10: subtract the coordinates."
+      }
+    ],
+    "generator": null,
+    "memory": "Definition 1.2, page 10: subtract the coordinates."
+  },
+  {
+    "id": "ch1-1.2-def13",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Definition 1.3",
+      "page": 10
+    },
+    "kind": "flash",
+    "prompt": "Multiplication.",
+    "steps": [
+      {
+        "text": "Multiplication.",
+        "answer": "$(x_1,y_1)(x_2,y_2)=(x_1 x_2-y_1 y_2,\\, x_1 y_2+x_2 y_1)$",
+        "accept": [],
+        "why": "Definition 1.3, page 10: the $i^2=-1$ rule, written as pairs."
+      }
+    ],
+    "generator": null,
+    "memory": "Definition 1.3, page 10: the $i^2=-1$ rule, written as pairs."
+  },
+  {
+    "id": "ch1-1.2-def14",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Definition 1.4",
+      "page": 11
+    },
+    "kind": "flash",
+    "prompt": "Division, for $z_2\\neq 0$.",
+    "steps": [
+      {
+        "text": "Division, for $z_2\\neq 0$.",
+        "answer": "$\\dfrac{z_1}{z_2}=\\left(\\dfrac{x_1 x_2+y_1 y_2}{x_2^2+y_2^2},\\, \\dfrac{-x_1 y_2+x_2 y_1}{x_2^2+y_2^2}\\right)$",
+        "accept": [],
+        "why": "Definition 1.4, page 11: multiply by the conjugate, then divide by $|z_2|^2$."
+      }
+    ],
+    "generator": null,
+    "memory": "Definition 1.4, page 11: multiply by the conjugate, then divide by $|z_2|^2$."
+  },
+  {
+    "id": "ch1-1.2-isq",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Identity $i^2=-1$",
+      "page": 13
+    },
+    "kind": "flash",
+    "prompt": "What $i$ is, as a point.",
+    "steps": [
+      {
+        "text": "What $i$ is, as a point.",
+        "answer": "$i=(0,1)$ and $i^2=(0,1)^2=(-1,0)=-1$.",
+        "accept": [],
+        "why": "Page 13: $i$ is the point $(0,1)$, and the product rule sends it to $-1$."
+      }
+    ],
+    "generator": null,
+    "memory": "Page 13: $i$ is the point $(0,1)$, and the product rule sends it to $-1$."
+  },
+  {
+    "id": "ch1-1.2-def15",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Definition 1.5",
+      "page": 14
+    },
+    "kind": "flash",
+    "prompt": "Real part.",
+    "steps": [
+      {
+        "text": "Real part.",
+        "answer": "$\\operatorname{Re}(x+iy)=x$",
+        "accept": [],
+        "why": "Definition 1.5, page 14: the first coordinate."
+      }
+    ],
+    "generator": null,
+    "memory": "Definition 1.5, page 14: the first coordinate."
+  },
+  {
+    "id": "ch1-1.2-def16",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Definition 1.6",
+      "page": 14
+    },
+    "kind": "flash",
+    "prompt": "Imaginary part.",
+    "steps": [
+      {
+        "text": "Imaginary part.",
+        "answer": "$\\operatorname{Im}(x+iy)=y$",
+        "accept": [],
+        "why": "Definition 1.6, page 14: the second coordinate, a real number."
+      }
+    ],
+    "generator": null,
+    "memory": "Definition 1.6, page 14: the second coordinate, a real number."
+  },
+  {
+    "id": "ch1-1.2-def17",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Definition 1.7",
+      "page": 14
+    },
+    "kind": "flash",
+    "prompt": "Conjugate.",
+    "steps": [
+      {
+        "text": "Conjugate.",
+        "answer": "$\\overline{x+iy}=x-iy$",
+        "accept": [],
+        "why": "Definition 1.7, page 14: flip the sign of the second coordinate."
+      }
+    ],
+    "generator": null,
+    "memory": "Definition 1.7, page 14: flip the sign of the second coordinate."
+  },
+  {
+    "id": "ch1-1.2-id12",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Identity (1.12)",
+      "page": 14
+    },
+    "kind": "flash",
+    "prompt": "Conjugate, twice.",
+    "steps": [
+      {
+        "text": "Conjugate, twice.",
+        "answer": "$\\overline{\\overline{z}}=z$",
+        "accept": [],
+        "why": "Identity (1.12), page 14."
+      }
+    ],
+    "generator": null,
+    "memory": "Identity (1.12), page 14."
+  },
+  {
+    "id": "ch1-1.2-id13",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Identity (1.13)",
+      "page": 14
+    },
+    "kind": "flash",
+    "prompt": "Conjugate of a sum.",
+    "steps": [
+      {
+        "text": "Conjugate of a sum.",
+        "answer": "$\\overline{z_1+z_2}=\\overline{z_1}+\\overline{z_2}$",
+        "accept": [],
+        "why": "Identity (1.13), page 14."
+      }
+    ],
+    "generator": null,
+    "memory": "Identity (1.13), page 14."
+  },
+  {
+    "id": "ch1-1.2-id14",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Identity (1.14)",
+      "page": 14
+    },
+    "kind": "flash",
+    "prompt": "Conjugate of a product.",
+    "steps": [
+      {
+        "text": "Conjugate of a product.",
+        "answer": "$\\overline{z_1 z_2}=\\overline{z_1}\\,\\overline{z_2}$",
+        "accept": [],
+        "why": "Identity (1.14), page 14."
+      }
+    ],
+    "generator": null,
+    "memory": "Identity (1.14), page 14."
+  },
+  {
+    "id": "ch1-1.2-id15",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Identity (1.15)",
+      "page": 14
+    },
+    "kind": "flash",
+    "prompt": "Conjugate of a quotient.",
+    "steps": [
+      {
+        "text": "Conjugate of a quotient.",
+        "answer": "$\\overline{z_1/z_2}=\\overline{z_1}/\\overline{z_2}$ when $z_2\\neq 0$",
+        "accept": [],
+        "why": "Identity (1.15), page 14."
+      }
+    ],
+    "generator": null,
+    "memory": "Identity (1.15), page 14."
+  },
+  {
+    "id": "ch1-1.2-id16",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Identity (1.16)",
+      "page": 14
+    },
+    "kind": "flash",
+    "prompt": "Real part from the conjugate.",
+    "steps": [
+      {
+        "text": "Real part from the conjugate.",
+        "answer": "$\\operatorname{Re}(z)=(z+\\overline{z})/2$",
+        "accept": [],
+        "why": "Identity (1.16), page 14."
+      }
+    ],
+    "generator": null,
+    "memory": "Identity (1.16), page 14."
+  },
+  {
+    "id": "ch1-1.2-id17",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Identity (1.17)",
+      "page": 14
+    },
+    "kind": "flash",
+    "prompt": "Imaginary part from the conjugate.",
+    "steps": [
+      {
+        "text": "Imaginary part from the conjugate.",
+        "answer": "$\\operatorname{Im}(z)=(z-\\overline{z})/(2i)$",
+        "accept": [],
+        "why": "Identity (1.17), page 14."
+      }
+    ],
+    "generator": null,
+    "memory": "Identity (1.17), page 14."
+  },
+  {
+    "id": "ch1-1.2-id18",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Identity (1.18)",
+      "page": 14
+    },
+    "kind": "flash",
+    "prompt": "Real part of $iz$.",
+    "steps": [
+      {
+        "text": "Real part of $iz$.",
+        "answer": "$\\operatorname{Re}(iz)=-\\operatorname{Im}(z)$",
+        "accept": [],
+        "why": "Identity (1.18), page 14."
+      }
+    ],
+    "generator": null,
+    "memory": "Identity (1.18), page 14."
+  },
+  {
+    "id": "ch1-1.2-id19",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Identity (1.19)",
+      "page": 14
+    },
+    "kind": "flash",
+    "prompt": "Imaginary part of $iz$.",
+    "steps": [
+      {
+        "text": "Imaginary part of $iz$.",
+        "answer": "$\\operatorname{Im}(iz)=\\operatorname{Re}(z)$",
+        "accept": [],
+        "why": "Identity (1.19), page 14."
+      }
+    ],
+    "generator": null,
+    "memory": "Identity (1.19), page 14."
+  },
+  {
+    "id": "ch1-1.3-def18",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "Definition 1.8",
+      "page": 17
+    },
+    "kind": "flash",
+    "prompt": "Modulus.",
+    "steps": [
+      {
+        "text": "Modulus.",
+        "answer": "$|x+iy|=\\sqrt{x^2+y^2}$",
+        "accept": [],
+        "why": "Definition 1.8, page 17: the distance from $z$ to $0$."
+      }
+    ],
+    "generator": null,
+    "memory": "Definition 1.8, page 17: the distance from $z$ to $0$."
+  },
+  {
+    "id": "ch1-1.3-id21",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "Identity (1.21)",
+      "page": 17
+    },
+    "kind": "flash",
+    "prompt": "The legs and the hypotenuse.",
+    "steps": [
+      {
+        "text": "The legs and the hypotenuse.",
+        "answer": "$|\\operatorname{Re}(z)|\\le |z|$ and $|\\operatorname{Im}(z)|\\le |z|$",
+        "accept": [],
+        "why": "Identity (1.21), page 17."
+      }
+    ],
+    "generator": null,
+    "memory": "Identity (1.21), page 17."
+  },
+  {
+    "id": "ch1-1.3-dist",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "Distance formula",
+      "page": 18
+    },
+    "kind": "flash",
+    "prompt": "Distance between two points.",
+    "steps": [
+      {
+        "text": "Distance between two points.",
+        "answer": "$|z_1-z_2|=\\sqrt{(x_1-x_2)^2+(y_1-y_2)^2}$",
+        "accept": [],
+        "why": "Page 18: the length of the displacement from $z_2$ to $z_1$."
+      }
+    ],
+    "generator": null,
+    "memory": "Page 18: the length of the displacement from $z_2$ to $z_1$."
+  },
+  {
+    "id": "ch1-1.3-id22",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "Identity (1.22)",
+      "page": 18
+    },
+    "kind": "flash",
+    "prompt": "Modulus squared, without a square root.",
+    "steps": [
+      {
+        "text": "Modulus squared, without a square root.",
+        "answer": "$|z|^2=z\\overline{z}$",
+        "accept": [],
+        "why": "Identity (1.22), page 18."
+      }
+    ],
+    "generator": null,
+    "memory": "Identity (1.22), page 18."
+  },
+  {
+    "id": "ch1-1.3-th12",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "Theorem 1.2",
+      "page": 18
+    },
+    "kind": "flash",
+    "prompt": "The triangle inequality.",
+    "steps": [
+      {
+        "text": "The triangle inequality.",
+        "answer": "$|z_1+z_2|\\le |z_1|+|z_2|$",
+        "accept": [],
+        "why": "Theorem 1.2, page 18, Identity (1.23)."
+      }
+    ],
+    "generator": null,
+    "memory": "Theorem 1.2, page 18, Identity (1.23)."
+  },
+  {
+    "id": "ch1-1.3-id24",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "Identity (1.24)",
+      "page": 19
+    },
+    "kind": "flash",
+    "prompt": "The reverse triangle inequality.",
+    "steps": [
+      {
+        "text": "The reverse triangle inequality.",
+        "answer": "$|z_1+z_2|\\ge |z_1|-|z_2|$",
+        "accept": [],
+        "why": "Identity (1.24), page 19. The book also writes $|z_1|-|z_2|\\le |z_1+z_2|$."
+      }
+    ],
+    "generator": null,
+    "memory": "Identity (1.24), page 19. The book also writes $|z_1|-|z_2|\\le |z_1+z_2|$."
+  },
+  {
+    "id": "ch1-1.3-id25",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "Identity (1.25)",
+      "page": 19
+    },
+    "kind": "flash",
+    "prompt": "Modulus of a product.",
+    "steps": [
+      {
+        "text": "Modulus of a product.",
+        "answer": "$|z_1 z_2|=|z_1|\\,|z_2|$",
+        "accept": [],
+        "why": "Identity (1.25), page 19."
+      }
+    ],
+    "generator": null,
+    "memory": "Identity (1.25), page 19."
+  },
+  {
+    "id": "ch1-1.3-id26",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "Identity (1.26)",
+      "page": 19
+    },
+    "kind": "flash",
+    "prompt": "Modulus of a quotient.",
+    "steps": [
+      {
+        "text": "Modulus of a quotient.",
+        "answer": "$|z_1/z_2|=|z_1|/|z_2|$ when $z_2\\neq 0$",
+        "accept": [],
+        "why": "Identity (1.26), page 19."
+      }
+    ],
+    "generator": null,
+    "memory": "Identity (1.26), page 19."
+  }
+]
