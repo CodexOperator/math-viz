@@ -46,6 +46,11 @@ function chapterExerciseId(preset) {
   return exerciseFromToken(token);
 }
 
+function chapterChip(ctx) {
+  const id = chapterExerciseId(ctx && ctx.preset);
+  return id ? CHAPTER_PICTURE[id].chip : null;
+}
+
 function problemRow(stationId, preset) {
   const probs = test2ProblemsAt(stationId);
   if (!probs.length) return null;
@@ -156,10 +161,19 @@ function sequencePanel() {
     chips.append(b);
   });
   draw();
-  return h('section', { class: 'panel', 'aria-labelledby': 'sequence-title' },
+  const panel = h('section', { class: 'panel', 'aria-labelledby': 'sequence-title' },
     h('h2', { id: 'sequence-title' }, 'Two sequences from section 4.1'),
     h('p', null, 'A limit means the terms eventually sit in every disk you draw around one point. Bounded is weaker: convergent sequences are bounded, and section 4.2 uses that word for orbits.'),
     chips, host, h('div', { id: 'sequence-film-slot', 'data-film-slot': '' }), note);
+  // The page is built once. A later visit from an exercise has to press that exercise's chip.
+  panel.applyChip = (id) => {
+    const i = modes.findIndex((m) => m.id === id);
+    if (i < 0) return;
+    current = modes[i];
+    buttons.forEach((btn, j) => btn.setAttribute('aria-pressed', String(j === i)));
+    draw();
+  };
+  return panel;
 }
 
 function harmonicLines(n) {
@@ -586,11 +600,18 @@ function powerPanel() {
     chips.append(b);
   });
   draw();
-  return h('section', { class: 'panel', 'aria-labelledby': 'powerseries-title' },
+  const panel = h('section', { class: 'panel', 'aria-labelledby': 'powerseries-title' },
     h('h2', { id: 'powerseries-title' }, 'Inside the disk, outside the disk'),
     h('p', { id: 'powerseries-radii' }, 'One series, Σ (z/2)^n. The disk has radius 2. Move the point across that radius and the sentence flips. The unit circle on the flat paper is this same wall, read at radius 1.'),
     chips, host, note,
     h('p', null, 'Exercise 6 asks whether a series can settle at one point and leave at a nearer one. The check is closed on the index. Exercise 3, marked extra, asks for ten radii. The index quotes the four answers the HTML prints and leaves the rest in the section.'));
+  panel.applyChip = (id) => {
+    const found = samples.find((s) => s.id === id);
+    if (!found) return;
+    current = found;
+    draw();
+  };
+  return panel;
 }
 
 function harmonicPanel() {
@@ -731,6 +752,8 @@ export function mountConcept(el, ctx) {
   }
   if (ctx.station.id === 'zero') spec = { ...spec, panel: zeroPanel(ctx) };
   if (ctx.station.id === 'geometric') spec = { ...spec, panel: geometricPanel(ctx) };
+  const chip = chapterChip(ctx);
+  if (chip && spec.panel && typeof spec.panel.applyChip === 'function') spec.panel.applyChip(chip);
   shell(el, ctx, spec);
   el.querySelectorAll('[data-film-sync]').forEach((n) => n.dispatchEvent(new CustomEvent('mv-sync')));
   return function unmount() {};
