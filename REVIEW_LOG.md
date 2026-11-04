@@ -5800,3 +5800,52 @@ The eight exercise statements still match the printed exercises. §4.1 Exercise 
 While this review was open, `667a5c3` landed on the branch. It only adds the taste note in `TASTE_LOG.md`. The note asks for one more cutting batch: the film under the chip, the sequence note when the door was the chapter, the previous tick under the header, Theorem 4.11 off section 4.2, and the last sentence of each chapter hint. This pass does not start that batch.
 
 **accept with fixes**
+
+## Book path, batch 3 — close review
+
+Verdict: **accept with fixes**. Draft pull request 33, branch `cursor/book-chapter-path-df29`, reviewed from `ae5c8a8`. The five cuts only. Not merged.
+
+The film sits under the chip the chapter named. Exercise 5 lands on `c = −2`, the list 0, −2, 2, 2, …, and the Theorem 4.9 line, and the film starts under that line. Section 4.2 cites Theorem 4.9 only. Go to 4.2, 4.3, and 4.4 put that section’s title under the header and leave the previous tick above the window. The seven homework hints no longer end by saying the card does not print the write-up. Exercise 6 still does not say which point is closer.
+
+### Fixed
+
+The sequence page is built once. `applyChip` set the chapter wording and never cleared it, so a later visit to `#sequence` kept “These terms are the disk in Definition 4.1” after Exercise 3 or Exercise 13 had been opened. A plain visit now keeps the chip the learner pressed and puts Exercise 1(a) back on the settle note. A chapter door still presses `(1/2 + i/4)^n` and names Definition 4.1. The cycle chip still names Exercise 7.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the tick-only rule and the Theorem 4.9 pin, and it was run again after the note fix. `node kit/smoke.mjs` exits 0. `node tools/film-smoke.mjs` exits 0. `js/core/map-route.js` is byte-identical to `kit/template/js/core/map-route.js`. No file under `js/` imports `kit/`. The static import graph from `js/app.js` is 20 files, and none of them are in `kit/`.
+
+Headless Chrome, served under `/math-viz/`, light and dark, widths 1280, 700, and 390 (windows 800, 800, and 844 tall). `#book`, `#chapter-4`, Test 1 home, Test 2 home, the Homework filter, `playground.html`, `#cross`, and the eight picture doors come up with no console errors, no page errors, no failed assets, and no sideways scroll. Book, chapter, both homes, homework, the playground, and the picture doors schedule 0 animation frames in the 600 ms after ready. `#cross` is L21, “One number, on the set of c and on the Julia set.” Its first window is the draw. After 3.5 s the next 600 ms schedules 0 frames. An offscreen canvas does not widen the page.
+
+Walk Chapter 4 opens `#chapter-4` at scroll 0. The title sits at 103px, under a 56px header, at every width and in both themes. Go to 4.2 is hidden until both 4.1 exercises are ticked. After the jump the section box starts at 56px, the title “Julia and Mandelbrot Sets” starts at 96px, and the Exercise 13 tick runs from −38px to 6px, above the window. Go to 4.3 and Go to 4.4 do the same at 1280, at 700, at 390, and in the dark theme. With all eight ticked the book says “Done. 8 of 8 exercises. Chapter 5 is next, and its walk is not drawn yet.” The button is Open Chapter 5.
+
+A tick on the chapter is pressed on the index, and a tick on the index is pressed on the chapter. Unticking on the chapter clears the index and leaves the other tick. A fresh load of broken JSON for `mv:progress.test2` and `mv:book.progress` shows “0 of 8” and throws nothing. `"yes"`, the number `1`, and an unknown id are dropped. A real `true` is kept, and Next stays on the first unticked exercise. An old chapter record folds its exercise ticks into the index memory once and is then stored as `{ migrated: true }`. A section mark in that old record does not finish a section whose exercise is still open. Unticking the folded exercise and reloading leaves it unticked. When `localStorage` throws, the tick still shows for that visit, with no console error.
+
+Each picture door, fresh storage:
+
+- 4.1.3 and 4.1.13 open A Sequence Has a Fate on `(1/2 + i/4)^n`, pressed. The note names Definition 4.1. The film starts under that note. The link back is `#chapter-4-4-1-3` or `#chapter-4-4-1-13`. On the laptop the note ends at 746px, inside the 800px window. On the phone the chip is on screen and the note is the next screen. The film is under the note at both widths.
+- 4.2.3 opens One Newton Step. The page still cites Example 4.7, page 110. The degree-1 line is above the film. On the laptop that line ends at 787px and the film starts at 866px. On the phone the line is the next screen, under the five-step table and above the film.
+- 4.2.4 opens When c Is 0, a Disk with `|z| < 1` pressed, on the first screen, and links back to the chapter card.
+- 4.2.5 opens The Orbit of 0 with `c = −2` pressed. The list is step 0: 0, step 1: −2, then 2 through step 7. The line under it is Exercise 5 and Theorem 4.9, page 113. On the laptop the list runs 518px to 717px and that line ends at 773px. The film starts at 839px. At 700px wide the line ends at 792px, still inside the 800px window, and the film starts at 885px. On the phone the chip and the start of the list are on the 844px screen. The last steps and the sentence under the list sit just past the fold. The film starts at 1136px, under that sentence.
+- 4.3.1 opens Geometric Series on `(1+i)/2`. 4.3.2 opens it on `z = 0 in D₂(−i)`. Both chips stay pressed and both link back to the chapter card.
+- 4.4.6 opens A Radius, Then a Wall on `|z| = 1`, pressed, and links back to the chapter card.
+
+The chapter page has no Copy Markdown and no Mark. Hints start closed. Section 4.2’s only pin is Theorem 4.9, page 113. The seven homework hints no longer end with “this card does not print.” Exercise 6 still ends “This card does not say which of the two points is closer.” The Homework filter shows the same seven cards and reads “7 shown. Homework. Ticked 0 of 30.” The index still hides the Exercise 6 check behind Show. The added text is not on screen until that control is used.
+
+Test 1 home lists addresses and does not list Julia. Test 2 home lists Julia and Newton and does not list addresses. The menu on `#book` and `#chapter-4` is The Book plus the eleven chapters. Which test is not in that menu. The footer colour key stays hidden on the book routes. The playground opens on L0 watch.
+
+### Citations checked against the professor PDF
+
+The anchors from the previous close reviews are unchanged. Theorem 4.1, page 103, is `Lim_Zn_Thm`. Theorem 4.16, page 125, is `th15`. Chapter 5, page 130, opens `sec_exponential-function.html`. Theorem 4.11, page 116, is still `Attracting_Thm` where an older stop names it. It is no longer a pin on section 4.2.
+
+The contents titles and printed pages for all eleven chapters, and the sections under them, still match printed pages i–ii. Chapter 4 is Sequences, Series, and Fractals, page 102: 4.1 page 102, 4.2 page 109, 4.3 page 118, 4.4 page 123. Chapter 5 is Elementary Functions, page 130: 5.1 page 130, 5.2 page 137, 5.3 page 143, 5.4 page 148, 5.5 page 159.
+
+The eight exercise statements still match the printed exercises. §4.1 Exercise 3, page 108, is the conjugate of the limit. §4.1 Exercise 13, page 109, completes Theorem 4.1 for the imaginary part. §4.2 Exercise 3, page 117, is Newton’s method for a degree-1 polynomial. §4.2 Exercise 4, page 117, is the iterates of `z^2`. §4.2 Exercise 5, page 117, is the Julia set of `f_{-2}`. §4.3 Exercise 1, page 122, is the two geometric sums. The card still says “Evaluate the following”; the PDF says “Evaluate”. That wording was already accepted, and this batch did not edit the card. §4.3 Exercise 2, page 122, is convergence on `D_2(-i)`. §4.4 Exercise 6, page 129, is a power series that converges at `4-i` and diverges at `2+3i`.
+
+Definition 4.1 and Theorem 4.1 are page 103. Example 4.7 is page 110. Example 4.9, Example 4.10, and Theorem 4.9 are page 113. Theorem 4.12 is page 118. Theorem 4.15 is page 124. Theorem 4.16 is page 125.
+
+`#chapter-1` stays on the roadmap. Complex Numbers sits at 96px, under the header. The menu there marks The Book, because that hash is not a chapter page. `#chapter-6-6-1` is no such place. Visiting the book leaves the remembered test alone: a Test 2 visit, then the book, then the site title, is still Test 2. Chapter 5 is the title, the sentence that the exponential, the logarithm, and the powers are not drawn here yet, the source tag for page 130, and Back to the book.
+
+While this review was open, `a483344` landed on the branch. It only adds the batch 3 taste note in `TASTE_LOG.md`. The note says the five doors landed and the loop should rest. The note fix sits on top of that commit. The four station lines that still mention the index, and the 36px picture chip, are the leftovers that note already left. This pass does not start another batch.
+
+**accept with fixes**
