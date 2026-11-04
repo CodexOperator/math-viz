@@ -167,10 +167,16 @@ function mountPair(parent, opts) {
     green.setAttribute('cx', zView.X(here.re));
     green.setAttribute('cy', zView.Y(here.im));
     const finite = w && Number.isFinite(w.re) && Number.isFinite(w.im);
-    const shown = finite && wView.inside(w) ? w : (finite ? wView.clamp(w) : { re: wView.cx, im: wView.cy });
-    purple.setAttribute('cx', wView.X(shown.re));
-    purple.setAttribute('cy', wView.Y(shown.im));
-    purple.setAttribute('opacity', finite && wView.inside(w) ? '1' : '0.45');
+    // A pole is not a point of the plane. Parking the dot at the view centre
+    // would put 1/0 at the centre of the orange circle.
+    if (!finite) {
+      purple.setAttribute('opacity', '0');
+    } else {
+      const shown = wView.inside(w) ? w : wView.clamp(w);
+      purple.setAttribute('cx', wView.X(shown.re));
+      purple.setAttribute('cy', wView.Y(shown.im));
+      purple.setAttribute('opacity', wView.inside(w) ? '1' : '0.45');
+    }
     if (spoken.text !== claimText) {
       claimText = spoken.text;
       claim.replaceChildren();
@@ -237,7 +243,9 @@ function mountPair(parent, opts) {
   zSvg.addEventListener('pointerup', onUp);
   zSvg.addEventListener('pointercancel', onUp);
   zSvg.addEventListener('keydown', (ev) => {
-    const step = ev.shiftKey ? 0.4 : 0.15;
+    // The unshifted step has to clear the snap band (0.2), or an arrow
+    // from the line lands back on the line and the false claim never shows.
+    const step = ev.shiftKey ? 0.45 : 0.28;
     const move = { ArrowRight: [step, 0], ArrowLeft: [-step, 0], ArrowUp: [0, step], ArrowDown: [0, -step] }[ev.key];
     if (!move) return;
     ev.preventDefault();
@@ -363,14 +371,19 @@ export function principalSqrt(z) {
   return { re: root * Math.cos(half), im: root * Math.sin(half) };
 }
 
+// Example 2.21, pages 68–69: the two limits are the approaches to a negative
+// real number, where Arg is near π from above and near −π from below.
+// Anywhere in the left half-plane is not “near π”.
 export function branchClaim(z) {
-  if (z.re < -0.05 && z.im > 0.08) {
+  const arg = Math.atan2(z.im, z.re);
+  const nearAxis = z.re < -0.05 && Math.hypot(z.re, z.im) > 0.15;
+  if (nearAxis && z.im > 0 && Math.PI - arg <= 0.55) {
     return { holds: true, text: 'Above the cut, Arg $z$ is near $\\pi$, and the principal square root is in the upper half-plane.' };
   }
-  if (z.re < -0.05 && z.im < -0.08) {
+  if (nearAxis && z.im < 0 && arg + Math.PI <= 0.55) {
     return { holds: false, text: 'Below the cut, Arg $z$ is near $-\\pi$, and the principal square root is in the lower half-plane.' };
   }
-  if (z.re < -0.05) return { holds: false, text: 'On the negative real axis, Arg jumps.' };
+  if (nearAxis && Math.abs(z.im) <= 0.08) return { holds: false, text: 'On the negative real axis, Arg jumps.' };
   return { holds: false, text: 'Off the cut, Arg does not jump. Cross the blue ray.' };
 }
 

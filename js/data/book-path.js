@@ -1,6 +1,6 @@
 // The textbook as a path. Titles and printed pages are the table of contents of
 // Howell & Mathews, Complex Analysis, 202 Updated Edition (PDF pages 6–7).
-// Chapter 2 is open: five stages, and 2.1–2.3 are the walk. Chapter 4 is the
+// Chapter 2 is open: five stages, and 2.1–2.5 are the walk. Chapter 4 is the
 // walk that can be marked done from its exercises. Chapter 5 opens on the
 // exponential, and §5.1 is the walk under that picture. Sections 5.2–5.5 stay
 // titles. The other chapters are later: a door, when this site already draws

@@ -15,8 +15,7 @@
         "answer": "-6",
         "accept": [
           "-6+0i",
-          "-6+0i",
-          "0-6i"
+          "-6 + 0i"
         ],
         "form": "A number written like 3+2i.",
         "why": "\\((2+i)(-2+2i) = -6+2i\\), then subtract \\(2i\\)."
@@ -38,7 +37,7 @@
           "a triangle",
           "triangle"
         ],
-        "form": "A shape, such as a triangle.",
+        "form": "The name of the shape.",
         "why": "A linear map sends a triangle to a triangle."
       }
     ],
@@ -302,7 +301,7 @@
         ],
         "why": "\\(v = 4y\\), so \\(y = v/4\\) and \\(u = 4 - y^2\\).",
         "miss": {
-          "u = 4 - v^2/4": "v^2/4 is the image of the line x = 1.",
+          "u = 4 - v^2/4": "v^2/4 belongs to the line x = 1.",
           "v = 4 - u^2/16": "That swaps the axes.",
           "u = 2 - v^2/16": "That uses x, not x squared."
         }
@@ -347,8 +346,8 @@
     "chapter": 2,
     "section": "2.2",
     "cite": {
-      "ref": "§2.2, the sector for z^n",
-      "page": 59
+      "ref": "§2.2, angles under z^n",
+      "page": 58
     },
     "kind": "mc",
     "prompt": "Another sector under z^n. The image angle is computed.",
@@ -429,7 +428,7 @@
           "the modulus of f(z)-w0"
         ],
         "why": "Each of \\(|u-u_0|\\) and \\(|v-v_0|\\) is at most \\(|f(z)-w_0|\\).",
-        "form": "A number written like 3+2i."
+        "form": "An expression in f(z) and w_0."
       },
       {
         "text": "In the other direction, choose \\(\\delta\\) to be the ___ of \\(\\delta_1\\) and \\(\\delta_2\\).",
@@ -441,7 +440,7 @@
           "the smaller"
         ],
         "why": "On that smaller disk both \\(|u-u_0| < \\varepsilon/2\\) and \\(|v-v_0| < \\varepsilon/2\\).",
-        "form": "A number written like 3+2i."
+        "form": "One word: how the two deltas combine."
       }
     ],
     "generator": null,
@@ -748,8 +747,8 @@
     "chapter": 2,
     "section": "2.5",
     "cite": {
-      "ref": "Section 2.5",
-      "page": 72
+      "ref": "Example 2.24",
+      "page": 76
     },
     "kind": "next-step-mc",
     "prompt": "The picture is the line \\(x = 1\\) under \\(w = 1/z\\). Its image is the circle",
@@ -775,15 +774,15 @@
       }
     ],
     "generator": null,
-    "memory": "1/z swaps lines and circles."
+    "memory": "1/z sends lines and circles to lines and circles."
   },
   {
     "id": "ch2-2.5-gen",
     "chapter": 2,
     "section": "2.5",
     "cite": {
-      "ref": "Section 2.5",
-      "page": 72
+      "ref": "Example 2.24",
+      "page": 76
     },
     "kind": "mc",
     "prompt": "Another vertical line under 1/z. The circle is computed.",
@@ -794,15 +793,15 @@
         "kind": "recip-line"
       }
     },
-    "memory": "1/z swaps lines and circles."
+    "memory": "1/z sends lines and circles to lines and circles."
   },
   {
     "id": "ch2-2.5-flash",
     "chapter": 2,
     "section": "2.5",
     "cite": {
-      "ref": "Section 2.5",
-      "page": 72
+      "ref": "§2.5, lines and circles",
+      "page": 76
     },
     "kind": "flash",
     "prompt": "What does 1/z do to lines and circles?",
@@ -814,6 +813,6 @@
       }
     ],
     "generator": null,
-    "memory": "1/z swaps lines and circles."
+    "memory": "1/z sends lines and circles to lines and circles."
   }
 ]

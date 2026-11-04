@@ -67,7 +67,7 @@ const COPY = {
   '2.4': {
     why: 'Arg jumps when the point crosses the negative real axis.',
     summit: 'Arg jumps across the negative real axis, and the principal square root jumps with it.',
-    example: 'At $z = -1$, from above, Arg $z$ approaches $\\pi$ and the principal square root approaches $i$. From below, Arg $z$ approaches $-\\pi$ and the square root approaches $-i$. A branch is one continuous choice of those values. Definition 2.1, page 55, and Section 2.4, page 68.',
+    example: 'Example 2.21, pages 68–69. At $z = -1$, from above, Arg $z$ approaches $\\pi$ and the principal square root approaches $i$. From below, Arg $z$ approaches $-\\pi$ and the square root approaches $-i$. A branch is one continuous choice of those values. Definition 2.1, page 55.',
     picture: mountBranch,
     next: '2.5',
     read: [
@@ -78,13 +78,14 @@ const COPY = {
   },
   '2.5': {
     why: '$1/z$ sends the line $x = 1$ to a circle.',
-    summit: '$1/z$ swaps lines and circles: the blue line lands on the orange circle.',
-    example: 'Section 2.5, page 72. On the line $x = 2$, $u = 2/(4+y^2)$ and $v = -y/(4+y^2)$, which is the circle $|w - 1/4| = 1/4$. The picture uses a different vertical line. At $0$, $1/z$ is not a point of the plane.',
+    summit: '$1/z$ sends the line $x = 1$ to the circle $|w - 1/2| = 1/2$.',
+    example: 'Example 2.24, page 76. The line $x = a$ goes to the circle with center $1/(2a)$ and radius $1/(2a)$. For $x = 2$ that is $|w - 1/4| = 1/4$. The picture uses the line $x = 1$. At $0$, $1/z$ is not a point of the plane.',
     picture: mountReciprocal,
     next: null,
     read: [
       { pin: 'Section 2.5, page 72', href: sectionHref(S25) },
       { pin: 'Figure 2.22, the sphere, page 73', href: sectionHref(S25, 'fig_ch-02-22') },
+      { pin: 'Example 2.24, lines to circles, page 76', href: sectionHref(S25, 'fig_ch-02-25') },
     ],
   },
 };

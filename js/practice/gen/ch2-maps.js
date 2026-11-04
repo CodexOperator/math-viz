@@ -137,12 +137,12 @@ function powerLine(rng, params) {
 
 // The image angle is n times the sector. These pairs are not all π/2.
 const SECTORS = Object.freeze([
-  { n: 2, den: 3, label: '2π/3', rad: (2 * Math.PI) / 3 },
-  { n: 3, den: 2, label: '3π/2', rad: (3 * Math.PI) / 2 },
-  { n: 2, den: 4, label: 'π/2', rad: Math.PI / 2 },
-  { n: 4, den: 3, label: '4π/3', rad: (4 * Math.PI) / 3 },
-  { n: 3, den: 3, label: 'π', rad: Math.PI },
-  { n: 4, den: 2, label: '2π', rad: 2 * Math.PI },
+  { n: 2, den: 3, label: '2π/3', tex: '2\\pi/3', rad: (2 * Math.PI) / 3 },
+  { n: 3, den: 2, label: '3π/2', tex: '3\\pi/2', rad: (3 * Math.PI) / 2 },
+  { n: 2, den: 4, label: 'π/2', tex: '\\pi/2', rad: Math.PI / 2 },
+  { n: 4, den: 3, label: '4π/3', tex: '4\\pi/3', rad: (4 * Math.PI) / 3 },
+  { n: 3, den: 3, label: 'π', tex: '\\pi', rad: Math.PI },
+  { n: 4, den: 2, label: '2π', tex: '2\\pi', rad: 2 * Math.PI },
 ]);
 
 function powerSector(rng, seed) {
@@ -169,7 +169,7 @@ function powerSector(rng, seed) {
     accept: [answer],
     choices,
     miss,
-    why: `Arguments multiply by ${row.n}: \\(\\pi/${row.den} \\cdot ${row.n} = ${row.label}\\).`,
+    why: `Arguments multiply by ${row.n}: \\(\\pi/${row.den} \\cdot ${row.n} = ${row.tex}\\).`,
     memory: 'z^n multiplies arguments by n.',
     values: { n: row.n, end: row.rad, den: row.den },
   };
@@ -202,7 +202,7 @@ function recipLine(rng) {
     choices,
     miss,
     why: `On \\(x = ${a}\\), \\(|w - 1/${2 * a}| = 1/${2 * a}\\).`,
-    memory: '1/z swaps lines and circles.',
+    memory: '1/z sends lines and circles to lines and circles.',
     values: { a },
   };
 }
