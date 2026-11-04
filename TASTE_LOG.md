@@ -1402,3 +1402,51 @@ A right blank ("M_k") shows the why and opens the next step. The choice buttons 
 Each stage carries its own colour sentence. The Test 1 colour key stays hidden here (`display: none` while `data-book` is set), so orange means the band or the circle on this page.
 
 The 7.4 memory lines are worth keeping word for word: no negative powers means removable, lowest power −k means a pole of order k, infinitely many means essential. The citations on the cards (Theorem 7.1, page 212, and the rest) stay.
+
+## ux-veteran (ch7 batch 1)
+
+Preview https://ch7-preview.complexanalysis.pages.dev/#chapter-7, branch `cursor/chapter-7` at `897d8d1`. Headless Chrome, touch, 390×844 and 1280×800, light and dark. No product code was changed. No console errors. No failed requests. No sideways scroll (`scrollWidth` matched the window at 390; at 1280 the page was 1265 wide).
+
+### Verdict
+
+ANOTHER BATCH
+
+The three pictures do the job once you can touch them. A phone lands on a status line written for the build ("0 of 3 drawn stages"), with the green point and Play below the fold, and the only way back is a 17px link that forgets where you were. The book, after a finished stage, still says to walk Chapter 4.
+
+### How the walk went
+
+**390×844, light, fresh storage.** The first screen is the site name (full, not cut), the theme and menu icons at 44×44, then THE BOOK at 69×17, the Iowan title, and the lede "Five stages. The first three are drawn. Sections 7.4 and 7.5 are marked for the next pass." The status card says "Stage 7.1 of 5. 0 of 3 drawn stages complete." Go to 7.1 is a 44px accent button. Under it, 7.1's title, the why, and "Drag the green point along the partial sum" are on screen. The graph starts at y = 755 and is 216px tall, so an 844px window keeps 89px of it: the rising tips, not the axis and not the point. Play is at y = 1074, 70×44. Tapping Go to 7.1 scrolls to 435. The section title stays clear of the header (title top 96, header bottom 56) and Play comes up into the window. The button's words say you are leaving for 7.1 while 7.1 is already the card on screen.
+
+A touch 40px from the point does nothing (the probe stays at 0.2, "inside the band"). A touch on the point, which is drawn 9×9, runs it to 0.92 and the sentence becomes "At this x, the same partial sum has left the band." Play switches to Pause, the term moves (n = 1 to n = 2), and a second click leaves the label Play and freezes n at 2. The same 9px point on the Taylor picture crosses the circle through ±i and the sentence stops agreeing. On the Laurent picture the region goes from the annulus to the disk and the sentence changes to non-negative powers. With reduced motion the three buttons say Next step.
+
+The M-test blank rejects "nope" with "Not yet." The field is 197×44 and Check is 85×44. The right blanks, then the two choices (the first choice is 290×97), store `ch7-7.1-mtest-blank` and `ch7-7.1-mtest-mc`. Stage complete then presses. The flag, the button, and the summit sentence are on one screen, and the button still says Stage complete. The status, off the top of that screen, becomes "Stage 7.2 of 5. 1 of 3 drawn stages complete" with Go to 7.2. Show the back is 157×44 and reveals the card. The pinned rows (Definition 7.1 and the four that follow) are 23px tall and 29px apart. Stage 7.4 says "The winding picture is the next batch" and "The cards are written. The picture for this stage is the next batch." The chapter is 12921px. The path's bottom padding is 788px, and the last screen is blank paper with "Back to the book" at 134×23.
+
+The menu is twelve rows, each 44px, and chapter 7 is the current one, on the first screen of the drawer. Chapter 6 opens `#chapter-6` on the roadmap, scrolled to 1324, on the Later card. Back from there returns to `#chapter-7` at scroll 0. From 7.3 at scroll 6146, THE BOOK opens `#book` and Back returns to scroll 0.
+
+**The book, after that tick.** The tick is in `mv:progress.test2`. The roadmap still says "Next is §4.1, Exercise 3. 0 of 8 exercises." and the accent button still says Walk Chapter 4. Chapter 7's card is at y = 1510 on a page 2385px tall. The heading is not a link. Open Chapter 7 is 126×23. The flag says Open.
+
+**Dark, both widths.** Paper `rgb(13, 18, 28)`, title `rgb(233, 237, 245)`, the accent button `rgb(207, 216, 234)` with dark type. The green edge on the finished stage, the orange band, the purple curve, and the green point still separate. Same first screen, same clip of the graph.
+
+**1280×800.** The menu is the sidebar, 280px, and chapter 7 is in view and current. The title is Iowan at 36px, the same size as Chapter 5. The graph is 352×235 in a 985px column, top at y = 578, so its bottom sits 13px past an 800px window. Play is at y = 916. Chapter 5 on the same window puts a 480px square at y = 179 and Play at y = 701.
+
+### Where the page already matches
+
+Title Iowan Old Style, 25.85px, weight 600, `rgb(26, 34, 48)` at 390. Lede 16.8px, `rgb(81, 91, 108)`. Accent button 17px, 44px tall, radius 6px, `rgb(47, 62, 92)`. Card white, 1px `rgb(216, 210, 196)`, radius 10px, 16px of padding. Paper `rgb(246, 243, 236)`. Those are the station numbers. The footer colour key is hidden on the book route. Each stage has its own colour sentence under Play.
+
+### Ranked fixes
+
+1. **Put the point and Play on the first phone screen.** Evidence: at 390 the graph starts at y = 755 and Play at y = 1074; the visible strip is the tips of the curves. The lede and the status say "drawn" and "0 of 3 drawn stages." At 1280 Play is at y = 916 and the graph is capped at 352px while Chapter 5's square is 480px and on the screen. Change: size this picture the way the exponential square is sized, so the point and Play sit above the fold at 390. The status line reads "Uniform convergence. Stage 1 of 5."
+
+2. **Make the point a target a finger can hit.** Evidence: the dot is 9×9. A touch 40px off its center leaves the probe at 0.2. A touch on it moves the sentence, on all three pictures. Change: a drag may start on the curve, and the drawn point is at least 44px across.
+
+3. **Give Back a 44px control and the place you left.** Evidence: THE BOOK is 69×17. From scroll 6146, Back lands at scroll 0. The same reset happens from the chapter 6 row. "Back to the book" is 134×23 under 788px of empty padding. Change: one up control with the 44px of Play. Returning to the chapter keeps the scroll. The empty viewport under 7.5 goes.
+
+4. **The book should show the stage you just finished.** Evidence: after 7.1 is stored, `#book` still says "Next is §4.1, Exercise 3" and Walk Chapter 4. The chapter 7 row is at y = 1510, the heading is not a link, and Open Chapter 7 is 126×23. In the menu, chapter 6 is the same kind of row as chapter 7 and opens a Later card. Change: the status card counts the Chapter 7 stages and its button opens Chapter 7. The row itself is the link, at 44px. A Later chapter stays a Later card and does not wear the current-page mark of an open one.
+
+5. **A finished stage should say the next one, and 7.4 should stop talking about the batch.** Evidence: after the press the button still says Stage complete, the flag says Stage complete, and the summit sentence is on that same screen. Go to 7.2 exists only in the status card at the top. Stage 7.4 says the picture is "the next batch." Change: the press reveals the summit sentence and the button says Go to 7.2. On 7.4 and 7.5, keep the title, the page, and Later.
+
+6. **Give the pins a row a thumb can land on.** Evidence: Definition 7.1 through Example 7.2 are 23px tall and stacked 29px apart, and the same list repeats under 7.2, 7.3, 7.4, and 7.5. Change: each pin is a 44px row, the height the chapter links in the menu already are.
+
+### What to keep
+
+The four colours, and the sentence that flips: inside the band, then outside it; agreement that stops at the circle through ±i; the annulus, then the disk of non-negative powers. Play, Pause, and the freeze on the second click. Next step when motion is reduced. Check, the choices, Show the back, and Go to, all at 44px, and a wrong blank that says "Not yet." The type, the paper, the white card, and the accent button, in light and in dark. The menu row that marks chapter 7 while you are on it. The green edge on a stage that is done.
