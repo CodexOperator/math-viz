@@ -1342,3 +1342,41 @@ On a 390×844 phone the arrows are on the first screen, under the why. The claim
 ## Another batch
 
 The shared practice engine, when it lands, should replace the local card. The page already reads `data/practice/ch3.json`. Still open: a phone layout that keeps Play beside the claim on the first screen, and the exam recipes that are not cards yet. Theorem 3.4's long proof is a statement and a flash. The step-by-step blank is Theorem 3.3.
+
+## test-prep-coach (ch3 batch 1)
+
+Preview https://ch3-preview.complexanalysis.pages.dev/#chapter-3, tip `160ab62`. Phone 390×844 first, then 1280×800, light and dark. No product code changed. No console errors. No sideways scroll. The chapter page is 12469px tall. The first screen, at both sizes and in both themes, is the title, "Next is 3.1 Differentiable and Analytic Functions. 0 of 3 stages.", the why, and the top of the derivative picture. The §3.1 memory list starts at y=2996. The §3.2 deck has two buttons, Show and Next card.
+
+### Theorem 3.4
+
+Leave the long proof as the flash. On the phone, card 2 of 5 in §3.2 asks "What extra hypothesis makes the Cauchy-Riemann equations guarantee a derivative?" The back is the statement, cited Theorem 3.4, page 89. There is no proof-blank and no proof-mc for it. The only proof drill is Theorem 3.3, page 86, once as a four-step blank and once as four choices. That split is the one to keep for an exam in a few days.
+
+The web edition's matching statement is Theorem 3.2.6. The proof splits Δu, calls the mean value theorem, and carries four epsilons through to the limit of Δw/Δz. That is a page and a half. The exercises after it ask where f is differentiable and what f' is. §3.1 Exercise 11 is |z|², differentiable only at 0. The counterexample the card already names, Example 3.6, page 88 (web Example 3.2.5), satisfies the equations at 0 and then gives two limits, 1 along the real axis and −1 along y=x. Those two questions are what a student misses after memorizing "Cauchy-Riemann means differentiable." A twelve-step blank of the epsilon argument spends the night those two questions need.
+
+The back of the flash should still match the sentence you would write if the exam says "state Theorem 3.4." The book asks for f defined and continuous in a neighborhood, the four partials continuous at the point, and the equations at the point. The card says u, v, and the four partials are continuous near z_0. "Near" is a stronger claim about the partials than the theorem makes, and it is the word Example 3.6 turns on.
+
+The section's own "prove this" exercise is the polar form, Exercise 10, which is Theorem 3.5. That is a three-part chain-rule derivation. It waits until the computational holes below are filled. So do the short proofs of Theorem 3.1 and Theorem 3.8.
+
+### Verdict
+
+ANOTHER BATCH
+
+The five recipes, the Theorem 3.3 drill, the chain-rule blank, and the conjugate integration are enough to start. They are not enough to sit the chapter's own exercise list. The endless cards train the success case, and the sheet repeats itself under the drills.
+
+### Ranked
+
+1. **Add the two uses of Theorem 3.4, and correct the flash.** Evidence: the live deck's Theorem 3.4 back says the partials are continuous near z_0. Nothing on the page is |z|², and nothing makes you compare the two paths in Example 3.6. The generator's choice "hold only on the axes" is never the answer (see 2). Change: keep Theorem 3.4 as one flash, with the book's three hypotheses and f'(z_0) = u_x + i v_x. Add a next-step on §3.1 Exercise 11: the equations hold only at 0, and f'(0) = 0. Add a three-step card on Example 3.6: the partials at 0, the equations hold there, the two limits are 1 and −1.
+
+2. **Make a generated card that can fail.** Evidence, four seeds each, on the preview. Cauchy-Riemann: u = x+2y−1, v = −2x+y; then u = x−y, v = x+y−2; then u = x+y, v = −x+y+2; then u = 2x+2y+1, v = −2x+2y. Clicking "fail at every point" was wrong every time, and the why cited Theorem 3.4. Harmonic: clicking "2" was wrong every time, on Re(−z²), Re(−2iz²), Re(2iz²), and Re(z²), and the why said Laplace holds. §3.2 Exercise 1(g) is the case the generator offers and never builds: the equations hold only on the real axis. §3.3 Exercise 2 asks whether any analytic f has imaginary part x³+y³. Change: some Cauchy-Riemann seeds hold only at a point or only on a line, and the derivative is claimed only there. Some harmonic seeds fail Laplace on the first step. A seed that passes asks for ∫ u_x dy and then for C'(x), the same three moves as Exercise 5(a).
+
+3. **Accept the line the exam wants, and show it after a miss.** Evidence, typed on the preview. On §3.2 Exercise 1(a), step 2, `u_x=0=v_y and u_y=-1=-v_x` was marked wrong and `both hold` was marked right. The why on the miss already prints those partials. On the chain rule, `5(z^2-iz+9)^4` was accepted, `5*(z^2-iz+9)^4` was rejected, and `-i+2z` was rejected for an inside derivative that `2z - i` passed. The miss showed "n[f(z)]^{n-1}" and left Next step hidden, so the factor never appeared. On §3.3 Exercise 5(a), the book's conjugate with the constant first, `C + x^3 - 3xy^2`, was marked wrong. The why explains C'(x) = 3x² and does not print v. Change: a miss prints the expected step under the why. The checker accepts the same sum with the terms in either order, and it accepts the four partials in place of the words "both hold."
+
+4. **Give L'Hôpital one limit.** Evidence: §3.1's memory ends with "The 0/0 rule, for functions analytic at the point, with g' not zero." The deck states Theorem 3.2. No card computes a limit. §3.1 Exercise 7 is six of them. Change: one next-step-blank for Exercise 7(a), page 83, lim_{z→i} (z⁴−1)/(z−i). Both are 0 at i, the quotient of the derivatives is 4z³, and the value is −4i.
+
+5. **One memory list, one tap from the stage.** Evidence, the live §3.1 list, in order: the five recipes, then "Same limit along every path," then "Analytic means a whole disk of derivatives" (recipe 3 already said that), then "Entire means the disk is the whole plane" (same recipe), then the singular-point line, then the quotient line again, then "Differentiable implies continuous" again, then L'Hôpital. §3.2's fifth recipe is "both hold and the partials are continuous, f' = u_x + i v_x," and the flash line under it is "Cauchy-Riemann plus continuous partials implies differentiable." That list starts at y=2996 on a 390×844 screen whose first view ends in the why. Change: Memory is the five recipes plus the three lines that are not already a recipe (singular point, the 0/0 rule, Example 3.6). The stage flag links there.
+
+6. **A missed card comes back next.** Evidence: each §3.2 card, after Show, offers Show (hidden) and Next card. Sixteen statements across the three stages, and a miss leaves the queue. Change: Missed puts that card next. Leave the intervals out. The cite already sits on the card; keep it there.
+
+### What to keep
+
+The five recipes per stage, especially §3.2's last two lines: if either equation fails there is no derivative, and if both hold with continuous partials then f' = u_x + i v_x. Theorem 3.3 as a blank and again as choices. The last choice set on the phone is u_y = −v_x against u_y = v_x, and the note says the sign is the usual miss. The chain-rule blank on (z² − iz + 9)⁵, which is §3.1 Exercise 1(a), page 83, once the checker accepts a reordered product. The Re z paths, horizontal 1 and vertical 0, with "differentiable only at 0" sitting there as the trap from |z|². The z + conjugate card: u and v are 2x and 0, against x and −y. The hand-written conjugate on u = y³ − 3x²y, whose steps match the book's solution v = x³ − 3xy² + C. The statement cards for analytic, entire, singular point, Theorem 3.1, Theorem 3.6, Theorem 3.7, and Laplace. Theorem 3.4 left as a statement.
