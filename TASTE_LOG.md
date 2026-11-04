@@ -1386,3 +1386,85 @@ I then dragged the green dot while Play was running. The real part stayed near 0
 ### What to keep
 
 The summit sentences are the right ones, and they name the next camp. I saw both "a sequence settles…" with Go to 4.2, and "e^z is the radius e^x turned by the angle y…" with Next is 5.2. Hints start closed, and the §4.4 hint still refuses to say which point is closer. The §5.1 blanks start empty, and the walk opens at the bottom of the circle, so Exercise 2 is not answered on arrival. Play, the claim, and one green handle are a real picture of the identity. The sequence station already has the worked contrast, and the sentence flips when the chip flips. The citations are pinned to the edition (Definition 4.1 page 103, Theorem 4.9 page 113, Exercises 1 and 2 page 135). Dark type on the phone stays readable. The laptop layout tells the same lesson.
+
+## taste-skill (ch4-5 batch 1)
+
+Branch `cursor/chapter-4-5-2649`, tip `ea7599da`. Preview https://book-preview.complexanalysis.pages.dev matches this tip (`js/stations/book.js` and `js/stations/exp-picture.js` are the same bytes). Headless Chrome, like a student, `#chapter-4` then `#chapter-5`, at 390×844 and at 1280×800, light and dark. On the phone the finger was a touch-sized pointer. A 2px nudge on the green dot, a drag out, a drag in to the clamp. Play, then Pause, with the radius already off the circle, and the angle held. Reduced motion through the steps, from a fresh load, on the phone. The 4.1.3 chip, the 4.2 title, the Julia still, and the 5.1 title. No console errors. No sideways scroll (`scrollWidth` was 390 and 1280). `inspect.mjs` was not run. Its house rules ban the kicker, the four teaching colours, and the 1px card, and kit/SKILL.md keeps those. The measurements below are from Chrome.
+
+### Verdict
+
+ANOTHER BATCH.
+
+The phone's Chapter 5 is the page: the circle, the sentence, and Play, in both themes. Chapter 4 on the laptop is two soft stamps, and the Chapter 5 title is a door to a page that does not exist. Those are the batch.
+
+```
+ROUND 1
+Seen in one second: on the phone, the circle; on the laptop, a small circle in a wide field (Chapter 5) or two large soft sets (Chapter 4).
+Idea (one sentence): e^z is a radius the hand sets and an angle the clock turns, and the sentence under the circle says which.
+Live thing: drag the green dot, or press Play.
+Layout words by section: hero=picture / status=bar / 5.1=list / later=cards. Chapter 4 is hero=pair / status=bar / four lists.
+Scores: design 6 · usability 6 · creativity 7 · content 7 → overall 6.3
+Caps applied: the laptop Chapter 5 picture sits in the left of a 952px column with the right half empty, so design stays at 6.5 or under. The kicker and the section flags are the site's own uppercase labels; kit keeps them, and this pass does not cut them. The pictures are drawn, which is the picture this subject has.
+Top three problems (most visible first), each with the screenshot it shows in and the fix:
+1. d1280-light-ch4-fold and d1280-dark-ch4-fold. Two 160px stills drawn at 466px, pixelated, and the "0 of 8" line is at y=817 in an 800px window. Cap the stills and move the pair to 4.2.
+2. d1280-light-ch5-fold and d1280-dark-ch5-fold. The square is 272px at x=304 in a column that runs to 1256. Play ends at 623. Let the square use the room above Play.
+3. p390-light-ch5-door-left. The 5.1 title opens "No such place" at #chapter-exp. The title stays on this page.
+```
+
+### What I could actually do
+
+`#chapter-5` at 390×844, light and dark. THE BOOK, then "Chapter 5. The exponential", then "Drag the green dot. Play turns the angle. A blank fills when the picture makes it true.", then the source line, then the square. The square is 358×358, from y=271 to 629. The claim is two lines, "The point sits on the bottom of the unit circle.", from 637 to 690. Play is 44px and ends at 742. The status ends at 836 and reads "Next is §5.1, Exercise 1, page 135. 0 of 2 exercises." The probe is real part 0, angle −π/2. Exercise 2's blank is empty and its Tick is disabled. The green handle is a 20px dot inside a 44px ring, on the right of the circle. The purple point is 12px, on the bottom. Paper is rgb(246, 243, 236) in the light and rgb(13, 18, 28) in the dark. The dark sentence is rgb(233, 237, 245). Same boxes.
+
+A 2px nudge leaves the real part at 0 and Play at y=698. A drag to the right sets the real part to about 0.88, the claim and the modulus blank both say the radius is \(e^{x}\), larger than 1, the claim box stays 53px, and Play stays at 698. A drag the other way clamps the real part at −1.2 and both lines say smaller than 1. Play stays at 698. After that drag the stage is focused, `:focus-visible` is false, and the outline is none. The same radius sentences on the laptop move Play from 579 to 580.
+
+With the radius already at −1.2, Play says Pause and the angle moves. The radius sentence stays "smaller than 1". Pause puts the button back to Play. Four hundred milliseconds later the angle is the same number (−1.204 on the phone, −1.204 on the laptop).
+
+Reduced motion, fresh load, phone, button Next step, radius 1:
+
+- The bottom, angle −π/2. Both blanks empty. Both ticks off.
+- The first press stays on that same angle, −1.5707963267948966, and the claim stays "the bottom of the unit circle."
+- The second press lands on the right. The claim names the right-hand point. Exercise 1 fills with 1 and Tick wakes.
+- The top. That 1 clears.
+- The left. The button says Start again. Exercise 2 reads "land together at −1" and Tick wakes. The button never says Pause.
+
+The stops are t = 2, 4, 6, 8 on an 8 second walk, and the page opens at t = 2. The first Next step sets t to the first stop, which is the frame already on screen.
+
+Ticking Exercise 2 on the bottom does nothing (`mv:progress.test2` stays empty). After Play reaches the left, the blank fills and the tick writes `{"5.1.2": true}`. The status becomes "Next is §5.1, Exercise 1, page 135. 1 of 2 exercises."
+
+The 5.1 card is the question, then the blank, then Tick, then Show the hint. The hint stays closed. Exercise 1 asks why \(\exp(0) = 1\) and the blank is "\(\exp(0)\) is" with an underline.
+
+The 5.1 title is a 44px link to `#chapter-exp`. Tapping it leaves the chapter. The page says "No such place" and "Nothing lives at #chapter-exp."
+
+At 1280×800 the column starts at x=304 and is 952px wide. The square is 272×272, from y=265 to 537. The claim is one line at 545. Play ends at 623. The status is one line at 664, full width, 918px. The same frame in the dark. From 576 to the right edge of the column, the first screen is paper.
+
+`#chapter-4` at 390. The title is two lines, 62px. The lede is "Four sections. Tick an exercise when you have worked it. The hint stays closed until you ask." The two stills are 169×169 from a 160×160 canvas, side by side, ending at y=542. The status is on the screen, "Next is §4.1, Exercise 3. 0 of 8 exercises.", and 4.1 starts at y=651. The page is 5334px. Each picture chip is 44×324. Each Tick is 44×324 and starts disabled. "Open the picture, then tick." sits above the Tick, in the muted ink.
+
+At 1280×800 those stills are 466×466. The pair ends at y=776. The status is at y=817, past the window, in both themes. The disk's edge and the Mandelbrot's filaments are the 160px bitmap scaled up.
+
+The 4.2 title opens `#julia`, "Julia Sets: Square, then Slide". The Julia still opens the same hash. The 4.1.3 chip opens `#sequence-chapter-4-1-3`, "A Sequence Has a Fate", and writes `mv:book.seen` as `{"4.1.3": true, "4.1.13": true}`. On the way back the Tick is live and the sentence is hidden. The 4.1 flag is the only "you are here": it is rgb(26, 34, 48) and the other three flags are rgb(81, 91, 108). The stage itself has no border and no shadow.
+
+### What clicks
+
+On the phone the circle is the first screen, the claim names the frame, and Play is on that screen in both themes. The walk opens on the bottom, so Exercise 2 is not already answered. The question leads the card. A drag fills the radius sentence and does not move Play. Pause holds the angle. The keyboard ring is the page's own; a drag leaves the square unframed.
+
+Chapter 4's chips and ticks are 44px. A tick stays off until that picture has been opened, and the open is remembered. The 4.2 title and the Julia still agree. The four Later rows are titles and pages: 5.2 page 137, 5.3 page 143, 5.4 page 148, 5.5 page 159. Three open the textbook. 5.4 opens `#phasor-current`. They are not pictures of a stage.
+
+The type, the paper, the white card, and the four colours are the site's. This pass leaves them.
+
+### Ranked cut or fix
+
+1. **The 5.1 title leaves the page.** Evidence: the heading "The Complex Exponential Function" is a link to `#chapter-exp`. At 390, light, that tap lands on "No such place. Nothing lives at #chapter-exp." The picture it was meant to reach is already on `#chapter-5`, with id `chapter-exp`, and the hash router does not treat an element id as a route. Change: the 5.1 title is not a hash. It does not navigate. 4.1–4.4 keep their doors, because those open real stations.
+
+2. **Chapter 4's first screen on the laptop is two soft stamps of the wrong camp.** Evidence: both canvases are 160×160 and drawn at 466×466 (`d1280-light-ch4-fold`, and the same pair in the dark). The Julia disk's edge is stair-stepped. The status "0 of 8" is at y=817 in an 800px window. The stamps are Julia and Mandelbrot, and the section under them is 4.1 Sequences. On the phone the same bitmaps are 169px and the status ends at 610, so the phone already fits the tally and the start of 4.1. Change: move the pair to section 4.2, and draw each still at the size it is shown, capped so the "0 of 8" line stays inside the 800px window the way it already does at 390.
+
+3. **The Chapter 5 square gives up height it still has.** Evidence: at 1280×800 the square is 272px (`100dvh - 33rem` under the 800px rule) at x=304, in a 952px column. Play ends at 623, with the window running to 800. The claim is one line. The right of the square, from about x=576 to the column edge, is empty paper, in light and in dark. Change: size the square from the room above Play. At this window that is about 440px, and Play still ends inside 800. Drop the fixed 33rem deduction. The phone's 358px square, at a height of 844, stays.
+
+4. **The first Next step does not move.** Evidence: reduced motion, 390, fresh load. The button says Next step and the point is already on the bottom, angle −π/2. The first press leaves that angle at −1.5707963267948966. The second press is the one that reaches the right and fills \(\exp(0)\) with 1. The walk opens at t = 2, and the first stop is t = 2, so the first press re-lands on the frame in front of you. Change: the first press advances to the next quarter turn. The page can keep opening on the bottom, so Exercise 2 stays empty.
+
+5. **Eight cards say "Open the picture, then tick." above a dead Tick.** Evidence: on 4.1.3 the line is muted, 17px, and the Tick under it is 44×324, opacity 0.55, disabled. The chip above it is already 44×324, "The disk in Definition 4.1". Opening that chip enables the Tick and hides the line. The same stack is on all eight exercises. Change: the chip is the control. The Tick is not drawn until that picture has been opened. The sentence goes.
+
+6. **The modulus blank repeats the claim, one screen down.** Evidence: under the square the claim says "larger than 1" or "smaller than 1" and stays on the first screen. In the 5.1 walk the idea already says the modulus is \(e^{x}\), and the next line is "The modulus is \(e^{x}\), smaller than 1" after a drag. On the phone that line starts with the walk at y=877, below an 844px window, so the fill happens off the picture. Change: cut the modulus blank. The claim under the square is the sentence. The two exercise blanks stay.
+
+### What to keep
+
+The phone's Chapter 5: lede under the title, square at the width of the page, claim, Play, and the status, all inside 844px, light and dark. Opening on the bottom, so Exercise 2 is empty. The question, then the blank, then Tick. The green ring at 44px, the drag that owns the radius, the clock that owns the angle, Pause holding the angle, and a drag that leaves the square unframed. The four colours. Chapter 4's 44px chips and the tick that waits until the picture has been opened, and is then remembered. The 4.2 door opening Julia. The Later rows as titles and pages. The kicker, the paper, the serif title, the white card. No new chrome.
