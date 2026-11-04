@@ -1220,6 +1220,39 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 }
 
 .section-idea { max-width: 62ch; margin: 0; }
+
+.ch3-picture .exp-stage {
+  width: min(100%, 22rem, calc(100dvh - 22rem));
+}
+
+@media (max-width: 40rem) {
+  .ch3-picture .exp-stage { width: min(100%, 13rem); }
+}
+
+#chapter-deriv-stage:focus:not(:focus-visible),
+#chapter-square-stage:focus:not(:focus-visible),
+#chapter-level-stage:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.ch3-choices {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.ch3-choices .btn {
+  justify-content: flex-start;
+  height: auto;
+  min-height: var(--tap);
+  white-space: normal;
+  text-align: left;
+}
+
+.ch3-card p { margin: 0; }
+.ch3-card input[type="text"] { width: min(100%, 24rem); }
 .chapter-exercises { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
 .chapter-card { min-width: 0; }
 .chapter-card p { min-width: 0; }

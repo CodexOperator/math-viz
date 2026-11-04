@@ -5,7 +5,10 @@ import { readFileSync } from 'node:fs';
 import { stationsForMap, stationForTopic, stationForProblem, stationById, threadsOn, stationPart, STATIONS } from '../js/registry.js';
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
-import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, chapter4ExerciseIds, chapter5ExerciseIds } from '../js/data/book-path.js';
+import { BOOK_CHAPTERS, CHAPTER_3, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, chapter3StageIds, chapter4ExerciseIds, chapter5ExerciseIds } from '../js/data/book-path.js';
+import { derivativeScene, squareScene, levelScene } from '../js/book/ch3-math.js';
+import { selfCheck as crPolyChecks } from '../js/practice/gen/cr-poly.js';
+import { selfCheck as harmonicChecks } from '../js/practice/gen/harmonic-conjugate.js';
 import { chapterTally, sectionFinished, foldLegacyExercises, saveSharedTicks, toggleTick } from '../js/book/progress.js';
 import { EXP_DURATION, expFrame, finishedStops } from '../js/core/live-film.js';
 import { compile } from '../js/core/parse.js';
@@ -118,7 +121,9 @@ check('#chapter-4 opens chapter 4', parseRoute('#chapter-4').book.kind === 'chap
 check('#chapter-4-4-1-3 focuses exercise 4.1.3', parseRoute('#chapter-4-4-1-3').book.focus === '4.1.3');
 check('#chapter-1 stays on the roadmap', parseRoute('#chapter-1').book.kind === 'roadmap' && parseRoute('#chapter-1').book.chapter === 1);
 check('a junk token on a later chapter is not a page', parseRoute('#chapter-1-extra').station == null && parseRoute('#chapter-1-extra').book == null);
-check('eleven chapters, 4 and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_CHAPTERS.join() === '4,5' && BOOK_CHAPTERS.filter((ch) => ch.open).map((ch) => ch.n).join() === '4,5');
+check('eleven chapters, 3, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_CHAPTERS.join() === '3,4,5' && BOOK_CHAPTERS.filter((ch) => ch.open).map((ch) => ch.n).join() === '3,4,5');
+check('#chapter-3 opens chapter 3', parseRoute('#chapter-3').book.kind === 'chapter' && parseRoute('#chapter-3').book.chapter === 3 && parseRoute('#chapter-3-3-2').book.focus === '3.2');
+check('chapter 3 stages are the three sections', CHAPTER_3.sections.map((s) => `${s.id} ${s.page}`).join() === '3.1 79,3.2 85,3.3 95' && chapter3StageIds().join() === '3.1,3.2,3.3');
 check('chapter 4 sections follow the contents', CHAPTER_4.sections.map((s) => `${s.id} ${s.page}`).join() === '4.1 102,4.2 109,4.3 118,4.4 123');
 check('chapter 4 exercises are the homework set plus 4.4.6', chapter4ExerciseIds().join() === '4.1.3,4.1.13,4.2.3,4.2.4,4.2.5,4.3.1,4.3.2,4.4.6');
 {
@@ -204,6 +209,26 @@ check('One Newton Step keeps Example 4.7', /Example 4\.7, page 110/.test(readFil
 }
 check('the live router does not import kit', !/from\s+['"][^'"]*kit\//.test(readFileSync(new URL('../js/app.js', import.meta.url), 'utf8')));
 check('book route parser matches the router', parseBookRoute('chapter-5').kind === 'chapter' && parseRoute('#chapter-5').book.chapter === 5);
+{
+  const straight = derivativeScene('sq', { re: 1, im: 1 }, 0.4);
+  const turned = derivativeScene('sq', { re: 1, im: 1 }, 2.1);
+  const mirrorA = derivativeScene('conj', { re: 0.2, im: -0.4 }, 0.2);
+  const mirrorB = derivativeScene('conj', { re: 0.2, im: -0.4 }, 1.1);
+  check('z squared keeps one turn', straight.claim.holds && turned.claim.holds && straight.claim.text === turned.claim.text && /45°/.test(straight.claim.text) && /2√2/.test(straight.claim.text));
+  check('conj changes the turn with the direction', !mirrorA.claim.holds && mirrorA.claim.text !== mirrorB.claim.text);
+  check('a turned square stays a square', squareScene('turn', 0.7).claim.holds === true);
+  check('a stretched square is not a square', squareScene('stretch', 0).claim.holds === false && squareScene('stretch', Math.PI / 4).claim.holds === false && squareScene('stretch', 0).claim.text !== squareScene('stretch', Math.PI / 4).claim.text);
+  check('conjugate levels meet at a right angle, except at the origin', levelScene('conj', 1, 0.4).claim.holds === true && levelScene('conj', 0, 0).claim.holds === false);
+  check('circles meet the hyperbolas at a right angle only on the diagonal', levelScene('circles', 1, 0.4).claim.holds === false && levelScene('circles', 1, 1).claim.holds === true);
+  check('polynomial generators recompute their answers', crPolyChecks() === true && harmonicChecks() === true);
+  const mem = { 'progress.test2': { '4.1.3': true } };
+  const store = {
+    get(key, fallback) { return Object.prototype.hasOwnProperty.call(mem, key) ? mem[key] : fallback; },
+    set(key, value) { mem[key] = value; },
+  };
+  saveSharedTicks(store, { '3.1': true, '3.2': false });
+  check('a chapter 3 stage tick keeps a chapter 4 tick', mem['progress.test2']['3.1'] === true && mem['progress.test2']['4.1.3'] === true && mem['progress.test2']['3.2'] == null);
+}
 check('the shipped route rule matches the kit helper',
   readFileSync(new URL('../js/core/map-route.js', import.meta.url), 'utf8')
   === readFileSync(new URL('../kit/template/js/core/map-route.js', import.meta.url), 'utf8'));

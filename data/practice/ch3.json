@@ -1,0 +1,518 @@
+[
+  {
+    "id": "ch3-3.1-chain-001",
+    "chapter": 3,
+    "section": "3.1",
+    "cite": {"ref": "§3.1, Exercise 1(a)", "page": 83},
+    "kind": "next-step-blank",
+    "prompt": "Find the derivative of \\(g(z) = (z^{2} - iz + 9)^{5}\\).",
+    "steps": [
+      {
+        "text": "The chain rule, Equation (3.12), puts this factor in front:",
+        "answer": "5(z^2 - iz + 9)^4",
+        "accept": ["5(z^2-iz+9)^4", "5(z^{2}-iz+9)^{4}"],
+        "why": "The outside power n = 5 contributes n[f(z)]^{n-1}."
+      },
+      {
+        "text": "The derivative of the inside is",
+        "answer": "2z - i",
+        "accept": ["2z-i"],
+        "why": "Equation (3.5) on z^2, and the constant -i differentiates to itself as a coefficient."
+      },
+      {
+        "text": "So g'(z) =",
+        "answer": "5(z^2 - iz + 9)^4(2z - i)",
+        "accept": ["5(z^2-iz+9)^4(2z-i)", "5(z^{2}-iz+9)^{4}(2z-i)"],
+        "why": "Multiply the two factors. Equation (3.12), page 81."
+      }
+    ],
+    "generator": null,
+    "memory": "A power of a polynomial: n[inside]^{n-1} times the inside derivative."
+  },
+  {
+    "id": "ch3-3.1-re-001",
+    "chapter": 3,
+    "section": "3.1",
+    "cite": {"ref": "§3.1, Exercise 2(a)", "page": 83},
+    "kind": "next-step-mc",
+    "prompt": "Show that \\(f(z) = \\operatorname{Re} z\\) is nowhere differentiable. Compare two paths into \\(z_0\\).",
+    "steps": [
+      {
+        "text": "Along a horizontal step the difference quotient tends to",
+        "answer": "1",
+        "choices": ["1", "0", "-1", "i"],
+        "why": "The real part changes by the whole step, so the quotient is 1."
+      },
+      {
+        "text": "Along a vertical step it tends to",
+        "answer": "0",
+        "choices": ["0", "1", "-1", "-i"],
+        "why": "A vertical step does not change the real part, so the numerator is 0."
+      },
+      {
+        "text": "Therefore Re z is",
+        "answer": "nowhere differentiable",
+        "choices": ["nowhere differentiable", "entire", "differentiable only at 0", "analytic on the real axis"],
+        "why": "The two paths disagree at every z_0. Example 3.2, page 80, is the same test for conj z."
+      }
+    ],
+    "generator": null,
+    "memory": "Two paths, two limits: no derivative. Continuous is not enough."
+  },
+  {
+    "id": "ch3-3.1-flash-deriv",
+    "chapter": 3,
+    "section": "3.1",
+    "cite": {"ref": "Equation (3.1)", "page": 79},
+    "kind": "flash",
+    "prompt": "When does \\(f'(z_0)\\) exist?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "When the limit of [f(z) - f(z_0)] / (z - z_0) exists as z approaches z_0. The path must not matter.",
+        "why": "Equation (3.1), page 79. The same limit is Equation (3.2) with the step Δz."
+      }
+    ],
+    "generator": null,
+    "memory": "Same limit along every path, or there is no derivative."
+  },
+  {
+    "id": "ch3-3.1-flash-analytic",
+    "chapter": 3,
+    "section": "3.1",
+    "cite": {"ref": "Definition 3.1", "page": 81},
+    "kind": "flash",
+    "prompt": "What does analytic at \\(z_0\\) mean?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "f' exists at every point of some disk around z_0, not only at z_0.",
+        "why": "Definition 3.1, page 81. One point is differentiable. A disk is analytic."
+      }
+    ],
+    "generator": null,
+    "memory": "Analytic means a whole disk of derivatives."
+  },
+  {
+    "id": "ch3-3.1-flash-entire",
+    "chapter": 3,
+    "section": "3.1",
+    "cite": {"ref": "Definition 3.2", "page": 81},
+    "kind": "flash",
+    "prompt": "What does entire mean?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "Analytic at every point of the complex plane.",
+        "why": "Definition 3.2, page 81. Polynomials are entire. 1/z is not, because of 0."
+      }
+    ],
+    "generator": null,
+    "memory": "Entire means the disk is the whole plane."
+  },
+  {
+    "id": "ch3-3.1-flash-singular",
+    "chapter": 3,
+    "section": "3.1",
+    "cite": {"ref": "Singular points", "page": 81},
+    "kind": "flash",
+    "prompt": "What is a singular point?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "A point where f fails to be analytic.",
+        "why": "Page 81. For 1/z the singular point is 0. For the principal square root, the singular points are 0 and the negative real axis."
+      }
+    ],
+    "generator": null,
+    "memory": "A singular point is where analyticity stops."
+  },
+  {
+    "id": "ch3-3.1-flash-rules",
+    "chapter": 3,
+    "section": "3.1",
+    "cite": {"ref": "Equations (3.4)–(3.10)", "page": 81},
+    "kind": "flash",
+    "prompt": "Which calculus rules survive for a complex derivative?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "Constant, power, sum, product, quotient, and chain rule. A quotient requires the denominator not zero.",
+        "why": "Equations (3.4) through (3.10), page 81. The product rule uses Theorem 3.1."
+      }
+    ],
+    "generator": null,
+    "memory": "Differentiate polynomials as in calculus. A quotient dies where the denominator is 0."
+  },
+  {
+    "id": "ch3-3.1-flash-t31",
+    "chapter": 3,
+    "section": "3.1",
+    "cite": {"ref": "Theorem 3.1", "page": 82},
+    "kind": "flash",
+    "prompt": "If f is differentiable at z_0, what else is true?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "f is continuous at z_0. The converse is false.",
+        "why": "Theorem 3.1, page 82. conj z is continuous everywhere and differentiable nowhere. Remark 3.1, page 80."
+      }
+    ],
+    "generator": null,
+    "memory": "Differentiable implies continuous. Continuous does not imply differentiable."
+  },
+  {
+    "id": "ch3-3.1-flash-t32",
+    "chapter": 3,
+    "section": "3.1",
+    "cite": {"ref": "Theorem 3.2", "page": 83},
+    "kind": "flash",
+    "prompt": "State L'Hôpital's rule as Theorem 3.2 gives it.",
+    "steps": [
+      {
+        "text": "",
+        "answer": "If f and g are analytic at z_0, f(z_0) = g(z_0) = 0, and g'(z_0) is not 0, then the limit of f/g equals the limit of f'/g'.",
+        "why": "Theorem 3.2, page 83. The book defers the proof to Corollary 7.11."
+      }
+    ],
+    "generator": null,
+    "memory": "The 0/0 rule, for functions analytic at the point, with g' not zero."
+  },
+  {
+    "id": "ch3-3.2-proof-blank",
+    "chapter": 3,
+    "section": "3.2",
+    "cite": {"ref": "Theorem 3.3", "page": 86},
+    "kind": "proof-blank",
+    "prompt": "Prove the Cauchy-Riemann equations. Assume f = u + iv is differentiable at z_0 = x_0 + iy_0.",
+    "steps": [
+      {
+        "text": "Along the horizontal path, f'(z_0) equals",
+        "answer": "u_x + i v_x",
+        "accept": ["ux + i vx", "u_x(x_0,y_0) + i v_x(x_0,y_0)"],
+        "why": "The denominator is x - x_0, so the quotient splits into the two partials in x. Equation (3.14)."
+      },
+      {
+        "text": "Along the vertical path, dividing by i(y - y_0), f'(z_0) equals",
+        "answer": "v_y - i u_y",
+        "accept": ["vy - i uy", "v_y(x_0,y_0) - i u_y(x_0,y_0)"],
+        "why": "1/i = -i, so the change in u moves to the imaginary part with a minus. Equation (3.15)."
+      },
+      {
+        "text": "The real parts of those two values of f'(z_0) give",
+        "answer": "u_x = v_y",
+        "accept": ["ux = vy", "u_x(x_0,y_0) = v_y(x_0,y_0)"],
+        "why": "Both paths produce the same derivative, so the real parts match."
+      },
+      {
+        "text": "The imaginary parts give",
+        "answer": "u_y = -v_x",
+        "accept": ["uy = -vx", "u_y = - v_x", "v_x = -u_y"],
+        "why": "Imaginary part on the horizontal path is v_x. On the vertical path it is -u_y. Equation (3.16)."
+      }
+    ],
+    "generator": null,
+    "memory": "Horizontal gives u_x + i v_x. Vertical gives v_y - i u_y. Set them equal."
+  },
+  {
+    "id": "ch3-3.2-proof-mc",
+    "chapter": 3,
+    "section": "3.2",
+    "cite": {"ref": "Theorem 3.3", "page": 86},
+    "kind": "proof-mc",
+    "prompt": "The same proof of Theorem 3.3. Pick the step that belongs.",
+    "steps": [
+      {
+        "text": "The horizontal limit equals",
+        "answer": "u_x + i v_x",
+        "choices": ["u_x + i v_x", "u_y + i v_y", "v_y - i u_y", "u_x - i v_x"],
+        "why": "Horizontal means a derivative in x. Equation (3.14), page 86."
+      },
+      {
+        "text": "The vertical limit equals",
+        "answer": "v_y - i u_y",
+        "choices": ["v_y - i u_y", "u_y + i v_y", "v_x + i u_x", "u_x + i v_x"],
+        "why": "Dividing by i contributes the minus on u_y. Equation (3.15)."
+      },
+      {
+        "text": "Equating real parts gives",
+        "answer": "u_x = v_y",
+        "choices": ["u_x = v_y", "u_x = v_x", "u_y = v_y", "u_x = -v_y"],
+        "why": "This is the first Cauchy-Riemann equation."
+      },
+      {
+        "text": "Equating imaginary parts gives",
+        "answer": "u_y = -v_x",
+        "choices": ["u_y = -v_x", "u_y = v_x", "u_x = -v_y", "v_y = -u_x"],
+        "why": "The sign is the usual miss. Equation (3.16) says u_y = -v_x, not u_y = v_x."
+      }
+    ],
+    "generator": null,
+    "memory": "The sign to remember is u_y = -v_x, not u_y = v_x."
+  },
+  {
+    "id": "ch3-3.2-check-001",
+    "chapter": 3,
+    "section": "3.2",
+    "cite": {"ref": "§3.2, Exercise 1(a)", "page": 93},
+    "kind": "next-step-blank",
+    "prompt": "Use the Cauchy-Riemann equations on \\(f(z) = iz + 4i\\), and find \\(f'(z)\\) where it exists.",
+    "steps": [
+      {
+        "text": "u and v are",
+        "answer": "-y and x + 4",
+        "accept": ["-y, x+4", "u=-y, v=x+4", "-y and x+4"],
+        "why": "iz + 4i = -y + i(x + 4)."
+      },
+      {
+        "text": "The two Cauchy-Riemann checks",
+        "answer": "both hold",
+        "accept": ["hold", "hold everywhere", "yes", "0 = 0 and -1 = -1"],
+        "why": "u_x = 0 = v_y and u_y = -1 = -v_x, at every point."
+      },
+      {
+        "text": "The partials are continuous everywhere, so f'(z) =",
+        "answer": "i",
+        "accept": ["0 + i", "i * 1"],
+        "why": "Theorem 3.4: f' = u_x + i v_x = i. The same number is the ordinary derivative of iz + 4i."
+      }
+    ],
+    "generator": null,
+    "memory": "Write u and v, test both equations, then f' = u_x + i v_x."
+  },
+  {
+    "id": "ch3-3.2-fail-001",
+    "chapter": 3,
+    "section": "3.2",
+    "cite": {"ref": "§3.2, Exercise 7(b)", "page": 93},
+    "kind": "next-step-mc",
+    "prompt": "Show that \\(g(z) = z + \\overline{z}\\) is nowhere differentiable.",
+    "steps": [
+      {
+        "text": "u and v are",
+        "answer": "2x and 0",
+        "choices": ["2x and 0", "x and y", "x and -y", "0 and 2y"],
+        "why": "z + conj z = 2x, which is real."
+      },
+      {
+        "text": "The Cauchy-Riemann equations",
+        "answer": "fail at every point",
+        "choices": ["fail at every point", "hold at every point", "hold only at 0", "hold on the real axis"],
+        "why": "u_x = 2 and v_y = 0. Theorem 3.3 says the derivative cannot exist."
+      },
+      {
+        "text": "So g is",
+        "answer": "nowhere differentiable",
+        "choices": ["nowhere differentiable", "entire", "differentiable only at 0", "differentiable on the axes"],
+        "why": "The equations fail everywhere, so there is no disk and no point."
+      }
+    ],
+    "generator": null,
+    "memory": "If either Cauchy-Riemann equation fails, the derivative does not exist there."
+  },
+  {
+    "id": "ch3-3.2-cr-gen",
+    "chapter": 3,
+    "section": "3.2",
+    "cite": {"ref": "§3.2, Exercise 1", "page": 93},
+    "kind": "next-step-mc",
+    "prompt": "Check the Cauchy-Riemann equations for a polynomial u + iv and find f'(z).",
+    "steps": [],
+    "generator": {"template": "cr-poly", "params": {"coef": [-2, 2], "deg": [1, 3]}},
+    "memory": "A polynomial in z passes Cauchy-Riemann. f' is the calculus derivative."
+  },
+  {
+    "id": "ch3-3.2-flash-t33",
+    "chapter": 3,
+    "section": "3.2",
+    "cite": {"ref": "Theorem 3.3", "page": 86},
+    "kind": "flash",
+    "prompt": "State the Cauchy-Riemann equations, and what they give for f'.",
+    "steps": [
+      {
+        "text": "",
+        "answer": "If f = u + iv is differentiable at z_0, then u_x = v_y and u_y = -v_x there, and f' = u_x + i v_x = v_y - i u_y.",
+        "why": "Theorem 3.3, page 86. Equations (3.14), (3.15), and (3.16). The equations are necessary, not sufficient."
+      }
+    ],
+    "generator": null,
+    "memory": "u_x = v_y and u_y = -v_x. Then f' = u_x + i v_x."
+  },
+  {
+    "id": "ch3-3.2-flash-t34",
+    "chapter": 3,
+    "section": "3.2",
+    "cite": {"ref": "Theorem 3.4", "page": 89},
+    "kind": "flash",
+    "prompt": "What extra hypothesis makes the Cauchy-Riemann equations guarantee a derivative?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "u, v, and the four partials are continuous near z_0, the equations hold at z_0, and f is defined on a neighborhood. Then f'(z_0) = u_x + i v_x.",
+        "why": "Theorem 3.4, page 89. Example 3.6, page 88, satisfies the equations at 0 and is still not differentiable there."
+      }
+    ],
+    "generator": null,
+    "memory": "Cauchy-Riemann plus continuous partials implies differentiable."
+  },
+  {
+    "id": "ch3-3.2-flash-t35",
+    "chapter": 3,
+    "section": "3.2",
+    "cite": {"ref": "Theorem 3.5", "page": 91},
+    "kind": "flash",
+    "prompt": "State the polar Cauchy-Riemann equations.",
+    "steps": [
+      {
+        "text": "",
+        "answer": "For f = U + iV in r and θ, with continuous partials: r U_r = V_θ and r V_r = -U_θ.",
+        "why": "Theorem 3.5, page 91. The book asks for the proof in Exercise 10."
+      }
+    ],
+    "generator": null,
+    "memory": "Polar form: r U_r = V_θ and r V_r = -U_θ."
+  },
+  {
+    "id": "ch3-3.2-flash-t36",
+    "chapter": 3,
+    "section": "3.2",
+    "cite": {"ref": "Theorem 3.6", "page": 92},
+    "kind": "flash",
+    "prompt": "If f is analytic on a domain and |f| is constant, what is f?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "f is constant on that domain.",
+        "why": "Theorem 3.6, page 92. A constant modulus leaves no room for the Cauchy-Riemann equations except a constant."
+      }
+    ],
+    "generator": null,
+    "memory": "Analytic and constant modulus means constant."
+  },
+  {
+    "id": "ch3-3.2-flash-t37",
+    "chapter": 3,
+    "section": "3.2",
+    "cite": {"ref": "Theorem 3.7", "page": 93},
+    "kind": "flash",
+    "prompt": "If f is analytic on a domain and f' is identically 0, what is f?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "f is constant on that domain.",
+        "why": "Theorem 3.7, page 93. Then every partial of u and of v is 0."
+      }
+    ],
+    "generator": null,
+    "memory": "Analytic and f' = 0 means constant."
+  },
+  {
+    "id": "ch3-3.3-conj-001",
+    "chapter": 3,
+    "section": "3.3",
+    "cite": {"ref": "§3.3, Exercise 5(a)", "page": 100},
+    "kind": "next-step-blank",
+    "prompt": "Find an analytic f = u + iv with \\(u(x, y) = y^{3} - 3x^{2}y\\).",
+    "steps": [
+      {
+        "text": "u_xx + u_yy equals",
+        "answer": "0",
+        "accept": ["0 + 0"],
+        "why": "u_xx = -6y and u_yy = 6y. Laplace's equation holds, so u is harmonic."
+      },
+      {
+        "text": "Integrating u_x = -6xy with respect to y gives v =",
+        "answer": "-3xy^2 + C(x)",
+        "accept": ["-3xy^2+C(x)", "-3x y^2 + C(x)"],
+        "why": "Equation (3.27), page 97: v = ∫ u_x dy + C(x)."
+      },
+      {
+        "text": "Matching v_x to -u_y fixes C, and v =",
+        "answer": "x^3 - 3xy^2 + C",
+        "accept": ["x^3 - 3xy^2 + K", "x^3-3xy^2+C", "x^3 - 3xy^2 + c"],
+        "why": "v_x = -3y^2 + C'(x) equals -u_y = 3x^2 - 3y^2, so C'(x) = 3x^2. This is Im(z^3), up to the constant."
+      }
+    ],
+    "generator": null,
+    "memory": "Integrate u_x in y. Then v_x = -u_y names C'(x)."
+  },
+  {
+    "id": "ch3-3.3-conj-gen",
+    "chapter": 3,
+    "section": "3.3",
+    "cite": {"ref": "§3.3, Exercise 5", "page": 100},
+    "kind": "next-step-mc",
+    "prompt": "Find a harmonic conjugate of a polynomial real part.",
+    "steps": [],
+    "generator": {"template": "harmonic-conjugate", "params": {"coef": [-2, 2], "deg": [2, 3]}},
+    "memory": "The imaginary part of the same polynomial in z is a conjugate. Add a constant."
+  },
+  {
+    "id": "ch3-3.3-flash-harmonic",
+    "chapter": 3,
+    "section": "3.3",
+    "cite": {"ref": "Laplace's equation", "page": 95},
+    "kind": "flash",
+    "prompt": "When is a real function φ harmonic on a domain?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "φ and its partials through second order are continuous, and φ_xx + φ_yy = 0.",
+        "why": "Page 95. Equation (3.26) is Laplace's equation."
+      }
+    ],
+    "generator": null,
+    "memory": "Harmonic means Laplace's equation, with continuous second partials."
+  },
+  {
+    "id": "ch3-3.3-flash-conjugate",
+    "chapter": 3,
+    "section": "3.3",
+    "cite": {"ref": "Harmonic conjugate", "page": 95},
+    "kind": "flash",
+    "prompt": "When is v a harmonic conjugate of u?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "Both are harmonic on the domain, and together they satisfy the Cauchy-Riemann equations. Then u + iv is analytic.",
+        "why": "Page 95. The constant added to v is still a conjugate."
+      }
+    ],
+    "generator": null,
+    "memory": "A conjugate is a harmonic v that satisfies Cauchy-Riemann with u."
+  },
+  {
+    "id": "ch3-3.3-flash-t38",
+    "chapter": 3,
+    "section": "3.3",
+    "cite": {"ref": "Theorem 3.8", "page": 95},
+    "kind": "flash",
+    "prompt": "What does Theorem 3.8 say about an analytic function?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "If f = u + iv is analytic on a domain, then both u and v are harmonic there.",
+        "why": "Theorem 3.8, page 95. Differentiate the Cauchy-Riemann equations and use equality of mixed partials."
+      }
+    ],
+    "generator": null,
+    "memory": "Analytic implies both the real part and the imaginary part are harmonic."
+  },
+  {
+    "id": "ch3-3.3-flash-t39",
+    "chapter": 3,
+    "section": "3.3",
+    "cite": {"ref": "Theorem 3.9", "page": 97},
+    "kind": "flash",
+    "prompt": "What does Theorem 3.9 guarantee about a harmonic function?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "Near any point where u is harmonic, some conjugate v exists, and u + iv is analytic in that neighborhood.",
+        "why": "Theorem 3.9, page 97. Build v by integrating u_x in y, then fix C(x) from v_x = -u_y."
+      }
+    ],
+    "generator": null,
+    "memory": "A harmonic function has a conjugate in a small disk. Integrate, then match C(x)."
+  }
+]

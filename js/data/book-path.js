@@ -7,6 +7,9 @@
 
 import { sectionHref } from './book.js';
 
+const S31 = 'sec_diff-analytic.html';
+const S32 = 'sec_cauchy-riemann.html';
+const S33 = 'sec_harmonic-functions.html';
 const S41 = 'sec_sequences-series.html';
 const S42 = 'sec_julia-mandelbrot.html';
 const S43 = 'sec_convergence-theorems.html';
@@ -21,8 +24,8 @@ function deepFreeze(o) {
   return o;
 }
 
-// Chapters the router will open as their own page. 1–3 and 6–11 stay on the book.
-export const OPEN_CHAPTERS = Object.freeze([4, 5]);
+// Chapters the router will open as their own page. 1–2 and 6–11 stay on the book.
+export const OPEN_CHAPTERS = Object.freeze([3, 4, 5]);
 
 export const BOOK_CHAPTERS = deepFreeze([
   {
@@ -47,7 +50,7 @@ export const BOOK_CHAPTERS = deepFreeze([
     ],
   },
   {
-    n: 3, title: 'Analytic and Harmonic Functions', page: 79, open: false, door: 'derivative',
+    n: 3, title: 'Analytic and Harmonic Functions', page: 79, open: true, door: null,
     sections: [
       { id: '3.1', title: 'Differentiable and Analytic Functions', page: 79 },
       { id: '3.2', title: 'The Cauchy-Riemann Equations', page: 85 },
@@ -214,6 +217,112 @@ export function chapter4Section(id) {
 
 export function chapter4ExerciseIds() {
   return CHAPTER_4.sections.flatMap((s) => s.exercises);
+}
+
+// The Chapter 3 mountain. A stage is finished when its id is ticked.
+// Pages are the 202 Updated Edition. The HTML anchors are the same statements.
+export const CHAPTER_3 = deepFreeze({
+  n: 3,
+  href: sectionHref('ch_A_and_H_Functions.html'),
+  pin: 'Chapter 3, Analytic and Harmonic Functions, page 79',
+  sections: [
+    {
+      id: '3.1',
+      title: 'Differentiable and Analytic Functions',
+      page: 79,
+      why: 'A derivative is one number that turns and stretches every tiny step the same way. Two directions that disagree means there is no derivative.',
+      summit: 'A derivative exists only when every tiny step is the same turn and the same stretch.',
+      read: [
+        { pin: 'Equation (3.1), page 79', href: sectionHref(S31, 'Deriv_Def_1') },
+        { pin: 'Definition 3.1, page 81', href: sectionHref(S31, 'Analytic_Def') },
+        { pin: 'Definition 3.2, page 81', href: sectionHref(S31, 'Entire_Def') },
+        { pin: 'Theorem 3.1, page 82', href: sectionHref(S31, 'Diffl_Implies_Cont') },
+        { pin: 'Equations (3.4)–(3.10), page 81', href: sectionHref(S31, 'sec_diff-analytic-14') },
+        { pin: 'Theorem 3.2, page 83', href: sectionHref(S31, 'LH_s_rule') },
+      ],
+      worked: {
+        pin: 'Example 3.1, page 79',
+        href: sectionHref(S31, 'DerivEx'),
+        body: [
+          'For $f(z) = z^3$, factor $z^3 - z_0^3 = (z - z_0)(z^2 + zz_0 + z_0^2)$.',
+          'The difference quotient is $z^2 + zz_0 + z_0^2$, and the limit is $3z_0^2$. No direction appears, so $f\'(z) = 3z^2$ everywhere and $f$ is entire.',
+        ],
+      },
+      recipes: [
+        'Write the difference quotient and let the step go to 0.',
+        'Try a horizontal step and a vertical step. If they disagree, there is no derivative.',
+        'Analytic means a whole disk of derivatives. Entire means that disk is the plane.',
+        'Polynomials, products, and quotients differentiate as in calculus. A quotient fails where the denominator is 0.',
+        'Differentiable implies continuous. Continuous does not imply differentiable.',
+      ],
+      exercises: ['3.1'],
+    },
+    {
+      id: '3.2',
+      title: 'The Cauchy-Riemann Equations',
+      page: 85,
+      why: 'The Cauchy-Riemann equations test whether the horizontal derivative and the vertical derivative are the same number.',
+      summit: 'The Cauchy-Riemann equations say the horizontal and vertical derivatives agree, so a tiny square maps to a square with the corners in the same order.',
+      read: [
+        { pin: 'Theorem 3.3, page 86', href: sectionHref(S32, 'CR_EQ_Thm') },
+        { pin: 'Equation (3.16), page 86', href: sectionHref(S32, 'C-R_EQs') },
+        { pin: 'Theorem 3.4, page 89', href: sectionHref(S32, 'Sufficient_Conditions') },
+        { pin: 'Theorem 3.5, page 91', href: sectionHref(S32, 'Sufficient_Conditions_Polar') },
+        { pin: 'Theorem 3.6, page 92', href: sectionHref(S32, 'Abs_Const_implies_Const') },
+        { pin: 'Theorem 3.7, page 93', href: sectionHref(S32, 'Df_0_implies_f_const') },
+      ],
+      worked: {
+        pin: 'Example 3.4, page 87',
+        href: sectionHref(S32, 'sec_cauchy-riemann-13'),
+        body: [
+          '$z^2 = (x^2 - y^2) + i(2xy)$. Then $u_x = 2x = v_y$ and $u_y = -2y = -v_x$.',
+          'The partials are continuous everywhere. Theorem 3.4 says $f\'(z) = u_x + iv_x = 2x + 2iy = 2z$.',
+        ],
+      },
+      recipes: [
+        'Write $u$ and $v$.',
+        'Compute $u_x$, $u_y$, $v_x$, and $v_y$.',
+        'Check $u_x = v_y$ and $u_y = -v_x$.',
+        'If either fails, $f\'$ does not exist there.',
+        'If both hold and the partials are continuous, $f\' = u_x + iv_x$.',
+      ],
+      exercises: ['3.2'],
+    },
+    {
+      id: '3.3',
+      title: 'Harmonic Functions',
+      page: 95,
+      why: 'Level curves of a harmonic conjugate pair cross at a right angle. That is how you rebuild $f$ from one part.',
+      summit: 'The level curves of a harmonic conjugate pair cross at a right angle, and $v$ is recovered by integrating the Cauchy-Riemann equations.',
+      read: [
+        { pin: "Laplace's equation, page 95", href: sectionHref(S33, 'Laplace_s_Equation') },
+        { pin: 'Theorem 3.8, page 95', href: sectionHref(S33, 'Harmonic_Theorem') },
+        { pin: 'Harmonic conjugate, page 95', href: sectionHref(S33, 'sec_harmonic-functions-5') },
+        { pin: 'Example 3.11, page 96', href: sectionHref(S33, 'sec_harmonic-functions-6') },
+        { pin: 'Theorem 3.9, page 97', href: sectionHref(S33, 'Conjugate_Construction') },
+      ],
+      worked: {
+        pin: 'Example 3.11, page 96',
+        href: sectionHref(S33, 'sec_harmonic-functions-6'),
+        body: [
+          'For $u = x^2 - y^2$, $u_{xx} + u_{yy} = 2 - 2 = 0$, so $u$ is harmonic.',
+          '$v = 2xy$ satisfies $u_x = 2x = v_y$ and $u_y = -2y = -v_x$. So $v$ is a harmonic conjugate and $f(z) = z^2$.',
+        ],
+      },
+      recipes: [
+        'Harmonic means $u_{xx} + u_{yy} = 0$, with the second partials continuous.',
+        'The real and imaginary parts of an analytic function are harmonic.',
+        'A conjugate $v$ satisfies $u_x = v_y$ and $u_y = -v_x$.',
+        'Build $v$ by integrating $u_x$ in $y$, then fix $C(x)$ from $v_x = -u_y$.',
+        'Where both gradients are nonzero, the level curves cross at a right angle.',
+      ],
+      exercises: ['3.3'],
+    },
+  ],
+});
+
+export function chapter3StageIds() {
+  return CHAPTER_3.sections.map((s) => s.id);
 }
 
 // §5.1 under the exponential picture. The statements are the 202 Updated Edition,

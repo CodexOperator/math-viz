@@ -1330,3 +1330,15 @@ Nothing. No slider, no scrubber, no spring, no second clock.
 Yes. One batch, then stop. It is the one cut above.
 
 The hold, the button, and the frame clock are the lesson, and they hold. Something real is left, and it is the frame a mouse drag draws around the square. A touch does not draw it. After that frame is gone, nothing real is left of this walk's touch.
+
+## Chapter 3
+
+Branch `cursor/chapter-3`. Batch 1. Headless Chrome on a local server: `#chapter-3`, `#chapter-3-3-3`, `#book`, `#chapter-4`, `#chapter-5`. Light and dark. 1280 and 390. No console errors. No sideways scroll. Idle after Pause schedules 0 frames.
+
+The three pictures agree with the sentences. z² at 1+i stays 45° and 2√2 while the direction changes. conj mirrors, and the turn moves. A turned square stays a square with the marked corner leading. Stretch is a rectangle at angle 0 and a rhombus at 45°, and the sentence changes. Conjugate levels cross at a right angle except at the origin. Circles do that only on the diagonal. Play says Pause, a second press holds the angle, and reduced motion says Step and advances a quarter turn. A typed chain-rule step, a Cauchy-Riemann choice, a generated polynomial, and a flashcard all answer in place. Marking 3.1 writes `progress.test2` and leaves a Chapter 4 tick alone. The roadmap shows Chapter 3 open, with 3.1 done, and Walk Chapter 4 is still the next walk.
+
+On a 390×844 phone the arrows are on the first screen, under the why. The claim and Play sit just below that screen. The picture is the next thumb, not a buried one. Dragging the green corner turns the square and keeps it a square. Stretch, dragged, is neither a right angle nor equal sides. A point near the origin snaps there, where both slopes vanish.
+
+## Another batch
+
+The shared practice engine, when it lands, should replace the local card. The page already reads `data/practice/ch3.json`. Still open: a phone layout that keeps Play beside the claim on the first screen, and the exam recipes that are not cards yet. Theorem 3.4's long proof is a statement and a flash. The step-by-step blank is Theorem 3.3.
