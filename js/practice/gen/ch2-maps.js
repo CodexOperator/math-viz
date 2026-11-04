@@ -112,10 +112,15 @@ function linear(rng, params) {
   };
 }
 
-function powerLine(rng, params) {
-  const aR = pair(params.a, [1, 3]);
-  let a = irand(rng, aR[0], aR[1]);
-  if (a === 0) a = 1;
+function freshLine(seed, skip) {
+  const pool = [];
+  for (let n = 3; n <= 6; n += 1) if (!skip.has(n)) pool.push(n);
+  return pool[(Number(seed) >>> 0) % pool.length];
+}
+
+function powerLine(rng, params, seed) {
+  const skip = new Set([1, 2]);
+  const a = params && params.fresh === false ? irand(rng, 1, 3) : freshLine(seed, skip);
   const num = a * a;
   const den = 4 * a * a;
   const answer = `u = ${num} - v^2/${den}`;
@@ -136,7 +141,8 @@ function powerLine(rng, params) {
   }
   return {
     kind: 'mc',
-    prompt: `Under \\(w = z^2\\), the vertical line \\(x = ${a}\\) maps to the parabola`,
+    prompt: 'Another vertical line under \\(z^2\\).',
+    ask: `The image of \\(x = ${a}\\) is`,
     answer,
     accept: [answer, `u=${num}-v^2/${den}`, `u = ${num} - \\frac{v^2}{${den}}`],
     choices,
@@ -187,8 +193,8 @@ function powerSector(rng, seed) {
   };
 }
 
-function recipLine(rng) {
-  const a = irand(rng, 1, 3);
+function recipLine(rng, seed) {
+  const a = freshLine(seed, new Set([1, 2]));
   const answer = `|w - 1/${2 * a}| = 1/${2 * a}`;
   const choices = [
     answer,
@@ -219,6 +225,41 @@ function recipLine(rng) {
   };
 }
 
+function rootItem(seed) {
+  const cases = [
+    { n: 2, label: '-1', arg: Math.PI },
+    { n: 2, label: '1', arg: 0 },
+    { n: 4, label: '1', arg: 0 },
+  ];
+  const row = cases[(Number(seed) >>> 0) % cases.length];
+  const roots = [];
+  for (let k = 0; k < row.n; k += 1) {
+    const t = (row.arg + 2 * Math.PI * k) / row.n;
+    const re = Math.abs(Math.cos(t)) < 1e-9 ? 0 : Math.cos(t);
+    const im = Math.abs(Math.sin(t)) < 1e-9 ? 0 : Math.sin(t);
+    const q = (x) => (Math.abs(Math.abs(x) - 1) < 1e-9 ? Math.sign(x) : x);
+    roots.push(fmtComplex(q(re), q(im)));
+  }
+  const answer = roots.join(' and ');
+  const dropped = roots[0];
+  const choices = [answer, dropped, roots.slice().reverse().join(' and '), '1 and -1'].filter((v, i, all) => all.indexOf(v) === i);
+  while (choices.length < 4) choices.push(`only ${dropped}`);
+  const miss = {};
+  miss[dropped] = 'That keeps k = 0 and drops the root from Arg + 2π.';
+  if (choices.includes(`only ${dropped}`)) miss[`only ${dropped}`] = 'That keeps k = 0 and drops the root from Arg + 2π.';
+  return {
+    kind: 'mc',
+    prompt: `The ${row.n === 2 ? 'square' : `${row.n}th`} roots of \\(${row.label}\\) are`,
+    answer,
+    accept: [answer, roots.slice().reverse().join(' and ')],
+    choices: choices.slice(0, 4),
+    miss,
+    why: `Divide \\(\\operatorname{Arg} + 2\\pi k\\) by ${row.n}, for \\(k = 0\\) through \\(${row.n - 1}\\).`,
+    memory: 'The other roots come from Arg + 2πk.',
+    values: { n: row.n },
+  };
+}
+
 function pack(item) {
   item.steps = [{
     text: '___',
@@ -237,9 +278,10 @@ export function generate(seed, params) {
   const spec = params && typeof params === 'object' ? params : {};
   const rng = lcg(seed);
   const kind = spec.kind || 'linear';
-  if (kind === 'power-line') return pack(powerLine(rng, spec));
+  if (kind === 'power-line') return pack(powerLine(rng, spec, seed));
   if (kind === 'power-sector') return pack(powerSector(rng, seed));
-  if (kind === 'recip-line') return pack(recipLine(rng));
+  if (kind === 'recip-line') return pack(recipLine(rng, seed));
+  if (kind === 'root') return pack(rootItem(seed));
   return pack(linear(rng, spec));
 }
 
@@ -284,8 +326,10 @@ export function selfCheck() {
 
     const line = generate(seed, { kind: 'power-line', a: [1, 3] });
     const a = line.values.a;
+    if (a === 1 || a === 2) throw new Error(`line seed ${seed} repeats a worked line`);
     const expect = `u = ${a * a} - v^2/${4 * a * a}`;
     if (line.answer !== expect) throw new Error(`line seed ${seed}`);
+    if (!line.prompt.endsWith('z^2\\).') && !line.prompt.endsWith('z^2).')) throw new Error(`line prompt ${line.prompt}`);
     if (!line.choices.includes(line.answer) || new Set(line.choices).size !== 4) throw new Error(`line choices ${seed}`);
 
     const sector = generate(seed, { kind: 'power-sector' });
@@ -300,9 +344,27 @@ export function selfCheck() {
 
     const circ = generate(seed, { kind: 'recip-line' });
     const A = circ.values.a;
+    if (A === 1 || A === 2) throw new Error(`recip seed ${seed} repeats a shown line`);
     if (circ.answer !== `|w - 1/${2 * A}| = 1/${2 * A}`) throw new Error(`recip ${seed}`);
     if (new Set(circ.choices).size !== 4) throw new Error(`recip choices ${seed}`);
+
+    const root = generate(seed, { kind: 'root' });
+    if (!root.choices.includes(root.answer)) throw new Error(`root choices ${seed}`);
+    const dropped = Object.keys(root.miss || {});
+    if (!dropped.length || !/2π|2\\pi|Arg/.test(root.miss[dropped[0]])) throw new Error(`root miss ${seed}`);
   }
+  if (answerMatches('0-6i', { answer: '-6', accept: ['-6+0i'] })) throw new Error('0-6i must stay -6i');
+  if (!answerMatches('-6.0', { answer: '-6', accept: [] })) throw new Error('.0');
+  if (!answerMatches('3+2*i', { answer: '3+2i', accept: [] })) throw new Error('star');
+  if (!answerMatches('(3+2i)', { answer: '3+2i', accept: [] })) throw new Error('parens');
+  if (!answerMatches('2i+3', { answer: '3+2i', accept: [] })) throw new Error('order');
+  if (!answerMatches('3.0+2.0i', { answer: '3+2i', accept: [] })) throw new Error('decimals');
+  if (!answerMatches('right triangle', { answer: 'triangle', accept: ['a triangle', 'right triangle', 'a right triangle'] })) throw new Error('shape');
+  if (!answerMatches('|f(z)-w₀|', { answer: '|f(z) - w_0|', accept: ['sqrt((u-u0)^2+(v-v0)^2)'] })) throw new Error('modulus');
+  if (!answerMatches('sqrt((u-u_0)^2+(v-v_0)^2)', { answer: '|f(z) - w_0|', accept: ['sqrt((u-u0)^2+(v-v0)^2)'] })) throw new Error('sqrt modulus');
+  const lines = new Set();
+  for (let seed = 1; seed <= 4; seed += 1) lines.add(generate(seed, { kind: 'power-line' }).values.a);
+  if (lines.size < 4) throw new Error('another did not change the line');
   const angles = new Set();
   for (let seed = 1; seed <= 40; seed += 1) angles.add(generate(seed, { kind: 'power-sector' }).answer);
   if (angles.size < 3) throw new Error(`sector answers did not vary: ${[...angles].join(' | ')}`);

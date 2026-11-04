@@ -1535,3 +1535,11 @@ One batch, these six, then this lens rests. The picture, the colours, and the fi
 ### Keep
 
 The paper, the serif title, and the four teaching colours. The header is the name, the theme button, and the menu, and it stays quiet in both themes. The lede is the colour key, one time, and the captions under the squares say “z plane” and “w plane.” The uppercase kickers (The Book, Worked, Practice, Further reading) stay. They are the book path. Show the back stays the card’s own full-width button, and the back stays closed until asked. Stage complete stays 44px and stays disabled until the claim has been both true and false. The 544px cap on the pair stays, so the claim can end at y = 718 inside the 800px window. A drag leaves the square unframed. Memory stays hidden until the card is finished. The status line, “0 of 5 stages marked.”, sits under the five stages.
+
+## Chapter 2, batch 3
+
+Started from `3467fc0`. Items 1–13.
+
+On the book, at 390, Open Chapter 2 is the first control, 44px, from y = 265 to 309. A stored stage mark changes the status to “Chapter 2: 2 of 5 stages marked.” The green and purple marks draw at 13.8px on the phone, the hit stays 44px, and the §2.4 mark stops at the left edge of the square. The Summit heading stays hidden with its sentence. Another on the parabola moves from \(x = 4\) to \(x = 5\), and neither generator offers \(x = 1\) or \(x = 2\). §2.5 works \(x = 1\) as \(|w-1/2|=1/2\). The \(x = 2\) card asks for the image and does not reprint \(u = 1 - v^2/4\). The claim says “On the blue line or to its right.” The four root choices sit in one row, each 44px. A closed Memory sheet button holds the page cites. The roots item’s miss names the dropped \(2\pi k\).
+
+Claim ends at y = 694 at 390 and y = 718 at 1280 in the dark. No sideways scroll. No console errors. The three checks passed.

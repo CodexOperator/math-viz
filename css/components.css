@@ -1039,6 +1039,12 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   margin: 0;
 }
 
+#book-open-2 { min-height: var(--tap); }
+
+@media (max-width: 40rem) {
+  #book-next { flex-direction: column; align-items: stretch; }
+}
+
 .book-path,
 .chapter-path,
 .book-sections {
@@ -1276,6 +1282,14 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 }
 
 .ch2-choices .btn { text-align: left; min-height: var(--tap); }
+
+.ch2-choices-row { flex-direction: row; flex-wrap: nowrap; }
+.ch2-choices-row .btn {
+  flex: 1 1 0;
+  min-width: var(--tap);
+  justify-content: center;
+  text-align: center;
+}
 
 .ch2-blank {
   display: flex;

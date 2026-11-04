@@ -5,7 +5,7 @@
 import { stationById } from '../registry.js';
 import { BOOK, sectionHref } from '../data/book.js';
 import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, bookChapter, chapter4ExerciseIds, chapter5ExerciseIds, CHAPTER_PICTURE, pictureHref } from '../data/book-path.js';
-import { loadChapter2Marks } from '../book/ch2-progress.js';
+import { loadChapter2Marks, CH2_STAGES } from '../book/ch2-progress.js';
 import { mount as mountChapter2 } from './chapter2.js';
 import { test2ProblemById } from '../data/test2-problems.js';
 import { loadSharedTicks, saveSharedTicks, toggleTick, sectionFinished, chapterTally } from '../book/progress.js';
@@ -49,12 +49,16 @@ function mountRoadmap(el, ctx, spec) {
   const tally = () => chapterTally(CHAPTER_4.sections, ticks);
 
   const status = h('p', { class: 'book-status', id: 'book-status' });
-  const walk = h('a', { class: 'btn btn-primary', id: 'book-walk', href: '#chapter-4' }, 'Walk Chapter 4');
+  const open2 = h('a', { class: 'btn btn-primary', id: 'book-open-2', href: '#chapter-2' }, 'Open Chapter 2');
+  const walk = h('a', { class: 'btn', id: 'book-walk', href: '#chapter-4' }, 'Walk Chapter 4');
   const list = h('ol', { class: 'book-path', id: 'book-path' });
 
   function paint() {
     const t = tally();
-    if (t.complete) {
+    const marked = CH2_STAGES.filter((id) => ch2[id] === true).length;
+    if (marked > 0) {
+      status.textContent = `Chapter 2: ${marked} of ${CH2_STAGES.length} stages marked.`;
+    } else if (t.complete) {
       status.textContent = `${nextSentence(t)} Chapter 5 is next.`;
       walk.textContent = 'Open Chapter 5';
       walk.setAttribute('href', '#chapter-5');
@@ -117,11 +121,6 @@ function mountRoadmap(el, ctx, spec) {
       }
       kids.push(sections);
     }
-    if (ch.n === 2) {
-      kids.push(h('p', { class: 'book-door', id: 'book-open-2' },
-        h('a', { href: '#chapter-2' }, 'Open Chapter 2'),
-        '.'));
-    }
     if (ch.door) {
       const st = stationById(ch.door);
       if (st) {
@@ -141,7 +140,7 @@ function mountRoadmap(el, ctx, spec) {
       h('h1', { id: 'book-title' }, 'The Book'),
       h('p', { class: 'station-lede', id: 'book-lede' }, 'Eleven chapters, in the order Howell and Mathews print them.'),
       sourceTag({ pin: '202 Updated Edition, table of contents, pages i–ii', href: BOOK.html })),
-    h('div', { class: 'book-next', id: 'book-next' }, status, walk),
+    h('div', { class: 'book-next', id: 'book-next' }, open2, status, walk),
     list);
 
   const focus = spec && spec.chapter;

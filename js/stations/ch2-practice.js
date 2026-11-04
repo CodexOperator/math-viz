@@ -11,6 +11,12 @@ function rich(el, text) {
   appendRich(el, src);
 }
 
+function asMath(choice) {
+  const s = String(choice);
+  if (/^[A-Za-z][A-Za-z ]+$/.test(s) && !/[=^|]/.test(s)) return s;
+  return `\\(${s}\\)`;
+}
+
 function stepOf(item, made, index) {
   if (made) {
     const step = (made.steps && made.steps[0]) || {};
@@ -67,7 +73,9 @@ function card(item, store, onDone, onMemory) {
   function paintPrompt() {
     prompt.replaceChildren();
     const step = current();
-    const text = made ? made.prompt : (index === 0 ? `${item.prompt} ${step.text || ''}` : step.text || '');
+    const text = made
+      ? `${made.prompt}${made.ask ? ` ${made.ask}` : ''}`
+      : (index === 0 ? `${item.prompt} ${step.text || ''}` : step.text || '');
     rich(prompt, text);
   }
 
@@ -107,10 +115,13 @@ function card(item, store, onDone, onMemory) {
     const useMc = item.kind.endsWith('mc') || (made && made.kind === 'mc');
     const note = h('p', { class: 'book-page', id: `ch2-card-miss-${id}`, hidden: '' });
     if (useMc && choices) {
-      const row = h('div', { class: 'ch2-choices', id: `ch2-card-choices-${id}` });
+      const rowClass = item.section === '2.4' && choices.length === 4 && choices.every((c) => String(c).length <= 3)
+        ? 'ch2-choices ch2-choices-row'
+        : 'ch2-choices';
+      const row = h('div', { class: rowClass, id: `ch2-card-choices-${id}` });
       choices.forEach((choice, i) => {
         const b = h('button', { type: 'button', class: 'btn', id: `ch2-card-choice-${id}-${i}` }, '');
-        rich(b, choice);
+        rich(b, asMath(choice));
         b.addEventListener('click', () => {
           if (b.disabled) return;
           const ok = answerMatches(choice, { answer: step.answer, accept: step.accept, values: step.values });
@@ -204,10 +215,17 @@ function flashDeck(items, store, section, onMemory) {
     if (item.memory) rich(memory, item.memory);
     again.hidden = true;
     knew.hidden = true;
+    const dueNow = items.filter((it) => loadFlashBox(store, it.id).due <= Date.now());
+    if (!dueNow.length) {
+      show.hidden = true;
+      const soon = Math.min(...items.map((it) => loadFlashBox(store, it.id).due));
+      const days = Math.max(1, Math.round((soon - Date.now()) / 86400000));
+      due.textContent = `Nothing is due. The next card returns ${days === 1 ? 'tomorrow' : `in ${days} days`}.`;
+      return;
+    }
     const box = loadFlashBox(store, item.id);
-    const wait = box.due > Date.now();
     const place = `${at + 1} of ${items.length}`;
-    due.textContent = wait ? `${place}. Not due yet.` : (box.box ? `${place}. Box ${box.box}.` : place);
+    due.textContent = box.box ? `${place}. Box ${box.box}.` : place;
   }
 
   function openBack() {

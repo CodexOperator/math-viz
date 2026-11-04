@@ -7,6 +7,7 @@ import { h, appendRich } from './test2-ui.js';
 
 const SIZE = 320;
 const HIT = 44;
+const DOT_R = 14;
 const NS = 'http://www.w3.org/2000/svg';
 
 function svgEl(name, attrs) {
@@ -25,9 +26,10 @@ function makeView(cx, cy, half) {
     re: (px) => (cx - half) + (px / SIZE) * span,
     im: (py) => (cy + half) - (py / SIZE) * span,
     clamp(z) {
+      const inset = (DOT_R / SIZE) * half * 2;
       return {
-        re: Math.min(cx + half, Math.max(cx - half, z.re)),
-        im: Math.min(cy + half, Math.max(cy - half, z.im)),
+        re: Math.min(cx + half - inset, Math.max(cx - half + inset, z.re)),
+        im: Math.min(cy + half - inset, Math.max(cy - half + inset, z.im)),
       };
     },
     inside(z) {
@@ -86,7 +88,7 @@ export function linearClaim(z) {
   return {
     holds,
     text: holds
-      ? 'Right of the blue line, $w = iz+i$ lands on or above $\\operatorname{Im} w = 2$.'
+      ? 'On the blue line or to its right, $w = iz+i$ lands on or above $\\operatorname{Im} w = 2$.'
       : 'Left of the blue line, $w = iz+i$ lands below $\\operatorname{Im} w = 2$.',
   };
 }
@@ -144,8 +146,8 @@ function mountPair(parent, opts) {
   opts.drawZ(zSvg, zView);
   opts.drawW(wSvg, wView);
 
-  const green = svgEl('circle', { r: '11', fill: 'var(--input)' });
-  const purple = svgEl('circle', { r: '11', fill: 'var(--output)' });
+  const green = svgEl('circle', { r: String(DOT_R), fill: 'var(--input)' });
+  const purple = svgEl('circle', { r: String(DOT_R), fill: 'var(--output)' });
   zSvg.append(green);
   wSvg.append(purple);
 

@@ -286,10 +286,10 @@
       "page": 59
     },
     "kind": "next-step-mc",
-    "prompt": "Exercise 1(b). The vertical line \\(x = 2\\) under \\(w = z^2\\). The line \\(x = 1\\) was \\(u = 1 - v^2/4\\).",
+    "prompt": "Exercise 1(b). The vertical line \\(x = 2\\) under \\(w = z^2\\).",
     "steps": [
       {
-        "text": "The image is the parabola",
+        "text": "The image is",
         "answer": "u = 4 - v^2/16",
         "accept": [
           "u=4-v^2/16",
@@ -321,7 +321,7 @@
       "page": 56
     },
     "kind": "mc",
-    "prompt": "Another vertical line under z^2. The parabola is computed.",
+    "prompt": "Another vertical line under z^2.",
     "steps": [
       {
         "text": "___",
@@ -419,7 +419,7 @@
       "page": 62
     },
     "kind": "proof-blank",
-    "prompt": "Theorem 2.1. The limit of f is u0 + iv0 exactly when the real and imaginary parts have those limits.",
+    "prompt": "Theorem 2.1. The limit of \\(f\\) is \\(u_0 + iv_0\\) exactly when the real and imaginary parts have those limits.",
     "steps": [
       {
         "text": "If \\(|f(z) - w_0| < \\varepsilon\\), then \\(|u - u_0| \\le\\) ___.",
@@ -764,26 +764,27 @@
       "page": 76
     },
     "kind": "next-step-mc",
-    "prompt": "The picture is the line \\(x = 1\\) under \\(w = 1/z\\). Its image is the circle",
+    "prompt": "Example 2.24. The line \\(x = 2\\) under \\(w = 1/z\\). The line \\(x = 1\\) is the circle in the picture.",
     "steps": [
       {
         "text": "",
-        "answer": "|w - 1/2| = 1/2",
+        "answer": "|w - 1/4| = 1/4",
         "accept": [
-          "|w-1/2|=1/2"
+          "|w-1/4|=1/4",
+          "|w - 1/4|=1/4"
         ],
         "choices": [
-          "|w - 1/2| = 1/2",
           "|w - 1/4| = 1/4",
+          "|w - 1/2| = 1/2",
           "|w| = 1",
           "the real axis"
         ],
         "miss": {
-          "|w - 1/4| = 1/4": "That circle is the image of x = 2, the line just worked.",
-          "|w| = 1": "The unit circle is the image of the unit circle, not of x = 1.",
+          "|w - 1/2| = 1/2": "That circle is the image of x = 1, the line in the picture.",
+          "|w| = 1": "The unit circle is the image of the unit circle, not of x = 2.",
           "the real axis": "A vertical line that misses 0 becomes a circle."
         },
-        "why": "On \\(x = 1\\), \\(|w - 1/2| = 1/2\\)."
+        "why": "On \\(x = 2\\), \\(|w - 1/4| = 1/4\\). Example 2.24, page 76."
       }
     ],
     "generator": null,
@@ -827,5 +828,24 @@
     ],
     "generator": null,
     "memory": "1/z sends lines and circles to lines and circles."
+  },
+  {
+    "id": "ch2-2.2-roots",
+    "chapter": 2,
+    "section": "2.2",
+    "cite": {
+      "ref": "Definition 2.2",
+      "page": 59
+    },
+    "kind": "mc",
+    "prompt": "Another set of roots. The values are computed.",
+    "steps": [],
+    "generator": {
+      "template": "ch2-maps",
+      "params": {
+        "kind": "root"
+      }
+    },
+    "memory": "The other roots come from Arg + 2πk."
   }
 ]
