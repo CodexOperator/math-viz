@@ -332,3 +332,89 @@ Yes. One pass, then stop. It is the cuts above. The set, the copy, and the blank
 Branch `cursor/homework-ch4-hints-copy-md-a873`, after `f88fd14`. The three cuts from the taste note above, and then stop.
 
 The sentence under the `(1+i)/2` sums no longer calls that chip Exercise 1(b). Part (b) stays in the hint, ratio `1/(2+i)`. There is no new chip. The Exercise 5 hint no longer opens the Mandelbrot set or The Crossing. The chip `c = −2` on The Orbit of 0 is the demo, and that note no longer says the pad stops at 1.6. The Exercise 3 hint no longer names the quadratic film. A fresh card link still opens on All. After Homework is pressed, the station chip back to `#index-4-2-5` leaves Homework pressed, scope Any, and seven cards. Copy Markdown, the disk’s four starts, the `c = −2` list, and the Exercise 2 chips are unchanged.
+
+## Book path, batch 1
+
+Branch `cursor/book-chapter-path-df29`, commit `ad216c1`. Used like a MAT 412 student on a local server in headless Chrome, light theme, fresh storage. `#book` and `#chapter-4` at 1280×800 and at 390×844. I walked Chapter 4 toward the end: the sequence station and its cycle chip, Exercise 3’s chip through to the index, the hint, Copy Markdown, both 4.1 ticks, the mark, Exercise 5’s picture, the `c = −2` chip, then the rest of the ticks and marks. Reload, `#chapter-5`, `#chapter-1`, and a leftover `#chapter-6-6-1`. On the phone, the first screen, the Chapter 4 node, section 4.2, one card, and the menu. No console errors. No sideways scroll at either width (`scrollWidth` matched the window).
+
+## Verdict
+
+The thing we are trying to be able to do is walk Chapter 4 until the four sentences are ours and the eight exercises are done, then see the book move. This batch can remember that, and the four sentences are the right voice. The page around them is the old homework packet, filed under four headings, with a second tick and a mark. I finished 4.2, 4.3, and 4.4 by clicking Tick and Mark and never opened their pictures. Another batch is worth doing only as a cutting batch on this path. After that, stop. Do not build Chapter 5 in this shape.
+
+## What I could actually do
+
+`#book` opens on the status and one dark button, Walk Chapter 4. The button is in the first screen at both widths. The page under it is the printed contents: 11 chapters, 66 section rows, about 4000px at 1280 and about 6200px at 390. Chapter 4, the chapter marked Next, starts below the fold. At 390 its top is about 1900px down, under Chapter 1’s six sections.
+
+The walk button’s address is `#chapter-4-4-1`. The chapter title, the lede, and the link back to the book sit above the screen (the title was 146px above the window). The dark button on that screen says Go to 4.1 while 4.1 is the section in front of you. The sentence under 4.1 is the one worth keeping: a sequence settles when its terms eventually sit in every disk around the limit.
+
+Opening A Sequence Has a Fate leaves the chapter. The sidebar switches from Test 1 to Test 2, because the station belongs to Test 2. Nothing on that page links back to Chapter 4. The list on the station is Exercise 1(a): `(1/2 + i/4)^n` settles at 0. The other chip is Exercise 7, the point that stays on the unit circle. Exercise 3, the card I came from, is a proof that conjugation preserves the limit. The station’s exercise chips go to `#index-4-1-3`. The index opens that card with the hint already showing, and it says the assigned seven walk on Chapter 4. Three pages, and the picture I was sent to is a different exercise.
+
+Show the hint on the chapter stays closed until asked, and it names the disk in Definition 4.1. Copy Markdown changes to Copied. Ticking 4.1.3 and 4.1.13 leaves the status at “Next is 4.1” and “0 of 4 sections finished, 2 of 8 exercises.” The same card on the index still says Tick. Marking 4.1 is what moves Next to 4.2. Unmarking sends Next back to 4.1 with both exercises still ticked. On the phone I marked 4.4 and ticked its exercise while 4.1 was still Next. The section went Done. The status stayed on 4.1. A reload kept the tick.
+
+Section 4.2 is the section that shows the shape. The sentence is one idea: the Julia set of `z^2 + c` is one piece exactly when the orbit of 0 stays bounded. Under it are six links out to the textbook, then seven picture chips (Newton’s step, the Newton fractal, the disk, Julia, the orbit, the Mandelbrot set, the cardioid), then three exercise cards. On a phone that section is about 2500px tall, and the picture chips are 36px tall. The sidebar, once a picture has been opened, is the same list again.
+
+Exercise 5’s picture link opens The Orbit of 0 on `c = i`, which is Example 4.10. Pressing `c = −2` is the exercise: the list is 0, −2, 2, 2, 2, 2, 2, 2, and the line under it cites Theorem 4.9. That is the wonder in this batch. The chapter does not land on it, and the station has no way back except the browser. Back did return to the outlined card, with the earlier tick still on.
+
+Go to 4.2 does put 4.2’s title under the header (88px of room). The room is large enough that the previous section’s dark button, Mark 4.1 done, hangs under the site header. On the phone that button is the first thing on the 4.2 screen.
+
+Section 4.4 is the size the others should be. One sentence, two theorem links, one picture, one exercise. The question is the radius question, and the card says there is no solution on it.
+
+Twelve clicks finish the chapter: eight ticks and four marks. The status becomes “Done. 4 of 4 sections, 8 of 8 exercises.” The book’s button becomes Open Chapter 5, and a reload keeps “Chapter 4 is done.” The lede on the book still says to walk Chapter 4 until every exercise is done. Chapter 4’s Done flag is on the node, which is still below Chapter 1.
+
+Chapter 5 is five cards. Four of them say “Not drawn on this page yet.” Section 5.4 adds the current and the impedance, and says the rest is not drawn. The footer says “Chapter 4 is the walk that is open now,” after the book has already called Chapter 4 done. `#chapter-1` stays on the roadmap and scrolls to Complex Numbers. `#chapter-6-6-1` is “No such place,” and the recovery list is the stations of whichever test the sidebar last remembered.
+
+The menu on the book is Which test, plus 24 stations. A fresh phone visit to Chapter 4 opens that menu on Test 1: the staircase, the roots, the curves. The Book is the current row, and the drawer covers the exercise. The colour key on the book is the Test 1 key: blue is the Cartesian address, orange is polar, and the rest of that course. The book page has no picture.
+
+## What clicks
+
+The four sentences are in the site’s voice, and each one is a thing a student can say. 4.4 shows the size that voice wants: the sentence, the picture it names, the exercise.
+
+Walk Chapter 4 is one dark button, and it is on the first screen at 1280 and at 390. When the flags are all on, that button becomes Open Chapter 5. The browser remembers it.
+
+The hint on the chapter stays closed. The card does not print a solution. Copy Markdown admits that it copied. A deep link to `#chapter-4-4-2-5` outlines that card and clears the header.
+
+The orbit at `c = −2` is the moment the chapter is promising. The steps sit there, bounded, and the sentence names Exercise 5 and Theorem 4.9.
+
+Later chapters do not pretend to be pages. A bad token on one of them is still no such place.
+
+## What gets in the way
+
+**Two scores, and a mark that can cancel both.** The chapter tick and the index tick are different memories. Finishing an exercise on the walk leaves the index card unticked. A section counts as finished only when it is also marked, so two ticked proofs and an unmarked section are still “Next is 4.1.” The reverse is just as easy: 4.4 can be Done while the walk still says to start at 4.1. The lede tells you to mark a section when you can say its sentence. The button does not check that. It checks that you clicked it.
+
+**The picture is a door out, and it often opens on a different exercise.** Exercise 3’s picture demonstrates Exercise 1(a) and Exercise 7, then offers the index. Exercise 5’s picture opens on `c = i`. The hint knows the chip is `c = −2`. The link does not. From either station the way back to the chapter is the browser, or The Book at the top of a menu that has just become the other test.
+
+**4.2 is a contents list of the test.** Seven pictures of equal weight, six readings, three exercises, and a sidebar that repeats the pictures. The sentence is about the orbit of 0. Newton’s fractal, the Mandelbrot set, and the cardioid are other lessons sitting in the same box.
+
+**The book is the table of contents, and the menu is a test.** Eleven chapter titles would be a roadmap. Sixty-six section rows of chapters you cannot open are a PDF contents page. The first screen at 390 is Chapter 1. The menu beside all of this asks which test, and a fresh visit answers Test 1 while the page says walk Chapter 4. Opening any picture changes that answer under you.
+
+**The reward for finishing is a page of blanks.** Chapter 5 says the exponential is the next page, then says it four more times. The footer still calls Chapter 4 the walk that is open.
+
+## Cut
+
+- Mark section done. An exercise tick is the section. The status names the next exercise.
+- The index Tick on these eight cards. One score, on the chapter. Leave the other index cards alone. Do not add a sync between the two stores.
+- The Pictures row. The exercise already names its picture. In 4.2 that row is the whole test map.
+- The reading list, down to the one pin the sentence is. 4.2’s six links are a bibliography.
+- The per-card line “Homework. The hint points at a picture. No solution on this card.” The chapter already said the hint stays closed, and the card has no solution on it.
+- Copy Markdown on every chapter card. The walk is the job. One export for the chapter is enough if the paste-into-an-LLM habit is still wanted, and it can live once.
+- Section rows on Later chapters. Title, page, Later. Chapters 1–3 keep the single “already drawn” door.
+- The Chapter 5 page, until a section on it is a real walk. The book can say Chapter 5 is next without opening five blanks. With the page gone, the stale footer line goes too.
+- The second sentence of the book lede. The status line is the instruction, and it is the line that changes when you finish.
+- On the book and the chapter, Which test and the station menu. The menu for this route is the chapters.
+
+## Add
+
+- The picture link opens the chip the exercise uses. Exercise 5 opens `c = −2`. The page it opens has one link back to that exercise.
+- Nothing else. No new picture, no check that the proof was typed, no progress layer, no Chapter 5 dossier.
+
+## Another batch
+
+Yes. One batch, and it is these cuts. The order is the chapter first, then the book.
+
+1. **Chapter 4 is four sentences and eight exercises.** Cut the mark, the pictures row, the extra readings, the homework banner, and the eight copy buttons. The status names the next exercise. The Walk button opens the chapter at its title. Go to 4.2 appears when 4.1’s exercises are ticked.
+
+2. **The picture is the exercise’s chip, and it returns.** Exercise 5 opens on `c = −2`. Exercise 3’s picture can stay the sequence station if the card calls it the disk from Definition 4.1, and the station stops sending that exercise to the index. One link back to the chapter card.
+
+3. **The book is eleven chapters.** Later chapters lose their section lists. Chapter 5 stays a node that says Open, and its page waits. The menu on `#book` and `#chapter-4` is the book.
+
+When those three are done, stop. A Chapter 5 batch that copies this page will feel like the homework again, five times.
