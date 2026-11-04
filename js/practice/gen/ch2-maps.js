@@ -44,6 +44,8 @@ export function normAnswer(s) {
   t = t.replace(/\\pi/g, 'pi');
   t = t.replace(/π/g, 'pi');
   t = t.replace(/[−–—]/g, '-');
+  t = t.replace(/[₀₁₂₃₄₅₆₇₈₉]/g, (ch) => '₀₁₂₃₄₅₆₇₈₉'.indexOf(ch).toString());
+  t = t.replace(/√/g, 'sqrt');
   t = t.replace(/_/g, '');
   t = t.replace(/\s+/g, '');
   t = t.replace(/\\/g, '');
@@ -52,10 +54,17 @@ export function normAnswer(s) {
 
 // a+bi, a-bi, a+i, a-i, bi, a, i, -i. null when the text is not one complex number.
 export function parseComplex(s) {
-  const t = normAnswer(s).replace(/\*/g, '');
+  let t = normAnswer(s).replace(/\*/g, '').replace(/[()]/g, '');
   if (t === 'i' || t === '+i') return { re: 0, im: 1 };
   if (t === '-i') return { re: 0, im: -1 };
-  let m = /^([+-]?\d+(?:\.\d+)?)([+-])(\d+(?:\.\d+)?)?i$/.exec(t);
+  // 2i+3, -7i+3, i-4. The real part is written second.
+  let m = /^([+-]?)(\d+(?:\.\d+)?)?i([+-]\d+(?:\.\d+)?)$/.exec(t);
+  if (m) {
+    const sign = m[1] === '-' ? -1 : 1;
+    const mag = m[2] == null || m[2] === '' ? 1 : Number(m[2]);
+    return { re: Number(m[3]), im: sign * mag };
+  }
+  m = /^([+-]?\d+(?:\.\d+)?)([+-])(\d+(?:\.\d+)?)?i$/.exec(t);
   if (m) {
     const sign = m[2] === '-' ? -1 : 1;
     const mag = m[3] == null || m[3] === '' ? 1 : Number(m[3]);
@@ -110,12 +119,14 @@ function powerLine(rng, params) {
   const num = a * a;
   const den = 4 * a * a;
   const answer = `u = ${num} - v^2/${den}`;
-  const choices = [
-    answer,
-    `u = ${num} - v^2/${2 * a}`,
-    `v = ${num} - u^2/${den}`,
-    `u = ${num} + v^2/${den}`,
-  ];
+  const coeff = `u = ${num} - v^2/${2 * a}`;
+  const swapped = `v = ${num} - u^2/${den}`;
+  const sign = `u = ${num} + v^2/${den}`;
+  const choices = [answer, coeff, swapped, sign];
+  const miss = {};
+  miss[coeff] = 'The denominator is 4a^2.';
+  miss[swapped] = 'That swaps the axes.';
+  miss[sign] = 'The parabola opens to the left, so the v^2 term is subtracted.';
   // Shuffle after the answer exists, so the seed picks the order and not the truth.
   for (let i = choices.length - 1; i > 0; i -= 1) {
     const j = irand(rng, 0, i);
@@ -129,6 +140,7 @@ function powerLine(rng, params) {
     answer,
     accept: [answer, `u=${num}-v^2/${den}`, `u = ${num} - \\frac{v^2}{${den}}`],
     choices,
+    miss,
     why: `\\(v = ${2 * a}y\\), so \\(y = v/${2 * a}\\) and \\(u = ${num} - v^2/${den}\\).`,
     memory: 'A vertical line under z^2 opens left as a parabola.',
     values: { a, num, den },
@@ -240,6 +252,9 @@ export function sameComplex(text, values) {
 export function answerMatches(text, item) {
   if (!item) return false;
   if (item.values && Object.prototype.hasOwnProperty.call(item.values, 're') && sameComplex(text, item.values)) return true;
+  const official = parseComplex(item.answer);
+  const gotC = parseComplex(text);
+  if (official && gotC && Math.abs(official.re - gotC.re) < 1e-9 && Math.abs(official.im - gotC.im) < 1e-9) return true;
   const got = normAnswer(text);
   if (!got) return false;
   const forms = [item.answer].concat(item.accept || []);
@@ -260,6 +275,11 @@ export function selfCheck() {
     if (!read || read.re !== re || read.im !== im) throw new Error(`linear seed ${seed} parse ${lin.answer}`);
     if (!answerMatches(lin.answer, lin)) throw new Error(`linear seed ${seed} grade`);
     if (!answerMatches(lin.answer.replace('+', ' + '), lin)) throw new Error(`linear seed ${seed} spaced`);
+    if (im !== 0) {
+      const imagFirst = re < 0 ? `${im}i${re}` : `${im}i+${re}`;
+      if (!answerMatches(imagFirst, lin)) throw new Error(`linear seed ${seed} imag first ${imagFirst}`);
+    }
+    if (!answerMatches(`(${lin.answer})`, lin)) throw new Error(`linear seed ${seed} parens`);
     if (v.a === 0 && v.b === 0) throw new Error(`linear seed ${seed} is constant`);
 
     const line = generate(seed, { kind: 'power-line', a: [1, 3] });

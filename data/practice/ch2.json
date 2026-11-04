@@ -35,7 +35,9 @@
         "answer": "triangle",
         "accept": [
           "a triangle",
-          "triangle"
+          "the triangle",
+          "right triangle",
+          "a right triangle"
         ],
         "form": "The name of the shape.",
         "why": "A linear map sends a triangle to a triangle."
@@ -425,7 +427,8 @@
         "accept": [
           "|f(z)-w0|",
           "|f(z)-w_0|",
-          "the modulus of f(z)-w0"
+          "the modulus of f(z)-w0",
+          "sqrt((u-u0)^2+(v-v0)^2)"
         ],
         "why": "Each of \\(|u-u_0|\\) and \\(|v-v_0|\\) is at most \\(|f(z)-w_0|\\).",
         "form": "An expression in f(z) and w_0."
@@ -471,6 +474,11 @@
           "δ",
           "|z - z_0|"
         ],
+        "miss": {
+          "ε/2": "Each half is less than ε/2. The two halves add.",
+          "δ": "δ is the radius in the z plane.",
+          "|z - z_0|": "That is the distance to z0, not the bound on the image."
+        },
         "why": "The two halves are each less than \\(\\varepsilon/2\\), so the sum is less than \\(\\varepsilon\\)."
       },
       {
@@ -486,6 +494,11 @@
           "the real axis",
           "D_δ(z_0)"
         ],
+        "miss": {
+          "the punctured disk about z_0": "That is where z sits. The image sits near w0.",
+          "the real axis": "The bound is a disk about w0.",
+          "D_δ(z_0)": "That is the disk around z0, not the disk around w0."
+        },
         "why": "\\(|f(z)-w_0| < \\varepsilon\\) is the disk of radius \\(\\varepsilon\\) about \\(w_0\\)."
       }
     ],

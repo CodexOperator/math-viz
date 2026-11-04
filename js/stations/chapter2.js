@@ -49,7 +49,7 @@ const COPY = {
   '2.3': {
     why: 'The conjugate mirrors the point, and that limit exists.',
     summit: 'For the conjugate, the image disk has the same radius, so $\\delta = \\varepsilon$, and the definition skips $z_0$.',
-    example: 'Example 2.16, page 62. The mirror keeps the distance, so $\\delta = \\varepsilon$. One direction of Theorem 2.1: if $|f(z) - w_0| < \\varepsilon$, then $|u - u_0| \\le |f(z) - w_0|$ and the same for $v$. The other direction takes the smaller of the two deltas.',
+    example: 'Example 2.16, page 62. The mirror keeps the distance, so $\\delta = \\varepsilon$. Theorem 2.1 says the complex limit is the pair of real limits. One direction bounds the real and imaginary parts by how far $f(z)$ is from $w_0$. The other direction builds one $\\delta$ from the two real ones.',
     picture: mountLimit,
     next: '2.4',
     read: [
@@ -67,7 +67,7 @@ const COPY = {
   '2.4': {
     why: 'Arg jumps when the point crosses the negative real axis.',
     summit: 'Arg jumps across the negative real axis, and the principal square root jumps with it.',
-    example: 'Example 2.21, pages 68–69. At $z = -1$, from above, Arg $z$ approaches $\\pi$ and the principal square root approaches $i$. From below, Arg $z$ approaches $-\\pi$ and the square root approaches $-i$. A branch is one continuous choice of those values. Definition 2.1, page 55.',
+    example: 'Example 2.21, pages 68–69. At a negative real number the limit from above and the limit from below are different square roots, so the principal square root jumps. A branch is one continuous choice of those values. Definition 2.1, page 55.',
     picture: mountBranch,
     next: '2.5',
     read: [
