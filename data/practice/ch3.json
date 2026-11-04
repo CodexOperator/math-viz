@@ -60,6 +60,90 @@
     "memory": "Two paths, two limits: no derivative. Continuous is not enough."
   },
   {
+    "id": "ch3-3.1-abs2-001",
+    "chapter": 3,
+    "section": "3.1",
+    "cite": {"ref": "§3.1, Exercise 11", "page": 84},
+    "kind": "next-step-mc",
+    "prompt": "Show that \\(f(z) = |z|^2\\) is differentiable only at \\(0\\).",
+    "steps": [
+      {
+        "text": "With \\(u = x^2 + y^2\\) and \\(v = 0\\), the Cauchy-Riemann equations",
+        "answer": "hold only at 0",
+        "choices": ["hold only at 0", "hold at every point", "fail at every point", "hold only on the real axis"],
+        "why": "\\(u_x = 2x = v_y\\) and \\(u_y = 2y = -v_x\\) only when \\(x = y = 0\\)."
+      },
+      {
+        "text": "At that point, \\(f'(0)\\) equals",
+        "answer": "0",
+        "choices": ["0", "1", "2z", "does not exist"],
+        "why": "\\(f'(0) = u_x + i v_x = 0\\). There is no disk of such points, so \\(|z|^2\\) is nowhere analytic."
+      }
+    ],
+    "generator": null,
+    "memory": "The equations at one point are not a disk. |z|^2 is differentiable only at 0."
+  },
+  {
+    "id": "ch3-3.2-ex36-001",
+    "chapter": 3,
+    "section": "3.2",
+    "cite": {"ref": "Example 3.6", "page": 88},
+    "kind": "next-step-mc",
+    "prompt": "Example 3.6. At \\(0\\), \\(f(z) = \\overline{z}^2 / z\\) for \\(z \\neq 0\\), and \\(f(0) = 0\\). The partials exist. What do the paths say?",
+    "steps": [
+      {
+        "text": "At \\(0\\), the Cauchy-Riemann equations",
+        "answer": "hold",
+        "choices": ["hold", "fail", "hold only for real h", "are undefined"],
+        "why": "\\(u_x = v_y = 1\\) and \\(u_y = v_x = 0\\) at the origin. The equations hold at that one point."
+      },
+      {
+        "text": "Along the real axis the difference quotient tends to",
+        "answer": "1",
+        "choices": ["1", "0", "-1", "i"],
+        "why": "\\(f(x) = x\\) for real \\(x\\), so the quotient is 1."
+      },
+      {
+        "text": "Along \\(y = x\\) it tends to",
+        "answer": "-1",
+        "choices": ["-1", "1", "0", "i"],
+        "why": "The two limits are 1 and −1, so \\(f'(0)\\) does not exist even though the equations hold. Page 88."
+      }
+    ],
+    "generator": null,
+    "memory": "Cauchy-Riemann at a point is not a derivative. Example 3.6: the paths give 1 and −1."
+  },
+  {
+    "id": "ch3-3.1-lhopital-001",
+    "chapter": 3,
+    "section": "3.1",
+    "cite": {"ref": "§3.1, Exercise 7(a)", "page": 84},
+    "kind": "next-step-blank",
+    "prompt": "Use L'Hôpital's rule for \\(\\lim_{z \\to i} \\dfrac{z^4 - 1}{z - i}\\).",
+    "steps": [
+      {
+        "text": "At \\(z = i\\), the numerator and the denominator are",
+        "answer": "both 0",
+        "accept": ["0 and 0", "0/0", "both zero"],
+        "why": "\\(i^4 - 1 = 0\\) and \\(i - i = 0\\). Theorem 3.2, page 83, applies."
+      },
+      {
+        "text": "The quotient of the derivatives is",
+        "answer": "4z^3",
+        "accept": ["4z^3/1", "4*z^3"],
+        "why": "The derivative of \\(z^4 - 1\\) is \\(4z^3\\), and the derivative of \\(z - i\\) is 1."
+      },
+      {
+        "text": "So the limit equals",
+        "answer": "-4i",
+        "accept": ["-4*i", "0 - 4i"],
+        "why": "\\(4i^3 = 4(-i) = -4i\\)."
+      }
+    ],
+    "generator": null,
+    "memory": "0/0 for analytic functions: replace the quotient by f'/g' and then plug in."
+  },
+  {
     "id": "ch3-3.1-flash-deriv",
     "chapter": 3,
     "section": "3.1",
@@ -267,7 +351,7 @@
       {
         "text": "The two Cauchy-Riemann checks",
         "answer": "both hold",
-        "accept": ["hold", "hold everywhere", "yes", "0 = 0 and -1 = -1"],
+        "accept": ["hold", "hold everywhere", "yes", "0 = 0 and -1 = -1", "u_x = 0 = v_y and u_y = -1 = -v_x"],
         "why": "u_x = 0 = v_y and u_y = -1 = -v_x, at every point."
       },
       {
@@ -348,7 +432,7 @@
     "steps": [
       {
         "text": "",
-        "answer": "f is continuous and defined on a neighborhood of z_0, the four partials are continuous at z_0, and the equations hold at z_0. Then f'(z_0) = u_x + i v_x.",
+        "answer": "f is defined and continuous in a neighborhood of z_0, the four partials are continuous at z_0, and the Cauchy-Riemann equations hold at z_0. Then f'(z_0) = u_x + i v_x.",
         "why": "Theorem 3.4, page 89. Example 3.6, page 88, satisfies the equations at 0 and is still not differentiable there."
       }
     ],

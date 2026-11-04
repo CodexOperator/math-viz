@@ -57,7 +57,7 @@ export function derivativeScene(fn, z, phi) {
       turn,
       claim: {
         holds: false,
-        text: `The purple arrow is the mirror of the green one. This direction turns by ${fmtDeg(turn)}, and the turn moves when the direction moves.`,
+        text: `The purple arrow mirrors the green one. The turn is ${fmtDeg(turn)}, and it moves.`,
       },
     };
   }

@@ -122,7 +122,7 @@ export function mountDerivativePicture(parent) {
   const { X, Y } = plane(span);
   const shell = mountShell(parent, 'chapter-deriv-stage', 'A tiny step and its image. Play sweeps the direction. Drag the green dot to move the base point.');
   axes(shell.stage, span);
-  const arc = svgEl('path', { fill: 'none', stroke: 'var(--polar)', 'stroke-width': '3', 'stroke-linecap': 'round' });
+  const arc = svgEl('path', { fill: 'none', stroke: 'var(--polar)', 'stroke-width': '4', 'stroke-linecap': 'round' });
   const gLine = svgEl('line', { stroke: 'var(--input)', 'stroke-width': '3', 'stroke-linecap': 'round' });
   const gHead = svgEl('polygon', { fill: 'var(--input)' });
   const pLine = svgEl('line', { stroke: 'var(--output)', 'stroke-width': '3', 'stroke-linecap': 'round' });
@@ -158,7 +158,7 @@ export function mountDerivativePicture(parent) {
     handle.setAttribute('cy', oy);
     const turn = scene.turn || 0;
     if (Math.abs(turn) > 0.12) {
-      const r = 28;
+      const r = 72;
       const a0 = phi;
       const a1 = phi + turn;
       const x0 = ox + r * Math.cos(a0);
@@ -222,8 +222,12 @@ export function mountDerivativePicture(parent) {
     const dot = dotClient(shell.stage, handle);
     return Math.hypot(ev.clientX - dot.x, ev.clientY - dot.y) <= HIT;
   }
+  function place(re, im) {
+    return clampPlane(re, im, span - 0.25);
+  }
   function moveTo(ev) {
-    z = clampPlane(clientMath(shell.stage, span, ev).re, clientMath(shell.stage, span, ev).im, 1.15);
+    const p = clientMath(shell.stage, span, ev);
+    z = place(p.re, p.im);
   }
   function onDown(ev) {
     if (ev.button != null && ev.button !== 0) return;
@@ -238,8 +242,8 @@ export function mountDerivativePicture(parent) {
     }
     if (!drag.moved && Math.hypot(ev.clientX - drag.x0, ev.clientY - drag.y0) < PICK) return;
     drag.moved = true;
+    stopPlay();
     moveTo(ev);
-    if (playing) return;
     frame.arm(() => paint());
   }
   function onUp(ev) {
@@ -261,7 +265,8 @@ export function mountDerivativePicture(parent) {
     const d = { ArrowRight: [step, 0], ArrowLeft: [-step, 0], ArrowUp: [0, step], ArrowDown: [0, -step] }[ev.key];
     if (!d) return;
     ev.preventDefault();
-    z = clampPlane(z.re + d[0], z.im + d[1], 1.15);
+    stopPlay();
+    z = place(z.re + d[0], z.im + d[1]);
     paint();
   });
   const dropMotion = listenMotion((next) => {
@@ -269,8 +274,7 @@ export function mountDerivativePicture(parent) {
     stopPlay();
     paint();
   });
-  const observe = h('p', { class: 'book-page', id: 'chapter-deriv-observe' }, 'Play sweeps the direction. Drag the green dot.');
-  parent.append(shell.frame, observe, shell.claim, shell.controls, play);
+  parent.append(shell.frame, shell.claim, shell.controls, play);
   paint();
   return function unmount() {
     stopPlay();

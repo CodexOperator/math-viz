@@ -7,6 +7,7 @@ import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
 import { BOOK_CHAPTERS, CHAPTER_3, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, chapter3StageIds, chapter4ExerciseIds, chapter5ExerciseIds } from '../js/data/book-path.js';
 import { derivativeScene, squareScene, levelScene } from '../js/book/ch3-math.js';
+import { answersMatch } from '../js/book/ch3-grade.js';
 import { selfCheck as crPolyChecks } from '../js/practice/gen/cr-poly.js';
 import { selfCheck as harmonicChecks } from '../js/practice/gen/harmonic-conjugate.js';
 import { chapterTally, sectionFinished, foldLegacyExercises, saveSharedTicks, toggleTick } from '../js/book/progress.js';
@@ -221,6 +222,12 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
   check('conjugate levels meet at a right angle, except at the origin', levelScene('conj', 1, 0.4).claim.holds === true && levelScene('conj', 0, 0).claim.holds === false);
   check('circles meet the hyperbolas at a right angle only on the diagonal', levelScene('circles', 1, 0.4).claim.holds === false && levelScene('circles', 1, 1).claim.holds === true);
   check('polynomial generators recompute their answers', crPolyChecks() === true && harmonicChecks() === true);
+  check('a reordered sum and a starred factor count',
+    answersMatch('2z - i', [], '-i+2z')
+    && answersMatch('5(z^2 - iz + 9)^4', [], '5*(z^2-iz+9)^4')
+    && answersMatch('x^3 - 3xy^2 + C', [], 'C + x^3 - 3xy^2')
+    && answersMatch('5(z^2 - iz + 9)^4(2z - i)', [], '(2z-i)5(z^2-iz+9)^4')
+    && answersMatch('both hold', ['u_x = 0 = v_y and u_y = -1 = -v_x'], 'u_y=-1=-v_x and u_x=0=v_y'));
   const mem = { 'progress.test2': { '4.1.3': true } };
   const store = {
     get(key, fallback) { return Object.prototype.hasOwnProperty.call(mem, key) ? mem[key] : fallback; },

@@ -1222,12 +1222,21 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .section-idea { max-width: 62ch; margin: 0; }
 
 .ch3-picture .exp-stage {
-  width: min(100%, 22rem, calc(100dvh - 22rem));
+  width: min(100%, calc(100dvh - 24rem));
 }
 
-@media (max-width: 40rem) {
-  .ch3-picture .exp-stage { width: min(100%, 13rem); }
+.ch3-picture .exp-claim {
+  min-height: calc(1.0625rem * 1.55 * 2);
 }
+
+a.book-flag {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  text-decoration: none;
+}
+
+.ch3-memory { scroll-margin-top: calc(var(--header-h) + var(--space-3)); }
 
 #chapter-deriv-stage:focus:not(:focus-visible),
 #chapter-square-stage:focus:not(:focus-visible),

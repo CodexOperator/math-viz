@@ -5,6 +5,7 @@
 import items from '../../data/practice/ch3.json' with { type: 'json' };
 import { sectionHref } from '../data/book.js';
 import { h, appendRich, sourceTag } from '../stations/test2-ui.js';
+import { answersMatch } from './ch3-grade.js';
 import { generate as generateCr } from '../practice/gen/cr-poly.js';
 import { generate as generateHarmonic } from '../practice/gen/harmonic-conjugate.js';
 
@@ -36,6 +37,9 @@ const HREF = Object.freeze({
   'Theorem 3.9': sectionHref(S33, 'Conjugate_Construction'),
   '§3.1, Exercise 1(a)': sectionHref(S31, 'x3_1_1'),
   '§3.1, Exercise 2(a)': sectionHref(S31, 'x3_1_2'),
+  '§3.1, Exercise 7(a)': sectionHref(S31, 'x3_1_7'),
+  '§3.1, Exercise 11': sectionHref(S31, 'x3_1_11'),
+  'Example 3.6': sectionHref(S32, 'CR_but_not_diff'),
   '§3.2, Exercise 1(a)': sectionHref(S32, 'x3_2_1'),
   '§3.2, Exercise 1': sectionHref(S32, 'x3_2_1'),
   '§3.2, Exercise 7(b)': sectionHref(S32, 'x3_2_7'),
@@ -61,28 +65,15 @@ function write(el, text) {
   appendRich(el, String(text || '').replace(/\\\(/g, '$').replace(/\\\)/g, '$'));
 }
 
-function norm(s) {
-  return String(s || '')
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, '')
-    .replace(/\\,/g, '')
-    .replace(/[{}]/g, '')
-    .replace(/[−–]/g, '-')
-    .replace(/_/g, '')
-    .replace(/\((x0|y0|x|y|z0|z)(,(x0|y0|x|y))*\)/g, '');
-}
-
 function accepted(step, given) {
-  const want = [step.answer, ...(step.accept || [])].map(norm);
-  return want.includes(norm(given));
+  return answersMatch(step.answer, step.accept, given);
 }
 
 function materialize(item, seed) {
   if (!item.generator) return item;
   const gen = GENS[item.generator.template];
   if (!gen) return item;
-  const made = gen(item.generator.params || {}, seed);
+  const made = gen(seed, item.generator.params || {});
   return {
     ...item,
     prompt: made.prompt || item.prompt,
@@ -161,18 +152,17 @@ function card(source, cleanups) {
     const current = item.steps[index];
     if (!current) return;
     const right = accepted(current, given);
-    write(why, current.why || (right ? 'Yes.' : `The step is ${current.answer}.`));
+    const expected = `The step is ${current.answer}.`;
+    write(why, right ? (current.why || 'Yes.') : `${current.why ? `${current.why} ` : ''}${expected}`);
     why.hidden = false;
     const node = hostOf();
     if (node) node.dataset.right = right ? 'true' : 'false';
-    if (right) {
-      check.hidden = true;
-      if (mc()) {
-        for (const b of choices.querySelectorAll('button')) b.disabled = true;
-      }
-      next.hidden = false;
-      next.textContent = index + 1 >= item.steps.length ? 'Done' : 'Next step';
+    if (right && mc()) {
+      for (const b of choices.querySelectorAll('button')) b.disabled = true;
     }
+    if (right) check.hidden = true;
+    next.hidden = false;
+    next.textContent = index + 1 >= item.steps.length ? 'Done' : 'Next step';
   }
 
   function hostOf() {
@@ -231,22 +221,29 @@ function card(source, cleanups) {
 export function mountDeck(host, sectionId) {
   const list = items.filter((item) => item.section === sectionId && item.kind === 'flash');
   if (!list.length) return function unmount() {};
-  let index = 0;
+  let queue = list.map((_, i) => i);
+  let cursor = 0;
   let open = false;
   const count = h('p', { class: 'book-page', id: `chapter-deck-${sectionId}-count` });
   const front = h('p', { id: `chapter-deck-${sectionId}-front` });
   const back = h('p', { class: 'hint-note', id: `chapter-deck-${sectionId}-back`, hidden: '' });
   const show = h('button', { type: 'button', class: 'btn', id: `chapter-deck-${sectionId}-show` }, 'Show');
+  const missed = h('button', { type: 'button', class: 'btn', id: `chapter-deck-${sectionId}-missed`, hidden: '' }, 'Missed');
   const next = h('button', { type: 'button', class: 'btn', id: `chapter-deck-${sectionId}-next` }, 'Next card');
   const cite = h('p', { class: 'book-page', id: `chapter-deck-${sectionId}-cite` });
 
+  function current() {
+    return list[queue[cursor]];
+  }
+
   function paint() {
-    const item = list[index];
-    count.textContent = `Card ${index + 1} of ${list.length}.`;
+    const item = current();
+    count.textContent = `Card ${cursor + 1} of ${queue.length}.`;
     write(front, item.prompt);
     write(back, item.steps[0] ? item.steps[0].answer : '');
     back.hidden = !open;
     show.hidden = open;
+    missed.hidden = !open;
     const pin = citeOf(item);
     cite.replaceChildren(sourceTag(pin));
   }
@@ -255,8 +252,21 @@ export function mountDeck(host, sectionId) {
     open = true;
     paint();
   });
+  missed.addEventListener('click', () => {
+    if (queue.length < 2) {
+      open = false;
+      paint();
+      return;
+    }
+    const id = queue[cursor];
+    queue.splice(cursor, 1);
+    if (cursor >= queue.length) cursor = 0;
+    queue.splice(cursor + 1, 0, id);
+    open = false;
+    paint();
+  });
   next.addEventListener('click', () => {
-    index = (index + 1) % list.length;
+    cursor = (cursor + 1) % queue.length;
     open = false;
     paint();
   });
@@ -269,13 +279,7 @@ export function mountDeck(host, sectionId) {
     front,
     back,
     cite,
-    h('div', { class: 'problem-actions' }, show, next)));
+    h('div', { class: 'problem-actions' }, show, missed, next)));
   paint();
   return function unmount() {};
-}
-
-export function memoryLines(sectionId) {
-  return items
-    .filter((item) => item.section === sectionId && item.kind === 'flash' && item.memory)
-    .map((item) => item.memory);
 }

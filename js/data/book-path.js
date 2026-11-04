@@ -255,6 +255,11 @@ export const CHAPTER_3 = deepFreeze({
         'Polynomials, products, and quotients differentiate as in calculus. A quotient fails where the denominator is 0.',
         'Differentiable implies continuous. Continuous does not imply differentiable.',
       ],
+      extras: [
+        'A singular point is where analyticity stops.',
+        'The 0/0 rule: if f and g are analytic, both zero, and g\' is not zero, the limit of f/g is f\'/g\'.',
+        'Example 3.6, page 88: the Cauchy-Riemann equations can hold at a point where two paths still disagree.',
+      ],
       exercises: ['3.1'],
     },
     {

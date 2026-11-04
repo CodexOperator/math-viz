@@ -1343,6 +1343,22 @@ On a 390×844 phone the arrows are on the first screen, under the why. The claim
 
 The shared practice engine, when it lands, should replace the local card. The page already reads `data/practice/ch3.json`. Still open: a phone layout that keeps Play beside the claim on the first screen, and the exam recipes that are not cards yet. Theorem 3.4's long proof is a statement and a flash. The step-by-step blank is Theorem 3.3.
 
+## Chapter 3 batch 2
+
+Branch `cursor/chapter-3`, after `838edd7`. The reviewer's `6db51c7` and the two taste notes stay. Headless Chrome, light and dark, 390×844 and 1280×800.
+
+The opening point is still 1+i. A 12px drag moves the dot with the finger, miss 0px, and the imaginary part stays 1. A drag while the button says Pause stops the angle. Four hundred milliseconds later the angle is the same number and the button says Play. Idle after that schedules 0 frames.
+
+The first screen is the square, the claim, and Play. At 390, Play ends at y=703 inside 844. At 1280, Play ends at y=776 inside 800. The same numbers in the dark. The why sits under Play. The duplicate "Play sweeps the direction" line is gone. The orange turn is a visible arc. Switching to conj leaves the claim box at 53px and Play at the same y.
+
+A wrong chain-rule step prints the expected factor and leaves Next step visible. `u_x=0=v_y and u_y=-1=-v_x`, `-i+2z`, `5*(z^2-iz+9)^4`, and `C + x^3 - 3xy^2` match. Theorem 3.4 stays a flash: defined and continuous in a neighborhood, partials continuous at the point, Cauchy-Riemann at the point, then f' = u_x + i v_x. Exercise 11 is |z|² only at 0. Example 3.6 is the two paths, 1 and −1. Exercise 7(a) is −4i. Some generated polynomials fail Cauchy-Riemann or hold only on the real axis. Some harmonic seeds fail Laplace. A passing one asks for the integral and for C'(x). The stage flag opens the one memory list. Missed puts that card next.
+
+The drawer, the way up, and Back are untouched. Reduced motion still says Step and moves a quarter turn.
+
+## Next
+
+Hand the cards to js/practice/ when that renderer lands. Nothing else on this page until then.
+
 ## test-prep-coach (ch3 batch 1)
 
 Preview https://ch3-preview.complexanalysis.pages.dev/#chapter-3, tip `160ab62`. Phone 390×844 first, then 1280×800, light and dark. No product code changed. No console errors. No sideways scroll. The chapter page is 12469px tall. The first screen, at both sizes and in both themes, is the title, "Next is 3.1 Differentiable and Analytic Functions. 0 of 3 stages.", the why, and the top of the derivative picture. The §3.1 memory list starts at y=2996. The §3.2 deck has two buttons, Show and Next card.

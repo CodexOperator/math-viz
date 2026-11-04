@@ -6,7 +6,7 @@ import { CHAPTER_3, chapter3StageIds } from '../data/book-path.js';
 import { loadSharedTicks, saveSharedTicks, toggleTick, sectionFinished, chapterTally } from './progress.js';
 import { h, appendRich, sourceTag } from '../stations/test2-ui.js';
 import { mountDerivativePicture, mountSquarePicture, mountLevelPicture } from './ch3-pictures.js';
-import { mountPractice, mountDeck, memoryLines } from './ch3-cards.js';
+import { mountPractice, mountDeck } from './ch3-cards.js';
 
 const PICTURES = {
   '3.1': mountDerivativePicture,
@@ -36,6 +36,8 @@ export function mount(el, ctx, focus) {
   const stops = [];
   const path = h('ol', { class: 'chapter-path', id: 'chapter-path' });
   const status = h('p', { class: 'book-status', id: 'chapter-status' });
+  const lede = h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Three stages, from the derivative to a harmonic conjugate.');
+  const statusWrap = h('div', { class: 'book-next', id: 'chapter-next-row' }, status);
   const buttons = [];
 
   function paint() {
@@ -81,14 +83,12 @@ export function mount(el, ctx, focus) {
       workedBody);
     const practice = h('div', { class: 'chapter-exercises', id: `${scope}-practice` });
     stops.push(mountPractice(practice, section.id));
-    const recipes = h('ul', { class: 'book-read', id: `${scope}-recipes` });
-    for (const line of section.recipes) {
+    const memory = h('ul', { class: 'book-read ch3-memory', id: `${scope}-memory` });
+    for (const line of [...section.recipes, ...(section.extras || [])]) {
       const li = h('li');
       appendRich(li, line);
-      recipes.append(li);
+      memory.append(li);
     }
-    const lines = h('ul', { class: 'book-read', id: `${scope}-memory` });
-    for (const line of memoryLines(section.id)) lines.append(h('li', null, line));
     const deck = h('div', { id: `${scope}-deck` });
     stops.push(mountDeck(deck, section.id));
     const summit = h('p', { class: 'section-idea', id: `${scope}-summit` });
@@ -102,15 +102,17 @@ export function mount(el, ctx, focus) {
       paint();
     });
     buttons.push(mark);
-    path.append(h('li', {
-      class: 'section-node', id: scope, 'data-section': section.id, 'data-state': 'ahead',
-    },
-      h('p', { class: 'book-flag', id: `${scope}-flag` }, section.id),
+    const flag = h('a', { class: 'book-flag', href: `#${scope}-memory`, id: `${scope}-flag` }, section.id);
+    const heading = [
+      flag,
       h('h2', { id: `${scope}-title` }, section.title),
       h('p', { class: 'book-page' }, `Page ${section.page}`),
+    ];
+    const whyBlock = [
       h('p', { class: 'book-label', id: `${scope}-why-label` }, "Why you'd care"),
       why,
-      picture,
+    ];
+    const rest = [
       h('p', { class: 'book-label' }, 'In the book'),
       read,
       h('p', { class: 'book-label' }, 'Worked'),
@@ -118,21 +120,25 @@ export function mount(el, ctx, focus) {
       h('p', { class: 'book-label' }, 'Practice'),
       practice,
       h('p', { class: 'book-label' }, 'Memory'),
-      recipes,
-      lines,
+      memory,
       deck,
       h('p', { class: 'book-label' }, 'Summit'),
       summit,
-      h('div', { class: 'problem-actions' }, mark)));
+      h('div', { class: 'problem-actions' }, mark),
+    ];
+    const openOnPicture = section.id === '3.1'
+      ? [picture, ...whyBlock, lede, statusWrap, ...heading, ...rest]
+      : [...heading, ...whyBlock, picture, ...rest];
+    path.append(h('li', {
+      class: 'section-node', id: scope, 'data-section': section.id, 'data-state': 'ahead',
+    }, ...openOnPicture));
   }
 
   paint();
   el.append(
     h('header', { class: 'station-header' },
       h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back' }, 'The Book')),
-      h('h1', { id: 'chapter-title' }, 'Chapter 3. Analytic and Harmonic Functions'),
-      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Three stages, from the derivative to a harmonic conjugate.')),
-    h('div', { class: 'book-next', id: 'chapter-next-row' }, status),
+      h('h1', { id: 'chapter-title' }, 'Chapter 3. Analytic and Harmonic Functions')),
     path,
     sourceTag({ pin: CHAPTER_3.pin, href: CHAPTER_3.href }),
     h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
