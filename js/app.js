@@ -239,7 +239,6 @@ export function start() {
     list.append(el('li', {}, el('a', {
       class: 'nav-link', id: 'nav-test-prep', href: '#test-prep', 'aria-label': 'Test prep',
     }, [
-      el('span', { class: 'nav-num', 'aria-hidden': 'true' }, '·'),
       el('span', { class: 'nav-title' }, 'Test prep'),
     ])));
     nav.append(list);
@@ -426,7 +425,7 @@ export function start() {
       if (seq !== state.seq) return;
       if (typeof mod.mount !== 'function') throw new Error('book page has no mount() export');
       section.replaceChildren();
-      const unmount = mod.mount(section, Object.freeze({
+      const unmount = await mod.mount(section, Object.freeze({
         navigate,
         store,
         book: spec,

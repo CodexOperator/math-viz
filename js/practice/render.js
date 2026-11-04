@@ -53,12 +53,14 @@ export function renderCard(host, vm, act) {
 
   const list = h('ol', { class: 'practice-steps', id: 'practice-steps' });
   item.steps.forEach((s, i) => {
+    if (!worked && i > vm.step) return;
     const li = h('li', {
       id: `practice-step-${i}`,
       'data-state': i < vm.step ? 'done' : i === vm.step ? 'current' : 'ahead',
     });
     const line = h('p', { class: 'practice-step-text' });
-    if (worked || i < vm.step || (i === vm.step && vm.phase === 'told')) fillStep(line, s.text, s.answer);
+    const revealAnswer = worked || i < vm.step || (i === vm.step && vm.revealAnswer);
+    if (revealAnswer) fillStep(line, s.text, s.answer);
     else appendRich(line, s.text || '');
     li.append(line);
     if ((worked || i < vm.step) && s.why) li.append(rich(s.why, { class: 'practice-why' }));
@@ -69,7 +71,7 @@ export function renderCard(host, vm, act) {
   if (worked) {
     kids.push(h('div', { class: 'problem-actions' },
       h('button', { type: 'button', class: 'btn btn-primary', id: 'practice-next' }, 'Try these steps')));
-  } else if (vm.phase === 'ask') {
+  } else if (vm.phase === 'ask' || vm.phase === 'hint') {
     const actions = [];
     if (String(item.kind).endsWith('mc')) {
       const choices = h('div', { class: 'practice-choices', id: 'practice-choices', role: 'group', 'aria-label': 'Choices' });
@@ -88,7 +90,9 @@ export function renderCard(host, vm, act) {
         spellcheck: 'false',
         'aria-label': 'Your answer',
       });
-      const field = h('label', { class: 'field practice-field', id: 'practice-field', for: 'practice-input' }, 'Your answer', input);
+      const field = h('label', { class: 'field practice-field', id: 'practice-field', for: 'practice-input' });
+      appendRich(field, step.text || 'Your answer');
+      field.append(input);
       input.addEventListener('keydown', (ev) => {
         if (ev.key === 'Enter') {
           ev.preventDefault();
@@ -117,6 +121,11 @@ export function renderCard(host, vm, act) {
       kids.push(note);
     }
     if (actions.length) kids.push(h('div', { class: 'problem-actions' }, ...actions));
+    if (vm.phase === 'hint') {
+      const note = h('div', { class: 'hint-note', id: 'practice-miss-note' });
+      note.append(rich(vm.missLine || '', { class: 'practice-hint-line', id: 'practice-miss-line' }));
+      kids.push(h('p', { class: 'practice-verdict', id: 'practice-verdict', 'data-right': 'false' }, 'Not that one.'), note);
+    }
   } else {
     const why = rich(step.why || '', { class: 'practice-why', id: 'practice-why' });
     const verdict = h('p', {
@@ -136,7 +145,7 @@ export function renderCard(host, vm, act) {
     const last = vm.step >= item.steps.length - 1;
     const nextLabel = !last ? 'Next step' : (vm.endless && item.generator ? 'Generate another' : 'Next');
     actions.push(h('button', { type: 'button', class: 'btn btn-primary', id: 'practice-next' }, nextLabel));
-    kids.push(verdict, vm.right ? null : reveal, why, h('div', { class: 'problem-actions' }, ...actions));
+    kids.push(verdict, vm.revealAnswer ? reveal : null, why, h('div', { class: 'problem-actions' }, ...actions));
   }
 
   const card = h('article', { class: 'card practice-card', id: 'practice-card', 'data-kind': item.kind, 'data-view': vm.view }, ...kids.filter(Boolean));

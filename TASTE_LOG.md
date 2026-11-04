@@ -1357,6 +1357,14 @@ Checked in headless Chrome at 360×780: the full site name, the seven chapters, 
 
 The home map and the Test 2 map still exist behind a thread hash. Pictures for Chapters 1–3 and 6–7 are not inside those chapter pages yet; those loops register the pages. The interleave seed, choice order, and unsaved practice attempts are unchanged from batch 1.
 
+# Practice engine — batch 3
+
+Pulled the reviewer tip `4030750` first. Test prep is the practice card only. Test 1 and Test 2 are 44px rows to `#problems` and `#index`. A closed chapter is one line, and Chapter 4 sits under the status card at 390, 360, and 1280, light and dark. Continue opens `#chapter-4` at the top. The first miss on a blank shows the hint, and the answer waits for the second miss. The mixed set opens on a worked proof. Flashcards on a first visit say “1 of N”, front the name, back the sentence. Julia’s two way-up links read The Book (`#book`) and Chapter 4 (`#chapter-4`). The catalog loads whichever of `ch1.json`–`ch7.json` exist. A generator whose first argument is not `seed` throws. Continue can count a walk registered beside the module line. Chapter 2 is `2: './stations/chapter2.js'`, with `ch2-maps` and a page that reads `ctx.book.focus`.
+
+## Still open
+
+Chapter 2’s page is the shell the loop fills, not the five sections. Chapters 1, 3, 6, and 7 are still closed. Film panels still say Story Map. The mix after the worked proof uses a fixed seed. A miss is not stored past the card. Choices stay in written order.
+
 ## skeptical-student (practice batch 2)
 
 Branch `cursor/practice-engine`, tip `e02fc859`. Preview https://practice-preview.complexanalysis.pages.dev. Fresh storage. Headless Chrome, touch, 390×844 light, then the same pages with the theme pinned dark, then 1280×800 light and dark, and the home at 360×780 in the OS dark theme. No product code was changed. No console errors. No failed requests. `scrollWidth` matched the window (390, 360, 1280).

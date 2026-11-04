@@ -67,19 +67,31 @@ export function mountBookHome(el, ctx, spec) {
   for (const ch of shellChapters()) {
     const open = OPEN_CHAPTERS.includes(ch.n);
     const href = `#chapter-${ch.n}`;
-    const head = h('a', { class: 'book-row', id: `book-open-${ch.n}`, href },
-      h('p', { class: 'book-flag', id: `book-flag-${ch.n}` }, 'Later'),
-      h('h2', { id: `book-title-${ch.n}` },
+    const expanded = walkSections().some((s) => s.chapter === ch.n);
+    const head = expanded
+      ? h('a', { class: 'book-row', id: `book-open-${ch.n}`, href },
+        h('p', { class: 'book-flag', id: `book-flag-${ch.n}` }, 'Later'),
+        h('h2', { id: `book-title-${ch.n}` },
+          h('span', { class: 'book-num' }, String(ch.n)),
+          document.createTextNode(` ${ch.title}`)),
+        h('p', { class: 'book-page', id: `book-page-${ch.n}` }, `Page ${ch.page}`))
+      : h('a', { class: 'book-row book-row-closed', id: `book-open-${ch.n}`, href },
         h('span', { class: 'book-num' }, String(ch.n)),
-        document.createTextNode(` ${ch.title}`)),
-      h('p', { class: 'book-page', id: `book-page-${ch.n}` }, `Page ${ch.page}`));
+        h('span', { class: 'book-closed-title', id: `book-title-${ch.n}` }, ch.title),
+        h('span', { class: 'book-flag', id: `book-flag-${ch.n}` }, open ? 'Open' : 'Closed'));
     const kids = [head];
-    if (open) {
+    if (expanded) {
       const sections = h('ol', { class: 'book-sections', id: `book-sections-${ch.n}` });
       for (const s of sectionList(ch)) {
-        const sectionHrefHash = open ? `#${chapterHash(ch.n, s.id)}` : href;
+        const live = walkSections().some((w) => w.id === s.id);
+        if (!live) {
+          sections.append(h('li', { 'data-section': s.id, id: `book-section-${slug(s.id)}`, 'data-state': 'later' },
+            h('span', null, `${s.id} ${s.title}`),
+            h('span', { class: 'book-flag' }, 'Later')));
+          continue;
+        }
         sections.append(h('li', { 'data-section': s.id, id: `book-section-${slug(s.id)}` },
-          h('a', { class: 'book-section-link', href: sectionHrefHash },
+          h('a', { class: 'book-section-link', href: `#${chapterHash(ch.n, s.id)}` },
             h('span', null, `${s.id} ${s.title}`),
             h('span', { class: 'book-section-page' }, `p. ${s.page}`),
             h('span', { class: 'book-section-mark' }, ''))));
@@ -95,7 +107,7 @@ export function mountBookHome(el, ctx, spec) {
     const n = Number(node.getAttribute('data-chapter'));
     const mine = walkSections().filter((s) => s.chapter === n);
     let state = 'later';
-    let flag = 'Later';
+    let flag = OPEN_CHAPTERS.includes(n) ? 'Open' : 'Closed';
     if (mine.length) {
       const done = mine.every((s) => sectionFinished(s, ticks));
       const current = mine.some((s) => s.id === tally.nextId);
@@ -127,7 +139,7 @@ export function mountBookHome(el, ctx, spec) {
     list);
 
   const focus = spec && spec.chapter;
-  if (focus) {
+  if (focus && walkSections().some((s) => s.chapter === focus)) {
     const node = el.querySelector(`#book-node-${focus}`);
     if (node) node.scrollIntoView({ block: 'start' });
   }
@@ -214,13 +226,13 @@ function mountChapter4(el, ctx, focus) {
     path.append(h('li', {
       class: 'section-node', id: scope, 'data-section': section.id, 'data-state': 'ahead',
     },
-      h('p', { class: 'book-flag', id: `${scope}-flag` }, section.id),
-      h('h2', { id: `${scope}-title` }, section.title),
+      h('div', { class: 'section-head', id: `${scope}-head` },
+        h('p', { class: 'book-flag', id: `${scope}-flag` }, section.id),
+        h('h2', { id: `${scope}-title` }, section.title),
+        h('a', { class: 'btn', href: `#${prepHash(4, section.id)}`, id: `${scope}-practice` }, `Test prep · ${section.id}`)),
       h('p', { class: 'book-page' }, `Page ${section.page}`),
       idea,
       read,
-      h('p', { class: 'book-door', id: `${scope}-practice-row` },
-        h('a', { href: `#${prepHash(4, section.id)}`, id: `${scope}-practice` }, `Practice ${section.id}`)),
       exerciseHost));
   }
 
@@ -325,13 +337,13 @@ function mountChapter5(el, ctx, focus) {
   const walk = h('section', {
     class: 'section-node exp-walk', id: scope, 'data-section': '5.1',
   },
-    h('p', { class: 'book-flag', id: `${scope}-flag` }, '5.1'),
-    h('h2', { id: `${scope}-title` }, section.title),
+    h('div', { class: 'section-head', id: `${scope}-head` },
+      h('p', { class: 'book-flag', id: `${scope}-flag` }, '5.1'),
+      h('h2', { id: `${scope}-title` }, section.title),
+      h('a', { class: 'btn', href: `#${prepHash(5, '5.1')}`, id: 'chapter-section-5-1-practice' }, 'Test prep · 5.1')),
     h('p', { class: 'book-page' }, `Page ${section.page}`),
     idea,
     read,
-    h('p', { class: 'book-door', id: 'chapter-section-5-1-practice-row' },
-      h('a', { href: `#${prepHash(5, '5.1')}`, id: 'chapter-section-5-1-practice' }, 'Practice 5.1')),
     h('ul', { class: 'exp-blanks', id: 'chapter-blanks' },
       h('li', null, modulus)),
     exerciseHost);

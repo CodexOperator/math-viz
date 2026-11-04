@@ -2,11 +2,8 @@
 // and Leitner flashcards. The two existing test maps stay behind their own links.
 
 import { h } from '../stations/test2-ui.js';
-import { mount as mountProblems } from '../stations/problems.js';
-import { mount as mountIndex } from '../stations/test2-index.js';
-import { stationById, threadsForMap } from '../registry.js';
 import { BOOK_CHAPTERS } from '../data/book-path.js';
-import { PRACTICE, realize } from './catalog.js';
+import { loadCatalog, realize } from './catalog.js';
 import { selectItems, sectionOfFocus, practiceEntries } from './queue.js';
 import { answersMatch } from './check.js';
 import { loadDeck, saveDeck, reviewCard, dueOrder, localDay } from './leitner.js';
@@ -56,9 +53,10 @@ function memoryGroups(items) {
   return groups;
 }
 
-export function mountPrep(el, ctx, spec) {
+export async function mountPrep(el, ctx, spec) {
   const section = sectionOfFocus(spec && spec.focus);
   const chapter = spec && spec.chapter;
+  const PRACTICE = await loadCatalog();
   const pool = selectItems(PRACTICE, { chapter, section });
   const walk = !!(section);
   const seed = 1 + (chapter || 0);
@@ -68,6 +66,7 @@ export function mountPrep(el, ctx, spec) {
   let index = 0;
   let step = 0;
   let hint = 0;
+  let misses = 0;
   let phase = 'ask';
   let right = false;
   let done = false;
@@ -77,7 +76,7 @@ export function mountPrep(el, ctx, spec) {
   const today = localDay();
 
   const status = h('p', { class: 'book-status', id: 'practice-status' });
-  const back = h('a', { class: 'btn', id: 'practice-back', href: chapter ? `#chapter-${chapter}` : '#book' }, chapter ? `Chapter ${chapter}` : 'The Book');
+  const up = h('a', { class: 'station-link', id: 'practice-book', href: '#book', 'data-dir': 'prev' }, 'The Book');
   const endlessBtn = h('button', {
     type: 'button', class: 'chip', id: 'practice-endless', 'aria-pressed': 'false',
   }, 'Endless');
@@ -99,10 +98,9 @@ export function mountPrep(el, ctx, spec) {
     });
   }
   const stage = h('div', { class: 'practice-stage', id: 'practice-stage' });
-  const fold1 = h('section', { id: 'prep-test-1', class: 'prep-fold' });
-  const fold2 = h('section', { id: 'prep-test-2', class: 'prep-fold' });
-  let stop1 = function stopProblems() {};
-  let stop2 = function stopIndex() {};
+  const indexes = h('nav', { class: 'practice-indexes', id: 'practice-indexes', 'aria-label': 'The two tests' },
+    h('a', { class: 'station-link', id: 'practice-to-test1', href: '#problems' }, 'Test 1'),
+    h('a', { class: 'station-link', id: 'practice-to-test2', href: '#index' }, 'Test 2'));
 
   function currentEntry() {
     return queue[index] || null;
@@ -117,8 +115,15 @@ export function mountPrep(el, ctx, spec) {
   function resetStep() {
     step = 0;
     hint = 0;
+    misses = 0;
     phase = 'ask';
     right = false;
+  }
+
+  function missLine(item) {
+    const s = item.steps[step];
+    if (s && s.hints && s.hints.length) return s.hints[0];
+    return item.memory || '';
   }
 
   function nextSeed(source) {
@@ -144,6 +149,7 @@ export function mountPrep(el, ctx, spec) {
     if (item && step < item.steps.length - 1 && phase === 'told') {
       step += 1;
       hint = 0;
+      misses = 0;
       phase = 'ask';
       right = false;
       paint();
@@ -173,10 +179,16 @@ export function mountPrep(el, ctx, spec) {
 
   function onAnswer(value) {
     const item = realized();
-    if (!item || phase !== 'ask') return;
+    if (!item || (phase !== 'ask' && phase !== 'hint')) return;
     const s = item.steps[step];
     right = answersMatch(value, s.answer, s.accept);
-    phase = 'told';
+    if (right) {
+      phase = 'told';
+      paint();
+      return;
+    }
+    misses += 1;
+    phase = misses === 1 ? 'hint' : 'told';
     paint();
   }
 
@@ -205,6 +217,8 @@ export function mountPrep(el, ctx, spec) {
       hint,
       phase: entry.view === 'worked' ? 'ask' : phase,
       right,
+      revealAnswer: phase === 'told' && !right,
+      missLine: missLine(item),
       kindLabel: KIND_LABEL[item.kind] || 'Practice',
       count: `Step ${Math.min(step + 1, item.steps.length)} of ${item.steps.length}`,
       showGenerate: !!(item.generator && phase === 'told' && step >= item.steps.length - 1 && !endless),
@@ -225,7 +239,10 @@ export function mountPrep(el, ctx, spec) {
 
   function flashList() {
     const order = dueOrder(pool, deck, today);
-    if (order.due.length) return { rows: order.due, early: false };
+    const fresh = order.due.filter((row) => !row.rec);
+    const reviewed = order.due.filter((row) => row.rec);
+    if (reviewed.length) return { rows: reviewed, early: false };
+    if (fresh.length) return { rows: fresh, early: false };
     return { rows: order.later, early: order.later.length > 0 };
   }
 
@@ -239,15 +256,17 @@ export function mountPrep(el, ctx, spec) {
     if (flashCursor >= rows.length) flashCursor = 0;
     const row = rows[flashCursor];
     const rec = deck.cards[row.item.id];
-    status.textContent = early
-      ? 'Nothing is due. This card is early.'
-      : `${rows.length} due.`;
+    const fresh = rows.every((r) => !r.rec);
+    status.textContent = fresh
+      ? `${flashCursor + 1} of ${rows.length}`
+      : (early ? 'Nothing is due. This card is early.' : `${rows.length} due.`);
+    const front = row.item.cite && row.item.cite.ref ? row.item.cite.ref : row.item.prompt;
     renderFlash(stage, {
-      item: row.item,
+      item: { ...row.item, prompt: front },
       show: flashShow,
       early,
       box: rec ? rec.box : 0,
-      count: rec ? `Box ${rec.box}, ${rec.reviews} reviews` : 'New card',
+      count: fresh ? `${flashCursor + 1} of ${rows.length}` : (rec ? `Box ${rec.box}` : 'New'),
     }, {
       show: () => { flashShow = true; paint(); },
       grade: (grade) => {
@@ -276,38 +295,14 @@ export function mountPrep(el, ctx, spec) {
     : 'Items from more than one section, mixed. Check, then read the reason.';
   el.append(
     h('header', { class: 'station-header' },
-      h('p', { class: 'book-kicker', id: 'practice-book' }, 'The Book'),
+      up,
       h('h1', { id: 'practice-title' }, 'Test prep'),
+      h('p', { class: 'where-line', id: 'where-line' }, 'Test prep'),
       h('p', { class: 'station-lede', id: 'practice-lede' }, lede)),
-    h('div', { class: 'book-next', id: 'practice-next-row' }, status, back),
+    h('div', { class: 'book-next', id: 'practice-next-row' }, status),
     h('div', { class: 'practice-toolbar', id: 'practice-toolbar' }, modeRow, hasGenerator ? endlessBtn : null),
     stage,
-    fold1,
-    fold2);
-  const indexStation = stationById('index');
-  const problemsUnmount = mountProblems(fold1, {
-    store: ctx.store,
-    navigate: ctx.navigate,
-    map: 'test1',
-    station: stationById('problems'),
-    threads: threadsForMap('test1'),
-    preset: null,
-    embedTitle: 'Test 1',
-  });
-  const indexUnmount = mountIndex(fold2, {
-    store: ctx.store,
-    navigate: ctx.navigate,
-    map: 'test2',
-    station: indexStation,
-    threads: threadsForMap('test2'),
-    preset: null,
-    embedTitle: 'Test 2',
-  });
-  if (typeof problemsUnmount === 'function') stop1 = problemsUnmount;
-  if (typeof indexUnmount === 'function') stop2 = indexUnmount;
+    indexes);
   paint();
-  return function unmount() {
-    stop1();
-    stop2();
-  };
+  return function unmount() {};
 }

@@ -8,6 +8,7 @@
 export const SHELL_LAST_CHAPTER = 7;
 
 export const CHAPTER_MODULES = Object.freeze({
+  2: './stations/chapter2.js',
   4: './stations/book.js',
   5: './stations/book.js',
 });
@@ -15,3 +16,8 @@ export const CHAPTER_MODULES = Object.freeze({
 export const OPEN_CHAPTER_NUMBERS = Object.freeze(
   Object.keys(CHAPTER_MODULES).map(Number).sort((a, b) => a - b),
 );
+
+// Exercise sections Continue counts, besides the walks already in book-path.js.
+// A chapter loop adds its own key and leaves the others alone.
+export const CHAPTER_WALKS = Object.freeze({
+});

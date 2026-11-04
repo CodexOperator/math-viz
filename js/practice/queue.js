@@ -67,7 +67,20 @@ export function interleave(items, seed = 1) {
   return out.map((item) => ({ source: item, seed: 1, view: 'faded' }));
 }
 
+// The mixed set opens on one worked proof, then that proof with the blanks.
+export function testPrepEntries(items, seed = 1) {
+  const live = items.filter((it) => it.kind !== 'flash');
+  const proof = live.find((it) => it.kind === 'proof-blank');
+  const rest = interleave(live.filter((it) => it !== proof), seed);
+  const out = [];
+  if (proof) {
+    out.push({ source: proof, seed: 1, view: 'worked' });
+    out.push({ source: proof, seed: 1, view: 'faded' });
+  }
+  return out.concat(rest);
+}
+
 export function practiceEntries(items, { mode, seed }) {
   if (mode === 'walk') return sectionWalk(items);
-  return interleave(items, seed);
+  return testPrepEntries(items, seed);
 }

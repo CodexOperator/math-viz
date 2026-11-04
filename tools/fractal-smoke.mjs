@@ -13,8 +13,11 @@ import { parseBookRoute } from '../js/book/route.js';
 import { answersMatch, parseComplex } from '../js/practice/check.js';
 import { generate as geometricGenerate } from '../js/practice/gen/geometric-series.js';
 import { generate as expGenerate, principalQuarters } from '../js/practice/gen/exp-mod-arg.js';
-import { catalogIssues, PRACTICE } from '../js/practice/catalog.js';
-import { interleave, sectionWalk } from '../js/practice/queue.js';
+import { catalogIssues, loadCatalog, assertGeneratorSignatures } from '../js/practice/catalog.js';
+import { seedFirst } from '../js/practice/gen/index.js';
+import { generate as mapGenerate } from '../js/practice/gen/ch2-maps.js';
+import { testPrepEntries, sectionWalk } from '../js/practice/queue.js';
+import { walkSections, continueTarget } from '../js/book/continue.js';
 import { mergeLeitner, reviewCard, emptyDeck } from '../js/practice/leitner.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
 import { parsePath, evalPath } from '../js/core/path-expr.js';
@@ -124,12 +127,13 @@ check('a chapter page is the module named in the book registry',
   bookModuleFor(parseRoute('#chapter-4').book) === './stations/book.js'
   && bookModuleFor(parseRoute('#chapter-5').book) === './stations/book.js'
   && bookModuleFor(parseRoute('#book').book) === './stations/book.js'
-  && bookModuleFor(parseRoute('#test-prep').book) === './stations/book.js');
+  && bookModuleFor(parseRoute('#test-prep').book) === './stations/book.js'
+  && bookModuleFor(parseRoute('#chapter-2').book) === './stations/chapter2.js');
 check('#chapter-4 opens chapter 4', parseRoute('#chapter-4').book.kind === 'chapter' && parseRoute('#chapter-4').book.chapter === 4 && parseRoute('#chapter-4').book.focus == null);
 check('#chapter-4-4-1-3 focuses exercise 4.1.3', parseRoute('#chapter-4-4-1-3').book.focus === '4.1.3');
 check('#chapter-1 stays on the roadmap', parseRoute('#chapter-1').book.kind === 'roadmap' && parseRoute('#chapter-1').book.chapter === 1);
 check('a junk token on a later chapter is not a page', parseRoute('#chapter-1-extra').station == null && parseRoute('#chapter-1-extra').book == null);
-check('eleven chapters, 4 and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_CHAPTERS.join() === '4,5' && BOOK_CHAPTERS.filter((ch) => ch.open).map((ch) => ch.n).join() === '4,5');
+check('eleven chapters, registry opens 2, 4, and 5', BOOK_CHAPTERS.length === 11 && OPEN_CHAPTERS.join() === '2,4,5' && BOOK_CHAPTERS.filter((ch) => ch.open).map((ch) => ch.n).join() === '4,5');
 check('chapter 4 sections follow the contents', CHAPTER_4.sections.map((s) => `${s.id} ${s.page}`).join() === '4.1 102,4.2 109,4.3 118,4.4 123');
 check('chapter 4 exercises are the homework set plus 4.4.6', chapter4ExerciseIds().join() === '4.1.3,4.1.13,4.2.3,4.2.4,4.2.5,4.3.1,4.3.2,4.4.6');
 {
@@ -879,7 +883,7 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
 }
 
 await runViewChecks();
-runPracticeChecks();
+await runPracticeChecks();
 
 if (failed) {
   console.error(`${failed} failed`);
@@ -1127,7 +1131,8 @@ async function runViewChecks() {
   check('a drive after a pause gap does not spend the idle time', driveDt.length >= 2 && driveDt[0] < 1 && driveDt[1] > 10 && driveDt[1] < 30);
 }
 
-function runPracticeChecks() {
+async function runPracticeChecks() {
+const PRACTICE = await loadCatalog();
 check('test prep is a book route and does not force a map',
   parseRoute('#test-prep').book.kind === 'prep'
   && parseRoute('#test-prep').book.chapter == null
@@ -1146,8 +1151,21 @@ check('a fraction, a power, and a complex number match their equivalents',
   && !answersMatch('1+i', '1-i')
   && !answersMatch('e^{2}', '7.389'));
 {
-  const issues = catalogIssues();
+  const issues = catalogIssues(PRACTICE);
   check('practice catalog matches the schema', issues.length === 0);
+  check('a missing why and a repeated id are flagged',
+    catalogIssues([
+      { id: 'a', kind: 'blank', cite: { ref: 'X', page: 1 }, memory: 'm', steps: [{ text: 't', answer: '1', why: '' }] },
+      { id: 'a', kind: 'blank', cite: { ref: 'X', page: 1 }, memory: 'm', steps: [{ text: 't', answer: '1', why: 'because' }] },
+    ]).some((line) => line.includes('why'))
+    && catalogIssues([
+      { id: 'a', kind: 'blank', cite: { ref: 'X', page: 1 }, memory: 'm', steps: [{ text: 't', answer: '1', why: 'because' }] },
+      { id: 'a', kind: 'blank', cite: { ref: 'X', page: 1 }, memory: 'm', steps: [{ text: 't', answer: '1', why: 'because' }] },
+    ]).some((line) => line.startsWith('id ')));
+  let swapped = false;
+  try { assertGeneratorSignatures({ bad: { generate(params, seed) { return { params, seed }; } } }); }
+  catch (err) { swapped = /seed/.test(err.message); }
+  check('a swapped generator signature is rejected', swapped && seedFirst(function generate(seed) { return seed; }));
   const kinds = new Set(PRACTICE.map((it) => it.kind));
   check('every practice kind is in the pilot set',
     ['proof-blank', 'proof-mc', 'next-step-blank', 'next-step-mc', 'blank', 'mc', 'flash'].every((k) => kinds.has(k)));
@@ -1159,7 +1177,8 @@ check('a fraction, a power, and a complex number match their equivalents',
     PRACTICE.filter((it) => it.kind === 'next-step-blank' || it.kind === 'next-step-mc').length >= 4
     && PRACTICE.some((it) => it.generator && it.generator.template === 'geometric-series' && it.generator.params.kind === 'sum')
     && PRACTICE.some((it) => it.generator && it.generator.template === 'geometric-series' && it.generator.params.kind === 'radius')
-    && PRACTICE.some((it) => it.generator && it.generator.template === 'exp-mod-arg'));
+    && PRACTICE.some((it) => it.generator && it.generator.template === 'exp-mod-arg')
+    && PRACTICE.some((it) => it.generator && it.generator.template === 'ch2-maps' && it.chapter === 2));
   const refs = new Set(PRACTICE.filter((it) => it.kind === 'flash').map((it) => it.cite.ref));
   const needed = [
     'Definition 4.1', 'Theorem 4.1', 'Definition 4.2', 'Theorem 4.2', 'Definition 4.3', 'Theorem 4.3',
@@ -1177,8 +1196,22 @@ check('a fraction, a power, and a complex number match their equivalents',
   }));
   const walk = sectionWalk(PRACTICE.filter((it) => it.id === 'ch4-4.1-thm-4.1-blank'));
   check('a proof blank opens as a worked example', walk[0] && walk[0].view === 'worked' && walk[1] && walk[1].view === 'faded');
-  const mix = interleave(PRACTICE, 3);
-  check('test prep mixes sections', new Set(mix.slice(0, 4).map((e) => e.source.section)).size >= 2);
+  const mix = testPrepEntries(PRACTICE, 3);
+  check('test prep opens on a worked proof, then the blank',
+    mix[0] && mix[0].view === 'worked' && mix[0].source.kind === 'proof-blank'
+    && mix[1] && mix[1].view === 'faded' && mix[1].source.id === mix[0].source.id);
+  check('test prep then mixes sections', new Set(mix.slice(2, 6).map((e) => e.source.section)).size >= 2);
+  const counted = walkSections().reduce((n, s) => n + s.exercises.length, 0);
+  const withChapter = walkSections({ 2: [{ id: '2.1', exercises: ['2.1.1'] }] });
+  check('continue counts a registered chapter',
+    counted === 10
+    && withChapter.some((s) => s.id === '2.1')
+    && withChapter.reduce((n, s) => n + s.exercises.length, 0) === 11
+    && continueTarget({}).href === '#chapter-4');
+  const mapped = mapGenerate(1);
+  check('a linear map answer is computed from the seed',
+    mapped.witness.re === mapped.witness.a * mapped.witness.x + mapped.witness.b
+    && mapped.witness.im === mapped.witness.a * mapped.witness.y);
 }
 {
   let sumsOk = true;
