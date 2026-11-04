@@ -927,3 +927,19 @@ Branch `cursor/book-chapter-path-df29`, after the batch 5 review at `c4118ee`. T
 **Verified.** `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` and `node kit/smoke.mjs` exit 0. The router does not import `kit/`. Headless Chrome: at 360×640 Play is on the first screen and the page does not scroll sideways, and the same at 1280×800. The resting picture still says the point is on the left of the unit circle. Exercise 1’s tick stays disabled there, and Exercise 2’s blank is filled. `#chapter-5-5-1-1` opens at 1 and the tick writes `5.1.1` beside the Chapter 4 ticks. Reduced motion’s first Next step lands on the bottom and fills the segment blank, and the button does not say Pause. Chapter 4 still has eight cards. The index still has 30. Screenshots: `/opt/cursor/artifacts/chapter5-walk-360.png`, `/opt/cursor/artifacts/chapter5-walk-1280.png`.
 
 **Stop.** Not merged. Not deployed.
+
+## Book path — batch 7 (the cut)
+
+Branch `cursor/book-chapter-path-df29`, after the batch 6 review at `046f77f`. The picture is unchanged. One cutting batch, then the walk rests.
+
+1. The strip blank is gone. The modulus blank stays, and it fills when the radius leaves 1.
+2. Exercise 2’s card is part (c) only: where the images of \(\pm i\pi\) are. The blank still reads “land together at −1” on the left-hand frame, including the frame the page opens on. The hint keeps the strip \(-\pi < y \le \pi\) and says the two ends are the left-hand point.
+3. Each tick stays live while the point is within 0.35 radians of its end: Exercise 2 on the left, Exercise 1 on the right. The first frames of Play do not clear it. The tick sits above the quotation.
+4. Exercise 1’s hint keeps the series sentence and names the right-hand point of the unit circle as \(z = 0\).
+5. On a phone the radius sentence stays one line, and the claim box keeps the resting height, so Play does not hop.
+
+The Later titles for 5.2–5.5 stay. The kicker, the colours, the flags, and the hint button stay.
+
+**Verified.** `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` and `node kit/smoke.mjs` exit 0. The router does not import `kit/`. Headless Chrome: Play is on the first screen at 360×640, 390×844, and 1280×800, and the page does not scroll sideways. A drag that grows the radius keeps that claim on one line and leaves Play where it was. Screenshots: `/opt/cursor/artifacts/chapter5-cut-360.png`, `/opt/cursor/artifacts/chapter5-cut-1280.png`.
+
+**Stop.** The walk rests. Not merged. Not deployed.

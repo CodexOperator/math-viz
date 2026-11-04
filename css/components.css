@@ -1084,6 +1084,13 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .exp-claim {
   max-width: 62ch;
   margin: 0;
+  line-height: 1.55;
+}
+
+/* On a phone the resting sentence is two lines and the radius sentence is one.
+   The box keeps the taller height, so Play does not hop when the radius leaves 1. */
+@media (max-width: 40rem) {
+  .exp-claim { min-height: calc(1.0625rem * 1.55 * 2); }
 }
 
 .exp-blanks {

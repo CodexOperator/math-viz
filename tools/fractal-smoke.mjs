@@ -141,16 +141,21 @@ check('One Newton Step keeps Example 4.7', /Example 4\.7, page 110/.test(readFil
 {
   const card1 = CHAPTER_5.cards['5.1.1'];
   const card2 = CHAPTER_5.cards['5.1.2'];
-  check('section 5.1 quotes exercise 1 and exercise 2 from page 135',
+  check('section 5.1 quotes exercise 1 and part (c) of exercise 2',
     chapter5ExerciseIds().join() === '5.1.1,5.1.2'
     && card1.statement.includes('exp(0)')
     && card1.href.endsWith('#x5_1_1')
-    && card2.statement.includes('Figure 5.2')
+    && /right-hand point/.test(card1.hint)
+    && !/blank stays empty/.test(card1.hint)
     && card2.statement.includes('\\pm i\\pi')
+    && !/shading|s_\{1\}/.test(card2.statement)
     && card2.href.endsWith('#x5_1_2')
+    && /-\\pi < y \\le \\pi/.test(card2.hint)
+    && /left-hand point/.test(card2.hint)
     && CHAPTER_5.sections[0].read[0].href.endsWith('#exp_z__Def')
     && CHAPTER_5.sections[0].read[1].href.endsWith('#fig_ch-05-02')
-    && CHAPTER_5.sections[0].idea.includes('Identity (5.1)'));
+    && CHAPTER_5.sections[0].idea.includes('Identity (5.1)')
+    && !readFileSync(new URL('../js/stations/book.js', import.meta.url), 'utf8').includes('vertical segment'));
   check('the index does not gain the section 5.1 cards',
     !readFileSync(new URL('../js/data/test2-problems.js', import.meta.url), 'utf8').includes("id: '5.1.1'")
     && !readFileSync(new URL('../js/stations/test2-index.js', import.meta.url), 'utf8').includes('5.1.1'));

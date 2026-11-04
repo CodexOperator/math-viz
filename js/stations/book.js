@@ -290,7 +290,6 @@ function mountChapter5(el, ctx, focus) {
 
   const status = h('p', { class: 'book-status', id: 'chapter-status' });
   const modulus = blankLine('chapter-blank-modulus', 'The modulus is ');
-  const segment = blankLine('chapter-blank-segment', 'A vertical segment in the strip lands on the circle of radius ');
   const cards = {};
   const exerciseHost = h('div', { class: 'chapter-exercises', id: 'chapter-section-5-1-exercises' });
   for (const id of section.exercises) {
@@ -321,8 +320,7 @@ function mountChapter5(el, ctx, focus) {
     idea,
     read,
     h('ul', { class: 'exp-blanks', id: 'chapter-blanks' },
-      h('li', null, modulus),
-      h('li', null, segment)),
+      h('li', null, modulus)),
     exerciseHost);
 
   const later = h('ol', { class: 'book-path exp-later', id: 'chapter-later-sections' });
@@ -353,17 +351,16 @@ function mountChapter5(el, ctx, focus) {
     const x = Number(stage && stage.dataset.probeRe);
     const y = Number(stage && stage.dataset.probeIm);
     const onCircle = Number.isFinite(x) && Math.abs(x) <= 1e-9;
-    const atZero = onCircle && Number.isFinite(y) && Math.abs(y) <= 1e-6;
-    const atEnds = onCircle && Number.isFinite(y) && Math.abs(Math.abs(y) - Math.PI) <= 1e-6;
-    const offAxis = Number.isFinite(y) && Math.abs(Math.sin(y)) > 0.35;
+    const nearRight = onCircle && Number.isFinite(y) && Math.abs(y) <= 0.35;
+    const nearLeft = onCircle && Number.isFinite(y)
+      && Math.min(Math.abs(y - Math.PI), Math.abs(y + Math.PI)) <= 0.35;
     const grown = Number.isFinite(x) && x > 0.06;
     const shrunk = Number.isFinite(x) && x < -0.06;
     fillGap(modulus, grown ? '$e^{x}$, larger than 1' : (shrunk ? '$e^{x}$, smaller than 1' : ''));
-    fillGap(segment, offAxis ? '$e^{x}$' : '');
-    fillGap(cards['5.1.1']._blank, atZero ? CHAPTER_5.cards['5.1.1'].answer : '');
-    fillGap(cards['5.1.2']._blank, atEnds ? CHAPTER_5.cards['5.1.2'].answer : '');
-    setTick(cards['5.1.1'], ticks['5.1.1'] === true, atZero);
-    setTick(cards['5.1.2'], ticks['5.1.2'] === true, atEnds);
+    fillGap(cards['5.1.1']._blank, nearRight ? CHAPTER_5.cards['5.1.1'].answer : '');
+    fillGap(cards['5.1.2']._blank, nearLeft ? CHAPTER_5.cards['5.1.2'].answer : '');
+    setTick(cards['5.1.1'], ticks['5.1.1'] === true, nearRight);
+    setTick(cards['5.1.2'], ticks['5.1.2'] === true, nearLeft);
     paintStatus();
   }
 
@@ -461,12 +458,12 @@ function exerciseCard5(card, id, onTick) {
     class: 'card problem-card chapter-card', id: cardId, 'data-problem': id,
   },
     h('h3', { id: `chapter-title-${idSlug}` }, card.pin),
+    blank,
+    last,
     sourceTag({ pin: card.pin, href: card.href }),
     body,
     show,
-    hint,
-    blank,
-    last);
+    hint);
   node._tick = tick;
   node._blank = blank;
   node._last = last;
