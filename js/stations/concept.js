@@ -7,7 +7,9 @@ import { createMotion } from '../core/anim.js';
 import { publishFilmParams } from '../core/film.js';
 import { mountStepControl, quantize, substepsForFrame } from '../core/stepper.js';
 import { fmtCart, fmtNum } from '../core/complex.js';
-import { test2ProblemsAt } from '../data/test2-problems.js';
+import { test2ProblemsAt, test2ProblemById } from '../data/test2-problems.js';
+import { chapter4ExerciseIds, CHAPTER_PICTURE, exerciseFromToken } from '../data/book-path.js';
+import { chapterHash } from '../book/route.js';
 import { sectionHref } from '../data/book.js';
 import { threadLabel } from '../registry.js';
 import { h, richP, sourceTag, scopeBanner, walkList, placeLinks, chipButton, appendRich, storyLinks } from './test2-ui.js';
@@ -39,21 +41,36 @@ function show(host, lines) {
   host.replaceChildren(walkList(lines));
 }
 
+function chapterExerciseId(preset) {
+  const token = preset && preset.kind === 'token' ? preset.token : '';
+  return exerciseFromToken(token);
+}
+
+function chapterChip(ctx) {
+  const id = chapterExerciseId(ctx && ctx.preset);
+  return id ? CHAPTER_PICTURE[id].chip : null;
+}
+
 function problemRow(stationId, preset) {
   const probs = test2ProblemsAt(stationId);
   if (!probs.length) return null;
   const opened = preset && preset.kind === 'problem' ? preset.id : null;
+  const fromChapter = chapterExerciseId(preset);
   const box = h('div', { class: 'chips', id: `${stationId}-problems` });
   for (const p of probs) {
+    const onChapter = chapter4ExerciseIds().includes(p.id);
     const chip = h('a', {
       class: 'chip', id: `${stationId}-ex-${p.id.replace(/\./g, '-')}`,
-      href: `#index-${p.id.replace(/\./g, '-')}`,
+      href: onChapter ? `#${chapterHash(4, p.id)}` : `#index-${p.id.replace(/\./g, '-')}`,
     }, p.pin);
-    if (p.id === opened) chip.setAttribute('aria-current', 'true');
+    if (p.id === opened || p.id === fromChapter) chip.setAttribute('aria-current', 'true');
     box.append(chip);
   }
   const openedProblem = opened ? probs.find((p) => p.id === opened) : null;
   let note;
+  if (fromChapter) {
+    note = 'This picture is the one that exercise names. The statement and the hint are on the chapter. This page does not print a solution.';
+  } else
   if (openedProblem && openedProblem.homework) {
     note = 'This stop is where that exercise is worked. The statement and a map hint are on the index card. The card does not print a solution.';
   } else if (openedProblem) {
@@ -91,6 +108,12 @@ function shell(el, ctx, spec) {
   bits.push(richP(spec.lede, { class: 'station-lede', id: `${id}-lede` }));
   const badges = threadBadges(ctx);
   if (badges) bits.push(badges);
+  const fromChapter = chapterExerciseId(ctx.preset);
+  if (fromChapter) {
+    const problem = test2ProblemById(fromChapter);
+    bits.push(h('p', { id: `${id}-chapter-back` },
+      h('a', { href: `#${chapterHash(4, fromChapter)}` }, problem ? problem.pin : fromChapter)));
+  }
   for (const cite of spec.cites) bits.push(sourceTag(cite));
   el.append(h('header', { class: 'station-header' }, ...bits));
   el.append(spec.panel);
@@ -113,6 +136,7 @@ function sequencePanel() {
     { id: 'sequence-cycle', label: '((1+i)/√2)^n', z: { re: Math.SQRT1_2, im: Math.SQRT1_2 }, kind: 'cycle' },
   ];
   let current = modes[0];
+  let fromChapter = false;
   const buttons = [];
   function publish() {
     const section = host.closest('section.station');
@@ -123,7 +147,9 @@ function sequencePanel() {
     const pts = orbit(current.z, 8);
     show(host, pts.map((p, i) => `n = ${i + 1}: ${fmtCart(p, 4)}, modulus ${fmtNum(Math.hypot(p.re, p.im), 4)}`));
     note.textContent = current.kind === 'settle'
-      ? 'Settles at 0. The modulus is (√5 / 4)^n, which goes to 0. Exercise 1(a) asks for this limit. What the book prints is closed on the index.'
+      ? (fromChapter
+        ? 'Settles at 0. The modulus is (√5 / 4)^n, which goes to 0. These terms are the disk in Definition 4.1.'
+        : 'Settles at 0. The modulus is (√5 / 4)^n, which goes to 0. Exercise 1(a) asks for this limit. What the book prints is closed on the index.')
       : 'Stays. The modulus is 1, and the point visits the eighth roots of unity. It does not settle. Exercise 7 asks whether the limit exists. What the book prints is closed on the index.';
     publish();
   }
@@ -138,10 +164,24 @@ function sequencePanel() {
     chips.append(b);
   });
   draw();
-  return h('section', { class: 'panel', 'aria-labelledby': 'sequence-title' },
+  const panel = h('section', { class: 'panel', 'aria-labelledby': 'sequence-title' },
     h('h2', { id: 'sequence-title' }, 'Two sequences from section 4.1'),
     h('p', null, 'A limit means the terms eventually sit in every disk you draw around one point. Bounded is weaker: convergent sequences are bounded, and section 4.2 uses that word for orbits.'),
-    chips, host, h('div', { id: 'sequence-film-slot', 'data-film-slot': '' }), note);
+    chips, host, note, h('div', { id: 'sequence-film-slot', 'data-film-slot': '' }));
+  // The page is built once. A chapter door names the disk; any other visit keeps the chip and the exercise name.
+  panel.visit = (chapter) => {
+    fromChapter = !!chapter;
+    draw();
+  };
+  panel.applyChip = (id) => {
+    const i = modes.findIndex((m) => m.id === id);
+    if (i < 0) return;
+    fromChapter = true;
+    current = modes[i];
+    buttons.forEach((btn, j) => btn.setAttribute('aria-pressed', String(j === i)));
+    draw();
+  };
+  return panel;
 }
 
 function harmonicLines(n) {
@@ -334,9 +374,12 @@ function zeroPanel(ctx) {
     { id: 'zero-c-quarter', label: 'c = 0.3', c: { re: 0.3, im: 0 }, text: 'Leaves. Real and greater than 1/4. Exercise 8: this c is not in the set of c whose orbit of 0 stays bounded. The terms keep climbing.' },
   ];
   const token = ctx && ctx.preset && ctx.preset.kind === 'token' ? String(ctx.preset.token).toLowerCase() : '';
-  const picked = (token === '0' || token === 'zero' || token === 'zero-c-0') ? samples[0]
-    : (token === 'i' || token === 'zero-c-i') ? samples[1]
-    : null;
+  const fromChapter = exerciseFromToken(token);
+  const wantChip = fromChapter ? CHAPTER_PICTURE[fromChapter].chip : null;
+  const picked = samples.find((s) => s.id === wantChip)
+    || ((token === 'm2' || token === 'zero-c-m2') ? samples[2] : null)
+    || ((token === '0' || token === 'zero' || token === 'zero-c-0') ? samples[0] : null)
+    || ((token === 'i' || token === 'zero-c-i') ? samples[1] : null);
   let current = picked || samples[1];
   const host = h('div', { id: 'zero-walk', 'data-film-sync': '' });
   const note = h('p', { id: 'zero-fate' });
@@ -368,9 +411,9 @@ function zeroPanel(ctx) {
   return h('section', { class: 'panel', 'aria-labelledby': 'zero-title' },
     h('h2', { id: 'zero-title' }, 'Only the start at 0'),
     h('p', null, 'Theorem 4.9, page 113: the Julia set of z² + c is connected exactly when this one orbit stays bounded. The book then collects those c into the Mandelbrot set. That picture is the next stop. On the flat paper, c is a hollow square.'),
+    chips, host, note,
     filmTie,
-    h('div', { id: 'zero-film-slot', 'data-film-slot': '' }),
-    chips, host, note);
+    h('div', { id: 'zero-film-slot', 'data-film-slot': '' }));
 }
 
 const BOOK_NEWTON = [
@@ -403,10 +446,10 @@ function newtonStepPanel() {
     h('h2', { id: 'newton-step-title' }, 'The book’s five steps, and a line'),
     h('p', null, 'The step is z − f(z)/f′(z). The table is Example 4.7, page 110, a quadratic. Exercise 3 is the line az + b. The derivative in the denominator is the zoom from Test 1.'),
     host, note,
-    h('div', { id: 'newton-step-film-slot', 'data-film-slot': '' }),
-    h('p', null, 'The film walks these five steps from the start in the table. On the flat paper the same formula flips: drag the plant and the sentence changes from which root to leaves, when the plant is real.'),
     h('h3', null, 'Degree 1'),
     lineHost,
+    h('p', null, 'The film walks these five steps from the start in the table. On the flat paper the same formula flips: drag the plant and the sentence changes from which root to leaves, when the plant is real.'),
+    h('div', { id: 'newton-step-film-slot', 'data-film-slot': '' }),
     h('p', null, h('a', { href: '#newton' }, 'Open the Newton picture')));
 }
 
@@ -489,7 +532,7 @@ function pileLines(z, steps) {
   return lines;
 }
 
-function geometricPanel() {
+function geometricPanel(ctx) {
   const samples = [
     {
       id: 'geometric-inside', label: '(1+i)/2', z: { re: 0.5, im: 0.5 },
@@ -512,7 +555,10 @@ function geometricPanel() {
       text: 'Leaves. |z + i| = 4 > 2, so |w| > 1 and the bags run off. The wall of Exercise 2 is the circle |z + i| = 2.',
     },
   ];
-  let current = samples[0];
+  const token = ctx && ctx.preset && ctx.preset.kind === 'token' ? String(ctx.preset.token).toLowerCase() : '';
+  const fromChapter = exerciseFromToken(token);
+  const wantChip = fromChapter ? CHAPTER_PICTURE[fromChapter].chip : null;
+  let current = samples.find((s) => s.id === wantChip) || samples[0];
   const host = h('div', { id: 'geometric-sum' });
   const note = h('p', { id: 'geometric-fate' });
   const buttons = [];
@@ -562,11 +608,18 @@ function powerPanel() {
     chips.append(b);
   });
   draw();
-  return h('section', { class: 'panel', 'aria-labelledby': 'powerseries-title' },
+  const panel = h('section', { class: 'panel', 'aria-labelledby': 'powerseries-title' },
     h('h2', { id: 'powerseries-title' }, 'Inside the disk, outside the disk'),
     h('p', { id: 'powerseries-radii' }, 'One series, Σ (z/2)^n. The disk has radius 2. Move the point across that radius and the sentence flips. The unit circle on the flat paper is this same wall, read at radius 1.'),
     chips, host, note,
     h('p', null, 'Exercise 6 asks whether a series can settle at one point and leave at a nearer one. The check is closed on the index. Exercise 3, marked extra, asks for ten radii. The index quotes the four answers the HTML prints and leaves the rest in the section.'));
+  panel.applyChip = (id) => {
+    const found = samples.find((s) => s.id === id);
+    if (!found) return;
+    current = found;
+    draw();
+  };
+  return panel;
 }
 
 function harmonicPanel() {
@@ -706,6 +759,10 @@ export function mountConcept(el, ctx) {
     return function unmount() {};
   }
   if (ctx.station.id === 'zero') spec = { ...spec, panel: zeroPanel(ctx) };
+  if (ctx.station.id === 'geometric') spec = { ...spec, panel: geometricPanel(ctx) };
+  const chip = chapterChip(ctx);
+  if (spec.panel && typeof spec.panel.visit === 'function') spec.panel.visit(!!chip);
+  if (chip && spec.panel && typeof spec.panel.applyChip === 'function') spec.panel.applyChip(chip);
   shell(el, ctx, spec);
   el.querySelectorAll('[data-film-sync]').forEach((n) => n.dispatchEvent(new CustomEvent('mv-sync')));
   return function unmount() {};

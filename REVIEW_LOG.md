@@ -5695,3 +5695,249 @@ Exercise 13’s hint does not call the missing half an ε/2 argument. The book a
 `node tools/fractal-smoke.mjs` exits 0, including the homework set, the copy shape, the degree-1 summary, and the Exercise 5 hint. `node tools/check_vectors.mjs` is 234/234. `node kit/smoke.mjs` exits 0. Playground files were not edited, so `playground-smoke` was not rerun.
 
 **accept with fixes**
+
+## Book path, batch 1 — close review
+
+Verdict: **accept with fixes**. Draft pull request 33, branch `cursor/book-chapter-path-df29`, reviewed from `ad216c1`. Scope is Chapters 4 and 5. Not merged.
+
+The book is a third route family. `#book` lists all eleven chapters from the 202 Updated Edition contents (PDF pages 6–7, printed i–ii). Chapter 4 is the walk. Chapter 5 is open and still a list. `#chapter-1` stays on the roadmap. A leftover token on a later chapter is no such place. Visiting the book leaves the remembered test alone. `js/app.js` does not import `kit/`. `js/core/map-route.js` is byte-identical to `kit/template/js/core/map-route.js`.
+
+### Fixed
+
+Theorem 4.1, page 103, opened the top of §4.1. The statement is `Lim_Zn_Thm` on the HTML edition (the same limit of real and imaginary parts the PDF prints as Theorem 4.1). The link now ends there.
+
+Theorem 4.11, page 116, opened `Fixed_point_Def`, which is the fixed-point definition (PDF Definition 4.9, page 115). The attracting-fixed-point criterion on page 116 is `Attracting_Thm`. The chapter pin now opens that theorem.
+
+Theorem 4.16, page 125, opened the same anchor as Theorem 4.15. Theorem 4.15 is the disk (`Regions_of_Convergence`, page 124). Theorem 4.16 is the three formulas for the radius, anchor `th15`.
+
+Chapter 5’s source tag opened the HTML front matter. The pin says Chapter 5, page 130, which is where §5.1 starts. It now opens `sec_exponential-function.html`. The lede said the pictures for the exponential, the logarithm, and the powers were the next page. That page is not on the site. The lede now says those three are not drawn here yet, which is what the section rows already say.
+
+### Citations checked against the professor PDF
+
+Contents titles and printed pages for all eleven chapters, and every section under them, match the table of contents. Chapter 4 is Sequences, Series, and Fractals, page 102: 4.1 page 102, 4.2 page 109, 4.3 page 118, 4.4 page 123. Chapter 5 is Elementary Functions, page 130: 5.1 page 130, 5.2 page 137, 5.3 page 143, 5.4 page 148, 5.5 page 159.
+
+Reading pins match the printed pages. Definition 4.1 and Theorem 4.1 are page 103. Theorem 4.5 is page 106. Example 4.7 is page 110. The Figure 4.3 caption is page 112 (the colouring is discussed on 111; the caption “Newton’s method applied to two different cubics” is on 112). Example 4.9 and Theorem 4.9 are page 113. Figure 4.6 is page 114. Theorem 4.11 is page 116. Theorem 4.12 is page 118. Theorem 4.15 is page 124. Theorem 4.16 is page 125.
+
+Exercise text, flat numbers, printed with the section’s exercises:
+
+- §4.1 Exercise 3, page 108. Suppose the limit of \(z_n\) is \(z_0\), and show the limit of the conjugate is the conjugate. The card quotes that.
+- §4.1 Exercise 13, page 109. Complete Theorem 4.1 for the imaginary part. The card quotes that.
+- §4.2 Exercise 3, page 117. Newton’s method for a degree-1 polynomial, and how many iterations reach \(-b/a\). The card quotes that.
+- §4.2 Exercise 4, page 117. Iterates of \(z^2\), inside, outside, and on the unit circle. The card quotes that.
+- §4.2 Exercise 5, page 117. The Julia set of \(f_{-2}\) is connected. The card quotes that.
+- §4.3 Exercise 1, page 122. The two geometric sums, \((1+i)^n/2^n\) and \(1/(2+i)\). The card quotes both parts. The lead-in on the card says “Evaluate the following”; the PDF says “Evaluate”.
+- §4.3 Exercise 2, page 122. Convergence on \(D_2(-i)\) and divergence outside it. The card quotes that.
+- §4.4 Exercise 6, page 129. A power series \(\sum c_n z^n\) that converges at \(4-i\) and diverges at \(2+3i\). The card quotes that. \(|4-i|=\sqrt{17}\) and \(|2+3i|=\sqrt{13}\), so the answer is no. That comparison stays in `added` on the index data. The chapter card, the closed hint, and Copy Markdown do not print it. A trusted click set Copy Markdown to Copied. The clipboard opened with the statement, the hint that points at A Radius, Then a Wall and Theorem 4.15, a blank solution, and the line that the export omits an answer key.
+
+The seven homework ids are unchanged. Hints on the chapter page start closed. The 4.1.3 hint opens and names Definition 4.1, page 103. Homework copy still points at `#chapter-4` and does not paste an orbit list.
+
+### Progress
+
+A section is finished only when it is marked and every exercise on it is ticked. Ticking all eight exercises, with no section marked, leaves Next on 4.1 and “0 of 4 sections finished.” Marking all four as well reads “Done. 4 of 4 sections, 8 of 8 exercises,” and the roadmap walk opens Chapter 5. Unticking 4.4.6 returns Next to 4.4. Unmarking 4.1, with its exercises still ticked, returns Next to 4.1.
+
+A fresh load of `mv:book.progress` set to broken JSON shows the blank walk, 0 of 4 and 0 of 8, and throws nothing. A record with `"yes"`, the number `1`, and an unknown id is dropped the same way. A full record saved and loaded again restores Done. There is no separate reset control. Turning a mark or a tick off is the reset, and a broken value is ignored until the next save replaces it. The Test 2 ticks stay in `progress.test2`.
+
+### Shell
+
+Headless Chrome, served under `/math-viz/`, light and dark, widths 1280, 700, and 390: `#book`, `#chapter-4`, `#chapter-5`, `#chapter-4-4-4-6`, and `#chapter-1` come up ready, with no console errors, no exceptions, no failed assets, no canvas, no sideways scroll, and 0 animation frames while the page sits. Leaving Julia for the book also leaves 0 frames. `#chapter-4-4-4-6` marks the exercise card and scrolls as far as the page allows; the card is on screen. The footer colour key stays hidden on the book routes.
+
+`#home` on a fresh Test 1 load lists the book and the 24 Test 1 stops, including addresses, and does not list Julia. The Test 2 switch lists Julia and Newton. `#addresses`, `#phasor-current`, `#complex-impedance`, and `#wave-phase` load. The Homework filter still shows the seven cards and “7 shown. Homework.” `playground.html` opens on L0 watch. `playground.html#cross` opens L21, “One number, on the set of c and on the Julia set.” Those pages do not scroll sideways. At 390 the index, the home map, addresses, and the current station do not scroll sideways.
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the four reading anchors and the Chapter 5 link. `node kit/smoke.mjs` exits 0.
+
+While this review was open, `0f8be9f` landed on the branch. It only adds the taste note in `TASTE_LOG.md`. The citation fixes sit on top of that commit.
+
+### For the builder, in this order
+
+1. **One cutting batch, the one the taste note already wrote, then stop.** Chapter 4 remembers a walk and still reads as the homework packet: a mark on top of the ticks, a pictures row, and a reading list. Chapter 5 is five blanks. The taste note’s three cuts are the next build. This close review does not start them, and it does not ask for a Chapter 5 picture on top of this page.
+2. **Keep the printed pages and the exercise quotes.** The contents titles, the Chapter 4 and 5 pages, and the eight exercise texts match this PDF. The Open links fixed here are the ones to keep: Theorem 4.1 at `Lim_Zn_Thm`, Theorem 4.11 at `Attracting_Thm`, Theorem 4.16 at `th15`, Chapter 5 at the exponential.
+3. **Leave the index reveal of Exercise 6, and leave the combined Theorem 4.11 pins on the older stops.** The chapter card has a closed hint and a copy with no answer. The same id on the index is still the older likely card, and its added check stays behind Show. The concept page, the flat paper, and the playground still use `Fixed_point_Def` for a sentence that also names Definitions 4.9 and 4.10.
+
+**accept with fixes**
+
+## Book path, batch 2 — close review
+
+Verdict: **accept with fixes**. Draft pull request 33, branch `cursor/book-chapter-path-df29`, reviewed from `05bda17`. The cutting batch only. Not merged.
+
+One score. The ticks live in `progress.test2`, and the chapter and the index read and write that same memory. A section is finished when its exercises are ticked. There is no mark. `#book` is the eleven titles: Chapter 4 still lists its four sections, Chapters 1–3 keep the one station already drawn, and every later chapter is the title, the page, and Later. Chapter 5 is one sentence and the exponential source tag. On `#book` and the chapter pages the menu is The Book plus the eleven chapters, not Which test. Walk opens `#chapter-4` with the title on screen.
+
+### Fixed
+
+The sequence page and the power-series page are built once. Pressing the other chip, leaving, and opening the exercise again left that other chip pressed. Exercise 3 and Exercise 13 ask for the disk in Definition 4.1, which is `(1/2 + i/4)^n`. Exercise 6 asks for the inside of the disk, `|z| = 1`. A chapter visit now presses that chip. A visit that is not from the chapter still keeps the chip the learner pressed. The orbit and the geometric series already rebuilt their picture on each visit, so `c = −2` and the two geometric chips were already right.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0. `node kit/smoke.mjs` exits 0. All three were run again after the chip fix. `js/core/map-route.js` is byte-identical to `kit/template/js/core/map-route.js`. No live module imports `kit/`.
+
+Headless Chrome, served under `/math-viz/`, light and dark, widths 1280, 700, and 390. `#book`, `#chapter-4`, `#chapter-5`, Test 1 home, the Homework filter, and `playground.html` come up with no console errors, no failed assets, no sideways scroll, and 0 animation frames while the page sits. Test 2 home was loaded with the map set before boot: Julia and Newton are in the menu, addresses is not, and the same three widths in both themes do not scroll sideways. `#cross` is L21, “One number, on the set of c and on the Julia set.” Its first quiet window still included the picture being drawn. After that draw settled, the next 700 ms scheduled 0 frames. An offscreen canvas sits far to the left and does not widen the page. `scrollWidth` matched the window.
+
+Walk Chapter 4 opens `#chapter-4` at scroll 0. The title sits under the header. Go to 4.2 is hidden until both 4.1 exercises are ticked, and then it puts section 4.2 under the header. With all eight ticked the status is “Done. 8 of 8 exercises.” and the book button is Open Chapter 5. Unticking 4.4.6 returns Next to §4.4, Exercise 6.
+
+A tick on the chapter is pressed on the index, and a tick on the index is pressed on the chapter. Unticking on either side clears the other. A fresh load of broken JSON for `mv:progress.test2` and `mv:book.progress` shows “0 of 8” and throws nothing. `"yes"`, the number `1`, and an unknown id are dropped; a real `true` is kept. An old chapter record folds its exercise ticks into the index memory once and is then stored as `{ migrated: true }`. A section mark in that old record does not finish a section. Unticking the folded exercise and loading again leaves it unticked. When `localStorage` throws, the chapter still opens and the tick still shows for that visit, with no console error.
+
+Each picture link, including a second visit after another chip was pressed:
+
+- 4.1.3 and 4.1.13 open A Sequence Has a Fate on `(1/2 + i/4)^n`, and link back to `#chapter-4-4-1-3` and `#chapter-4-4-1-13`.
+- 4.2.3 opens One Newton Step. 4.2.4 opens the disk. Neither names a chip. Both link back to the chapter card.
+- 4.2.5 opens The Orbit of 0 with `c = −2` pressed. The list is 0, −2, 2, and then 2. The link back is `#chapter-4-4-2-5`.
+- 4.3.1 opens Geometric Series on `(1+i)/2`. 4.3.2 opens it on `z = 0 in D₂(−i)`.
+- 4.4.6 opens A Radius, Then a Wall on `|z| = 1`.
+
+The link back scrolls the card under the header and outlines it. The exercise chip on the station points at the same chapter card. The other index cards still point at the index.
+
+The chapter page has no Copy Markdown, no Mark, and no homework line. Copy Markdown is still on the index. The Homework filter shows the same seven cards and reads “7 shown. Homework.” Section 4.2 is the sentence, Theorem 4.9, Theorem 4.11, and the three exercises. It does not list the seven pictures. Hints start closed. The 4.4.6 card does not print the comparison of the two moduli.
+
+### Citations checked against the professor PDF
+
+The anchors from the previous close review are unchanged. Theorem 4.1, page 103, is `Lim_Zn_Thm`. Theorem 4.11, page 116, is `Attracting_Thm`. Theorem 4.16, page 125, is `th15`. Chapter 5, page 130, opens `sec_exponential-function.html`.
+
+The contents titles and printed pages for all eleven chapters, and the sections under them, still match printed pages i–ii. Chapter 4 is page 102 and Chapter 5 is page 130, with the same section pages as the previous review.
+
+The eight exercise statements still match the printed exercises. §4.1 Exercise 3, page 108, is the conjugate of the limit. §4.1 Exercise 13, page 109, completes Theorem 4.1 for the imaginary part. §4.2 Exercise 3, page 117, is Newton’s method for a degree-1 polynomial. §4.2 Exercise 4, page 117, is the iterates of `z^2`. §4.2 Exercise 5, page 117, is the Julia set of `f_{-2}`. §4.3 Exercise 1, page 122, is the two geometric sums. The card still says “Evaluate the following”; the PDF says “Evaluate”. That wording was already accepted, and this batch did not edit the card. §4.3 Exercise 2, page 122, is convergence on `D_2(-i)`. §4.4 Exercise 6, page 129, is a power series that converges at `4-i` and diverges at `2+3i`.
+
+`#chapter-1` stays on the roadmap and scrolls to Complex Numbers. The menu there marks The Book, because that hash is not a chapter page. `#chapter-6-6-1` is no such place. Visiting the book leaves the remembered test alone: a Test 2 visit, then the book, then the site title, is still Test 2. The footer colour key stays hidden on the book routes. The older stops still use `Fixed_point_Def` where the sentence also names Definitions 4.9 and 4.10. The index still hides the Exercise 6 check behind Show.
+
+While this review was open, `667a5c3` landed on the branch. It only adds the taste note in `TASTE_LOG.md`. The note asks for one more cutting batch: the film under the chip, the sequence note when the door was the chapter, the previous tick under the header, Theorem 4.11 off section 4.2, and the last sentence of each chapter hint. This pass does not start that batch.
+
+**accept with fixes**
+
+## Book path, batch 3 — close review
+
+Verdict: **accept with fixes**. Draft pull request 33, branch `cursor/book-chapter-path-df29`, reviewed from `ae5c8a8`. The five cuts only. Not merged.
+
+The film sits under the chip the chapter named. Exercise 5 lands on `c = −2`, the list 0, −2, 2, 2, …, and the Theorem 4.9 line, and the film starts under that line. Section 4.2 cites Theorem 4.9 only. Go to 4.2, 4.3, and 4.4 put that section’s title under the header and leave the previous tick above the window. The seven homework hints no longer end by saying the card does not print the write-up. Exercise 6 still does not say which point is closer.
+
+### Fixed
+
+The sequence page is built once. `applyChip` set the chapter wording and never cleared it, so a later visit to `#sequence` kept “These terms are the disk in Definition 4.1” after Exercise 3 or Exercise 13 had been opened. A plain visit now keeps the chip the learner pressed and puts Exercise 1(a) back on the settle note. A chapter door still presses `(1/2 + i/4)^n` and names Definition 4.1. The cycle chip still names Exercise 7.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the tick-only rule and the Theorem 4.9 pin, and it was run again after the note fix. `node kit/smoke.mjs` exits 0. `node tools/film-smoke.mjs` exits 0. `js/core/map-route.js` is byte-identical to `kit/template/js/core/map-route.js`. No file under `js/` imports `kit/`. The static import graph from `js/app.js` is 20 files, and none of them are in `kit/`.
+
+Headless Chrome, served under `/math-viz/`, light and dark, widths 1280, 700, and 390 (windows 800, 800, and 844 tall). `#book`, `#chapter-4`, Test 1 home, Test 2 home, the Homework filter, `playground.html`, `#cross`, and the eight picture doors come up with no console errors, no page errors, no failed assets, and no sideways scroll. Book, chapter, both homes, homework, the playground, and the picture doors schedule 0 animation frames in the 600 ms after ready. `#cross` is L21, “One number, on the set of c and on the Julia set.” Its first window is the draw. After 3.5 s the next 600 ms schedules 0 frames. An offscreen canvas does not widen the page.
+
+Walk Chapter 4 opens `#chapter-4` at scroll 0. The title sits at 103px, under a 56px header, at every width and in both themes. Go to 4.2 is hidden until both 4.1 exercises are ticked. After the jump the section box starts at 56px, the title “Julia and Mandelbrot Sets” starts at 96px, and the Exercise 13 tick runs from −38px to 6px, above the window. Go to 4.3 and Go to 4.4 do the same at 1280, at 700, at 390, and in the dark theme. With all eight ticked the book says “Done. 8 of 8 exercises. Chapter 5 is next, and its walk is not drawn yet.” The button is Open Chapter 5.
+
+A tick on the chapter is pressed on the index, and a tick on the index is pressed on the chapter. Unticking on the chapter clears the index and leaves the other tick. A fresh load of broken JSON for `mv:progress.test2` and `mv:book.progress` shows “0 of 8” and throws nothing. `"yes"`, the number `1`, and an unknown id are dropped. A real `true` is kept, and Next stays on the first unticked exercise. An old chapter record folds its exercise ticks into the index memory once and is then stored as `{ migrated: true }`. A section mark in that old record does not finish a section whose exercise is still open. Unticking the folded exercise and reloading leaves it unticked. When `localStorage` throws, the tick still shows for that visit, with no console error.
+
+Each picture door, fresh storage:
+
+- 4.1.3 and 4.1.13 open A Sequence Has a Fate on `(1/2 + i/4)^n`, pressed. The note names Definition 4.1. The film starts under that note. The link back is `#chapter-4-4-1-3` or `#chapter-4-4-1-13`. On the laptop the note ends at 746px, inside the 800px window. On the phone the chip is on screen and the note is the next screen. The film is under the note at both widths.
+- 4.2.3 opens One Newton Step. The page still cites Example 4.7, page 110. The degree-1 line is above the film. On the laptop that line ends at 787px and the film starts at 866px. On the phone the line is the next screen, under the five-step table and above the film.
+- 4.2.4 opens When c Is 0, a Disk with `|z| < 1` pressed, on the first screen, and links back to the chapter card.
+- 4.2.5 opens The Orbit of 0 with `c = −2` pressed. The list is step 0: 0, step 1: −2, then 2 through step 7. The line under it is Exercise 5 and Theorem 4.9, page 113. On the laptop the list runs 518px to 717px and that line ends at 773px. The film starts at 839px. At 700px wide the line ends at 792px, still inside the 800px window, and the film starts at 885px. On the phone the chip and the start of the list are on the 844px screen. The last steps and the sentence under the list sit just past the fold. The film starts at 1136px, under that sentence.
+- 4.3.1 opens Geometric Series on `(1+i)/2`. 4.3.2 opens it on `z = 0 in D₂(−i)`. Both chips stay pressed and both link back to the chapter card.
+- 4.4.6 opens A Radius, Then a Wall on `|z| = 1`, pressed, and links back to the chapter card.
+
+The chapter page has no Copy Markdown and no Mark. Hints start closed. Section 4.2’s only pin is Theorem 4.9, page 113. The seven homework hints no longer end with “this card does not print.” Exercise 6 still ends “This card does not say which of the two points is closer.” The Homework filter shows the same seven cards and reads “7 shown. Homework. Ticked 0 of 30.” The index still hides the Exercise 6 check behind Show. The added text is not on screen until that control is used.
+
+Test 1 home lists addresses and does not list Julia. Test 2 home lists Julia and Newton and does not list addresses. The menu on `#book` and `#chapter-4` is The Book plus the eleven chapters. Which test is not in that menu. The footer colour key stays hidden on the book routes. The playground opens on L0 watch.
+
+### Citations checked against the professor PDF
+
+The anchors from the previous close reviews are unchanged. Theorem 4.1, page 103, is `Lim_Zn_Thm`. Theorem 4.16, page 125, is `th15`. Chapter 5, page 130, opens `sec_exponential-function.html`. Theorem 4.11, page 116, is still `Attracting_Thm` where an older stop names it. It is no longer a pin on section 4.2.
+
+The contents titles and printed pages for all eleven chapters, and the sections under them, still match printed pages i–ii. Chapter 4 is Sequences, Series, and Fractals, page 102: 4.1 page 102, 4.2 page 109, 4.3 page 118, 4.4 page 123. Chapter 5 is Elementary Functions, page 130: 5.1 page 130, 5.2 page 137, 5.3 page 143, 5.4 page 148, 5.5 page 159.
+
+The eight exercise statements still match the printed exercises. §4.1 Exercise 3, page 108, is the conjugate of the limit. §4.1 Exercise 13, page 109, completes Theorem 4.1 for the imaginary part. §4.2 Exercise 3, page 117, is Newton’s method for a degree-1 polynomial. §4.2 Exercise 4, page 117, is the iterates of `z^2`. §4.2 Exercise 5, page 117, is the Julia set of `f_{-2}`. §4.3 Exercise 1, page 122, is the two geometric sums. The card still says “Evaluate the following”; the PDF says “Evaluate”. That wording was already accepted, and this batch did not edit the card. §4.3 Exercise 2, page 122, is convergence on `D_2(-i)`. §4.4 Exercise 6, page 129, is a power series that converges at `4-i` and diverges at `2+3i`.
+
+Definition 4.1 and Theorem 4.1 are page 103. Example 4.7 is page 110. Example 4.9, Example 4.10, and Theorem 4.9 are page 113. Theorem 4.12 is page 118. Theorem 4.15 is page 124. Theorem 4.16 is page 125.
+
+`#chapter-1` stays on the roadmap. Complex Numbers sits at 96px, under the header. The menu there marks The Book, because that hash is not a chapter page. `#chapter-6-6-1` is no such place. Visiting the book leaves the remembered test alone: a Test 2 visit, then the book, then the site title, is still Test 2. Chapter 5 is the title, the sentence that the exponential, the logarithm, and the powers are not drawn here yet, the source tag for page 130, and Back to the book.
+
+While this review was open, `a483344` landed on the branch. It only adds the batch 3 taste note in `TASTE_LOG.md`. The note says the five doors landed and the loop should rest. The note fix sits on top of that commit. The four station lines that still mention the index, and the 36px picture chip, are the leftovers that note already left. This pass does not start another batch.
+
+**accept with fixes**
+
+## Book path, batch 4 — close review
+
+Verdict: **ACCEPT**. Pull request 33, branch `cursor/book-chapter-path-df29`, reviewed from `2dc9cff`. Synthesis batch 1 only: the live picture of e^z on Chapter 5. Not merged. Nothing in the picture was changed.
+
+While this review was open, `6fc1905`, `7c822c3`, and `5bd65f2` landed on the branch. All three only append to `TASTE_LOG.md`. The picture, the chapter page, and the router are the same bytes as `2dc9cff`. The taste notes ask for a later cutting batch. This review does not start it.
+
+The placeholder is gone. The clock owns y, from −π to π, through `createMotion`. The hand owns x. The stage publishes `data-probe-re` and `data-probe-im`. The purple point is `compile('exp(z)')`, recomputed on each paint. Play is the only button on the chapter. There is no scrubber, no chip, and no formula box. `js/registry.js` has no new row. `js/app.js` does not import `kit/`, and loading `#chapter-5` requests nothing under `kit/`.
+
+### Checked
+
+A fresh `#chapter-5` opens at the end of the walk: x = 0, y = π. The claim is “On the imaginary axis the image stays on the unit circle. The angle is the clock.” The purple point is −1 and the drawn radius is 1. A press at radius 2 writes x = ln 2, leaves y at π, and the claim becomes “The radius is e^x, larger than 1. The angle is still the clock.” The purple point is −2. The green point is 2 on the positive real axis. The orbit radius is 2.
+
+Play rewinds y to −π and walks it forward. x stays at ln 2. Pause freezes the angle. In the 450 ms after Pause the angle does not change and no further animation frame is scheduled. While a frame is already queued, marking the document hidden lets that callback return without painting and schedules nothing after it. Reduced motion says Next step, takes one step, schedules no frame, and does not say Pause. A second step says Start again.
+
+At 360×640, light and dark, the plane and the claim are on the first screen. In the dark theme the claim ends at 470px. The page does not scroll sideways (`scrollWidth` equals the window). At 1280×800 the claim ends at 543px inside the 800px window, and the page does not scroll sideways. Sitting on the page schedules 0 frames. The line under the picture says the logarithm and the powers are not drawn yet.
+
+Chapter 4 still opens as Sequences, Series, and Fractals, with four sections, eight cards, and closed hints. Ticking 4.1.3 stays pressed after a visit to Chapter 5, and that same tick is pressed on the index. The index still has its 30 cards. It lists 4.1.3 and does not list 5.1.1 or 5.1.2. Chapter 4, the index, and the book do not scroll sideways at 1280 or at 360, in the light theme, and they schedule no frame while they sit. No console errors and no failed assets on those pages.
+
+### The math, against the professor PDF
+
+Chapter 5 is Elementary Functions, printed page 130. That page is also the start of §5.1, The Complex Exponential Function. The source line says “Chapter 5, Elementary Functions, page 130” and opens `https://complexanalysis.org/web/sec_exponential-function.html`, which carries Definition 5.1. The licence line is CC BY 4.0.
+
+Identity (5.1), page 132, is e^z = e^x (cos y + i sin y). Equation (5.6), page 133, is |e^z| = e^x. The claim uses that. At x = 0 the image is on the unit circle. At x = ln 2 the radius is 2, which is larger than 1, and the angle is still y. e^{ln 2 + iπ} = −2. The fundamental strip on page 133 is −π < y ≤ π. The picture walks y from −π to π, which is what this batch asked for. The two ends are the same point: exercise 5.1.7 on page 135 is exp(z + iπ) = exp(z − iπ). The logarithm is §5.2, page 137, and the power z^c is §5.3, page 143. Neither is drawn. Chapter 4’s pins were not edited. The chapter page still names Definition 4.1, page 103, and the chapter source is still page 102.
+
+### Smoke
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the unit-circle claim, y = π at x = ln 2, and exp(ln 2 + iπ) = −2. `node kit/smoke.mjs` exits 0.
+
+**ACCEPT**
+
+## Book path, batch 5 — close review
+
+Verdict: **ACCEPT WITH FIXES**. Pull request 33, branch `cursor/book-chapter-path-df29`, reviewed from `5375bcaf`. One cutting batch on the Chapter 5 picture. Not merged. One fix landed on the branch: the sentence now follows the point.
+
+The cut is the one the three taste notes asked for. The plane is the column, or `100dvh - 20rem`, whichever is smaller. At 1280×800 it is 480px, wider than the old 304px cap, and Play ends inside the window. At 360×640 the plane is 320px and Play ends at 599px. At 390×844 the plane is 358px and Play ends at 637px. The same holds in the dark theme, and after each Next step. Nothing scrolls sideways. A paused picture schedules 0 frames, and the angle stays where Pause left it.
+
+A fresh page rests at x = 0, y = π. The purple point is −1, the left point of the unit circle, on the real axis. The sentence is “The point sits on the left of the unit circle, on the real axis.” The green dot is the radius handle. A press 21px from its centre picks it up. A press 23px away does nothing, and so does a press on the purple point or in the corner. A 2px twitch keeps the radius. A drag then keeps the dot under the finger and leaves y at π. e^x in the radius sentences is KaTeX. The purple circle is painted after the green one, and at the right-hand quarter turn it is the mark under the finger. The title is “Chapter 5. The exponential.” The “not drawn yet” lines are gone, including the finished-chapter status, which reads “Done. 8 of 8 exercises. Chapter 5 is next.” There is no §5.1 card. Next step says Next step, lands on the bottom, the right, the top, and the left, then says Start again, and never says Pause. It schedules no frame.
+
+Chapter 4 is still “Sequences, Series, and Fractals,” eight cards, hints closed, no exponential picture. A tick on 4.1.3 stays pressed after Chapter 5 and is pressed on the index. The index still has its 30 cards and does not list 5.1.1 or 5.1.2. `js/app.js` does not import `kit/`, and loading the chapter requests nothing under `kit/`.
+
+### The sentence
+
+At `5375bcaf` the resting sentence stayed on screen for the whole turn. Next step put the point on the bottom, the right, and the top, and the line still said it sat on the left of the unit circle, on the real axis. Play did the same. The radius sentences were already true at every angle, because |e^z| = e^x. While this review was open, `c84218e`, `9e136bb`, and `fc851ed` landed. All three only append to `TASTE_LOG.md`, and all three name this sentence as the one thing left. The unit-circle sentence now names the left, the bottom, the right, or the top when the point is there, and “The point sits on the unit circle” between those four. A radius other than 1 still says e^x, larger or smaller than 1. The aria label already says to drag the green dot, and that instruction stays off the claim.
+
+### The math
+
+The HTML of §5.1, which the source tag opens, is the section that starts on printed page 130. Definition 5.1.1 is e^z = Σ z^n/n!. Identity (5.1.1), the PDF’s Identity (5.1) on page 132, is e^z = e^x (cos y + i sin y). Equation (5.1.6), the PDF’s |e^z| = e^x on page 133, is what the green dot and the radius sentences use. The painted point is `compile('exp(z)')`. At rest that is −1. At x = ln 2 and y = π it is −2. The walk runs y from −π to π, the fundamental strip on that page.
+
+### Smoke
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the four quarter sentences. `node kit/smoke.mjs` exits 0.
+
+**ACCEPT WITH FIXES**
+
+## Book path, batch 6 — close review
+
+Verdict: **ACCEPT WITH FIXES**. Pull request 33, branch `cursor/book-chapter-path-df29`, reviewed from `6071a5a3`. The §5.1 walk under the exponential. Not merged. Not deployed. One fix landed on the branch: the section line and the next-exercise line sit under Play, so the button is on the first screen again.
+
+The picture is the batch 5 picture. The only addition in `exp-picture.js` is the pose that `#chapter-5-5-1-1` uses to open at \(z = 0\). The drag, the clock, the claim, and the resting frame are the same file otherwise. A fresh `#chapter-5` still rests at \(x = 0\), \(y = \pi\). The purple point is the left point of the unit circle. The sentence is “The point sits on the left of the unit circle, on the real axis.”
+
+### The walk, against the 202 Updated Edition
+
+Printed page 130 is Definition 5.1, the series for \(e^z\). The pin opens `sec_exponential-function.html#exp_z__Def`. The HTML numbers that definition 5.1.1. The PDF says Definition 5.1, and so does the card.
+
+Identity (5.1), page 132, is \(e^z = e^x(\cos y + i \sin y)\). That is the idea under the picture, with the modulus \(e^x\) and the angle \(y\). Equation (5.6), page 133, is \(|e^z| = e^x\). Figure 5.2 on that page is the fundamental period strip. The pin opens `#fig_ch-05-02`. The HTML calls the same figure 5.1.5.
+
+Exercises 1 and 2 are quoted from printed page 135. Exercise 1 is “Using Definition 5.1, explain why \(\exp(0) = e^0 = 1\).” Exercise 2 is the Figure 5.2 question, including parts (a), (b), and (c), the circle \(s_1^*\), the angles \(-\frac{7\pi}{8}\), \(\frac{\pi}{4}\), and \(\frac{3\pi}{4}\), and the points \(\pm i\pi\). The HTML exercise says Definition 5.1.1 and Figure 5.1.5. The cards keep the PDF’s words. The series evaluation on page 439 is not on either card. Hints start closed. The licence line is CC BY 4.0.
+
+Sections 5.2–5.5 are titles and pages only: the logarithm on 137, exponents on 143, trigonometric and hyperbolic functions on 148, and the inverses on 159. No links, no cards. The roadmap still shows Chapter 5 as one open title. Chapter 4 still has eight cards. The index still has 30, and it does not list 5.1.1 or 5.1.2.
+
+### The blanks
+
+Each blank stays empty until the picture is in the state that makes the words true. A tap on the plane, a tap on the green dot, and a 2px twitch leave \(x\) and \(y\) alone, and they leave the blanks alone. The disabled tick does not write.
+
+A drag that takes the radius off 1 fills the modulus with \(e^x\), larger than 1 or smaller than 1, and it clears the \(\pm i\pi\) blank, because \(e^{x+i\pi}\) is no longer \(-1\). Putting the radius back on 1 clears the modulus and fills “land together at \(-1\)” again. \(y\) stays at \(\pi\).
+
+Next step, with reduced motion, schedules no frame and never says Pause. From the rest it lands on the bottom and fills the vertical segment with \(e^x\). The next step is \(y = 0\), the claim names the right of the unit circle, and \(\exp(0)\) fills with 1. The tick enables. The top fills the segment and clears that 1. The left fills \(\pm i\pi\) again and the button says Start again. A running Play says Pause, freezes where the second click lands, and schedules nothing after that. The sweep fills the segment once the point has left the real axis. It does not fill \(\exp(0)\), because it does not stop on \(z = 0\).
+
+`#chapter-5-5-1-1` opens at 1. The tick writes `5.1.1` into `progress.test2` beside `4.1.3`, `4.2.5`, and `4.2.7`. Reload keeps it. Unticking 5.1.1 leaves those three. A tick on Chapter 4 and a tick on the index do not drop a Chapter 5 tick, and a Chapter 5 tick does not drop them. The only progress key is `mv:progress.test2`. `book.progress` is not written. `js/app.js` does not import `kit/`, and loading the chapter requests nothing under `kit/`.
+
+### The first screen
+
+At `6071a5a3` the section line and the “Next is” line sat above the plane. Play ended at 804px on a 640px screen, and at 897px on an 800px screen. They now sit under Play. The plane is the batch 5 size: 320px at 360×640, 358px at 390×844, and 480px at 1280×800. Play ends at 599, 637, and 745. That holds in light and dark, and with reduced motion, where the button says Next step. Nothing scrolls sideways. Sitting on the page schedules 0 frames.
+
+While this review was open, `5ea585b`, `4445063`, `58e9ccc`, and `deff16c` landed. All four only edit `TASTE_LOG.md`. They name the same first screen, and three further cuts: drop the segment line, shorten Exercise 2 to part (c), and take the Later cards off this page. This pass does not take those three. The batch asked for the segment blank, the exercises quoted in full from page 135, and §5.2–5.5 as titles. Those stay.
+
+### Smoke
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the shared tick and the quarter sentences, after the move. `node kit/smoke.mjs` exits 0.
+
+**ACCEPT WITH FIXES**

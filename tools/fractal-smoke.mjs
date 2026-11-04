@@ -5,6 +5,11 @@ import { readFileSync } from 'node:fs';
 import { stationsForMap, stationForTopic, stationForProblem, stationById, threadsOn, stationPart, STATIONS } from '../js/registry.js';
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
+import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, chapter4ExerciseIds, chapter5ExerciseIds } from '../js/data/book-path.js';
+import { chapterTally, sectionFinished, foldLegacyExercises, saveSharedTicks, toggleTick } from '../js/book/progress.js';
+import { EXP_DURATION, expFrame, finishedStops } from '../js/core/live-film.js';
+import { compile } from '../js/core/parse.js';
+import { parseBookRoute } from '../js/book/route.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
 import { parsePath, evalPath } from '../js/core/path-expr.js';
 import { smoothLoop, presetById, compileFormula } from '../js/core/path-geom.js';
@@ -108,6 +113,97 @@ check('#home keeps the remembered map', mapForcedByRoute(stationById('home'), pa
 check('#home-t2 is the Test 1 thread, not Test 2', mapForcedByRoute(stationById('home'), parseRoute('#home-t2')) === 'test1');
 check('#home-f2 is the Test 2 thread', mapForcedByRoute(stationById('home'), parseRoute('#home-f2')) === 'test2');
 check('an unknown hash forces no map', mapForcedByRoute(null, parseRoute('#nope')) === null);
+check('the book is its own route', parseRoute('#book').station == null && parseRoute('#book').book.kind === 'roadmap' && mapForcedByRoute(null, parseRoute('#book')) == null);
+check('#chapter-4 opens chapter 4', parseRoute('#chapter-4').book.kind === 'chapter' && parseRoute('#chapter-4').book.chapter === 4 && parseRoute('#chapter-4').book.focus == null);
+check('#chapter-4-4-1-3 focuses exercise 4.1.3', parseRoute('#chapter-4-4-1-3').book.focus === '4.1.3');
+check('#chapter-1 stays on the roadmap', parseRoute('#chapter-1').book.kind === 'roadmap' && parseRoute('#chapter-1').book.chapter === 1);
+check('a junk token on a later chapter is not a page', parseRoute('#chapter-1-extra').station == null && parseRoute('#chapter-1-extra').book == null);
+check('eleven chapters, 4 and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_CHAPTERS.join() === '4,5' && BOOK_CHAPTERS.filter((ch) => ch.open).map((ch) => ch.n).join() === '4,5');
+check('chapter 4 sections follow the contents', CHAPTER_4.sections.map((s) => `${s.id} ${s.page}`).join() === '4.1 102,4.2 109,4.3 118,4.4 123');
+check('chapter 4 exercises are the homework set plus 4.4.6', chapter4ExerciseIds().join() === '4.1.3,4.1.13,4.2.3,4.2.4,4.2.5,4.3.1,4.3.2,4.4.6');
+{
+  const reads = CHAPTER_4.sections.flatMap((s) => s.read);
+  const href = (pin) => reads.find((r) => r.pin === pin)?.href || '';
+  check('Theorem 4.1 opens the limit theorem', href('Theorem 4.1, page 103').endsWith('#Lim_Zn_Thm'));
+  check('section 4.2 cites Theorem 4.9 and not Theorem 4.11', CHAPTER_4.sections[1].read.length === 1 && href('Theorem 4.9, page 113').endsWith('#Kc_Connected') && !href('Theorem 4.11, page 116'));
+  check('Theorem 4.15 opens the disk of convergence', href('Theorem 4.15, page 124').endsWith('#Regions_of_Convergence'));
+  check('Theorem 4.16 opens the radius formulas', href('Theorem 4.16, page 125').endsWith('#th15'));
+}
+check('One Newton Step keeps Example 4.7', /Example 4\.7, page 110/.test(readFileSync(new URL('../js/stations/concept.js', import.meta.url), 'utf8')));
+{
+  const book = readFileSync(new URL('../js/stations/book.js', import.meta.url), 'utf8');
+  check('chapter 5 names the exponential and does not say the page is blank',
+    book.includes("sectionHref('sec_exponential-function.html')")
+    && book.includes('Chapter 5. The exponential')
+    && !book.includes('not drawn yet')
+    && !book.includes('lesson-progress'));
+}
+{
+  const card1 = CHAPTER_5.cards['5.1.1'];
+  const card2 = CHAPTER_5.cards['5.1.2'];
+  check('section 5.1 quotes exercise 1 and part (c) of exercise 2',
+    chapter5ExerciseIds().join() === '5.1.1,5.1.2'
+    && card1.statement.includes('exp(0)')
+    && card1.href.endsWith('#x5_1_1')
+    && /right-hand point/.test(card1.hint)
+    && !/blank stays empty/.test(card1.hint)
+    && card2.statement.includes('\\pm i\\pi')
+    && !/shading|s_\{1\}/.test(card2.statement)
+    && card2.href.endsWith('#x5_1_2')
+    && /-\\pi < y \\le \\pi/.test(card2.hint)
+    && /left-hand point/.test(card2.hint)
+    && CHAPTER_5.sections[0].read[0].href.endsWith('#exp_z__Def')
+    && CHAPTER_5.sections[0].read[1].href.endsWith('#fig_ch-05-02')
+    && CHAPTER_5.sections[0].idea.includes('Identity (5.1)')
+    && !readFileSync(new URL('../js/stations/book.js', import.meta.url), 'utf8').includes('vertical segment'));
+  check('the index does not gain the section 5.1 cards',
+    !readFileSync(new URL('../js/data/test2-problems.js', import.meta.url), 'utf8').includes("id: '5.1.1'")
+    && !readFileSync(new URL('../js/stations/test2-index.js', import.meta.url), 'utf8').includes('5.1.1'));
+  const mem = { 'progress.test2': { '4.1.3': true, '4.2.5': true } };
+  const store = {
+    get(key, fallback) { return Object.prototype.hasOwnProperty.call(mem, key) ? mem[key] : fallback; },
+    set(key, value) { mem[key] = value; },
+  };
+  saveSharedTicks(store, { '5.1.1': true });
+  check('a chapter 5 tick keeps the chapter 4 ticks',
+    mem['progress.test2']['4.1.3'] === true && mem['progress.test2']['4.2.5'] === true && mem['progress.test2']['5.1.1'] === true && Object.keys(mem).join() === 'progress.test2');
+  saveSharedTicks(store, toggleTick({ '4.1.3': true, '5.1.1': true }, '5.1.1'));
+  check('unticking 5.1.1 leaves the chapter 4 tick',
+    mem['progress.test2']['5.1.1'] == null && mem['progress.test2']['4.1.3'] === true && mem['progress.test2']['4.2.5'] === true);
+}
+{
+  const unit = expFrame(8, { re: 0 });
+  const end = expFrame(8, { re: Math.log(2) });
+  const small = expFrame(8, { re: -0.5 });
+  const w = compile('exp(z)').f({ re: end.x, im: end.y });
+  const stops = finishedStops(EXP_DURATION, unit.beats);
+  const quarters = stops.map((t) => expFrame(t, { re: 0 }).y);
+  check('x = 0 keeps the image on the unit circle', unit.claim.holds === true && /unit circle/.test(unit.claim.text) && /real axis/.test(unit.claim.text) && !/imaginary|clock/i.test(unit.claim.text) && Math.abs(unit.radius - 1) < 1e-12);
+  check('ln 2 at the end of the walk leaves y at pi and grows the radius', Math.abs(end.y - Math.PI) < 1e-9 && /larger than 1/.test(end.claim.text) && /\$e\^\{x\}\$/.test(end.claim.text) && !/clock/.test(end.claim.text) && Math.abs(end.radius - 2) < 1e-12);
+  check('a smaller radius names e to the x', /smaller than 1/.test(small.claim.text) && /\$e\^\{x\}\$/.test(small.claim.text));
+  check('the purple point is exp of that z', Math.abs(w.re + 2) < 1e-9 && Math.abs(w.im) < 1e-9);
+  check('next step lands on the four quarter turns', stops.length === 4 && Math.abs(quarters[0] + Math.PI / 2) < 1e-9 && Math.abs(quarters[1]) < 1e-9 && Math.abs(quarters[2] - Math.PI / 2) < 1e-9 && Math.abs(quarters[3] - Math.PI) < 1e-9);
+  const place = stops.map((t) => expFrame(t, { re: 0 }).claim.text);
+  check('each quarter names the point on screen',
+    /bottom of the unit circle/.test(place[0]) && !/real axis/.test(place[0])
+    && /right of the unit circle/.test(place[1]) && /real axis/.test(place[1])
+    && /top of the unit circle/.test(place[2]) && !/real axis/.test(place[2])
+    && /left of the unit circle/.test(place[3]) && /real axis/.test(place[3]));
+  const between = expFrame(1, { re: 0 });
+  check('between the stops the point is on the unit circle', Math.abs(between.x) < 1e-12 && between.claim.text === 'The point sits on the unit circle.');
+  check('a larger radius stays the radius sentence off the axis', /\$e\^\{x\}\$/.test(expFrame(stops[0], { re: Math.log(2) }).claim.text) && /larger than 1/.test(expFrame(stops[0], { re: Math.log(2) }).claim.text));
+}
+{
+  const legacy = foldLegacyExercises({ '4.2.4': true }, { exercises: { '4.1.3': true, nope: true }, sections: { '4.1': true } }, chapter4ExerciseIds());
+  check('a chapter tick folds into the index memory', legacy['4.1.3'] === true && legacy['4.2.4'] === true && legacy.nope == null);
+  check('a migrated record does not fold again', foldLegacyExercises({}, { migrated: true, exercises: { '4.1.3': true } }, chapter4ExerciseIds())['4.1.3'] == null);
+  const open = { '4.1.3': true };
+  check('ticks alone leave 4.1 open while 4.1.13 is unticked', sectionFinished(CHAPTER_4.sections[0], open) === false && chapterTally(CHAPTER_4.sections, open).nextExercise === '4.1.13');
+  const both = { '4.1.3': true, '4.1.13': true };
+  check('ticks alone finish 4.1 and move next to 4.2', sectionFinished(CHAPTER_4.sections[0], both) === true && chapterTally(CHAPTER_4.sections, both).nextId === '4.2');
+}
+check('the live router does not import kit', !/from\s+['"][^'"]*kit\//.test(readFileSync(new URL('../js/app.js', import.meta.url), 'utf8')));
+check('book route parser matches the router', parseBookRoute('chapter-5').kind === 'chapter' && parseRoute('#chapter-5').book.chapter === 5);
 check('the shipped route rule matches the kit helper',
   readFileSync(new URL('../js/core/map-route.js', import.meta.url), 'utf8')
   === readFileSync(new URL('../kit/template/js/core/map-route.js', import.meta.url), 'utf8'));

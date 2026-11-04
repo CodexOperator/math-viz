@@ -800,3 +800,152 @@ Branch `cursor/homework-ch4-hints-copy-md-a873`, after the close fixes at `f88fd
 **Change.** The sentence under the `(1+i)/2` sums no longer names Exercise 1(b) or `1/(2+i)`. No chip was added for part (b). The Exercise 5 hint keeps The Orbit of 0 and the chip `c = −2`, and it no longer names the Mandelbrot set or The Crossing. Those two stops left `also`, so the export no longer lists them. The `c = −2` note no longer mentions a pad at 1.6. The Exercise 3 hint no longer names the quadratic film. The index remembers a pressed Homework chip. Opening a homework card from `#index-…` after that press leaves Homework pressed and the scope on Any. A fresh link, with nothing saved, still opens on All and the card’s scope.
 
 **Verified.** `node tools/fractal-smoke.mjs` exits 0. `node tools/check_vectors.mjs` is 234/234. `node kit/smoke.mjs` exits 0. Headless Chrome: the open geometric sentence is “Settles. |z| < 1, so the pile sits down. Theorem 4.12, page 118. The index does not print the sum.” A fresh `#index-4-2-5` is All and Core, 25 shown. After Homework is pressed, the Exercise 5 chip on The Orbit of 0 returns to `#index-4-2-5` with Homework pressed, Any scope, and `7 shown. Homework.` The seven ids are unchanged. The hint names the orbit chip and does not name the other two pictures. The `c = −2` note has no 1.6. At 1280 the index `scrollWidth` is 1265, matching the client. At 390 both are 390. Screenshots: `/opt/cursor/artifacts/homework-geometric-sentence.png`, `/opt/cursor/artifacts/homework-ex5-hint.png`, `/opt/cursor/artifacts/homework-filter-return.png`.
+
+## Book path — batch 1 (Chapter 4)
+
+Branch `cursor/book-chapter-path-df29`, off `gh-pages`. Three rounds. No new picture: every Chapter 4 section already has a station. Chapter 5 is named and open, and its walk is the next batch. Chapters 1–3 and 6–11 get no pages.
+
+The table of contents is the 202 Updated Edition, printed pages i–ii (PDF pages 6–7). Chapter 4 pins checked on that PDF: Definition 4.1 and Theorem 4.1, page 103; Theorem 4.5, page 106; Example 4.7, page 110; Figure 4.3 caption, page 112; Example 4.9 and Theorem 4.9, page 113; Figure 4.6, page 114; Theorem 4.11, page 116; Theorem 4.12, page 118; Theorem 4.15, page 124; Theorem 4.16, page 125.
+
+**Choice.** The book is a route family (`#book`, `#chapter-4`, `#chapter-5`), not a third map. Visiting it does not switch the remembered test. `#chapter-1` scrolls the roadmap to that later chapter and does not open a new page. A leftover token on a later chapter is still “no such place.” Progress lives at `mv:book.progress`, apart from the Test 2 ticks. A section is finished only when it is marked and every exercise on it is ticked. Hints on the chapter page stay closed until asked. The index still shows the same seven cards with the hint open, and one sentence points at Chapter 4, so the old `#index-…` links keep working.
+
+### Round 1 — The book
+
+**Problem.** The two test maps are not a path through the textbook. A learner cannot see which chapter is next.
+
+**Change.** `#book` lists all eleven chapters and their sections, in contents order. Chapter 4 is Next. Chapter 5 is Open. The others are Later. Chapters 1, 2, and 3 each link the one station that already draws them (the two addresses, a function as a motion, the derivative). The walk button is the only primary control.
+
+### Round 2 — Chapter 4, four sections
+
+**Problem.** Chapter 4 on the site was a filter and a map of stops, not the book’s order.
+
+**Change.** `#chapter-4` is the four sections in order. Each one has one sentence, the reading (the pins above), and the stations that already picture it. 4.1 is the sequence and the series. 4.2 runs Newton’s step, the basins, the disk at c = 0, Julia, the orbit of 0, the Mandelbrot set, and the cardioid. 4.3 is the geometric series. 4.4 is the radius. No playground room is on this page.
+
+### Round 3 — The seven cards, and one exercise for 4.4
+
+**Problem.** The assigned set lived only behind the Homework chip. Section 4.4 had no exercise on the path.
+
+**Change.** The seven cards keep ids `4.1.3`, `4.1.13`, `4.2.3`, `4.2.4`, `4.2.5`, `4.3.1`, `4.3.2`. Each shows the quoted statement, a picture link, Copy Markdown, and Tick. The hint is behind “Show the hint” and is the same hint as the index. Copy Markdown is the index export plus a line to `#chapter-4`, and it still omits an answer key. The sync copy runs in the click turn, because the clipboard promise resolves after the browser has dropped the gesture. Exercise 4.4.6 is the one extra card: the statement already quoted on the index, a hint that points at A Radius, Then a Wall and Theorem 4.15, and no comparison of the two moduli. Marking 4.1 and ticking both of its exercises moves Next to 4.2, on the chapter page and on the book.
+
+**Verified.** `node tools/fractal-smoke.mjs` exits 0, including the book routes, the eleven chapters, the exercise list, and the progress rule. `node tools/check_vectors.mjs` is 234/234. `node kit/smoke.mjs` exits 0. `js/core/map-route.js` is unchanged and matches the kit helper. The router does not import `kit/`. Headless Chrome, light and dark, at 1280, 700, and 390: no console errors, no exceptions, no failed assets, no sideways scroll, no canvas, and 0 animation frames while the page sits. The hint on 4.1.3 opens and names Definition 4.1. The page text does not contain the 4.4.6 added check. A trusted click sets Copy Markdown to Copied. Finishing 4.1 makes the book say Next is 4.2, and the 4.1 row says Done. `#chapter-5` lists five sections and links the current and the impedance from 5.4. `#chapter-1` stays on the roadmap. Screenshots: `/opt/cursor/artifacts/book-1280-light.png`, `book-1280-dark.png`, `book-700-light.png`, `book-390-light.png`, `book-390-dark.png`, `chapter4-1280-light.png`, `chapter4-700-dark.png`, `chapter4-390-light.png`, `chapter4-390-dark.png`, `chapter5-1280-light.png`.
+
+**Next.** Build Chapter 5’s five sections the same way: one sentence, the stations that exist, cited reading, and a few exercises quoted from this PDF. The exponential and the logarithm have no picture yet. One new picture, at most, in that batch. Then the progress feel and the phone path.
+
+## Book path — batch 2 (the cut)
+
+Branch `cursor/book-chapter-path-df29`, after the close review at `cec19d0`. One cutting batch, then stop. No Chapter 5 picture. The reviewer’s anchors stay: Theorem 4.1 at `Lim_Zn_Thm`, Theorem 4.11 at `Attracting_Thm`, Theorem 4.16 at `th15`, Chapter 5 at `sec_exponential-function.html`. Exercise quotes are unchanged. Exercise 6 on the index still hides its added check behind Show. Older stops still use `Fixed_point_Def` when the sentence also names Definitions 4.9 and 4.10.
+
+**Choice.** The taste note asked not to sync two stores, and to drop the index tick on these eight cards. The brief for this batch says one score, shared by the chapter and the index. The ticks live in `progress.test2`. A visit folds any earlier `book.progress` exercise ticks into that memory once, then marks the old record migrated. Section marks are gone. A section is finished when its exercises are ticked. The site shell, the four colours, and the station pictures stay. This is a cut, not a new look.
+
+### Round 1 — One score
+
+**Problem.** A mark could finish a section the ticks had not, and a tick on the chapter left the index card open.
+
+**Change.** Tick is the only control that moves the walk. The status names the next exercise. The same tick shows on the index card.
+
+### Round 2 — The picture is the chip
+
+**Problem.** Exercise 5 opened The Orbit of 0 on c = i. The station sent the exercise back to the index.
+
+**Change.** Each exercise’s picture link opens the chip that exercise uses. Exercise 5 opens `#zero-chapter-4-2-5`, with c = −2 pressed, and the page links back to §4.2, Exercise 5. The eight chapter exercises on a station point at the chapter card. The other index cards are unchanged.
+
+### Round 3 — The dossier
+
+**Problem.** Section 4.2 was a contents list: six readings, seven pictures, a homework banner, and a copy button on every card.
+
+**Change.** Each section is the sentence, the one or two pins the sentence needs (4.4’s size), and the exercises. The pictures row, the homework line, and the per-card Copy Markdown are gone. Copy Markdown remains on the index.
+
+### Round 4 — The book, and the menu
+
+**Problem.** Later chapters printed every section. Chapter 5 ended by calling Chapter 4 the open walk. The menu on the book was Which test.
+
+**Change.** A later chapter is its title, its page, and Later. Chapters 1–3 keep the one station already drawn. Chapter 5 is one sentence and the exponential source tag, with no blank sections and no stale footer. On `#book` and the chapter pages the menu is the eleven chapters.
+
+### Round 5 — Walk opens the title
+
+**Problem.** Walk Chapter 4 opened `#chapter-4-4-1`, so the title sat above the window, and Go to 4.1 pointed at the section already on screen.
+
+**Change.** Walk opens `#chapter-4`. Go to 4.2 appears only once 4.1’s exercises are ticked.
+
+**Verified.** `node tools/fractal-smoke.mjs` exits 0, including the tick-only rule and the four anchors. `node tools/check_vectors.mjs` is 234/234. `node kit/smoke.mjs` exits 0. The router does not import `kit/`. Headless Chrome, light and dark, at 1280, 700, and 390: no console errors, no exceptions, no failed assets, no sideways scroll, and 0 animation frames on the book and on Chapter 4. The chapter title is on screen. Exercise 5 lands on c = −2 and the link back is `#chapter-4-4-2-5`. A tick on the chapter is pressed on the index. Screenshots: `/opt/cursor/artifacts/book-1280-light.png`, `chapter4-1280-light.png`, `orbit-ex5-1280-light.png`, `chapter5-1280-light.png`, `book-390-dark.png`, `chapter4-390-light.png`.
+
+**Stop.** The cutting batch is done. Chapter 5 is not built in this shape.
+
+## Book path — batch 3 (the doors)
+
+Branch `cursor/book-chapter-path-df29`, after the batch 2 review at `7069e060`. One cutting batch, then stop. Nothing added. Chapter 5 stays the one sentence.
+
+**Choice.** The film is the worked example, and it was sitting on top of the chip the chapter named. The chip and its list are the page. The film follows them. The sequence note keeps the chapter’s name for the picture when the door was the chapter, and keeps Exercise 1(a) when it was not.
+
+### The five cuts
+
+1. On The Orbit of 0, the chips, the list, and the Theorem 4.9 line come before the film. The sequence film and the Newton film move under the same way: the named chip, or the degree-1 line, then the film.
+2. Opened from Exercise 3 or 13, the sequence note calls the terms the disk in Definition 4.1. It does not call them Exercise 1(a).
+3. Go to 4.2, 4.3, and 4.4 puts that section’s title under the header. The previous tick stays above the window. The last section can scroll up because the path keeps a screen of room under it.
+4. Section 4.2 cites Theorem 4.9 only. Theorem 4.11 leaves the section. One Newton Step still cites Example 4.7, page 110.
+5. The seven homework hints drop the last sentence that said the card does not print the proof, the count, the orbit, the sum, the criterion, or the ε. Exercise 6 still does not say which point is closer.
+
+**Verified.** `node tools/fractal-smoke.mjs`, `node tools/check_vectors.mjs` (234/234), `node kit/smoke.mjs`, and `node tools/film-smoke.mjs` exit 0. The router does not import `kit/`. Headless Chrome at 1280×800: c = −2, the list 0, −2, 2, 2, …, and the Theorem 4.9 line are on the first screen, and the film starts under that list. The same list starts on screen at 390px, with no sideways scroll. The sequence note names Definition 4.1. The three Go to jumps hide the previous tick. No console errors and no failed assets. Screenshot: `/opt/cursor/artifacts/orbit-first-screen.png`, `goto-4-2-1280.png`.
+
+**Stop.** No Chapter 5 sections.
+
+## Book path — batch 4 (the exponential)
+
+Branch `cursor/book-chapter-path-df29`. Synthesis batch 1 only. The picture is lifted from `live/exp.js` and `expFrame` on `cursor/live-films-1fd7` at `fced5da4`. The stage publishes `data-probe-re` and `data-probe-im`, the names on the draw-and-map page. The purple point is `compile('exp(z)')`, recomputed. The clock owns y, from −π to π. The hand owns x. Play is the only button. No scrubber, no chips, no formula box. No new registry row. The router does not import `kit/`.
+
+**Cut.** The drawing page, the two-plane forest, sound, the disk gate, and deep zoom stay off this page. The logarithm, the power, and a second clock stay off. Under the picture, one line says the logarithm and the powers are not drawn yet.
+
+**Verified.** `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the unit-circle claim, y = π at the end of the walk with x = ln 2, and exp(ln 2 + iπ) = −2. `node kit/smoke.mjs` exits 0. Headless Chrome at 360×640: the plane and the claim are on the first screen, the page does not scroll sideways, and a paused picture schedules nothing. A press at radius 2 changes the claim to the radius e^x, larger than 1, and leaves y at π. Pause freezes that angle. Reduced motion says Next step, not Pause. Screenshot: `/opt/cursor/artifacts/chapter5-exp-360.png`.
+
+**Next.** Batch 5 is the §5.1 walk: Identity (5.1), Definition 5.1, Figure 5.2, exercises 5.1.1 and 5.1.2, ticks in `progress.test2`. Sections 5.2–5.5 stay titles.
+
+## Book path — batch 5 (the cut)
+
+Branch `cursor/book-chapter-path-df29`, after the batch 4 review at `f7ee315`. One cutting batch, then stop. No §5.1 exercise cards. The clock, the unit-circle detent, and the release stay. No slider, scrubber, spring, or second clock.
+
+**Choice.** The three taste notes agree the gesture is the exponential and the chrome is in the way. The resting frame stays on the left of the unit circle. Only Next step moves to the quarter turns.
+
+1. The plane drops the 38vh cap. Its width is the column, or the viewport minus the chrome that keeps Play on the first screen, whichever is smaller.
+2. At rest the sentence is “The point sits on the left of the unit circle, on the real axis.” The two radius sentences stay, and they write \(e^{x}\) as math. They do not say the angle is the clock, and they do not name an imaginary axis.
+3. The green dot is the radius handle. A press keeps the value until the finger moves, and then the dot stays under the finger. The hit target is 44px. A press anywhere else does nothing. The purple point is painted above the green disc.
+4. The line under the picture is gone. The Chapter 5 card on the book keeps Open, the title, and the page. The finished-chapter status no longer says the walk is not drawn.
+5. Next step, and the reduced-motion path, lands on the bottom, the right, the top, and the left.
+6. The chapter title is “Chapter 5. The exponential.”
+
+**Verified.** `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the resting sentence, the math in the radius sentences, y = π at the end of the walk with x = ln 2, and the four quarter-turn stops. `node kit/smoke.mjs` exits 0. The router does not import `kit/`. Headless Chrome: at 360×640 and at 1280×800 the page does not scroll sideways, Play is on the first screen, and a paused picture schedules nothing. The laptop plane is wider than the old 304px cap. A press off the green dot does nothing. A press on it keeps the radius until the finger moves, and then the dot stays under the finger. Letting go leaves that radius, and the angle stays at π. A drag during Play leaves the angle running. Reduced motion says Next step, then lands on −π/2, 0, π/2, and π, and the button becomes Start again. It never says Pause. Screenshots: `/opt/cursor/artifacts/chapter5-exp-360.png`, `/opt/cursor/artifacts/chapter5-exp-1280.png`.
+
+**Stop.** The §5.1 walk is the next batch, after this cut is reviewed. It is not started.
+
+## Book path — batch 6 (the §5.1 walk)
+
+Branch `cursor/book-chapter-path-df29`, after the batch 5 review at `c4118ee`. The picture is unchanged except that `#chapter-5-5-1-1` opens it at \(z = 0\). The drag, the clock, the claim, and the resting frame stay.
+
+**The walk.** It sits under the picture. Identity (5.1), page 132, is the idea: the modulus is \(e^{x}\) and the angle is \(y\). The reads are Definition 5.1, page 130, and Figure 5.2, page 133. Exercises 5.1.1 and 5.1.2 are quoted from printed page 135, with the CC BY 4.0 line. Hints stay closed. The series evaluation on page 439 is not on the card. Sections 5.2–5.5 are titles.
+
+**Blanks.** A blank stays empty until the picture makes it true. The modulus fills when the radius leaves 1. The vertical segment fills when the point leaves the real axis. \(\exp(0)\) fills with 1 when the picture is at \(z = 0\). The images of \(\pm i\pi\) fill when the picture is at the end of the walk. The tick is the last blank on each card. It waits until that card’s blank is right, then writes `progress.test2` through `saveSharedTicks`. A Chapter 5 save keeps every Chapter 4 tick. There is no second store. The index stays 30 cards.
+
+**Verified.** `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` and `node kit/smoke.mjs` exit 0. The router does not import `kit/`. Headless Chrome: at 360×640 Play is on the first screen and the page does not scroll sideways, and the same at 1280×800. The resting picture still says the point is on the left of the unit circle. Exercise 1’s tick stays disabled there, and Exercise 2’s blank is filled. `#chapter-5-5-1-1` opens at 1 and the tick writes `5.1.1` beside the Chapter 4 ticks. Reduced motion’s first Next step lands on the bottom and fills the segment blank, and the button does not say Pause. Chapter 4 still has eight cards. The index still has 30. Screenshots: `/opt/cursor/artifacts/chapter5-walk-360.png`, `/opt/cursor/artifacts/chapter5-walk-1280.png`.
+
+**Stop.** Not merged. Not deployed.
+
+## Book path — batch 7 (the cut)
+
+Branch `cursor/book-chapter-path-df29`, after the batch 6 review at `046f77f`. The picture is unchanged. One cutting batch, then the walk rests.
+
+1. The strip blank is gone. The modulus blank stays, and it fills when the radius leaves 1.
+2. Exercise 2’s card is part (c) only: where the images of \(\pm i\pi\) are. The blank still reads “land together at −1” on the left-hand frame, including the frame the page opens on. The hint keeps the strip \(-\pi < y \le \pi\) and says the two ends are the left-hand point.
+3. Each tick stays live while the point is within 0.35 radians of its end: Exercise 2 on the left, Exercise 1 on the right. The first frames of Play do not clear it. The tick sits above the quotation.
+4. Exercise 1’s hint keeps the series sentence and names the right-hand point of the unit circle as \(z = 0\).
+5. On a phone the radius sentence stays one line, and the claim box keeps the resting height, so Play does not hop.
+
+The Later titles for 5.2–5.5 stay. The kicker, the colours, the flags, and the hint button stay.
+
+**Verified.** `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` and `node kit/smoke.mjs` exit 0. The router does not import `kit/`. Headless Chrome: Play is on the first screen at 360×640, 390×844, and 1280×800, and the page does not scroll sideways. A drag that grows the radius keeps that claim on one line and leaves Play where it was. Screenshots: `/opt/cursor/artifacts/chapter5-cut-360.png`, `/opt/cursor/artifacts/chapter5-cut-1280.png`.
+
+**Stop.** The walk rests. Not merged. Not deployed.
+
+## Book path — batch 8 (the last cut)
+
+Branch `cursor/book-chapter-path-df29`, after the batch 7 review at `ee723a8`. Two cuts.
+
+A mouse drag focuses the square while `:focus-visible` is false, and the browser draws its auto outline. That outline is suppressed. The 3px keyboard ring on `:focus-visible` stays. On both exercise cards the order is the pin and its cite, the question, the blank, Tick, then the hint. The wording, the tick window, and the modulus blank are unchanged.

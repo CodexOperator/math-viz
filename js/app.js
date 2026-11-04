@@ -14,6 +14,8 @@ import { STATIONS, stationById, stationForProblem, stationForTopic, MAPS, MAP_ST
 import { mapForcedByRoute as mapForcedByRouteBody } from './core/map-route.js';
 import { filmsFor } from './data/films.js';
 import { BOOK } from './data/book.js';
+import { parseBookRoute } from './book/route.js';
+import { BOOK_CHAPTERS } from './data/book-path.js';
 import { cssVar, getTheme, setTheme, onThemeChange, prefersReducedMotion, initTheme } from './core/theme.js';
 import { createStore } from './core/store.js';
 import { watchIds } from './core/ids.js';
@@ -95,6 +97,11 @@ export function parseRoute(hash) {
     }
     return miss;
   }
+
+  // #book and #chapter-N are a third route family. They are not stations, so they
+  // do not switch the remembered test and they do not appear on either map.
+  const book = parseBookRoute(raw);
+  if (book) return { station: null, preset: null, raw, book };
 
   const exact = stationById(lower);
   if (exact) return { station: exact.id, preset: null, raw };
@@ -202,16 +209,44 @@ export function start() {
     navigate('home');
   }
 
-  function syncFooter(mapId) {
+  function syncFooter(mapId, bookRoute) {
     const note = document.getElementById('site-footer-note');
     if (!note) return;
+    if (bookRoute) {
+      note.textContent = 'The book path for MAT 412. Chapters 4 and 5 are open. The other chapters are later. It runs in your browser and works offline.';
+      return;
+    }
     note.textContent = mapId === 'test2'
       ? 'A study map for MAT 412 Test 2, Chapter 4. It runs in your browser and works offline.'
       : 'A study map for MAT 412 Test 1: Chapters 1 to 3, and the §5.4 circuit. It runs in your browser and works offline.';
   }
 
+  function buildBookNav() {
+    nav.replaceChildren();
+    nav.append(el('div', { class: 'nav-book', id: 'nav-book-block' },
+      el('a', { class: 'nav-link', id: 'nav-book', href: '#book' }, [
+        el('span', { class: 'nav-num', 'aria-hidden': 'true' }, '·'),
+        el('span', { class: 'nav-title' }, 'The Book'),
+      ])));
+    const list = el('ul', { class: 'nav-list', id: 'nav-chapters', 'aria-label': 'Chapters' });
+    for (const ch of BOOK_CHAPTERS) {
+      list.append(el('li', {}, el('a', {
+        class: 'nav-link', id: `nav-chapter-${ch.n}`, href: `#chapter-${ch.n}`, 'data-chapter': String(ch.n),
+      }, [
+        el('span', { class: 'nav-num', 'aria-hidden': 'true' }, String(ch.n)),
+        el('span', { class: 'nav-title' }, ch.title),
+      ])));
+    }
+    nav.append(list);
+  }
+
   function buildNav(mapId) {
     nav.replaceChildren();
+    nav.append(el('div', { class: 'nav-book', id: 'nav-book-block' },
+      el('a', { class: 'nav-link', id: 'nav-book', href: '#book' }, [
+        el('span', { class: 'nav-num', 'aria-hidden': 'true' }, '·'),
+        el('span', { class: 'nav-title' }, 'The Book'),
+      ])));
     const switchRow = el('div', { class: 'map-switch', id: 'nav-map-switch', role: 'group', 'aria-labelledby': 'nav-map-label' });
     for (const m of MAPS) {
       const b = el('button', {
@@ -266,9 +301,17 @@ export function start() {
     if (ar.top < nr.top || ar.bottom > nr.bottom) nav.scrollTop += ar.top - nr.top - (nr.height - ar.height) / 2;
   }
 
-  function markCurrent(id) {
+  function markCurrent(id, bookRoute) {
     for (const a of nav.querySelectorAll('a.nav-link')) {
-      if (a.dataset.station === id) a.setAttribute('aria-current', 'page');
+      let on = false;
+      if (bookRoute) {
+        on = bookRoute.kind === 'chapter'
+          ? a.dataset.chapter === String(bookRoute.chapter)
+          : a.id === 'nav-book';
+      } else {
+        on = a.dataset.station === id;
+      }
+      if (on) a.setAttribute('aria-current', 'page');
       else a.removeAttribute('aria-current');
     }
     revealActive();
@@ -390,6 +433,43 @@ export function start() {
     if (!first) view.focus({ preventScroll: true });
   }
 
+  async function renderBook(seq, route, first) {
+    const spec = route.book;
+    const label = spec.kind === 'chapter' ? `Chapter ${spec.chapter}` : 'The Book';
+    view.dataset.state = 'loading';
+    document.title = documentTitle(label);
+    const section = el('section', {
+      class: 'station', id: 'station-book', 'data-station': 'book', 'data-book': spec.kind,
+    });
+    view.append(section);
+    state.stopIds = watchIds(section, 'book');
+    try {
+      const mod = await import('./stations/book.js');
+      if (seq !== state.seq) return;
+      if (typeof mod.mount !== 'function') throw new Error('book page has no mount() export');
+      section.replaceChildren();
+      const unmount = mod.mount(section, Object.freeze({
+        navigate,
+        store,
+        book: spec,
+        map: activeMap,
+      }));
+      if (seq !== state.seq) {
+        runUnmount('book', unmount);
+        return;
+      }
+      state.current = { id: 'book', unmount: typeof unmount === 'function' ? unmount : null };
+      view.dataset.state = 'ready';
+      finish(first, label);
+    } catch (err) {
+      if (seq !== state.seq) return;
+      console.error(`[mv] the book page failed to load: ${err && err.message ? err.message : err}`, err);
+      section.replaceChildren(buildUnderConstruction({ id: 'book', title: label }, err));
+      view.dataset.state = 'error';
+      finish(first, `${label}: under construction`);
+    }
+  }
+
   async function render() {
     const seq = ++state.seq;
     clearTimeout(state.loadingTimer);
@@ -408,9 +488,11 @@ export function start() {
     }
     activeMap = mapId;
     document.body.dataset.map = mapId;
+    document.body.dataset.book = route.book ? 'true' : 'false';
     document.body.dataset.station = st ? st.id : '';
-    syncFooter(mapId);
-    buildNav(mapId);
+    syncFooter(mapId, route.book);
+    if (route.book) buildBookNav();
+    else buildNav(mapId);
 
     setNavOpen(false);
     view.replaceChildren();
@@ -418,7 +500,12 @@ export function start() {
     view.dataset.station = st ? st.id : '';
     view.dataset.map = mapId;
     window.scrollTo(0, 0);
-    markCurrent(st ? st.id : null);
+    markCurrent(st ? st.id : null, route.book);
+
+    if (route.book) {
+      await renderBook(seq, route, first);
+      return;
+    }
 
     if (!st) {
       view.dataset.state = 'nosuchplace';
