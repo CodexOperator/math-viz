@@ -33,6 +33,12 @@ export const TEMPLATE_ID = 'ch1-arithmetic';
 
 function rngOf(seed) {
   let s = (Number(seed) >>> 0) || 1;
+  // Mix first. The raw LCG moves by a hair when the seed grows by 1, so
+  // "Another" kept redrawing the same angle.
+  s = Math.imul(s ^ (s >>> 16), 0x7feb352d) >>> 0;
+  s = Math.imul(s ^ (s >>> 15), 0x846ca68b) >>> 0;
+  s = (s ^ (s >>> 16)) >>> 0;
+  if (s === 0) s = 1;
   return () => {
     s = (Math.imul(1664525, s) + 1013904223) >>> 0;
     return s / 4294967296;
@@ -238,7 +244,7 @@ export function generate(seed, params) {
 
 export function normMath(raw) {
   let s = String(raw == null ? '' : raw).trim().toLowerCase();
-  s = s.replace(/\u2212/g, '-').replace(/\$/g, '');
+  s = s.replace(/\u2212/g, '-').replace(/\u03c0/g, 'pi').replace(/\$/g, '');
   s = s.replace(/\\frac\s*\{([^{}]+)\}\{([^{}]+)\}/g, '($1)/($2)');
   s = s.replace(/\\sqrt\s*\{([^{}]+)\}/g, 'sqrt($1)');
   s = s.replace(/\\left|\\right|\\,|\\!|\\;|\\:/g, '');
@@ -271,6 +277,10 @@ function parseReal(s) {
   let t = String(s).trim();
   if (t === '') return null;
   if (t[0] === '+') return parseReal(t.slice(1));
+  if (t[0] === '-' && t.length > 1) {
+    const rest = parseReal(t.slice(1));
+    if (rest != null) return -rest;
+  }
   const div = splitDiv(t);
   if (div) {
     const n = parseReal(div[0]);
@@ -376,10 +386,9 @@ export function matches(input, spec) {
   }
   if (typeof v.angle === 'number') {
     const n = parseReal(got.replace(/\\/g, ''));
+    // Definition 1.11, page 23: Arg is the one value in (−π, π]. A 2π shift is a different name.
     if (n == null) return false;
-    const turn = 2 * PI;
-    const d = Math.abs(((n - v.angle) % turn + turn) % turn);
-    return Math.min(d, turn - d) <= 1e-6;
+    return Math.abs(n - v.angle) <= 1e-3;
   }
   if (typeof v.re === 'number' && typeof v.im === 'number') {
     const z = parseComplex(input);

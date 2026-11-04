@@ -30,8 +30,8 @@ export const CHAPTER_1 = deepFreeze({
       id: '1.1',
       title: 'The Origin of Complex Numbers',
       page: 1,
-      why: 'The cubic $x^3-15x-4=0$ has the real root $4$. Formula (1.3) writes that root as a sum of two square roots of negatives. The picture is the turn those square roots are asking you to allow.',
-      summit: 'Bombelli’s real $4$ is what is left when a conjugate pair of square roots of $-1$ adds.',
+      why: 'The cubic $x^3-15x-4=0$ has the real root $4$. Formula (1.3), page 2, writes that root as two cube roots, and the number under the square root is negative. The picture is the quarter turn that $\\sqrt{-1}$ is asking you to allow.',
+      summit: 'Bombelli’s $4$ is $(2+\\sqrt{-1})+(2-\\sqrt{-1})$. Equation (1.6), page 3.',
       idea: 'Equation (1.6), page 3: $(2+\\sqrt{-1})+(2-\\sqrt{-1})=4$, and $4$ satisfies $x^3-15x-4=0$.',
       read: [
         { pin: 'Equation (1.1), the general cubic, page 1', href: sectionHref(ORIGIN, 'Cubic_Equation') },
@@ -45,7 +45,7 @@ export const CHAPTER_1 = deepFreeze({
         body: 'Bombelli reached $(2+\\sqrt{-1})+(2-\\sqrt{-1})$. The square roots cancel and the sum is $4$. Then $4^3-15\\cdot 4-4=64-60-4=0$, so $4$ really is a root of $x^3-15x-4=0$. The detour was not optional: the formula passed through $\\sqrt{-1}$ on the way to a number you can see.',
       },
       memory: [
-        'Depress the cubic with $z=x-a_2/3$. Equation (1.2), page 1.',
+        'Depress the cubic with $z=x-a_2/3$. The depressed cubic is Equation (1.2), page 2.',
         'If the square root in (1.3) is negative, keep the pair. Do not drop it.',
         'A suspected real root is checked by substituting it back into the cubic.',
       ],
@@ -128,7 +128,7 @@ export const CHAPTER_1 = deepFreeze({
         { pin: 'Definition 1.9, polar representation, page 22', href: sectionHref(GEO2, 'def_polar_rep') },
         { pin: 'Definition 1.10, $\\arg z$, page 23', href: sectionHref(GEO2, 'arg_z') },
         { pin: 'Definition 1.11, $\\operatorname{Arg} z$, page 23', href: sectionHref(GEO2, 'Arg_z') },
-        { pin: "Euler's formula, page 25", href: sectionHref(GEO2, 'Euler_s_Identity') },
+        { pin: "Euler's formula, Equation (1.32), page 25", href: sectionHref(GEO2, 'Euler_s_Formula') },
         { pin: 'Theorem 1.3, arguments add, page 26', href: sectionHref(GEO2, 'thm_arg-sum') },
       ],
       worked: null,
@@ -145,7 +145,7 @@ export const CHAPTER_1 = deepFreeze({
       idea: '',
       read: [
         { pin: "De Moivre's formula, Equation (1.40), page 30", href: sectionHref(ALG2, 'De_Moivre_s_formula') },
-        { pin: 'Theorem 1.4, $n$ roots, page 30', href: sectionHref(ALG2, 'sec_algebra-2-8') },
+        { pin: 'Theorem 1.4, a degree-n polynomial has n roots, page 30', href: sectionHref(ALG2, 'NRoots') },
         { pin: 'Equation (1.43), the $n$th roots of unity, page 31', href: sectionHref(ALG2, 'Roots_of_Unity') },
         { pin: 'Definition 1.12, a primitive $n$th root, page 31', href: sectionHref(ALG2, 'Primitive_nth_Root') },
       ],
@@ -261,8 +261,9 @@ export function timesIClaim(z) {
 export function modulusClaim(z) {
   const re = Number(z && z.re);
   const im = Number(z && z.im);
-  const r = Math.hypot(re, im);
-  if (near(re, 4) && near(im, 3)) return { holds: true, text: 'The length is $5$. This is the book’s $4+3i$.' };
-  if (Math.abs(r - 5) <= 0.12) return { holds: true, text: 'The length is $5$. The point is on the circle through $4+3i$.' };
+  const r2 = re * re + im * im;
+  const lengthFive = Math.abs(r2 - 25) <= 1e-6;
+  if (near(re, 4, 1e-6) && near(im, 3, 1e-6)) return { holds: true, text: 'The length is $5$. This is the book’s $4+3i$.' };
+  if (lengthFive) return { holds: true, text: 'The length is $5$. The point is on the circle through $4+3i$.' };
   return { holds: false, text: 'The length is the distance to $0$. It is not $5$.' };
 }

@@ -5,9 +5,9 @@ import { readFileSync } from 'node:fs';
 import { stationsForMap, stationForTopic, stationForProblem, stationById, threadsOn, stationPart, STATIONS } from '../js/registry.js';
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
-import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, chapter4ExerciseIds, chapter5ExerciseIds } from '../js/data/book-path.js';
+import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, bookWalkTarget, chapter4ExerciseIds, chapter5ExerciseIds } from '../js/data/book-path.js';
 import { CHAPTER_1, chapter1StageIds, turnClaim, timesIClaim, modulusClaim } from '../js/data/chapter1.js';
-import { generate as generateCh1, matches as matchesCh1 } from '../js/practice/gen/ch1-arithmetic.js';
+import { generate as generateCh1, matches as matchesCh1, parseComplex } from '../js/practice/gen/ch1-arithmetic.js';
 import practiceCh1 from '../data/practice/ch1.json' with { type: 'json' };
 import { chapterTally, sectionFinished, foldLegacyExercises, saveSharedTicks, toggleTick } from '../js/book/progress.js';
 import { EXP_DURATION, expFrame, finishedStops } from '../js/core/live-film.js';
@@ -139,18 +139,93 @@ check('eleven chapters, 1, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_C
     && practiceCh1.some((item) => item.kind === 'next-step-blank' && item.cite.page === 15)
     && practiceCh1.some((item) => item.generator && item.generator.template === 'ch1-arithmetic' && item.generator.params.mode === 'polar'));
   const made = generateCh1(7, { mode: 'div', re: [-4, 4], im: [-4, 4] });
+  const nextDiv = generateCh1(8, { mode: 'div', re: [-4, 4], im: [-4, 4] });
   const mod = generateCh1(1, { mode: 'mod' });
   const polar = generateCh1(2, { mode: 'polar' });
+  const argA = generateCh1(20, { mode: 'arg' });
+  const argB = generateCh1(21, { mode: 'arg' });
   check('the chapter 1 generator computes its answers',
     matchesCh1(made.steps[0].answer, made.steps[0])
-    && matchesCh1('14/17+12/17i', made.steps[0])
+    && made.prompt !== nextDiv.prompt
+    && argA.prompt !== argB.prompt
     && Number(mod.steps[0].answer) === mod.steps[0].value.real
     && polar.steps.length === 3
     && matchesCh1(polar.steps[1].answer, polar.steps[1]));
   check('the chapter 1 sentences flip',
     turnClaim(2).holds === true && turnClaim(0).holds === false && turnClaim(2).text !== turnClaim(0).text
     && timesIClaim({ re: 0, im: 1 }).holds === true && timesIClaim({ re: 1, im: 0 }).holds === false
-    && modulusClaim({ re: 4, im: 3 }).holds === true && modulusClaim({ re: 1, im: 1 }).holds === false);
+    && modulusClaim({ re: 4, im: 3 }).holds === true && modulusClaim({ re: 1, im: 1 }).holds === false
+    && modulusClaim({ re: 5, im: 0 }).holds === true && modulusClaim({ re: -3, im: 4 }).holds === true
+    && modulusClaim({ re: 3.5, im: 3.5 }).holds === false && modulusClaim({ re: 5, im: 1 }).holds === false);
+  {
+    const fresh = bookWalkTarget({ complete: false, nextId: '1.1' }, { complete: false });
+    const later = bookWalkTarget({ complete: true, nextId: null }, { complete: false });
+    const done = bookWalkTarget({ complete: true, nextId: null }, { complete: true });
+    check('the roadmap walks Chapter 1 before Chapter 4',
+      fresh.label === 'Walk Chapter 1' && fresh.href === '#chapter-1-1-1' && fresh.chapter === 1
+      && later.label === 'Walk Chapter 4' && later.href === '#chapter-4'
+      && done.label === 'Open Chapter 5' && done.href === '#chapter-5');
+  }
+  {
+    const close = (a, b) => Math.abs(a - b) <= 1e-6;
+    const pairOf = (text) => {
+      const m = String(text).match(/\(([^)]+)\)\s*(?:\\cdot|\+|\/|-)\s*\(([^)]+)\)/);
+      if (!m) return null;
+      return [parseComplex(m[1]), parseComplex(m[2])];
+    };
+    const arithOf = (mode, a, b) => {
+      if (mode === 'add') return { re: a.re + b.re, im: a.im + b.im };
+      if (mode === 'sub') return { re: a.re - b.re, im: a.im - b.im };
+      if (mode === 'mul') return { re: a.re * b.re - a.im * b.im, im: a.re * b.im + a.im * b.re };
+      const d = b.re * b.re + b.im * b.im;
+      return { re: (a.re * b.re + a.im * b.im) / d, im: (a.im * b.re - a.re * b.im) / d };
+    };
+    let argOk = true;
+    let sawPi = false;
+    let sawNeg = false;
+    for (let seed = 1; seed <= 48; seed++) {
+      for (const mode of ['add', 'sub', 'mul', 'div']) {
+        const g = generateCh1(seed, { mode, re: [-5, 5], im: [-5, 5] });
+        const pair = pairOf(g.prompt);
+        const got = parseComplex(g.steps[0].answer);
+        if (!pair || !pair[0] || !pair[1] || !got) { argOk = false; continue; }
+        const want = arithOf(mode, pair[0], pair[1]);
+        if (!close(got.re, want.re) || !close(got.im, want.im)) argOk = false;
+        if (!close(g.steps[0].value.re, want.re) || !close(g.steps[0].value.im, want.im)) argOk = false;
+        if (!matchesCh1(g.steps[0].answer, g.steps[0])) argOk = false;
+      }
+      const modG = generateCh1(seed, { mode: 'mod' });
+      const modZ = parseComplex((modG.prompt.match(/\|([^|]+)\|/) || [])[1] || '');
+      if (!modZ || Number(modG.steps[0].answer) !== Math.hypot(modZ.re, modZ.im)) argOk = false;
+      const argG = generateCh1(seed, { mode: 'arg' });
+      const argZ = parseComplex((argG.prompt.match(/Arg\}\(([^)]+)\)/) || [])[1] || '');
+      const polarG = generateCh1(seed, { mode: 'polar' });
+      const polarZ = parseComplex((polarG.prompt.match(/Write \$([^$]+)\$/) || [])[1] || '');
+      for (const [g, z, mode] of [[argG, argZ, 'arg'], [polarG, polarZ, 'polar']]) {
+        if (!z) { argOk = false; continue; }
+        const theta = Math.atan2(z.im, z.re);
+        const argStep = mode === 'arg' ? g.steps[0] : g.steps[1];
+        if (!close(argStep.value.angle, theta)) argOk = false;
+        if (theta <= -Math.PI || theta > Math.PI + 1e-9) argOk = false;
+        if (!matchesCh1(argStep.answer, argStep)) argOk = false;
+        if (argStep.answer.includes('\\pi') && matchesCh1(argStep.answer.replace('\\pi', '3\\pi'), argStep)) argOk = false;
+        if (Math.abs(theta - Math.PI) < 1e-9) {
+          sawPi = true;
+          if (matchesCh1('-\\pi', argStep) || matchesCh1('-pi', argStep)) argOk = false;
+        }
+        if (theta < 0) sawNeg = true;
+        if (mode === 'polar' && !close(g.steps[0].value.real, Math.hypot(z.re, z.im))) argOk = false;
+      }
+    }
+    check('chapter 1 generator answers recompute, and Arg stays principal', argOk && sawPi && sawNeg);
+  }
+  {
+    const euler = CHAPTER_1.sections.find((s) => s.id === '1.4').read.find((item) => item.pin.startsWith('Euler'));
+    const roots = CHAPTER_1.sections.find((s) => s.id === '1.5').read.find((item) => item.pin.startsWith('Theorem 1.4'));
+    check('Euler’s formula and Theorem 1.4 open the printed statements',
+      euler.href.endsWith('#Euler_s_Formula') && euler.pin.includes('(1.32)')
+      && roots.href.endsWith('#NRoots') && roots.pin.includes('degree-n'));
+  }
   const mem = { 'progress.test2': { '4.1.3': true, '5.1.1': true } };
   const store = {
     get(key, fallback) { return Object.prototype.hasOwnProperty.call(mem, key) ? mem[key] : fallback; },

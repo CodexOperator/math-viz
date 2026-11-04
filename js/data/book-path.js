@@ -208,6 +208,17 @@ export function bookChapter(n) {
   return BOOK_CHAPTERS.find((ch) => ch.n === n) || null;
 }
 
+// The one button on the roadmap. Chapter 1 is the walk until its drawn stages
+// are marked. Chapter 4 is the walk after that. Chapter 5 follows a finished Chapter 4.
+export function bookWalkTarget(ch1, ch4) {
+  if (!ch1 || !ch1.complete) {
+    const id = (ch1 && ch1.nextId) || '1.1';
+    return { label: 'Walk Chapter 1', href: `#chapter-1-${String(id).replace(/\./g, '-')}`, chapter: 1 };
+  }
+  if (ch4 && ch4.complete) return { label: 'Open Chapter 5', href: '#chapter-5', chapter: 5 };
+  return { label: 'Walk Chapter 4', href: '#chapter-4', chapter: 4 };
+}
+
 export function chapter4Section(id) {
   return CHAPTER_4.sections.find((s) => s.id === id) || null;
 }
