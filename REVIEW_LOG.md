@@ -5754,3 +5754,49 @@ While this review was open, `0f8be9f` landed on the branch. It only adds the tas
 3. **Leave the index reveal of Exercise 6, and leave the combined Theorem 4.11 pins on the older stops.** The chapter card has a closed hint and a copy with no answer. The same id on the index is still the older likely card, and its added check stays behind Show. The concept page, the flat paper, and the playground still use `Fixed_point_Def` for a sentence that also names Definitions 4.9 and 4.10.
 
 **accept with fixes**
+
+## Book path, batch 2 — close review
+
+Verdict: **accept with fixes**. Draft pull request 33, branch `cursor/book-chapter-path-df29`, reviewed from `05bda17`. The cutting batch only. Not merged.
+
+One score. The ticks live in `progress.test2`, and the chapter and the index read and write that same memory. A section is finished when its exercises are ticked. There is no mark. `#book` is the eleven titles: Chapter 4 still lists its four sections, Chapters 1–3 keep the one station already drawn, and every later chapter is the title, the page, and Later. Chapter 5 is one sentence and the exponential source tag. On `#book` and the chapter pages the menu is The Book plus the eleven chapters, not Which test. Walk opens `#chapter-4` with the title on screen.
+
+### Fixed
+
+The sequence page and the power-series page are built once. Pressing the other chip, leaving, and opening the exercise again left that other chip pressed. Exercise 3 and Exercise 13 ask for the disk in Definition 4.1, which is `(1/2 + i/4)^n`. Exercise 6 asks for the inside of the disk, `|z| = 1`. A chapter visit now presses that chip. A visit that is not from the chapter still keeps the chip the learner pressed. The orbit and the geometric series already rebuilt their picture on each visit, so `c = −2` and the two geometric chips were already right.
+
+### Checked
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0. `node kit/smoke.mjs` exits 0. All three were run again after the chip fix. `js/core/map-route.js` is byte-identical to `kit/template/js/core/map-route.js`. No live module imports `kit/`.
+
+Headless Chrome, served under `/math-viz/`, light and dark, widths 1280, 700, and 390. `#book`, `#chapter-4`, `#chapter-5`, Test 1 home, the Homework filter, and `playground.html` come up with no console errors, no failed assets, no sideways scroll, and 0 animation frames while the page sits. Test 2 home was loaded with the map set before boot: Julia and Newton are in the menu, addresses is not, and the same three widths in both themes do not scroll sideways. `#cross` is L21, “One number, on the set of c and on the Julia set.” Its first quiet window still included the picture being drawn. After that draw settled, the next 700 ms scheduled 0 frames. An offscreen canvas sits far to the left and does not widen the page. `scrollWidth` matched the window.
+
+Walk Chapter 4 opens `#chapter-4` at scroll 0. The title sits under the header. Go to 4.2 is hidden until both 4.1 exercises are ticked, and then it puts section 4.2 under the header. With all eight ticked the status is “Done. 8 of 8 exercises.” and the book button is Open Chapter 5. Unticking 4.4.6 returns Next to §4.4, Exercise 6.
+
+A tick on the chapter is pressed on the index, and a tick on the index is pressed on the chapter. Unticking on either side clears the other. A fresh load of broken JSON for `mv:progress.test2` and `mv:book.progress` shows “0 of 8” and throws nothing. `"yes"`, the number `1`, and an unknown id are dropped; a real `true` is kept. An old chapter record folds its exercise ticks into the index memory once and is then stored as `{ migrated: true }`. A section mark in that old record does not finish a section. Unticking the folded exercise and loading again leaves it unticked. When `localStorage` throws, the chapter still opens and the tick still shows for that visit, with no console error.
+
+Each picture link, including a second visit after another chip was pressed:
+
+- 4.1.3 and 4.1.13 open A Sequence Has a Fate on `(1/2 + i/4)^n`, and link back to `#chapter-4-4-1-3` and `#chapter-4-4-1-13`.
+- 4.2.3 opens One Newton Step. 4.2.4 opens the disk. Neither names a chip. Both link back to the chapter card.
+- 4.2.5 opens The Orbit of 0 with `c = −2` pressed. The list is 0, −2, 2, and then 2. The link back is `#chapter-4-4-2-5`.
+- 4.3.1 opens Geometric Series on `(1+i)/2`. 4.3.2 opens it on `z = 0 in D₂(−i)`.
+- 4.4.6 opens A Radius, Then a Wall on `|z| = 1`.
+
+The link back scrolls the card under the header and outlines it. The exercise chip on the station points at the same chapter card. The other index cards still point at the index.
+
+The chapter page has no Copy Markdown, no Mark, and no homework line. Copy Markdown is still on the index. The Homework filter shows the same seven cards and reads “7 shown. Homework.” Section 4.2 is the sentence, Theorem 4.9, Theorem 4.11, and the three exercises. It does not list the seven pictures. Hints start closed. The 4.4.6 card does not print the comparison of the two moduli.
+
+### Citations checked against the professor PDF
+
+The anchors from the previous close review are unchanged. Theorem 4.1, page 103, is `Lim_Zn_Thm`. Theorem 4.11, page 116, is `Attracting_Thm`. Theorem 4.16, page 125, is `th15`. Chapter 5, page 130, opens `sec_exponential-function.html`.
+
+The contents titles and printed pages for all eleven chapters, and the sections under them, still match printed pages i–ii. Chapter 4 is page 102 and Chapter 5 is page 130, with the same section pages as the previous review.
+
+The eight exercise statements still match the printed exercises. §4.1 Exercise 3, page 108, is the conjugate of the limit. §4.1 Exercise 13, page 109, completes Theorem 4.1 for the imaginary part. §4.2 Exercise 3, page 117, is Newton’s method for a degree-1 polynomial. §4.2 Exercise 4, page 117, is the iterates of `z^2`. §4.2 Exercise 5, page 117, is the Julia set of `f_{-2}`. §4.3 Exercise 1, page 122, is the two geometric sums. The card still says “Evaluate the following”; the PDF says “Evaluate”. That wording was already accepted, and this batch did not edit the card. §4.3 Exercise 2, page 122, is convergence on `D_2(-i)`. §4.4 Exercise 6, page 129, is a power series that converges at `4-i` and diverges at `2+3i`.
+
+`#chapter-1` stays on the roadmap and scrolls to Complex Numbers. The menu there marks The Book, because that hash is not a chapter page. `#chapter-6-6-1` is no such place. Visiting the book leaves the remembered test alone: a Test 2 visit, then the book, then the site title, is still Test 2. The footer colour key stays hidden on the book routes. The older stops still use `Fixed_point_Def` where the sentence also names Definitions 4.9 and 4.10. The index still hides the Exercise 6 check behind Show.
+
+While this review was open, `667a5c3` landed on the branch. It only adds the taste note in `TASTE_LOG.md`. The note asks for one more cutting batch: the film under the chip, the sequence note when the door was the chapter, the previous tick under the header, Theorem 4.11 off section 4.2, and the last sentence of each chapter hint. This pass does not start that batch.
+
+**accept with fixes**
