@@ -5849,3 +5849,31 @@ Definition 4.1 and Theorem 4.1 are page 103. Example 4.7 is page 110. Example 4.
 While this review was open, `a483344` landed on the branch. It only adds the batch 3 taste note in `TASTE_LOG.md`. The note says the five doors landed and the loop should rest. The note fix sits on top of that commit. The four station lines that still mention the index, and the 36px picture chip, are the leftovers that note already left. This pass does not start another batch.
 
 **accept with fixes**
+
+## Book path, batch 4 — close review
+
+Verdict: **ACCEPT**. Pull request 33, branch `cursor/book-chapter-path-df29`, reviewed from `2dc9cff`. Synthesis batch 1 only: the live picture of e^z on Chapter 5. Not merged. Nothing in the picture was changed.
+
+The placeholder is gone. The clock owns y, from −π to π, through `createMotion`. The hand owns x. The stage publishes `data-probe-re` and `data-probe-im`. The purple point is `compile('exp(z)')`, recomputed on each paint. Play is the only button on the chapter. There is no scrubber, no chip, and no formula box. `js/registry.js` has no new row. `js/app.js` does not import `kit/`, and loading `#chapter-5` requests nothing under `kit/`.
+
+### Checked
+
+A fresh `#chapter-5` opens at the end of the walk: x = 0, y = π. The claim is “On the imaginary axis the image stays on the unit circle. The angle is the clock.” The purple point is −1 and the drawn radius is 1. A press at radius 2 writes x = ln 2, leaves y at π, and the claim becomes “The radius is e^x, larger than 1. The angle is still the clock.” The purple point is −2. The green point is 2 on the positive real axis. The orbit radius is 2.
+
+Play rewinds y to −π and walks it forward. x stays at ln 2. Pause freezes the angle. In the 450 ms after Pause the angle does not change and no further animation frame is scheduled. While a frame is already queued, marking the document hidden lets that callback return without painting and schedules nothing after it. Reduced motion says Next step, takes one step, schedules no frame, and does not say Pause. A second step says Start again.
+
+At 360×640, light and dark, the plane and the claim are on the first screen. In the dark theme the claim ends at 470px. The page does not scroll sideways (`scrollWidth` equals the window). At 1280×800 the claim ends at 543px inside the 800px window, and the page does not scroll sideways. Sitting on the page schedules 0 frames. The line under the picture says the logarithm and the powers are not drawn yet.
+
+Chapter 4 still opens as Sequences, Series, and Fractals, with four sections, eight cards, and closed hints. Ticking 4.1.3 stays pressed after a visit to Chapter 5, and that same tick is pressed on the index. The index still has its 30 cards. It lists 4.1.3 and does not list 5.1.1 or 5.1.2. Chapter 4, the index, and the book do not scroll sideways at 1280 or at 360, in the light theme, and they schedule no frame while they sit. No console errors and no failed assets on those pages.
+
+### The math, against the professor PDF
+
+Chapter 5 is Elementary Functions, printed page 130. That page is also the start of §5.1, The Complex Exponential Function. The source line says “Chapter 5, Elementary Functions, page 130” and opens `https://complexanalysis.org/web/sec_exponential-function.html`, which carries Definition 5.1. The licence line is CC BY 4.0.
+
+Identity (5.1), page 132, is e^z = e^x (cos y + i sin y). Equation (5.6), page 133, is |e^z| = e^x. The claim uses that. At x = 0 the image is on the unit circle. At x = ln 2 the radius is 2, which is larger than 1, and the angle is still y. e^{ln 2 + iπ} = −2. The fundamental strip on page 133 is −π < y ≤ π. The picture walks y from −π to π, which is what this batch asked for. The two ends are the same point: exercise 5.1.7 on page 135 is exp(z + iπ) = exp(z − iπ). The logarithm is §5.2, page 137, and the power z^c is §5.3, page 143. Neither is drawn. Chapter 4’s pins were not edited. The chapter page still names Definition 4.1, page 103, and the chapter source is still page 102.
+
+### Smoke
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the unit-circle claim, y = π at x = ln 2, and exp(ln 2 + iπ) = −2. `node kit/smoke.mjs` exits 0.
+
+**ACCEPT**
