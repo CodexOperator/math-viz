@@ -1,14 +1,17 @@
 // The Chapter 5 picture. The clock owns the angle. The hand owns the real part.
 // Play is the only button. The purple point is compile('exp(z)'), recomputed.
+// The green dot is the radius handle: a press keeps the value until the finger
+// moves, and then the dot stays under the finger. A press anywhere else does nothing.
 
-import { fmtNum } from '../core/complex.js';
 import { prefersReducedMotion } from '../core/anim.js';
 import { compile } from '../core/parse.js';
 import { EXP_DURATION, createLivePlayer, expFrame, placeReal } from '../core/live-film.js';
-import { h } from './test2-ui.js';
+import { h, appendRich } from './test2-ui.js';
 
 const SPAN = 7.2;
 const SIZE = 480;
+const HIT_PX = 22;
+const PICK_PX = 4;
 const X = (re) => ((re + 3.6) / SPAN) * SIZE;
 const Y = (im) => ((3.6 - im) / SPAN) * SIZE;
 const R = (radius) => (radius / SPAN) * SIZE;
@@ -35,16 +38,16 @@ export function mountExpPicture(parent) {
     viewBox: '0 0 480 480',
     tabindex: '0',
     role: 'img',
-    'aria-label': 'The image of e to the z. Drag to change the radius. Purple is e to the z. Green is that radius on the real axis. Orange is the unit circle.',
+    'aria-label': 'The image of e to the z. Drag the green dot to change the radius. Purple is e to the z. Green is that radius on the real axis. Orange is the unit circle.',
   });
   const axisX = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2' });
   const axisY = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2' });
   const unit = svgEl('circle', { fill: 'none', stroke: 'var(--polar)', 'stroke-width': '2', 'stroke-dasharray': '6 6' });
   const orbit = svgEl('circle', { fill: 'none', stroke: 'var(--output)', 'stroke-width': '1.5', opacity: '0.55' });
   const ray = svgEl('line', { stroke: 'var(--polar)', 'stroke-width': '3', 'stroke-linecap': 'round' });
+  const radiusDot = svgEl('circle', { r: '6', fill: 'var(--input)' });
   const walker = svgEl('circle', { r: '8', fill: 'var(--output)' });
-  const radiusDot = svgEl('circle', { r: '11', fill: 'var(--input)' });
-  stage.append(axisX, axisY, unit, orbit, ray, walker, radiusDot);
+  stage.append(axisX, axisY, unit, orbit, ray, radiusDot, walker);
   putLine(axisX, X(-3.6), Y(0), X(3.6), Y(0));
   putLine(axisY, X(0), Y(-3.6), X(0), Y(3.6));
   unit.setAttribute('cx', X(0));
@@ -57,6 +60,7 @@ export function mountExpPicture(parent) {
   parent.append(frame, claim, play);
 
   let reduced = prefersReducedMotion();
+  let claimText = '';
   const player = createLivePlayer({
     duration: EXP_DURATION,
     params: { re: 0, im: 0 },
@@ -69,12 +73,16 @@ export function mountExpPicture(parent) {
       orbit.setAttribute('cy', Y(0));
       orbit.setAttribute('r', R(radius));
       putLine(ray, X(0), Y(0), X(w.re), Y(w.im));
-      walker.setAttribute('cx', X(w.re));
-      walker.setAttribute('cy', Y(w.im));
       radiusDot.setAttribute('cx', X(radius));
       radiusDot.setAttribute('cy', Y(0));
+      walker.setAttribute('cx', X(w.re));
+      walker.setAttribute('cy', Y(w.im));
       unit.setAttribute('stroke-width', scene.snapped ? '4' : '2');
-      claim.textContent = scene.claim.text;
+      if (scene.claim.text !== claimText) {
+        claimText = scene.claim.text;
+        claim.replaceChildren();
+        appendRich(claim, claimText);
+      }
       claim.dataset.holds = scene.claim.holds ? 'true' : 'false';
       stage.dataset.probeRe = String(scene.x);
       stage.dataset.probeIm = String(scene.y);
@@ -86,30 +94,54 @@ export function mountExpPicture(parent) {
 
   play.addEventListener('click', () => player.toggle());
 
-  function xFromEvent(ev) {
+  function dotClient() {
     const rect = stage.getBoundingClientRect();
-    const px = ((ev.clientX - rect.left) / Math.max(1, rect.width)) * SIZE;
-    const py = ((ev.clientY - rect.top) / Math.max(1, rect.height)) * SIZE;
-    const re = -3.6 + (px / SIZE) * SPAN;
-    const im = 3.6 - (py / SIZE) * SPAN;
-    return placeReal(Math.log(Math.max(1e-3, Math.hypot(re, im))));
+    const cx = Number(radiusDot.getAttribute('cx'));
+    const cy = Number(radiusDot.getAttribute('cy'));
+    return {
+      x: rect.left + (cx / SIZE) * rect.width,
+      y: rect.top + (cy / SIZE) * rect.height,
+    };
   }
 
-  let dragging = false;
+  function onHandle(ev) {
+    const dot = dotClient();
+    return Math.hypot(ev.clientX - dot.x, ev.clientY - dot.y) <= HIT_PX;
+  }
+
+  // The green dot lives on the positive real axis. Its screen x is the finger's.
+  function realUnderFinger(ev) {
+    const rect = stage.getBoundingClientRect();
+    const px = ((ev.clientX - rect.left) / Math.max(1, rect.width)) * SIZE;
+    const re = -3.6 + (px / SIZE) * SPAN;
+    return placeReal(Math.log(Math.max(1e-6, re))).x;
+  }
+
+  let drag = null;
   function onDown(ev) {
-    dragging = true;
+    if (ev.button != null && ev.button !== 0) return;
+    if (!onHandle(ev)) return;
+    drag = { id: ev.pointerId, x0: ev.clientX, y0: ev.clientY, moved: false };
+    stage.style.cursor = 'grabbing';
     stage.setPointerCapture(ev.pointerId);
-    player.setParams({ re: xFromEvent(ev).x, im: 0 });
   }
   function onMove(ev) {
-    if (!dragging) return;
-    player.setParams({ re: xFromEvent(ev).x, im: 0 });
+    if (!drag || ev.pointerId !== drag.id) {
+      stage.style.cursor = onHandle(ev) ? 'grab' : 'default';
+      return;
+    }
+    if (!drag.moved) {
+      if (Math.hypot(ev.clientX - drag.x0, ev.clientY - drag.y0) < PICK_PX) return;
+      drag.moved = true;
+    }
+    player.setParams({ re: realUnderFinger(ev), im: player.params.im });
   }
   function onUp(ev) {
-    if (!dragging) return;
-    dragging = false;
+    if (!drag || ev.pointerId !== drag.id) return;
+    if (drag.moved) player.setParams({ re: realUnderFinger(ev), im: player.params.im });
+    drag = null;
+    stage.style.cursor = onHandle(ev) ? 'grab' : 'default';
     try { stage.releasePointerCapture(ev.pointerId); } catch { /* already released */ }
-    player.setParams({ re: xFromEvent(ev).x, im: 0 });
   }
   stage.addEventListener('pointerdown', onDown);
   stage.addEventListener('pointermove', onMove);
@@ -120,7 +152,7 @@ export function mountExpPicture(parent) {
     const move = { ArrowRight: step, ArrowLeft: -step }[ev.key];
     if (move === undefined) return;
     ev.preventDefault();
-    player.setParams({ re: placeReal(player.params.re + move).x, im: 0 });
+    player.setParams({ re: placeReal(player.params.re + move).x, im: player.params.im });
   });
 
   let motionMedia = null;

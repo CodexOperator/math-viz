@@ -51,7 +51,7 @@ function mountRoadmap(el, ctx, spec) {
   function paint() {
     const t = tally();
     if (t.complete) {
-      status.textContent = `${nextSentence(t)} Chapter 5 is next, and its walk is not drawn yet.`;
+      status.textContent = `${nextSentence(t)} Chapter 5 is next.`;
       walk.textContent = 'Open Chapter 5';
       walk.setAttribute('href', '#chapter-5');
     } else {
@@ -108,9 +108,6 @@ function mountRoadmap(el, ctx, spec) {
           h('a', { href: `#${st.id}` }, st.title),
           '.'));
       }
-    }
-    if (ch.n === 5) {
-      kids.push(h('p', { class: 'book-node-note', id: 'book-note-5' }, 'Open. The walk through these sections is not drawn yet.'));
     }
     list.append(h('li', { class: 'book-node', id: `book-node-${ch.n}`, 'data-chapter': String(ch.n), 'data-state': 'later' }, ...kids));
   }
@@ -289,9 +286,8 @@ function mountChapter5(el) {
   el.append(
     h('header', { class: 'station-header' },
       h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back' }, 'The Book')),
-      h('h1', { id: 'chapter-title' }, 'Chapter 5')),
+      h('h1', { id: 'chapter-title' }, 'Chapter 5. The exponential')),
     picture,
-    h('p', { class: 'station-lede', id: 'chapter-later' }, 'The logarithm and the powers are not drawn yet.'),
     sourceTag({ pin: 'Chapter 5, Elementary Functions, page 130', href: sectionHref('sec_exponential-function.html') }),
     h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
   return function unmount() { stop(); };

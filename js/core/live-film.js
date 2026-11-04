@@ -134,10 +134,10 @@ export function placeReal(x) {
 
 export function expClaim(x, snapped) {
   if (snapped) {
-    return { holds: true, text: 'On the imaginary axis the image stays on the unit circle. The angle is the clock.' };
+    return { holds: true, text: 'The point sits on the left of the unit circle, on the real axis.' };
   }
-  if (x > 0) return { holds: false, text: 'The radius is e^x, larger than 1. The angle is still the clock.' };
-  return { holds: false, text: 'The radius is e^x, smaller than 1. The angle is still the clock.' };
+  if (x > 0) return { holds: false, text: 'The radius is $e^{x}$, larger than 1.' };
+  return { holds: false, text: 'The radius is $e^{x}$, smaller than 1.' };
 }
 
 export function expFrame(t, params, opts = {}) {
@@ -159,7 +159,9 @@ export function expFrame(t, params, opts = {}) {
     w,
     mod: radius,
     fate: seed.snapped ? 'stay' : (seed.x > 0 ? 'leave' : 'settle'),
-    beats: [0, D / 2, D],
+    // finishedStops lands 0.05 before each interior beat. Offset by that
+    // so Next step sits on the quarter turns: bottom, right, top, then the end.
+    beats: [0, D / 4 + 0.05, D / 2 + 0.05, (3 * D) / 4 + 0.05, D],
     claim: expClaim(seed.x, seed.snapped),
   };
 }

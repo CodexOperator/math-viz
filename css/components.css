@@ -1067,7 +1067,9 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 }
 
 .exp-stage {
-  width: min(100%, 38vh);
+  /* The square takes the column, and stops short of the height that would
+     push Play off the first screen. */
+  width: min(100%, calc(100dvh - 20rem));
   max-width: 100%;
   aspect-ratio: 1;
   touch-action: none;

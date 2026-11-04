@@ -898,3 +898,20 @@ Branch `cursor/book-chapter-path-df29`. Synthesis batch 1 only. The picture is l
 **Verified.** `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the unit-circle claim, y = π at the end of the walk with x = ln 2, and exp(ln 2 + iπ) = −2. `node kit/smoke.mjs` exits 0. Headless Chrome at 360×640: the plane and the claim are on the first screen, the page does not scroll sideways, and a paused picture schedules nothing. A press at radius 2 changes the claim to the radius e^x, larger than 1, and leaves y at π. Pause freezes that angle. Reduced motion says Next step, not Pause. Screenshot: `/opt/cursor/artifacts/chapter5-exp-360.png`.
 
 **Next.** Batch 5 is the §5.1 walk: Identity (5.1), Definition 5.1, Figure 5.2, exercises 5.1.1 and 5.1.2, ticks in `progress.test2`. Sections 5.2–5.5 stay titles.
+
+## Book path — batch 5 (the cut)
+
+Branch `cursor/book-chapter-path-df29`, after the batch 4 review at `f7ee315`. One cutting batch, then stop. No §5.1 exercise cards. The clock, the unit-circle detent, and the release stay. No slider, scrubber, spring, or second clock.
+
+**Choice.** The three taste notes agree the gesture is the exponential and the chrome is in the way. The resting frame stays on the left of the unit circle. Only Next step moves to the quarter turns.
+
+1. The plane drops the 38vh cap. Its width is the column, or the viewport minus the chrome that keeps Play on the first screen, whichever is smaller.
+2. At rest the sentence is “The point sits on the left of the unit circle, on the real axis.” The two radius sentences stay, and they write \(e^{x}\) as math. They do not say the angle is the clock, and they do not name an imaginary axis.
+3. The green dot is the radius handle. A press keeps the value until the finger moves, and then the dot stays under the finger. The hit target is 44px. A press anywhere else does nothing. The purple point is painted above the green disc.
+4. The line under the picture is gone. The Chapter 5 card on the book keeps Open, the title, and the page. The finished-chapter status no longer says the walk is not drawn.
+5. Next step, and the reduced-motion path, lands on the bottom, the right, the top, and the left.
+6. The chapter title is “Chapter 5. The exponential.”
+
+**Verified.** `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the resting sentence, the math in the radius sentences, y = π at the end of the walk with x = ln 2, and the four quarter-turn stops. `node kit/smoke.mjs` exits 0. The router does not import `kit/`. Headless Chrome: at 360×640 and at 1280×800 the page does not scroll sideways, Play is on the first screen, and a paused picture schedules nothing. The laptop plane is wider than the old 304px cap. A press off the green dot does nothing. A press on it keeps the radius until the finger moves, and then the dot stays under the finger. Letting go leaves that radius, and the angle stays at π. A drag during Play leaves the angle running. Reduced motion says Next step, then lands on −π/2, 0, π/2, and π, and the button becomes Start again. It never says Pause. Screenshots: `/opt/cursor/artifacts/chapter5-exp-360.png`, `/opt/cursor/artifacts/chapter5-exp-1280.png`.
+
+**Stop.** The §5.1 walk is the next batch, after this cut is reviewed. It is not started.
