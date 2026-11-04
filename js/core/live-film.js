@@ -132,9 +132,27 @@ export function placeReal(x) {
   return { x: v, snapped: false };
 }
 
-export function expClaim(x, snapped) {
+// The resting sentence is true only while the image is the left point of the
+// unit circle. Next step and Play move that point, and the sentence moves with it.
+const AXIS = 1e-6;
+
+export function expClaim(x, snapped, y) {
   if (snapped) {
-    return { holds: true, text: 'The point sits on the left of the unit circle, on the real axis.' };
+    const s = Math.sin(y);
+    const c = Math.cos(y);
+    if (Math.abs(s) <= AXIS && c < 0) {
+      return { holds: true, text: 'The point sits on the left of the unit circle, on the real axis.' };
+    }
+    if (Math.abs(s) <= AXIS) {
+      return { holds: false, text: 'The point sits on the right of the unit circle, on the real axis.' };
+    }
+    if (Math.abs(c) <= AXIS && s < 0) {
+      return { holds: false, text: 'The point sits on the bottom of the unit circle.' };
+    }
+    if (Math.abs(c) <= AXIS && s > 0) {
+      return { holds: false, text: 'The point sits on the top of the unit circle.' };
+    }
+    return { holds: false, text: 'The point sits on the unit circle.' };
   }
   if (x > 0) return { holds: false, text: 'The radius is $e^{x}$, larger than 1.' };
   return { holds: false, text: 'The radius is $e^{x}$, smaller than 1.' };
@@ -162,7 +180,7 @@ export function expFrame(t, params, opts = {}) {
     // finishedStops lands 0.05 before each interior beat. Offset by that
     // so Next step sits on the quarter turns: bottom, right, top, then the end.
     beats: [0, D / 4 + 0.05, D / 2 + 0.05, (3 * D) / 4 + 0.05, D],
-    claim: expClaim(seed.x, seed.snapped),
+    claim: expClaim(seed.x, seed.snapped, y),
   };
 }
 
