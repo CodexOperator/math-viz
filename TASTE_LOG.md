@@ -1465,3 +1465,71 @@ The clock. Play, Pause, the hold, the continue, Step under reduced motion, and 6
 ## Add
 
 Nothing. No slider, no scrubber, no spring, no second clock, no third chip.
+
+## ux-veteran (ch3 batch 2)
+
+Preview https://ch3-preview.complexanalysis.pages.dev/#chapter-3, tip `e684095`. The served `js/book/chapter3.js` matches that commit. Used like a student, touch first: 390×844 and 360×780, then 1280×800, light and dark. No product code changed. No console errors. No sideways scroll (`scrollWidth` equals the window at 360, 390, and 1280).
+
+### Verdict
+
+ANOTHER BATCH
+
+On a 390×844 phone the first screen teaches the derivative: the square, the 45° sentence, z² and conj, Play, and the why. Camps 3.2 and 3.3 open in the right order, and marking 3.1 leaves 3.2's title and why on that same screen. The way around that picture is still broken. The stage flag leaves the chapter. Back forgets a 13,000px scroll. The way up is a 17px label, and the last camp ends in a blank screen. At 360×780 and at 1280×800 the why is cut. One batch, these fixes, then this lens rests. Same type, same paper, same cards.
+
+### What the hand meets
+
+**390×844, light and dark.** Same boxes. The header is 56px. THE BOOK is 69.5×17 at y=81. The title is two lines, y=103 to 165. The square is 324px, y=214 to 538. The claim is 52.7px, y=546 to 599: "The turn stays 45° and the stretch stays 2√2, for every direction." z² is 42.4×44 and conj is 59×44, both at y=607. Play is 70×44, y=659 to 703. WHY YOU'D CARE is at y=719. The why is 105px, y=742 to 848, so 4px of the box sits past the 844 edge and the last line is on the fold. "Three stages, from the derivative to a harmonic conjugate." starts at y=848. "Next is 3.1 Differentiable and Analytic Functions. 0 of 3 stages." starts at y=933. The stage title starts at y=1051. The flag "3.1" is 20×44.
+
+In the dark the page is rgb(13, 18, 28) and the sentence is rgb(233, 237, 245). The axes stay blue, the short arrow green, the long arrow purple, the turn orange. Same positions.
+
+A 12px drag from 1+i keeps the dot on the finger, miss 0, and the claim becomes 40° with stretch 3.09. A drag that starts 18px from the dot moves it. A drag that starts 26px out leaves 1+i. The drawn dot is 9.5px across, inside a 44px grab (22px radius). Play says Pause, a second press says Play, and the angle is the same number 400ms later. conj keeps the claim at 52.7px and Play at y=659. The sentence becomes "The purple arrow mirrors the green one. The turn is 0°, and it moves." The words "drag the green dot" are the square's aria-label. 3.2 and 3.3 print that kind of line on the page. 3.1 does not.
+
+**360×780, light and dark.** Same boxes. Play ends at y=672, inside 780. The why is 132px, y=712 to 844, so 64px of it is below the window. The last words on screen are "Two directions that". The site name truncates: the box is 186px, the text is 196px, "One Point, Two Addre…". The square is 294px and the dot is 8.6px across.
+
+**1280×800, light.** The sidebar is the chapter list and the menu button is hidden. The square is 416px, the cap `100dvh - 24rem`. Play ends at y=776. WHY YOU'D CARE runs y=792 to 812, so the label is cut by the 800 edge. The why sentence starts at y=816. The status starts at y=927. The stage title starts at y=1019. A 12px drag again leaves the dot on the finger, miss 0. The dark frame uses the same colours as the phone.
+
+### The drawer
+
+At 390 the menu is 12 rows, each 44px. Chapter 3 is the current row. The drawer covers the page, body overflow is hidden, and `#view` is inert. Escape closes it. The rows are The Book and chapters 1 through 11. Chapter 11 ends near y=617, so the whole list fits. Test 1, the indexes, and test prep are absent from this drawer. At 1280 the same list is the sidebar. Chapters 3, 4, 10, and 11 wrap to about 47px. The others stay 44.
+
+### Back, and the way up
+
+From scrollY 900, THE BOOK opens `#book` at 0. Browser Back returns `#chapter-3` at 0. Scroll restoration is manual, and the router scrolls to 0 on every hash change.
+
+Two links point at `#book`. THE BOOK is 69.5×17, 12.5px type, letter-spacing 0.75px. "Back to the book" is 134×23. The gap from the last Mark stage complete button down to that link is 843px at 360, 907px at 390, and 844px at 1280. `.chapter-path` padding-bottom is `100dvh - var(--header-h)`: 724px, 788px, and 744px. The screen at the end of the chapter is empty paper, then the source line, then the 23px link.
+
+### The climb
+
+`#chapter-3-3-3` opens Harmonic Functions with the title at y=121, under the 56px header, and the card marked as the target. On that screen: the why, the picture, "Drag the green point. Orange is a level of u. Purple is the other family.", the right-angle sentence, Conjugates and Circles.
+
+The 3.2 heading, scrolled to the top, is the same order: 3.2, the title, page 85, the why, the square, "Drag the green corner.", the square sentence, Turn and Stretch. Those two camps are the pattern.
+
+3.1 puts the picture, the why, the lede, and the status ahead of its own name. "Differentiable and Analytic Functions" is the next screen. The first screen carries the chapter title and the why. It does not carry "3.1" or "0 of 3".
+
+The summit sentence is already on the page when the button still says Mark stage complete: "A derivative exists only when every tiny step is the same turn and the same stretch." Pressing it renames the button to Stage complete, sets aria-pressed, paints a green left edge, and writes `mv:progress.test2` as `{"3.1":true}`. The flag at the top of the stage becomes "3.1 · stage complete". On the screen in front of the button, 3.2's title and why are 98px below it. The status line "Next is 3.2 The Cauchy-Riemann Equations. 1 of 3 stages." updates at the top of the chapter, off this screen.
+
+The flag is the break. Its href is `#chapter-section-3-1-memory`. Tapping that 20×44 control loads a page titled "No such place" for that hash. The memory list is still on the chapter, under the label Memory. The route parser does not treat `chapter-section-…` as a chapter.
+
+The book, with that tick stored, still says "Next is §4.1, Exercise 3. 0 of 8 exercises." The button is Walk Chapter 4, 163×44, on the first screen. Chapter 3's card starts at y=724 and is cut by the 844 edge. Its three rows are spans. Tapping the 3.1 row leaves the hash on `#book`. "Open Chapter 3" is a 26px text link at y=1008.
+
+### Style
+
+Same system as chapter 4, chapter 5, and addresses, measured at 390, light. The title is Iowan Old Style, 25.85px, weight 600, rgb(26, 34, 48). Body is 17px system-ui. The lede is 16.8px, rgb(81, 91, 108). A card is white, 1px rgb(216, 210, 196), radius 10px, padding 16px. The paper is rgb(246, 243, 236) in the light and rgb(13, 18, 28) in the dark. Play is the white 44px button chapter 5 uses, radius 6px. Shown text inputs are 44px (`min-height: 44px`). Choice buttons are 44px. Turn, Stretch, Conjugates, and Circles are at least 44px in both directions. The four teaching colours are the arrows. This chapter already sits in the site's style.
+
+### Ranked
+
+1. **The stage flag stays on the chapter, and it is 44px wide.** Evidence: the 3.1 flag is 20.1×44, and the same width at 360 and 1280. Its href is `#chapter-section-3-1-memory`. The page that loads is titled "No such place". Change: point the flag at a hash the chapter route already opens, `#chapter-3-3-1` (and `-3-2`, `-3-3`), and scroll the memory list up under the header. Min-width 44px and min-height 44px. Leave the hash on the chapter.
+
+2. **Back returns to the scroll the chapter had.** Evidence: from scrollY 900, THE BOOK opens `#book` at 0, and history.back opens `#chapter-3` at 0. The chapter is 13,595px at 390. Change: the router stores the scroll for each hash and restores it. A deep link such as `#chapter-3-3-3` still brings that stage's title under the header, where it already lands at y=121.
+
+3. **One up control, 44px, with the source line directly under the last camp.** Evidence: THE BOOK is 69.5×17. "Back to the book" is 134×23. The gap under the last stage button is 843px at 360, 907px at 390, and 844px at 1280. Change: one `.station-link`, min-height 44, label "The Book", at the top of the chapter. The end of the page is the source line and that same control. Cut `.chapter-path`'s `padding-bottom: calc(100dvh - var(--header-h))`.
+
+4. **The why finishes on the first screen at 360×780 and at 1280×800, and that screen names the stage.** Evidence: at 360 the why runs y=712 to 844 in a 780 window, and the visible sentence stops at "Two directions that". At 1280 the why sentence starts at y=816. The status starts below the fold at every size (y=929, y=933, y=927) and the stage title is lower (y=1046, y=1051, y=1019). The drag instruction is an aria-label; the dot is 9.5px at 390 and 8.6px at 360. Change: one line under the chapter title, in the part-label type the menu already uses, "3.1 · Differentiable and Analytic Functions · 0 of 3". One line under the square, the same book-page type 3.2 already uses: "Drag the green dot." Cap the 3.1 square so that line, Play, and the last line of the why end inside 780 and inside 800. At 360 the square is 294px and the why needs about 64px back. At 1280 the square is 416px and the why needs about 70px back. Give z² `min-width: 44px`; it is 42.4×44, and every other chip on the chapter is already at least 44 wide. Leave 3.2 and 3.3 in the order they have: name, why, picture.
+
+5. **The book's button walks this mountain.** Evidence: with `{"3.1":true}` stored, `#book` still says "Next is §4.1, Exercise 3. 0 of 8 exercises." and the button is Walk Chapter 4. Chapter 3 starts at y=724. The 3.1 row is a span, and a tap leaves `#book`. "Open Chapter 3" is 26px tall at y=1008. Change: until 3 of 3 stages are marked, the button says Open Chapter 3 and the status counts those stages. Each of 3.1, 3.2, and 3.3 is a link, min-height 44, to `#chapter-3-3-1`, `#chapter-3-3-2`, and `#chapter-3-3-3`.
+
+6. **The phone list stops at chapter 7.** Evidence: the open drawer is The Book plus chapters 1–11, each row 44px, chapter 3 current. Chapter 8 starts at y=441. A later chapter opens the roadmap on a Later card. Change: this drawer lists chapters 1–7. Chapters 8–11 stay in the data and off this list. The 44px rows, the current-chapter mark, the cover, and Escape stay.
+
+### Keep
+
+The type, the paper, the white cards, and the four teaching colours, in both themes. Play, Pause, and the hold. conj keeps the claim at 52.7px and Play at one y. The dot stays under the finger from 1+i, and a drag that starts 26px out changes nothing. 3.2 and 3.3 open with the name, the why, the picture, and a drag sentence. Mark stage complete, the green edge, and 3.2's title and why 98px under that button. `#chapter-3-3-3` puts the stage title under the header. Drawer rows are 44px, the open drawer covers the page, and the page behind it does not scroll. Shown inputs and choice buttons are 44px tall. No sideways scroll.
