@@ -431,6 +431,7 @@ body[data-nav-open="true"] {
 #colour-key-julia,
 #colour-key-newton,
 #colour-key-circuit { display: none; }
+body[data-book="true"] .colour-key { display: none; }
 body[data-map="test2"] #colour-key-test1 { display: none; }
 body[data-map="test2"]:not([data-station="julia"]):not([data-station="newton"]) #colour-key-test2 { display: grid; }
 body[data-map="test2"][data-station="julia"] #colour-key-julia { display: grid; }
@@ -1013,3 +1014,142 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   .film-controls.slider-row output { grid-column: 2; grid-row: 1; }
   .film-controls.slider-row input[type="range"] { grid-column: 1 / -1; grid-row: 2; }
 }
+
+/* ============================================================
+   Book path. A roadmap, not a third test map.
+   ============================================================ */
+
+.nav-book { margin: 0 0 var(--space-3); }
+
+.book-next {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.book-status {
+  flex: 1 1 16rem;
+  min-width: 0;
+  margin: 0;
+}
+
+.book-path,
+.chapter-path,
+.book-sections {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+
+.book-path,
+.chapter-path {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.book-node,
+.section-node {
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  scroll-margin-top: calc(var(--header-h) + var(--space-3));
+}
+
+.book-node[data-state="next"],
+.section-node[data-state="next"] {
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
+}
+
+.book-node[data-state="done"],
+.section-node[data-state="done"] {
+  border-left: 4px solid var(--ok);
+}
+
+.book-node[data-state="later"] {
+  background: transparent;
+  box-shadow: none;
+}
+
+.book-node[data-state="open"] { border-style: dashed; }
+
+.book-node-head h2,
+.section-node h2 { margin-bottom: var(--space-1); }
+
+.book-num {
+  display: inline-block;
+  min-width: 1.4em;
+  margin-right: 0.35em;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72em;
+  font-weight: 600;
+}
+
+.book-flag,
+.book-kicker {
+  margin: 0 0 var(--space-1);
+  color: var(--text-muted);
+  font-family: var(--font);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.book-node[data-state="next"] > .book-node-head .book-flag,
+.section-node[data-state="next"] > .book-flag { color: var(--text); }
+
+.book-page,
+.book-node-note,
+.book-door,
+.book-section-page,
+.book-footer-link {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.book-sections { display: flex; flex-direction: column; gap: var(--space-1); margin-top: var(--space-2); }
+
+.book-sections li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.75rem;
+  min-width: 0;
+}
+
+.book-section-page { margin-left: auto; font-variant-numeric: tabular-nums; }
+.book-section-mark { font-size: 0.82rem; font-weight: 700; }
+.book-section-mark:empty { display: none; }
+.book-sections [data-state="next"] .book-section-mark { color: var(--text); }
+.book-sections [data-state="done"] .book-section-mark { color: var(--ok); }
+
+.book-read { margin: 0; padding-left: 1.2rem; }
+.book-read li { margin: 0.15rem 0; }
+.book-label {
+  margin: var(--space-3) 0 var(--space-1);
+  font-family: var(--font);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.section-idea { max-width: 62ch; margin: 0; }
+.chapter-exercises { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.chapter-card { min-width: 0; }
+.chapter-card p { min-width: 0; }
+.section-mark { margin-top: var(--space-2); }
+.book-footer-link { margin-top: var(--space-2); }

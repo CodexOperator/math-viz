@@ -356,6 +356,7 @@ export function problemMarkdown(p) {
     if (extra) lines.push(`- Also: [${extra.title}](#${extra.id})`);
   }
   lines.push(`- Problem index card: [${p.pin}](#index-${problemSlug(p.id)})`);
+  if (p.homework) lines.push(`- On the book path: [Chapter ${p.chapter}](#chapter-${p.chapter})`);
   lines.push('', '## Hint');
   if (p.homework && p.hint) lines.push(p.hint);
   else lines.push(`Work it at #${p.station}. The book print stays behind Show on the card.`);

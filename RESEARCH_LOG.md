@@ -800,3 +800,33 @@ Branch `cursor/homework-ch4-hints-copy-md-a873`, after the close fixes at `f88fd
 **Change.** The sentence under the `(1+i)/2` sums no longer names Exercise 1(b) or `1/(2+i)`. No chip was added for part (b). The Exercise 5 hint keeps The Orbit of 0 and the chip `c = −2`, and it no longer names the Mandelbrot set or The Crossing. Those two stops left `also`, so the export no longer lists them. The `c = −2` note no longer mentions a pad at 1.6. The Exercise 3 hint no longer names the quadratic film. The index remembers a pressed Homework chip. Opening a homework card from `#index-…` after that press leaves Homework pressed and the scope on Any. A fresh link, with nothing saved, still opens on All and the card’s scope.
 
 **Verified.** `node tools/fractal-smoke.mjs` exits 0. `node tools/check_vectors.mjs` is 234/234. `node kit/smoke.mjs` exits 0. Headless Chrome: the open geometric sentence is “Settles. |z| < 1, so the pile sits down. Theorem 4.12, page 118. The index does not print the sum.” A fresh `#index-4-2-5` is All and Core, 25 shown. After Homework is pressed, the Exercise 5 chip on The Orbit of 0 returns to `#index-4-2-5` with Homework pressed, Any scope, and `7 shown. Homework.` The seven ids are unchanged. The hint names the orbit chip and does not name the other two pictures. The `c = −2` note has no 1.6. At 1280 the index `scrollWidth` is 1265, matching the client. At 390 both are 390. Screenshots: `/opt/cursor/artifacts/homework-geometric-sentence.png`, `/opt/cursor/artifacts/homework-ex5-hint.png`, `/opt/cursor/artifacts/homework-filter-return.png`.
+
+## Book path — batch 1 (Chapter 4)
+
+Branch `cursor/book-chapter-path-df29`, off `gh-pages`. Three rounds. No new picture: every Chapter 4 section already has a station. Chapter 5 is named and open, and its walk is the next batch. Chapters 1–3 and 6–11 get no pages.
+
+The table of contents is the 202 Updated Edition, printed pages i–ii (PDF pages 6–7). Chapter 4 pins checked on that PDF: Definition 4.1 and Theorem 4.1, page 103; Theorem 4.5, page 106; Example 4.7, page 110; Figure 4.3 caption, page 112; Example 4.9 and Theorem 4.9, page 113; Figure 4.6, page 114; Theorem 4.11, page 116; Theorem 4.12, page 118; Theorem 4.15, page 124; Theorem 4.16, page 125.
+
+**Choice.** The book is a route family (`#book`, `#chapter-4`, `#chapter-5`), not a third map. Visiting it does not switch the remembered test. `#chapter-1` scrolls the roadmap to that later chapter and does not open a new page. A leftover token on a later chapter is still “no such place.” Progress lives at `mv:book.progress`, apart from the Test 2 ticks. A section is finished only when it is marked and every exercise on it is ticked. Hints on the chapter page stay closed until asked. The index still shows the same seven cards with the hint open, and one sentence points at Chapter 4, so the old `#index-…` links keep working.
+
+### Round 1 — The book
+
+**Problem.** The two test maps are not a path through the textbook. A learner cannot see which chapter is next.
+
+**Change.** `#book` lists all eleven chapters and their sections, in contents order. Chapter 4 is Next. Chapter 5 is Open. The others are Later. Chapters 1, 2, and 3 each link the one station that already draws them (the two addresses, a function as a motion, the derivative). The walk button is the only primary control.
+
+### Round 2 — Chapter 4, four sections
+
+**Problem.** Chapter 4 on the site was a filter and a map of stops, not the book’s order.
+
+**Change.** `#chapter-4` is the four sections in order. Each one has one sentence, the reading (the pins above), and the stations that already picture it. 4.1 is the sequence and the series. 4.2 runs Newton’s step, the basins, the disk at c = 0, Julia, the orbit of 0, the Mandelbrot set, and the cardioid. 4.3 is the geometric series. 4.4 is the radius. No playground room is on this page.
+
+### Round 3 — The seven cards, and one exercise for 4.4
+
+**Problem.** The assigned set lived only behind the Homework chip. Section 4.4 had no exercise on the path.
+
+**Change.** The seven cards keep ids `4.1.3`, `4.1.13`, `4.2.3`, `4.2.4`, `4.2.5`, `4.3.1`, `4.3.2`. Each shows the quoted statement, a picture link, Copy Markdown, and Tick. The hint is behind “Show the hint” and is the same hint as the index. Copy Markdown is the index export plus a line to `#chapter-4`, and it still omits an answer key. The sync copy runs in the click turn, because the clipboard promise resolves after the browser has dropped the gesture. Exercise 4.4.6 is the one extra card: the statement already quoted on the index, a hint that points at A Radius, Then a Wall and Theorem 4.15, and no comparison of the two moduli. Marking 4.1 and ticking both of its exercises moves Next to 4.2, on the chapter page and on the book.
+
+**Verified.** `node tools/fractal-smoke.mjs` exits 0, including the book routes, the eleven chapters, the exercise list, and the progress rule. `node tools/check_vectors.mjs` is 234/234. `node kit/smoke.mjs` exits 0. `js/core/map-route.js` is unchanged and matches the kit helper. The router does not import `kit/`. Headless Chrome, light and dark, at 1280, 700, and 390: no console errors, no exceptions, no failed assets, no sideways scroll, no canvas, and 0 animation frames while the page sits. The hint on 4.1.3 opens and names Definition 4.1. The page text does not contain the 4.4.6 added check. A trusted click sets Copy Markdown to Copied. Finishing 4.1 makes the book say Next is 4.2, and the 4.1 row says Done. `#chapter-5` lists five sections and links the current and the impedance from 5.4. `#chapter-1` stays on the roadmap. Screenshots: `/opt/cursor/artifacts/book-1280-light.png`, `book-1280-dark.png`, `book-700-light.png`, `book-390-light.png`, `book-390-dark.png`, `chapter4-1280-light.png`, `chapter4-700-dark.png`, `chapter4-390-light.png`, `chapter4-390-dark.png`, `chapter5-1280-light.png`.
+
+**Next.** Build Chapter 5’s five sections the same way: one sentence, the stations that exist, cited reading, and a few exercises quoted from this PDF. The exponential and the logarithm have no picture yet. One new picture, at most, in that batch. Then the progress feel and the phone path.

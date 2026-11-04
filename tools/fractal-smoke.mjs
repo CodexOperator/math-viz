@@ -5,6 +5,9 @@ import { readFileSync } from 'node:fs';
 import { stationsForMap, stationForTopic, stationForProblem, stationById, threadsOn, stationPart, STATIONS } from '../js/registry.js';
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
+import { BOOK_CHAPTERS, CHAPTER_4, OPEN_CHAPTERS, chapter4ExerciseIds } from '../js/data/book-path.js';
+import { chapterTally, sanitizeBookProgress, toggleBookFlag, sectionFinished } from '../js/book/progress.js';
+import { parseBookRoute } from '../js/book/route.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
 import { parsePath, evalPath } from '../js/core/path-expr.js';
 import { smoothLoop, presetById, compileFormula } from '../js/core/path-geom.js';
@@ -108,6 +111,23 @@ check('#home keeps the remembered map', mapForcedByRoute(stationById('home'), pa
 check('#home-t2 is the Test 1 thread, not Test 2', mapForcedByRoute(stationById('home'), parseRoute('#home-t2')) === 'test1');
 check('#home-f2 is the Test 2 thread', mapForcedByRoute(stationById('home'), parseRoute('#home-f2')) === 'test2');
 check('an unknown hash forces no map', mapForcedByRoute(null, parseRoute('#nope')) === null);
+check('the book is its own route', parseRoute('#book').station == null && parseRoute('#book').book.kind === 'roadmap' && mapForcedByRoute(null, parseRoute('#book')) == null);
+check('#chapter-4 opens chapter 4', parseRoute('#chapter-4').book.kind === 'chapter' && parseRoute('#chapter-4').book.chapter === 4 && parseRoute('#chapter-4').book.focus == null);
+check('#chapter-4-4-1-3 focuses exercise 4.1.3', parseRoute('#chapter-4-4-1-3').book.focus === '4.1.3');
+check('#chapter-1 stays on the roadmap', parseRoute('#chapter-1').book.kind === 'roadmap' && parseRoute('#chapter-1').book.chapter === 1);
+check('a junk token on a later chapter is not a page', parseRoute('#chapter-1-extra').station == null && parseRoute('#chapter-1-extra').book == null);
+check('eleven chapters, 4 and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_CHAPTERS.join() === '4,5' && BOOK_CHAPTERS.filter((ch) => ch.open).map((ch) => ch.n).join() === '4,5');
+check('chapter 4 sections follow the contents', CHAPTER_4.sections.map((s) => `${s.id} ${s.page}`).join() === '4.1 102,4.2 109,4.3 118,4.4 123');
+check('chapter 4 exercises are the homework set plus 4.4.6', chapter4ExerciseIds().join() === '4.1.3,4.1.13,4.2.3,4.2.4,4.2.5,4.3.1,4.3.2,4.4.6');
+{
+  let progress = sanitizeBookProgress({ sections: { '9.9': true, '4.1': true }, exercises: { '4.1.3': true, 'nope': true } }, CHAPTER_4.sections);
+  check('book progress keeps only known ids', progress.sections['4.1'] === true && progress.sections['9.9'] == null && progress.exercises['4.1.3'] === true && progress.exercises.nope == null);
+  check('4.1 is unfinished while 4.1.13 is open', sectionFinished(CHAPTER_4.sections[0], progress) === false && chapterTally(CHAPTER_4.sections, progress).nextId === '4.1');
+  progress = toggleBookFlag(progress, 'exercises', '4.1.13');
+  check('4.1 finishes when it is marked and both exercises are ticked', sectionFinished(CHAPTER_4.sections[0], progress) === true && chapterTally(CHAPTER_4.sections, progress).nextId === '4.2');
+}
+check('the live router does not import kit', !/from\s+['"][^'"]*kit\//.test(readFileSync(new URL('../js/app.js', import.meta.url), 'utf8')));
+check('book route parser matches the router', parseBookRoute('chapter-5').kind === 'chapter' && parseRoute('#chapter-5').book.chapter === 5);
 check('the shipped route rule matches the kit helper',
   readFileSync(new URL('../js/core/map-route.js', import.meta.url), 'utf8')
   === readFileSync(new URL('../kit/template/js/core/map-route.js', import.meta.url), 'utf8'));
