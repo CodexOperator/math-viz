@@ -94,6 +94,7 @@ body {
 
 .site-header-inner {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2);
   min-height: var(--header-h);
@@ -194,6 +195,56 @@ body {
 .nav-toggle[aria-expanded="true"] {
   background: var(--surface-2);
   border-color: var(--text);
+}
+
+/* Sign-in sits in the header, including on The Book. An empty slot is the
+   signed-out site with no Functions env: it takes no space. */
+.account-slot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  min-width: 0;
+  max-width: 100%;
+}
+.account-slot:empty { display: none; }
+.account-details,
+.account-providers {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  min-width: 0;
+  max-width: 100%;
+}
+.account-signin,
+.account-signout,
+.account-provider {
+  min-height: var(--tap);
+  min-width: var(--tap);
+}
+.account-signin {
+  max-width: 16rem;
+  margin: 0;
+  white-space: normal;
+  font-size: 0.82rem;
+  line-height: 1.15;
+  list-style: none;
+}
+.account-signin::-webkit-details-marker { display: none; }
+.account-handle {
+  max-width: 10rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+  font-size: 0.85rem;
+  line-height: 1.2;
+}
+@media (max-width: 40rem) {
+  .account-slot:not(:empty) { flex: 1 1 100%; }
 }
 
 .where-line {

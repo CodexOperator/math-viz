@@ -3,7 +3,7 @@
 // No top-level DOM access: parseRoute, groupStations and documentTitle are pure and are
 // imported by the unit tests in Node.
 //
-// Imports are the registry, the three shell helpers (theme, store, ids), two pure data
+// Imports are the registry, the shell helpers (theme, store, ids, account), two pure data
 // files (films, book), and the route-to-map rule in ./core/map-route.js. The film panel
 // itself (js/core/film.js) is imported only when a station carries a film.
 // This file does not keep a second copy of that rule. The kit template keeps the same
@@ -20,6 +20,7 @@ import { shellChapters, bookChapter } from './data/book-path.js';
 import { cssVar, getTheme, setTheme, onThemeChange, prefersReducedMotion, initTheme } from './core/theme.js';
 import { createStore } from './core/store.js';
 import { watchIds } from './core/ids.js';
+import { mountAccount } from './core/account.js';
 
 export const SITE_TITLE = 'One Point, Two Addresses';
 
@@ -198,6 +199,15 @@ export function start() {
     target.addEventListener(type, fn, opts);
     cleanups.push(() => target.removeEventListener(type, fn, opts));
   };
+  const accountSlot = document.getElementById('account-slot');
+  if (accountSlot) {
+    try {
+      const stopAccount = mountAccount({ store, slot: accountSlot });
+      if (typeof stopAccount === 'function') cleanups.push(stopAccount);
+    } catch (err) {
+      console.error('[mv] sign-in did not start', err);
+    }
+  }
 
   try {
     history.scrollRestoration = 'manual';
