@@ -5953,6 +5953,7 @@ Checked against Howell & Mathews, *Complex Analysis*, 202 Updated Edition, print
 - The note on the inside derivative of \((z^2 - iz + 9)^5\) said the constant \(-i\) differentiates to itself. \(-i\) is the coefficient of \(z\). Equation (3.5) sends \(z^2\) to \(2z\), the derivative of \(-iz\) is \(-i\), and the constant 9 contributes 0.
 - \((z^2 - iz + 9)^4 * 5\) was marked wrong: deleting the star glued the exponent to the coefficient, so the product became a 45th power. A star between two digits now stays a factor break. \(5(z^2 - iz + 9)^{45}\) still fails.
 - \(v_y = u_x\) and \(-v_x = u_y\) now match the Cauchy-Riemann steps. \(u_y = v_x\) still fails.
+- \(u = -y\) and \(v = x + 4\) matches the real and imaginary parts of \(iz + 4i\). \(u = y\) and \(v = x + 4\) still fails. \(4(-i)\) matches \(-4i\). \(4(i)\) still fails.
 
 ### Checked and left as is
 

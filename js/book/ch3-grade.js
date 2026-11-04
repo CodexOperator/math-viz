@@ -75,9 +75,42 @@ function eqKey(s) {
   return parts.map((p) => sumKey(p) || p).sort().join('=');
 }
 
+function partKey(part) {
+  const labeled = part.match(/^(u|v)=(.+)$/);
+  const body = labeled ? labeled[2] : part;
+  return eqKey(body) || sumKey(body) || body;
+}
+
 function andKey(s) {
   if (!s.includes('and')) return null;
-  return s.split('and').map((part) => eqKey(part) || sumKey(part) || part).sort().join('&&');
+  return s.split('and').map(partKey).sort().join('&&');
+}
+
+function constValue(token) {
+  let t = token;
+  if (t.startsWith('(') && t.endsWith(')')) t = t.slice(1, -1);
+  if (t === 'i') return { re: 0, im: 1 };
+  if (t === '-i') return { re: 0, im: -1 };
+  if (/^-?\d+$/.test(t)) return { re: Number(t), im: 0 };
+  const m = t.match(/^(-?)(\d*)i$/);
+  if (!m) return null;
+  return { re: 0, im: (m[1] === '-' ? -1 : 1) * (m[2] === '' ? 1 : Number(m[2])) };
+}
+
+function constProduct(s) {
+  const fac = factorKey(s);
+  const parts = fac ? fac.split('*') : [s];
+  let re = 1;
+  let im = 0;
+  for (const part of parts) {
+    const v = constValue(part);
+    if (!v) return null;
+    const nr = re * v.re - im * v.im;
+    const ni = re * v.im + im * v.re;
+    re = nr;
+    im = ni;
+  }
+  return `${re},${im}`;
 }
 
 function factorNorm(fac) {
@@ -139,7 +172,10 @@ function same(a, b) {
   if (andL && andL === andR) return true;
   const facL = factorKey(left);
   const facR = factorKey(right);
-  return !!(facL && facL === facR);
+  if (facL && facL === facR) return true;
+  const cL = constProduct(left);
+  const cR = constProduct(right);
+  return !!(cL && cL === cR);
 }
 
 export function answersMatch(answer, accept, given) {

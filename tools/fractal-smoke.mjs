@@ -232,6 +232,10 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
     && answersMatch('u_x = v_y', [], 'v_y = u_x')
     && answersMatch('u_y = -v_x', [], '-v_x = u_y')
     && !answersMatch('u_y = -v_x', [], 'u_y = v_x')
+    && answersMatch('-y and x + 4', ['u=-y, v=x+4'], 'u=-y and v=x+4')
+    && !answersMatch('-y and x + 4', [], 'u=y and v=x+4')
+    && answersMatch('-4i', ['-4*i'], '4(-i)')
+    && !answersMatch('-4i', [], '4(i)')
     && answersMatch('both hold', ['u_x = 0 = v_y and u_y = -1 = -v_x'], 'u_y=-1=-v_x and u_x=0=v_y'));
   const mem = { 'progress.test2': { '4.1.3': true } };
   const store = {
