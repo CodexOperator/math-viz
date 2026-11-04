@@ -5745,10 +5745,12 @@ Headless Chrome, served under `/math-viz/`, light and dark, widths 1280, 700, an
 
 `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the four reading anchors and the Chapter 5 link. `node kit/smoke.mjs` exits 0.
 
+While this review was open, `0f8be9f` landed on the branch. It only adds the taste note in `TASTE_LOG.md`. The citation fixes sit on top of that commit.
+
 ### For the builder, in this order
 
-1. **Draw Chapter 5, starting with the exponential.** The page lists 5.1–5.5 and links the current and the impedance from 5.4. The exponential, the logarithm, and the powers are named and not drawn. One picture, with a sentence the gesture can make false, is the next batch. Keep the section titles and the printed pages above.
-2. **Leave the index reveal of Exercise 6.** The chapter card has a closed hint and a copy with no answer. The same id on the index is still the older likely card, and Show the check added for this site still opens the modulus comparison. That reveal was already on the index before this batch. The chapter path is the walk. Stripping the index would hide a check the likely filter already offered.
-3. **Leave the combined Theorem 4.11 pins on the older stops.** The chapter pin now opens the criterion. The concept page, the flat paper, and the playground still use `Fixed_point_Def` for a sentence that also names Definitions 4.9 and 4.10, which is that anchor. Splitting those sentences is a later pass.
+1. **One cutting batch, the one the taste note already wrote, then stop.** Chapter 4 remembers a walk and still reads as the homework packet: a mark on top of the ticks, a pictures row, and a reading list. Chapter 5 is five blanks. The taste note’s three cuts are the next build. This close review does not start them, and it does not ask for a Chapter 5 picture on top of this page.
+2. **Keep the printed pages and the exercise quotes.** The contents titles, the Chapter 4 and 5 pages, and the eight exercise texts match this PDF. The Open links fixed here are the ones to keep: Theorem 4.1 at `Lim_Zn_Thm`, Theorem 4.11 at `Attracting_Thm`, Theorem 4.16 at `th15`, Chapter 5 at the exponential.
+3. **Leave the index reveal of Exercise 6, and leave the combined Theorem 4.11 pins on the older stops.** The chapter card has a closed hint and a copy with no answer. The same id on the index is still the older likely card, and its added check stays behind Show. The concept page, the flat paper, and the playground still use `Fixed_point_Def` for a sentence that also names Definitions 4.9 and 4.10.
 
 **accept with fixes**
