@@ -1376,3 +1376,97 @@ ANOTHER BATCH. One batch, and it is the five cuts below. When those are on the p
 ## What to keep
 
 The three planes, the four colours, and the one clock. A drag off the half turn clears \(2i\) and the claim follows the point. Play says Pause while it runs, and a second press leaves the angle where it stopped. A pointer drag focuses the square and leaves it unframed (`:focus-visible` is false, outline `none`). The keyboard ring stays the 3px focus colour. Two controls on a picture, the drag and Play. The cards, the source line, Show the back, Check, and Another. The segment cards, the segment generator, the Cauchy proof, and the deformation question. The semicircle cards stay; they are the exam question, and this batch does not draw a second picture for them. The kicker, the flags, and the uppercase labels are the book path. Later stays a title, a page, one sentence, and the theorem links. No new type, no new colour, no new chrome.
+
+## taste-skill (ch6 batch 1)
+
+Branch `cursor/chapter-6`, commit `e8841fad`. Preview https://ch6-preview.complexanalysis.pages.dev/#chapter-6. Used like a MAT 412 student in headless Chrome, light and dark, at 390×844 and at 1280×800. Fresh storage. The first screen, then the square scrolled up, Play through a full turn, a drag of the green mark, a second Play on the segment while the first was running, reduced motion through the steps on the phone in the dark, the parametrization choices on 6.2, Another on a segment card, the three Later rows, and the Chapter 6 node on `#book`. No console errors. No failed assets. No sideways scroll (`scrollWidth` was 390 and 1280).
+
+The gallery inspector was left unrun. Its bans are one accent, no small-caps label, no 1px card, and a floor of four photographs. Those are the site: four teaching colours, the kicker, the section card, and a diagram drawn for the integral. The measurements below are the Chrome walk.
+
+### Verdict
+
+ANOTHER BATCH.
+
+The thing to be able to do is watch the purple point be the integral of the green point. That gesture is on the page. The page you land on hides it. At both sizes, in both themes, the first screen is a colour legend and a status card, and Play sits below the fold. One batch is the cuts below. After that, stop. Sections 6.4, 6.5, and 6.6 stay titles until this screen shows the integral.
+
+```
+ROUND 1
+Seen in one second: a chapter title and a legend, with the top of a small circle cut off at the bottom.
+Idea (one sentence): the purple point is the integral, and the green point walks the orange path.
+Live thing: Play, or a drag of the green mark. A second Play pauses the first.
+Layout words by section: hero=text stack / 6.1=card / 6.2=card / 6.3=card / later=outlined title
+Scores: design 5 · usability 6 · creativity 8 · content 7 → overall 6.1
+Caps applied: Play is off the first screen at both widths, so usability stays at 6. The 256px square sits in the left of a 952px card, so design stays at 5. The kicker, the four colours, the serif title, and the section card are the site, and they are not in the cuts.
+Top three problems:
+1. Phone fold and laptop fold. The square, the claim, and Play are below a legend. Cut that legend, and put Play on the first screen.
+2. Laptop fold. The square is 256px in a 952px card, and the circle is 98px across. Let the square use the column, and keep Play on the screen.
+3. The 6.1 picture, scrolled up. The claim says 2i and the worked paragraph says −5/4. One integral on that screen.
+```
+
+### What I could actually do
+
+`#chapter-6` opens on THE BOOK and Chapter 6. Complex Integration. The title is one line, 25.85px, at both widths.
+
+On the phone the column is x = 16, width 358. The lede is three lines, y = 142 to 220, in the muted ink. The colour paragraph is three lines, y = 236 to 315: "Blue is the axes. Orange marks the path or the pole. Green is the point you drag. Purple is the integral." The status card, "Next is 6.1. 0 of 3 stages.", sits at y = 401. Section 6.1 starts at y = 469. The why is three lines at y = 566. The observe is two lines at y = 672: "Drag the green point around the orange circle. Purple is the integral." The square is 256×256 at y = 732, so an 844px window shows the top 112px of it, a purple dot and the top of the orange circle. The claim is at y = 996. Play is 70×44 at y = 1057.
+
+On the laptop the column starts at x = 304 and is 952px wide. The same stack ends with the square at y = 595, 256×256, so its bottom is at 851 in an 800px window. The claim is one line at y = 859. Play is at y = 893. The card to the right of the square is empty paper. The same frames in the dark: paper rgb(13, 18, 28), sentence rgb(233, 237, 245), lede rgb(166, 176, 195).
+
+The square draws two circles, each 98px across. The green mark and the purple mark are 9×9. At rest the green mark is on the left of the orange circle and the purple mark is on the top of the dashed circle. The claim is "Half a turn leaves the integral at 2i." The blank under the worked paragraph already reads "From 0 to π the integral is 2i." The full-turn blank is empty. Stage complete is 44px tall and disabled. The worked paragraph is Example 6.1, and it says the value is −5/4.
+
+Play says Pause. The claim becomes "The integral has left 0." At the end of the turn the claim is "A full turn brings the integral back to 0.", the full-turn blank reads 0, the half-turn blank clears, and the button says Play. Starting Play on the segment while that turn is running sets the first button back to Play and leaves the phase on "move". Four hundred milliseconds later the phase is still "move", and the segment button says Pause.
+
+A drag of the green mark leaves the half turn and sets the same "left 0" sentence. On the laptop the drag focuses the svg, `:focus-visible` stays false, and the outline stays none.
+
+Reduced motion, on the phone, in the dark, opens on Next step at the half turn. The presses land on the moving frame, the full turn (the button says Start again), the quarter, and the half turn. The button says Pause on none of them.
+
+The 6.2 square is the same 256px. It opens at 2 of 8 steps, the claim says so, and the exact-value blank is empty. The worked paragraph is the segment from 0 to \(2+i\pi/4\), which is the segment on the canvas. The four parametrization choices are 290px wide and 44px tall, one of them 53px where the formula wraps. The right choice shows its why and disables the row. Another on the segment card deals a new pair of endpoints.
+
+The 6.3 square opens with the orange pole outside the green circle. The claim says the green integral is 0 and the purple circle is still \(2\pi i\). The blank reads 0.
+
+The page is 11877px on the phone. Section 6.1 is 1585px, 6.2 is 3911px, and 6.3 is 4096px. Sections 6.4, 6.5, and 6.6 are transparent boxes with a 1px border, 254px, 198px, and 280px tall. Each one is a LATER label, a title, a page, one sentence, and the theorem links.
+
+On `#book` the Chapter 6 node says Open. Section 6.1 is marked Next. Sections 6.4, 6.5, and 6.6 are marked Later. Walk Chapter 6 is a text link, 23px tall.
+
+### What clicks
+
+One picture, one drag, one Play, and a second Play pauses the first. The claim follows the frame: half a turn, left 0, a full turn back at 0. The full-turn blank fills at the full turn, and it is empty before that. Stage complete stays 44px and starts disabled.
+
+The colours are the course colours, and they sit on the marks. Blue is the axes, orange is the path or the pole, green is the handle, purple is the integral. Light and dark use the same positions. The button says Pause while the point moves, and Next step under reduced motion.
+
+Section 6.2's worked paragraph is the segment the picture draws. The choices are real mistakes, the why appears after the tap, and Another deals a new segment. The cites name Howell and Mathews and the page. The kicker, the serif title, and the section card stay.
+
+### What gets in the way
+
+**The first screen is the legend.** The colour paragraph and the observe say the same thing, "purple is the integral," and both of them sit above the square. Play is 213px past the phone fold and 93px past the laptop fold. A student who does not scroll can read the title and cannot press Play.
+
+**The integral is a stamp.** 256px in a 358px phone column, and 256px in a 952px laptop card. The circle is 98px. The two marks are 9px. The laptop card's right half is the paper.
+
+**Two answers share the 6.1 picture.** The claim and the blank say \(2i\). The paragraph under Play, labeled Worked example, says the value is \(−5/4\). That paragraph is \((t-i)^{3}\) from 0 to 1. The picture is \(e^{it}\).
+
+**The last three camps are empty frames.** The fill is already gone. The 1px border is still there, so 6.4, 6.5, and 6.6 read as cards with one sentence in them.
+
+### Cut
+
+1. **The first screen is the square, the claim, and Play.** At 390, Play is at y = 1057 in an 844px window, and the square starts at y = 732. At 1280, Play is at y = 893 in an 800px window. Cut the colour paragraph. Move "Next is 6.1" to under Play. The why stays one or two lines under the stage title, and the square follows it. The observe is one line under the square, then the claim, then Play. Play's bottom stays inside 844 and inside 800, in both themes.
+
+2. **The square uses the column.** It is 256×256, the circle is 98px, and the green mark is 9×9, in a card 358px wide on the phone and 952px wide on the laptop. Size the stage the way the exponential square is sized, and stop at the width that still keeps Play on that first screen. Draw the green mark large enough to see on the phone. The hit stays the 44px it already is.
+
+3. **One integral under the 6.1 picture.** The claim says the half turn leaves the integral at \(2i\), and Example 6.1 under it says the value is \(−5/4\). The worked sentence becomes the half turn on the canvas, and the full turn at \(0\). The evaluation of \((t-i)^{3}\) moves onto a practice card. Section 6.2 already works this way: the worked line is the segment the picture draws.
+
+4. **Later rows are titles.** Sections 6.4, 6.5, and 6.6 keep a 1px border on a transparent ground, 198px to 280px tall. Drop the border. Keep the LATER label, the title, the page, the one sentence, and the theorem links.
+
+5. **Walk Chapter 6 is a 44px control.** On the book the door is a text link 23px tall. Make it the button the other walks already use.
+
+### Add
+
+Nothing. No scrubber, no second clock, no colour-key paragraph, no new hue. Sections 6.4, 6.5, and 6.6 get no picture in this batch.
+
+### Another batch
+
+Yes. One batch, then stop. It is the five cuts above, in that order.
+
+The gesture is already the one a student came for. Play walks the integral, a drag moves the same mark, Pause holds, and the next picture's Play pauses the first. When the square, the claim, and Play are the first screen, and the sentence under that square is the integral the square is drawing, the loop should rest.
+
+### What to keep
+
+The three pictures, the one drag, and the one clock. The claim that flips, the full-turn blank that fills at the full turn, and Stage complete at 44px. The four colours on the marks, in light and in dark. The 6.2 choices, the why after the tap, and Another. The cites, the exam lines, and the summit sentences. The kicker and the section card. The outline that a pointer drag leaves off the square.
