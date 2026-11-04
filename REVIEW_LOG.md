@@ -5903,3 +5903,39 @@ The HTML of §5.1, which the source tag opens, is the section that starts on pri
 `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the four quarter sentences. `node kit/smoke.mjs` exits 0.
 
 **ACCEPT WITH FIXES**
+
+## Book path, batch 6 — close review
+
+Verdict: **ACCEPT WITH FIXES**. Pull request 33, branch `cursor/book-chapter-path-df29`, reviewed from `6071a5a3`. The §5.1 walk under the exponential. Not merged. Not deployed. One fix landed on the branch: the section line and the next-exercise line sit under Play, so the button is on the first screen again.
+
+The picture is the batch 5 picture. The only addition in `exp-picture.js` is the pose that `#chapter-5-5-1-1` uses to open at \(z = 0\). The drag, the clock, the claim, and the resting frame are the same file otherwise. A fresh `#chapter-5` still rests at \(x = 0\), \(y = \pi\). The purple point is the left point of the unit circle. The sentence is “The point sits on the left of the unit circle, on the real axis.”
+
+### The walk, against the 202 Updated Edition
+
+Printed page 130 is Definition 5.1, the series for \(e^z\). The pin opens `sec_exponential-function.html#exp_z__Def`. The HTML numbers that definition 5.1.1. The PDF says Definition 5.1, and so does the card.
+
+Identity (5.1), page 132, is \(e^z = e^x(\cos y + i \sin y)\). That is the idea under the picture, with the modulus \(e^x\) and the angle \(y\). Equation (5.6), page 133, is \(|e^z| = e^x\). Figure 5.2 on that page is the fundamental period strip. The pin opens `#fig_ch-05-02`. The HTML calls the same figure 5.1.5.
+
+Exercises 1 and 2 are quoted from printed page 135. Exercise 1 is “Using Definition 5.1, explain why \(\exp(0) = e^0 = 1\).” Exercise 2 is the Figure 5.2 question, including parts (a), (b), and (c), the circle \(s_1^*\), the angles \(-\frac{7\pi}{8}\), \(\frac{\pi}{4}\), and \(\frac{3\pi}{4}\), and the points \(\pm i\pi\). The HTML exercise says Definition 5.1.1 and Figure 5.1.5. The cards keep the PDF’s words. The series evaluation on page 439 is not on either card. Hints start closed. The licence line is CC BY 4.0.
+
+Sections 5.2–5.5 are titles and pages only: the logarithm on 137, exponents on 143, trigonometric and hyperbolic functions on 148, and the inverses on 159. No links, no cards. The roadmap still shows Chapter 5 as one open title. Chapter 4 still has eight cards. The index still has 30, and it does not list 5.1.1 or 5.1.2.
+
+### The blanks
+
+Each blank stays empty until the picture is in the state that makes the words true. A tap on the plane, a tap on the green dot, and a 2px twitch leave \(x\) and \(y\) alone, and they leave the blanks alone. The disabled tick does not write.
+
+A drag that takes the radius off 1 fills the modulus with \(e^x\), larger than 1 or smaller than 1, and it clears the \(\pm i\pi\) blank, because \(e^{x+i\pi}\) is no longer \(-1\). Putting the radius back on 1 clears the modulus and fills “land together at \(-1\)” again. \(y\) stays at \(\pi\).
+
+Next step, with reduced motion, schedules no frame and never says Pause. From the rest it lands on the bottom and fills the vertical segment with \(e^x\). The next step is \(y = 0\), the claim names the right of the unit circle, and \(\exp(0)\) fills with 1. The tick enables. The top fills the segment and clears that 1. The left fills \(\pm i\pi\) again and the button says Start again. A running Play says Pause, freezes where the second click lands, and schedules nothing after that. The sweep fills the segment once the point has left the real axis. It does not fill \(\exp(0)\), because it does not stop on \(z = 0\).
+
+`#chapter-5-5-1-1` opens at 1. The tick writes `5.1.1` into `progress.test2` beside `4.1.3`, `4.2.5`, and `4.2.7`. Reload keeps it. Unticking 5.1.1 leaves those three. A tick on Chapter 4 and a tick on the index do not drop a Chapter 5 tick, and a Chapter 5 tick does not drop them. The only progress key is `mv:progress.test2`. `book.progress` is not written. `js/app.js` does not import `kit/`, and loading the chapter requests nothing under `kit/`.
+
+### The first screen
+
+At `6071a5a3` the section line and the “Next is” line sat above the plane. Play ended at 804px on a 640px screen, and at 897px on an 800px screen. They now sit under Play. The plane is the batch 5 size: 320px at 360×640, 358px at 390×844, and 480px at 1280×800. Play ends at 599, 637, and 745. That holds in light and dark, and with reduced motion, where the button says Next step. Nothing scrolls sideways. Sitting on the page schedules 0 frames.
+
+### Smoke
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the shared tick and the quarter sentences, after the move. `node kit/smoke.mjs` exits 0.
+
+**ACCEPT WITH FIXES**
