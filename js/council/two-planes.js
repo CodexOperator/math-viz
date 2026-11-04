@@ -74,7 +74,7 @@ export function start() {
   if (hint) hint.textContent = coarse ? 'Swipe to turn. Pinch to zoom.' : 'Drag to turn. Scroll to zoom. Arrow keys turn. 0 resets.';
 
   let compiled = null;
-  try { compiled = compile(formula.value || 'z^2'); } catch { compiled = compile('z^2'); formula.value = 'z^2'; }
+  try { compiled = compile(formula.value || 'exp(z)'); } catch { compiled = compile('exp(z)'); formula.value = 'exp(z)'; }
 
   const useWebgl = webglAvailable();
   if (useWebgl) startWebGL({ stage, claim, status, error, cite, formula, tex, hint, chips, compiled, reduced });

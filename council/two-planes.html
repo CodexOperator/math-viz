@@ -23,17 +23,17 @@
 <body>
   <a class="skip" href="#stage">Skip to the picture</a>
   <main class="tp">
-    <p class="tp-kicker">Council prototype</p>
+    <p class="tp-kicker">Council prototype · Chapter 5, §1</p>
     <h1>Two sheets, one function</h1>
     <p class="tp-observe" id="observe">Drag to turn the pair. The green sheet is the z plane. The purple sheet is the w plane. A string runs from z to f(z). Up is the gap between the sheets, not a third coordinate of z.</p>
     <div class="tp-controls">
       <div class="tp-chips" role="group" aria-label="Function">
-        <button type="button" class="tp-chip" data-src="z^2" aria-pressed="true">z&#178;</button>
-        <button type="button" class="tp-chip" data-src="exp(z)" aria-pressed="false">e^z</button>
+        <button type="button" class="tp-chip" data-src="z^2" aria-pressed="false">z&#178;</button>
+        <button type="button" class="tp-chip" data-src="exp(z)" aria-pressed="true">e^z</button>
         <button type="button" class="tp-chip" data-src="log(z)" aria-pressed="false">ln z</button>
       </div>
       <label class="tp-field">f(z)
-        <input id="formula" value="z^2" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" aria-describedby="error">
+        <input id="formula" value="exp(z)" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" aria-describedby="error">
       </label>
     </div>
     <p class="tp-tex" id="formula-tex"></p>
