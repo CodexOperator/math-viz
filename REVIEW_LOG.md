@@ -5934,6 +5934,8 @@ Next step, with reduced motion, schedules no frame and never says Pause. From th
 
 At `6071a5a3` the section line and the “Next is” line sat above the plane. Play ended at 804px on a 640px screen, and at 897px on an 800px screen. They now sit under Play. The plane is the batch 5 size: 320px at 360×640, 358px at 390×844, and 480px at 1280×800. Play ends at 599, 637, and 745. That holds in light and dark, and with reduced motion, where the button says Next step. Nothing scrolls sideways. Sitting on the page schedules 0 frames.
 
+While this review was open, `5ea585b`, `4445063`, `58e9ccc`, and `deff16c` landed. All four only edit `TASTE_LOG.md`. They name the same first screen, and three further cuts: drop the segment line, shorten Exercise 2 to part (c), and take the Later cards off this page. This pass does not take those three. The batch asked for the segment blank, the exercises quoted in full from page 135, and §5.2–5.5 as titles. Those stay.
+
 ### Smoke
 
 `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the shared tick and the quarter sentences, after the move. `node kit/smoke.mjs` exits 0.
