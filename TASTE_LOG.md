@@ -885,3 +885,53 @@ Nothing. No slider, no scrubber, no spring, no second clock, no section list, no
 ## Another batch
 
 Yes. One cut, then stop. The handle, the four stills, and the frame clock are the lesson, and they already hold. A batch that adds the §5.1 exercises, or that starts the logarithm, will hang new cards on a sentence that calls the bottom of the circle the left.
+
+## unslop (batch 5)
+
+Branch `cursor/book-chapter-path-df29`, commit `5375bcaf`. Used like a MAT 412 student on https://book-preview.complexanalysis.pages.dev, light and dark. `#chapter-5` at 1280×800 and at 390×844. From the still: one full lap, a pause at the bottom, Play again from there, and a drag while that lap was running. A press on the green dot, a press 18px off it, a press 30px off it, a pull straight up, and a drag along the axis. Reduced motion from a fresh load, through all four steps. The chapter menu on the phone. The Chapter 5 node on `#book`, and the book again after the eight Chapter 4 ticks. No console errors. No sideways scroll at either width (`scrollWidth` matched the window).
+
+## Verdict
+
+The cuts from the last note landed, and the picture is the page. The title is Chapter 5. The exponential. The blank lines are gone. The plane is 480px on the laptop and the width of the phone, and Play is on the first screen in both. The green dot is the smaller mark, painted under the purple point, and it is the handle. A press keeps the radius until the finger moves, and then the dot stays under the finger along the axis. A press off the dot leaves the radius. Play turns the point. Pause holds the angle. The next Play continues it. A drag during that turn changes only the radius. Next step lands on the bottom, the right, the top, and the left.
+
+One sentence is still wrong, and it is wrong on the frames you can hold. At rest it says the point sits on the left of the unit circle, on the real axis, and that is the still. The same line stays up for the whole lap, for a pause at the bottom, and for every Next step, including the right, where the point is sitting on the green dot. Another batch is worth doing. It is that sentence. After that, stop.
+
+## What the hand does
+
+Play is one lap, about eight seconds. The button opens as Play, says Pause while the point moves, and says Play again when the point is back on the left. The real part stays 0. The angle passed about −2.83, −1.57, 0, and 1.57, and finished at π. Pause at the bottom left the angle at −1.57. Half a second later it was the same angle, and the button said Play. The next press said Pause, and the angle had moved to about −1.27. A drag during that second turn set the real part to about 0.85, the green dot sat on the finger, and the angle kept going, to about −0.90. The sentence changed to the larger radius.
+
+A press in the middle of the square, and a press on the purple point, leave the radius at 0. A press 30px above the green dot leaves it. A press 18px to the right of the dot, then a move, puts the dot on the finger. Both were at x = 671, and the angle stayed at π. A pull straight up, 90px, leaves the dot on the axis and leaves the radius. Dragging left along the axis crosses the dashed circle. The sentence changes to the smaller radius, and back when the finger returns. On the phone the same drag puts the dot on the finger, both at x = 285, and the angle stays at π. The green dot is 12px on the laptop and 9px on the phone. The purple point is 16px and 12px. The purple one is painted on top.
+
+Reduced motion opens on the still, and the button says Next step. The steps are the bottom, the right, the top, and the left. The button becomes Start again. At the right, the two dots share one center, and the purple point covers the green dot.
+
+The chrome is quiet in both themes. Light paper is #f6f3ec. Dark paper is #0d121c, and the sentence on it is #e9edf5. Blue, orange, green, and purple stay on the axes, the ray and the dashed circle, the radius mark, and the point. In the dark those are #62adf2, #ff9d5c, #3fd0a0, and #e48fd2. The header mark and the theme button are the icons. The phone adds the menu button at the same stroke. The menu is the eleven chapters. Chapter 5 is the current row, and the drawer covers the page. The kicker is the site’s small caps. It stays.
+
+## What reads as the page
+
+The title is “Chapter 5. The exponential.” The line that said the logarithm and the powers were not drawn is gone. The book node is Open, Elementary Functions, Page 130. With the eight ticks stored, the status is “Done. 8 of 8 exercises. Chapter 5 is next.” and the button is Open Chapter 5. The radius sentences set \(e^{x}\) as math, and they stop at larger than 1 and smaller than 1.
+
+On the laptop the square is 480×480, from x = 304 to 784, in a column that runs to 1256. Play ends at 745 in an 800px window. The cite ends at 795. Back to the book starts at 828. On the phone the square is 358×358. Play ends at 637. Back to the book ends at 762 in an 844px window. The footer’s first line is the next thing on that screen. The dashed circle is about 133px across on the laptop, inside a window that runs to a radius of about 3.6, so a large radius still fits.
+
+## What is still false
+
+**The sentence names the still, and then it stays.** At rest the words match the picture. Once the point leaves the left, they do not. At the bottom of the lap the point is under the origin, and the line still says it sits on the left, on the real axis. The same line is up at the right, where the point covers the green dot, and at the top. Pause at the bottom leaves that line over a point that is on the downward ray. Every Next step shows it too. The two radius sentences tell the truth about the circle growing and shrinking. The unit-circle line tells the truth only at the start and the end.
+
+The green dot is the handle, and the line names the purple point. On the phone the handle is 9px, inside a 44px grab. A press that misses it leaves the picture alone, which is the right grab. A student who reads the line has the left-hand point, and has not been told that the green dot is the drag.
+
+## Cut
+
+- The unit-circle line, so it is true on every frame that shows it. While the radius is 1, the point is on the dashed circle. That covers the lap, a pause in the middle, and each Next step. “On the left, on the real axis” belongs on that line only while the point is there. The same line says the green dot is the drag. The two radius lines stay, math included.
+
+## Add
+
+Nothing. No logarithm, no powers, no exercise cards, no second plane, no scrubber, no colour key. “The angle is the clock” stays off the line. It would be true on every frame.
+
+The paper to the right of the 480px square stays. A square the width of the column would put Play below the window. The phone already gives the plane the width. The green dot staying hidden under the purple point at the right-hand quarter stays too. Those two marks are the same point, and the purple one is the one the clock moves.
+
+## Another batch
+
+Yes. One batch, then stop. It is that one line.
+
+The gesture is the one a student came for, and the page around it is the page. When the line you can read at the bottom, the right, and the top is true of those frames, the loop should rest. A batch that adds the §5.1 exercises will hang the cards on a sentence that still says the point is on the left.
+
+Something real is left, and it is that sentence. The rest of the last note is on the page. After this line, nothing real is left.
