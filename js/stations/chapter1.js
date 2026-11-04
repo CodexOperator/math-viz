@@ -68,8 +68,7 @@ export function mountChapter1(el, ctx, focus) {
   nextBtn.addEventListener('click', () => {
     const jump = nextBtn.dataset.jump;
     if (jump === 'book') { ctx.navigate('book'); return; }
-    const node = el.querySelector(`#chapter-section-${slug(jump)}`);
-    if (node) node.scrollIntoView({ block: 'start' });
+    if (jump) ctx.navigate(`chapter-1-${slug(jump)}`);
   });
 
   for (const section of CHAPTER_1.sections) {
@@ -146,9 +145,11 @@ export function mountChapter1(el, ctx, focus) {
   function linkList(items, id) {
     const ul = h('ul', { class: 'book-read', id });
     items.forEach((item, i) => {
-      ul.append(h('li', null, h('a', {
+      const a = h('a', {
         href: item.href, target: '_blank', rel: 'noopener noreferrer', id: `${id}-${i + 1}`,
-      }, item.pin)));
+      });
+      appendRich(a, item.pin);
+      ul.append(h('li', null, a));
     });
     return ul;
   }
@@ -156,7 +157,8 @@ export function mountChapter1(el, ctx, focus) {
   function workedBlock(section, scope) {
     const w = section.worked;
     const body = h('div', { id: `${scope}-worked` });
-    const title = h('h3', { id: `${scope}-worked-title` }, w.title);
+    const title = h('h3', { id: `${scope}-worked-title` });
+    appendRich(title, w.title);
     const text = h('p');
     appendRich(text, w.body);
     body.append(title, sourceTag({ pin: w.pin, href: w.href }), text);

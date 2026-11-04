@@ -121,7 +121,7 @@ function mountRoadmap(el, ctx, spec) {
       const sections = h('ol', { class: 'book-sections', id: `book-sections-${ch.n}` });
       for (const s of ch.sections) {
         sections.append(h('li', { 'data-section': s.id, id: `book-section-${slug(s.id)}` },
-          h('span', null, `${s.id} ${s.title}`),
+          h('a', { href: `#chapter-${ch.n}-${slug(s.id)}` }, `${s.id} ${s.title}`),
           h('span', { class: 'book-section-page' }, `p. ${s.page}`),
           h('span', { class: 'book-section-mark' }, '')));
       }
