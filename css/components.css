@@ -1234,6 +1234,11 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   margin: 0;
   color: var(--text-muted);
 }
+.book-door a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+}
 
 .book-sections { display: flex; flex-direction: column; gap: var(--space-1); margin-top: var(--space-2); }
 

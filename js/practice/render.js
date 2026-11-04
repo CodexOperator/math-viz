@@ -145,9 +145,7 @@ export function renderCard(host, vm, act) {
   const generate = host.querySelector('#practice-generate');
   if (next) next.addEventListener('click', act.next);
   if (generate) generate.addEventListener('click', act.generate);
-  const input = host.querySelector('#practice-input');
-  if (input) input.focus();
-  else if (next && vm.phase === 'told') next.focus();
+  if (next && vm.phase === 'told') next.focus({ preventScroll: true });
 }
 
 export function renderSheet(host, groups) {

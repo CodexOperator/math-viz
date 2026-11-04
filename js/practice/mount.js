@@ -276,7 +276,7 @@ export function mountPrep(el, ctx, spec) {
     : 'Items from more than one section, mixed. Check, then read the reason.';
   el.append(
     h('header', { class: 'station-header' },
-      h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'practice-book' }, 'The Book')),
+      h('p', { class: 'book-kicker', id: 'practice-book' }, 'The Book'),
       h('h1', { id: 'practice-title' }, 'Test prep'),
       h('p', { class: 'station-lede', id: 'practice-lede' }, lede)),
     h('div', { class: 'book-next', id: 'practice-next-row' }, status, back),
