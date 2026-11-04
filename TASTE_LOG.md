@@ -1267,3 +1267,62 @@ Yes. One batch, then stop. It is the two cuts above.
 The gesture is the one a student came for, and the sentence follows the point. Play is on the first screen at both widths, in both themes. The segment line is gone. The two hints name the point the picture is on. When the question is the first line of the card, and a drag leaves the square unframed, the loop should rest. Sections 5.2 through 5.5 stay titles.
 
 Something real is left, and it is those two. The rest of the last note is on the page.
+## appllama (batch 7)
+
+Branch `cursor/book-chapter-path-df29`, commit `ee723a8`. Used like a MAT 412 student on https://book-preview.complexanalysis.pages.dev/#chapter-5. The live walk is that commit. Headless Chrome, light and dark, at 390×844 and at 1280×800. On the phone the finger was a touch. On the laptop it was the mouse. A press on the green dot with no move, a 2px nudge, a drag out, a drag back onto the circle, a drag in, Play through a full turn, a pause, and a continue. The same drag and the same turn in the dark, at both widths. Reduced motion through the four steps, on the phone, in the dark, from a fresh load. A second lap with the CPU slowed to 4×. No console errors. No sideways scroll at either width (the phone's scrollWidth is 390, the laptop's is 1265).
+
+The modulus blank stays. The other two notes kept it. This pass leaves it.
+
+## Verdict
+
+Rest. The tick holds while the point is within 0.35 radians of its end, Play stays where it is, and the turn is a steady 60 frames a second.
+
+The finger still owns the radius and the clock still owns the angle. A touch on Play says Pause and the point moves. A second press says Play and the angle is the same 400ms later. The claim under the square is the sentence that changes, and it is on the first screen at both sizes, in both themes. Nothing real is left of this walk's touch.
+
+## The finger
+
+At rest the real part is 0 and the angle is π. The claim is "The point sits on the left of the unit circle, on the real axis." A press on the green dot, held, leaves both numbers. A 2px nudge leaves them. A drag to the right sets the real part to 0.45, the angle stays π, and the claim becomes "The radius is \(e^{x}\), larger than 1." On the phone that claim is one line inside a box that stays 52.7px, the height of the two-line resting sentence, and Play stays at y = 593. Dragging back onto the circle restores the left-hand sentence and the same y. Dragging the other way fills "smaller than 1" and Play stays at 593. The laptop claim is already one line, 26.3px, and the radius sentence makes it 26.7px. Play moves from 700.9 to 701.2.
+
+A drag that starts in the middle of the square does not scroll the page and does not move the radius.
+
+Through a full turn the phone's Play stays at y = 593 and the claim box stays 52.7px, including the short line "The point sits on the unit circle." A touch that changes the word from Play to Pause moves the button from 593 to 594, one pixel. On the laptop the same word change is 700.9 and 701.9.
+
+## The tick
+
+Exercise 2 is live on the still you open, because that still is the left-hand point. Exercise 1 is grey, opacity 0.55. Both ticks are 44px tall and 68px wide. Live is opacity 1.
+
+Play leaves the left-hand window on the frame where the angle is 0.353 from −π. The frame before, at 0.340, the tick is still live. The same edge, reversed, brings it back at 0.341 from π, and the frame before, at 0.354, is grey. Exercise 1 comes live at 0.341 from 0 and goes grey at 0.353. On the laptop that window is 53 frames, 883ms. The phone lap crosses the same four edges, each on a 16.7ms frame.
+
+On the phone the words "land together at −1" wrap, so the tick under that blank moves from y = 1629.8 to y = 1602.4 when the window ends, 27px. Exercise 1's "1" fits on its line, and that tick moves 1px. On the laptop both answers fit, and both ticks move 1px. The 27px is below the picture. Play, at y = 593, does not move with it.
+
+Reduced motion, from a fresh load, opens on Next step. The four presses land on the bottom, the right, the top, and the left. The right fills Exercise 1 and the tick is live. The left fills Exercise 2. The button says Next step, then Start again. It does not say Pause. Each still is the same angle 400ms later.
+
+## The clock
+
+After Pause the angle was −1.9374201894688245, and 400ms later it was the same number. The button said Play. The next press said Pause and continued from that angle. On the laptop the held angle was −0.4321260695012761, the same 400ms later. A full turn ends on the left-hand point and the button says Play again.
+
+The phone lap was 540 frames over 9.0 seconds, median 16.7ms, 95th percentile 16.8ms, none over 20ms. The 482 frames whose button said Pause match that. The laptop turn matches, in light and in dark. With the CPU slowed to 4×, the phone's frames were median 16.7ms, maximum 16.8ms, none over 20ms, and the frame that cleared the left-hand tick was 16.7ms. No long task.
+
+## The page
+
+On the phone the square is 358px, from y = 166 to 524. The claim ends at 585. Play ends at 637 in the 844px window. The lede ends at 739. The status card ends at 849. The modulus blank, which this pass leaves, starts at 1154. The ticks start at 1270 and, while Exercise 2 is filled, at 1630.
+
+On the laptop the square is 480px, from y = 179 to 659, in the 800px window. The claim is one line at 667. Play ends at 745. The lede starts at 769 and its second line crosses the bottom of the window.
+
+In the dark the page is rgb(13, 18, 28) and the sentence is rgb(233, 237, 245). The axes stay blue, the circle and the ray stay orange, the handle stays green, and the point stays purple. The same positions, the same Play and Pause, the same hold.
+
+The four later sections are titles, marked Later. They sit under the ticks. This lens leaves them.
+
+`#chapter-5-5-1-1` opens at angle 0, with Exercise 1 filled and its tick live, and the picture above the window. The page a student opens is `#chapter-5`.
+
+## Cut
+
+Nothing.
+
+## Add
+
+Nothing. No slider, no scrubber, no spring, no second clock.
+
+## Another batch
+
+No. The hold, the button, and the frame clock are the lesson, and they hold. Nothing real is left of this walk's touch.
