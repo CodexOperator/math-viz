@@ -1533,3 +1533,82 @@ Same system as chapter 4, chapter 5, and addresses, measured at 390, light. The 
 ### Keep
 
 The type, the paper, the white cards, and the four teaching colours, in both themes. Play, Pause, and the hold. conj keeps the claim at 52.7px and Play at one y. The dot stays under the finger from 1+i, and a drag that starts 26px out changes nothing. 3.2 and 3.3 open with the name, the why, the picture, and a drag sentence. Mark stage complete, the green edge, and 3.2's title and why 98px under that button. `#chapter-3-3-3` puts the stage title under the header. Drawer rows are 44px, the open drawer covers the page, and the page behind it does not scroll. Shown inputs and choice buttons are 44px tall. No sideways scroll.
+
+
+## skeptical-student (ch3 batch 2)
+
+Preview https://ch3-preview.complexanalysis.pages.dev/#chapter-3, tip `e684095`. Phone 390×844 first, then 1280×800, light and dark. I have not read Chapter 3. No console errors. No sideways scroll (the phone's scrollWidth is 390, the laptop's is 1280).
+
+I opened the chapter and the first screen was the title, two arrows, "The turn stays 45° and the stretch stays 2√2, for every direction," the chips z² and conj, and Play. On the phone Play ends at y=703, inside 844, and the why is on that same screen: a derivative is one number that turns and stretches every tiny step the same way. Two directions that disagree means there is no derivative. I pressed Play. It said Pause, the sentence stayed, and Pause put the button back. That much I could do.
+
+The arrows themselves are unnamed. Green, purple, and the orange arc are never labeled on the page. The sentence that would have told me, "Play sweeps the direction. Drag the green dot to move the base point," is the picture's accessible name. It is not text. I dragged the dot. The claim became "The turn stays 27° and the stretch stays 4.3, for every direction," and the purple arrow left the top-right of the frame. The sentence still said the turn stays the same for every direction, while the number I was looking at had changed. I had moved the point, and the page never said so.
+
+conj I did understand. From a fresh point the claim was "The purple arrow mirrors the green one. The turn is 0°, and it moves." Play ran that to −65° and the button said Pause. The angle between the arrows was big enough to see. z²'s 45° arc is a small hook in a large empty plot.
+
+At 1280×800, light and dark, Play ends at y=776, inside 800. The why starts at y=816, so the laptop's first screen is the arrows, the claim, and Play, with the word "WHY YOU'D CARE" cut off on the bottom edge. Dark is the same layout: page rgb(13, 18, 28), text rgb(233, 237, 245), blue axes, green step, purple image. The phone in the dark matches the phone in the light, Play still ending at 703.
+
+### The three pictures
+
+The opening picture teaches the sentence under it once I press Play on z², and it teaches the failure once I press Play on conj. It does not teach analytic, and it does not teach the Cauchy-Riemann equations. Those words are not on the picture.
+
+§3.2 does better. The why says the equations test whether the horizontal derivative and the vertical derivative are the same number. Under that, a green square has a purple image that is a turned square, and the line is "Drag the green corner. Green is the tiny square. Purple is its image." Dragging the green corner turned both, and the claim stayed "Right angle, equal sides, and the marked corner still leads. A square." The same drag in the dark. Stretch made a tall rectangle and said "A right angle, and the sides are not equal. Not a square." I could see that. I still could not see a partial derivative. Example 3.4, under the picture, is where u_x and v_y show up.
+
+§3.3 I could read off the picture. Orange and purple levels cross, and the claim says they cross at a right angle. The origin says "Both slopes vanish, so there is no angle to read." Circles, from the opening point, says "The two curves do not cross at a right angle," and the circle sitting on the hyperbolas is the reason. Tapping Circles while I was still on the origin kept the vanish sentence, so the comparison the chip is for did not appear until I dragged away.
+
+### Where I got lost
+
+Under the why, one thumb down, a status says "Next is 3.1 Differentiable and Analytic Functions. 0 of 3 stages." Then a 20×44 link reading "3.1", then the section title, then "In the book": Equation (3.1), Definition 3.1, Definition 3.2, Theorem 3.1, Equations (3.4)–(3.10), Theorem 3.2. Six names and pages. No statement. Example 3.1 then ends "so f'(z) = 3z² everywhere and f is entire." I had not been told what entire means. That word is in the memory list, below the exercises.
+
+The first time the page says "Cauchy-Riemann" is §3.1 Exercise 11, step 1: with u = x² + y² and v = 0, the equations hold only at 0, or everywhere, or nowhere, or on the real axis. I had not been given the equations. The section that states them is the next one. I could guess "hold only at 0" because the prompt already says "differentiable only at 0."
+
+The labels 3.1, 3.2, and 3.3 are links, 20px wide and 44px tall. 3.1 points at `#chapter-section-3-1-memory`. I tapped it. The chapter was gone. The title was "No such place · One Point, Two Addresses," and the page said nothing lives at that hash. 3.2 and 3.3 point at the same kind of hash.
+
+`#chapter-3-3-3` does open Harmonic Functions at the top of the phone, with the picture and the claim in view.
+
+### Misses
+
+A wrong answer explains the step and then hands me the line, and Next step is already there.
+
+On the chain rule I typed `5(z^2-iz+9)^5`. The note said "The outside power n = 5 contributes n[f(z)]^{n-1}. The step is 5(z^2 - iz + 9)^4." The carets are literal characters. Check and Next step were both on the card. I could go on without ever typing the factor.
+
+On Re z I tapped 0. The note said the real part changes by the whole step, so the quotient is 1, and "The step is 1." Next step was there. The 0 button was still live. Nothing said the tap was the wrong one. Tapping 1 afterwards locked the choices and dropped the words "The step is."
+
+On the proof of Theorem 3.3 I typed "no idea." The note explained the horizontal path and ended "The step is u_x + i v_x," with Next step showing. The same on the four choices: I tapped `u_x - i v_x` and the note ended "The step is u_x + i v_x." On the generator, u = x and v = 0, I tapped "hold at every point." The note said u_x = 1 and v_y = 0, then "The step is fail at every point." On u = x³ + y³ I tapped 0. The note said the sum is 6x + 6y, then "The step is 6x + 6y."
+
+A right answer is the useful version of the same note. `u_x + i*v_x` on the proof left "The denominator is x - x_0, so the quotient splits into the two partials in x," and hid Check. That is a miss that would have helped. The printed line on top of it means I never have to produce the step.
+
+### What I typed
+
+These counted: `5*(z^2-iz+9)^4`, `-i+2z`, `(2z-i)*5*(z^2-iz+9)^4`, `u_x + i*v_x`, `-i*u_y + v_y`, `x+4 and -y`, `-y and x + 4`, `u_x=0=v_y and u_y=-1=-v_x`, `both 0`, `4*z^3`, `-4i`, `C(x)-3xy^2`, `C + x^3 - 3xy^2`.
+
+These did not. `(z^2-iz+9)^4*5` was wrong, and `5*(z^2-iz+9)^4` was right: the star in front of the 5 is deleted, so `^4*5` becomes the exponent 45. `u=-y and v=x+4` was wrong, which is the line the step "u and v are" asked me to write. `4(-i)` was wrong, and the note's own sentence is 4(−i) = −4i. `0, 0` was wrong and `both 0` was right. `x^3 - 3xy^2` without the constant was wrong, and the note does say why the constant is there. `2z+i` was wrong, and that one is a real sign error.
+
+### Can I study from it
+
+The pieces are on the page. Theorem 3.3 is a four-step blank and the same proof again as four choices, and the last choice set is the sign. The chain rule, the two paths for Re z, L'Hôpital down to −4i, and the conjugate built up to `C + x^3 - 3xy^2` are the exam moves. Another on the Cauchy-Riemann card reached a polynomial that fails everywhere and one that is the real-axis pattern (u = x² + y², v = 2xy). Another on the harmonic card reached "Is there a harmonic conjugate?" for x³ + y³. The memory list is one list per stage, and I could cram the five lines of §3.2 and of §3.3 the night before. The §3.1 list is longer, and it is where entire, singular point, and the 0/0 rule finally get a sentence.
+
+The flash cards work as cards. Show on §3.2's first card, then Missed, and the front became "What extra hypothesis makes the Cauchy-Riemann equations guarantee a derivative?" while the count still said Card 1 of 5. Next card said Card 2 of 5 and brought the Cauchy-Riemann statement back. Theorem 3.4 stays that one statement. I can use the deck. I can also finish every proof blank by reading "The step is" and pressing Next step, so the blanks do not make me write the proof.
+
+### Verdict
+
+ANOTHER BATCH
+
+I can tell what Play does, and §3.2 and §3.3 show me a square and a right angle with a sentence that matches the picture. I cannot use the 3.1 label, the opening picture never says that a drag moved the point, and a wrong proof step lets me skip. One batch for those. The cards and the pictures can rest after that.
+
+### Ranked
+
+1. **The stage label stays on the chapter.** Evidence: 3.1, 3.2, and 3.3 are 20×44 links. Tapping 3.1 set the hash to `#chapter-section-3-1-memory`, the title became "No such place," and the square was gone. Change: the label scrolls to that stage's memory list and leaves the address at `#chapter-3`. Make the target 44px wide.
+
+2. **A miss makes me produce the line.** Evidence: `5(z^2-iz+9)^5` left Check and Next step both showing, and the note ended "The step is 5(z^2 - iz + 9)^4," carets and all. The same ending followed a wrong tap on Re z, on both copies of Theorem 3.3, on u = x with v = 0, and on x³ + y³. A right answer omits "The step is" and hides Check. Change: keep the reason, stop appending the expected line, hide Next step until the line is right, and mark the choice that was tapped. Render the reason as math where it is math.
+
+3. **The first picture says which gesture does what.** Evidence: the only line that names Play and the drag is the picture's accessible name. A drag replaced 45° and 2√2 with 27° and 4.3, the sentence still said "for every direction," and the purple arrow left the frame. At 1280 the why starts at y=816. Change: one visible line under the plot. "Green is the step. Purple is where it goes. Orange is the turn. Play turns the step. Drag moves the point." When the point moves, name the point in the claim. Keep both arrows inside the frame. Put the why on the first screen at 1280×800, where the phone already has it.
+
+4. **A word is stated before an exercise uses it.** Evidence: Example 3.1 ends "f is entire," and entire is defined in the memory list under the exercises. Exercise 11's first step is the first time the page says "Cauchy-Riemann," with four hold-or-fail choices, and the prompt has already said "only at 0." The statement of the equations is a flash card in §3.2. The "In the book" list above the example is six names and pages. Change: one sentence for analytic and one for entire before the worked example. Make Exercise 11 a two-path question, as Re z already is, and let §3.2 be the first question that asks for the equations.
+
+5. **The line I would write on the exam counts.** Evidence, typed on the phone: `(z^2-iz+9)^4*5` was marked wrong and `5*(z^2-iz+9)^4` was marked right, because deleting the star glues the 5 onto the exponent. `u=-y and v=x+4` was wrong and `x+4 and -y` was right. `4(-i)` was wrong while the note writes 4(−i) = −4i. Change: a star between an exponent and the next factor stays a factor. Accept u and v with their labels. Accept `4(-i)` as `-4i`.
+
+6. **Circles, after the origin, shows the curves that fail.** Evidence: the origin says "Both slopes vanish, so there is no angle to read." Tapping Circles there kept that sentence. From the opening point, Circles says "The two curves do not cross at a right angle," and the circle against the hyperbolas is on the screen. Change: choosing Circles from the origin puts the point back where the two families can be compared.
+
+### Keep
+
+The three why sentences, and the three summit sentences under the cards. Play and Pause. z² holds one sentence while the direction turns. conj's sentence moves, from 0° to −65° on the phone, with Pause showing. The square that stays a square while the green corner turns, in the light and in the dark, and Stretch's rectangle with the sentence that the sides are not equal. The conjugate levels crossing at a right angle, and the origin saying both slopes vanish. Circles from the opening point. Example 3.1's difference quotient, in rendered math. Theorem 3.3 as a blank and again as four choices, and a right step's note that explains the path and leaves the line I typed. The chain rule, the two paths for Re z, L'Hôpital through −4i, and the conjugate that accepts `C + x^3 - 3xy^2`. One memory list per stage. The flash cards, Missed putting that card next, and Theorem 3.4 left as a statement. Another, including u = x with v = 0 and u = x³ + y³. The deep link `#chapter-3-3-3`. Dark at both widths, with the same layout. Choice buttons at 44px.
