@@ -35,13 +35,13 @@ export const CHAPTER_7 = deepFreeze({
       worked: {
         pin: 'Example 7.2, page 214',
         href: sectionHref(S71, 'Swap_Application'),
-        body: 'On any closed disk $|z|\\le r<1$ the geometric series converges uniformly to $1/(1-z)$. Integrate along the segment from $0$ to $z_0$. The calculation gives $-\\mathrm{Log}(1-z_0)=\\sum_{n=1}^{\\infty} z_0^n/n$, so $\\mathrm{Log}(1-z)=-\\sum_{n=1}^{\\infty} z^n/n$ inside the open unit disk.',
+        body: 'On any closed disk $|z|\\le r<1$ the geometric series converges uniformly to $1/(1-z)$. Integrate along the segment from $0$ to $z_0$. The calculation gives $-\\mathrm{Log}(1-z_0)=\\sum_{n=1}^{\\infty} z_0^n/n$, so $\\mathrm{Log}(1-z)=-\\sum_{n=1}^{\\infty} z^n/n$ inside the open unit disk. The prompt printed in Example 7.2 omits that minus sign. The calculation on page 214 is this one.',
       },
       memory: [
         'One $N_\\varepsilon$ for the whole set. If $N$ needs $z$, the convergence is only pointwise.',
         'The negation: one $\\varepsilon>0$ such that every $N$ still leaves some $z$ outside the band.',
         'M-test: $|u_k(z)|\\le M_k$ on $T$ and $\\sum M_k$ converges.',
-        'Then you may integrate term by term on a contour in $T$ (Corollary 7.2, page 213).',
+        'A power series that converges uniformly on a set may be integrated term by term along a contour in that set (Corollary 7.2, page 213).',
       ],
       read: [
         { pin: 'Definition 7.1, page 211', href: sectionHref(S71, 'sec_uniform-convergence-5') },
@@ -117,7 +117,7 @@ export const CHAPTER_7 = deepFreeze({
       why: 'The negative powers name the singularity: none, a finite string, or an infinite tail. The order is how many times the image winds.',
       observe: 'Drag the green point once around the orange circle.',
       key: 'Blue axes. Orange is the circle about the zero. Green is the point you drag. Purple is $z^2$, and it winds twice.',
-      summit: 'The order is the number of times the image winds on one trip around the point.',
+      summit: 'One trip around a zero of order $k$ sends the image around $k$ times.',
       worked: {
         pin: 'Definition 7.5, page 232, and Theorem 7.12, page 235',
         href: sectionHref(S74, 'sec_singularities-4'),
@@ -139,18 +139,18 @@ export const CHAPTER_7 = deepFreeze({
       page: 239,
       stub: false,
       picture: 'removable',
-      why: 'The series tell you two things you can say on an exam: zeros of a non-zero analytic function are isolated, and a bounded isolated singularity can be filled in.',
+      why: 'The series tell you two things you can say on an exam: on a connected domain, the zeros of an analytic function that is not identically zero are isolated, and a bounded isolated singularity can be filled in.',
       observe: 'Drag the green point toward 0.',
       key: 'Blue is the axis. Orange is the line at height 1, and the hole at 0. Green is the point you drag. Purple is $\\sin(z)/z$.',
-      summit: 'A non-zero analytic function has isolated zeros.',
+      summit: 'On a connected domain, an analytic function that is not identically zero has isolated zeros.',
       worked: {
-        pin: 'Theorem 7.13, page 239, and Theorem 7.15, page 241',
+        pin: 'Theorem 7.13, page 239, and Theorem 7.15, page 240',
         href: sectionHref(S75, 'Isolated_Zeros_Thm'),
-        body: 'The zeros of $\\sin z$ are at $n\\pi$. Each one has a disk around it that contains no other zero, which is Theorem 7.13. On the picture, $\\sin z/z$ has no negative powers once you set the value at 0 equal to 1. Theorem 7.15 says a bounded isolated singularity is removable.',
+        body: 'The zeros of $\\sin z$ are at $n\\pi$. Each one has a disk around it that contains no other zero. Theorem 7.13 needs a connected domain and a function that is not identically zero; $\\sin z$ on $\\mathbb{C}$ is both. On the picture, the Laurent series of $\\sin z/z$ is $1-z^2/3!+z^4/5!-\\cdots$ for $z\\neq 0$, so there are no negative powers. Defining the value at 0 to be 1 removes the singularity. The book does that on page 233. Theorem 7.15, page 240, says a bounded isolated singularity is removable.',
       },
       memory: [
-        'A non-zero analytic function has isolated zeros (Theorem 7.13, page 239).',
-        'A bounded isolated singularity is removable (Theorem 7.15, page 241). $\\sin z/z$ at 0 is filled in by the value 1.',
+        'On a connected domain, an analytic function that is not identically zero has isolated zeros (Theorem 7.13, page 239).',
+        'A bounded isolated singularity is removable (Theorem 7.15, page 240). $\\sin z/z$ at 0 is filled in by the value 1.',
       ],
       read: [
         { pin: 'Theorem 7.13, page 239', href: sectionHref(S75, 'Isolated_Zeros_Thm') },

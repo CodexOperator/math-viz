@@ -3,6 +3,8 @@
 // point you drag, purple the series.
 
 export const UNIFORM_EPS = 0.35;
+// Right edge of the drawn graph. The curve is back in the band only when this point is.
+export const UNIFORM_EDGE = 0.92;
 export const TAYLOR_SETTLE = 0.08;
 export const LAURENT_SETTLE = 0.08;
 
@@ -50,13 +52,14 @@ export function uniformGap(x, n) {
 
 export function placeUniform(x) {
   const v = Number(x);
-  return clamp(Number.isFinite(v) ? v : 0.4, -0.9, 0.92);
+  return clamp(Number.isFinite(v) ? v : 0.4, -0.9, UNIFORM_EDGE);
 }
 
 // True while the green point sits inside the orange band. False once it leaves.
-// A point near 1. Small n leaves it outside the band. A larger n brings it back.
+// The drawn curve runs out to UNIFORM_EDGE. Small n still leaves that edge
+// outside the band. A larger n brings the whole drawn curve back.
 export function bandHoldsNearOne(n) {
-  return uniformGap(0.7, n) < UNIFORM_EPS;
+  return uniformGap(UNIFORM_EDGE, n) < UNIFORM_EPS;
 }
 
 export function uniformClaim(x, n) {
@@ -118,8 +121,13 @@ export function taylorClaim(re, im, n, revealed = true) {
   let text;
   let holds;
   if (!revealed && !outside) {
-    text = 'This partial sum agrees with the function.';
-    holds = err < TAYLOR_SETTLE;
+    if (err < TAYLOR_SETTLE) {
+      text = 'This partial sum agrees with the function.';
+      holds = true;
+    } else {
+      text = 'Inside the disk, this partial sum has not caught the value yet.';
+      holds = false;
+    }
   } else if (outside) {
     text = 'The agreement stops at the circle through $\\pm i$.';
     holds = false;
@@ -238,9 +246,11 @@ export function laurentClaim(re, im, n, revealed = true) {
 // z^2 on the unit circle. One full turn of the green point winds the image twice.
 export function windingFrame(theta, travel) {
   const t = Number(theta) || 0;
-  const walked = Math.max(0, Number(travel) || 0);
+  const net = Number(travel) || 0;
+  const walked = Math.abs(net);
   const z = { re: Math.cos(t), im: Math.sin(t) };
   const w = { re: Math.cos(2 * t), im: Math.sin(2 * t) };
+  // One signed lap of z is a double lap of z^2. Path length is not the winding.
   const revealed = walked >= 2 * Math.PI - 0.05;
   return {
     z,
@@ -287,14 +297,37 @@ export function normAnswer(raw) {
     .toLowerCase()
     .replace(/\$/g, '')
     .replace(/\\,/g, '')
+    .replace(/[−–—]/g, '-')
     .replace(/ε|\\varepsilon|\\epsilon/g, 'epsilon')
     .replace(/∞|\\infty/g, 'infty')
     .replace(/\s+/g, '');
+}
+
+// A rational or decimal the blank can be graded by, or null when the text is a word.
+export function answerValue(raw) {
+  let s = normAnswer(raw).replace(/\\dfrac/g, '\\frac');
+  s = s.replace(/\\frac\{(-?\d+)\}\{(-?\d+)\}/g, '($1)/($2)');
+  s = s.replace(/[()]/g, '');
+  const frac = s.match(/^(-?\d+)\/(-?\d+)$/);
+  if (frac) {
+    const den = Number(frac[2]);
+    if (den === 0) return null;
+    return Number(frac[1]) / den;
+  }
+  if (/^-?\d+(?:\.\d+)?$/.test(s)) return Number(s);
+  return null;
 }
 
 export function answerMatches(given, step) {
   const g = normAnswer(given);
   if (!g || !step) return false;
   const opts = [step.answer].concat(Array.isArray(step.accept) ? step.accept : []);
-  return opts.some((a) => normAnswer(a) === g);
+  if (opts.some((a) => normAnswer(a) === g)) return true;
+  const gv = answerValue(given);
+  if (gv == null || !Number.isFinite(gv)) return false;
+  return opts.some((a) => {
+    const av = answerValue(a);
+    if (av == null || !Number.isFinite(av)) return false;
+    return Math.abs(gv - av) <= 1e-6 * Math.max(1, Math.abs(av));
+  });
 }

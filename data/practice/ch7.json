@@ -285,8 +285,7 @@
         "text": "Between the two circles the series uses negative powers and ___ powers.",
         "answer": "non-negative",
         "accept": [
-          "nonnegative",
-          "positive"
+          "nonnegative"
         ],
         "why": "Example 7.7, page 228. The outer pole contributes the powers $z^n$ for $n\\ge 0$, including the constant."
       }
@@ -572,7 +571,7 @@
     "section": "7.5",
     "cite": {
       "ref": "Theorem 7.15",
-      "page": 241
+      "page": 240
     },
     "kind": "next-step-blank",
     "prompt": "What did the picture just show?",
@@ -583,7 +582,7 @@
         "accept": [
           "one"
         ],
-        "why": "Theorem 7.15, page 241. The values stay bounded, and the missing value is the limit 1."
+        "why": "Theorem 7.15, page 240. The values stay bounded, and the missing value is the limit 1."
       }
     ],
     "generator": null,
@@ -598,7 +597,7 @@
       "page": 239
     },
     "kind": "next-step-mc",
-    "prompt": "Theorem 7.13, page 239. $f$ is analytic in a domain and not identically zero.",
+    "prompt": "Theorem 7.13, page 239. $f$ is analytic in a connected domain and not identically zero.",
     "steps": [
       {
         "text": "A zero of $f$ is",
@@ -613,7 +612,7 @@
       }
     ],
     "generator": null,
-    "memory": "A non-zero analytic function has isolated zeros."
+    "memory": "On a connected domain, an analytic function that is not identically zero has isolated zeros."
   },
   {
     "id": "ch7-7.5-flash-zeros",
@@ -628,12 +627,12 @@
     "steps": [
       {
         "text": "",
-        "answer": "If $f$ is analytic in a domain and not identically zero, then a zero is isolated.",
+        "answer": "If $f$ is analytic in a connected domain and not identically zero, then a zero is isolated.",
         "why": "Theorem 7.13, page 239."
       }
     ],
     "generator": null,
-    "memory": "Zeros of a non-zero analytic function are isolated. Identity theorems start there."
+    "memory": "On a connected domain, an analytic function that is not identically zero has isolated zeros."
   },
   {
     "id": "ch7-7.5-flash-removable",
@@ -641,7 +640,7 @@
     "section": "7.5",
     "cite": {
       "ref": "Theorem 7.15",
-      "page": 241
+      "page": 240
     },
     "kind": "flash",
     "prompt": "When is an isolated singularity removable?",
@@ -649,7 +648,7 @@
       {
         "text": "",
         "answer": "When $f$ is bounded in the punctured disk. The value that fills it in is the limit. For $\\sin z/z$ that value is 1.",
-        "why": "Theorem 7.15, page 241."
+        "why": "Theorem 7.15, page 240."
       }
     ],
     "generator": null,

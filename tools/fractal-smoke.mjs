@@ -234,7 +234,13 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
     && annulus.steps[1].answer === '-\\frac{1}{35}'
     && sampleAgrees(1, annulus.generator.params, 40) < 1e-6
     && answerMatches('-1/7', made.steps[0])
-    && answerMatches(made.steps[0].answer, made.steps[0]));
+    && answerMatches('1/-7', made.steps[0])
+    && answerMatches('-2/14', made.steps[0])
+    && answerMatches('−1/7', made.steps[0])
+    && answerMatches('-0.14', made.steps[0]) === false
+    && answerMatches(made.steps[0].answer, made.steps[0])
+    && JSON.stringify(laurentProblem(2, annulus.generator.params)) === JSON.stringify(laurentProblem(2, annulus.generator.params))
+    && laurentProblem(2, annulus.generator.params).seed === 2);
   check('the order generator matches its stored pole',
     order.prompt === madeOrder.prompt
     && madeOrder.order === 3
@@ -253,7 +259,12 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
   check('uniform play changes the sentence at the opening point',
     uniformClaim(0.35, 4).holds === true
     && /still leaves it/.test(uniformClaim(0.35, 4).text)
-    && /brought the curve back/.test(uniformClaim(0.35, 16).text));
+    && /still leaves it/.test(uniformClaim(0.35, 16).text)
+    && /brought the curve back/.test(uniformClaim(0.35, 44).text));
+  check('taylor agreement is withheld until the partial sum has caught the value',
+    taylorClaim(0.9, 0, 0, false).holds === false
+    && /not caught/.test(taylorClaim(0.9, 0, 0, false).text)
+    && taylorClaim(0.2, 0, 0, false).text === 'This partial sum agrees with the function.');
   check('chapter 7 exports five stages and the generators are seed-first',
     chapter7WalkSections().map((s) => s.id).join() === '7.1,7.2,7.3,7.4,7.5'
     && chapter7WalkSections()[0].exercises[0] === 'ch7-stage-7.1'
@@ -261,6 +272,13 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
     && orderGenId === 'singularity-order'
     && windingFrame(0.4, 0).holds === false
     && windingFrame(Math.PI * 2, Math.PI * 2).text.includes('order 2')
+    && windingFrame(0, Math.PI * 2).text.includes('twice')
+    && windingFrame(0, -(Math.PI * 2)).text.includes('twice')
+    && windingFrame(0, Math.PI).holds === false
+    && answerMatches('positive', practice.find((item) => item.id === 'ch7-7.3-picture').steps[0]) === false
+    && answerMatches('non-negative', practice.find((item) => item.id === 'ch7-7.3-picture').steps[0])
+    && !/page 241/.test(JSON.stringify(practice))
+    && /connected domain/.test(practice.find((item) => item.id === 'ch7-7.5-flash-zeros').steps[0].answer)
     && removableClaim(1.4).holds === false
     && /removable/.test(removableClaim(0.1).text)
     && /slip/.test(practice.find((item) => item.id === 'ch7-7.1-mtest-blank').steps[2].why)

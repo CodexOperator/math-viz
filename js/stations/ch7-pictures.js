@@ -6,6 +6,7 @@ import { createMotion, prefersReducedMotion } from '../core/anim.js';
 import { h, appendRich } from './test2-ui.js';
 import {
   UNIFORM_EPS,
+  UNIFORM_EDGE,
   TAYLOR_SETTLE,
   TAYLOR_WINDOW,
   LAURENT_SETTLE,
@@ -226,7 +227,7 @@ export function mountUniform(parent) {
   stage.append(axis, band, limit, partial);
 
   const xs = [];
-  for (let x = -0.9; x <= 0.92; x += 0.02) xs.push(Number(x.toFixed(3)));
+  for (let x = -0.9; x <= UNIFORM_EDGE + 1e-9; x += 0.02) xs.push(Number(x.toFixed(3)));
   for (const pts of polyPoints(xs, geometricLimit)) limit.append(svgEl('polyline', { points: pts }));
   for (const pts of polyPoints(xs, (x) => geometricLimit(x) + UNIFORM_EPS)) band.append(svgEl('polyline', { points: pts }));
   for (const pts of polyPoints(xs, (x) => geometricLimit(x) - UNIFORM_EPS)) band.append(svgEl('polyline', { points: pts }));
@@ -258,7 +259,7 @@ export function mountUniform(parent) {
     stage.dataset.holds = scene.holds ? 'true' : 'false';
   }
   const steps = [];
-  for (let n = 4; n <= 20; n += 1) steps.push(n);
+  for (let n = 4; n <= 44; n += 2) steps.push(n);
   const stopMotion = bindMotion(play, steps, paint, 4);
   const stopDrag = bindDrag(stage, (ev) => {
     const local = localOf(stage, ev, U.w, U.h);
@@ -527,7 +528,7 @@ export function mountWinding(parent) {
     let d = next - last;
     while (d > Math.PI) d -= 2 * Math.PI;
     while (d < -Math.PI) d += 2 * Math.PI;
-    travel += Math.abs(d);
+    travel += d;
     last = next;
     theta = next;
     show(windingFrame(theta, travel));

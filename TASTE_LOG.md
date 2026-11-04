@@ -1466,7 +1466,7 @@ Checked in headless Chrome at 390 and 1280, light and dark. No sideways scroll. 
 ## Still open
 
 - §7.3 Exercise 10 (three annuli) and §7.4 Exercise 3 (essential singularities) are not cards yet.
-- L'Hôpital and division of series are pinned, not pictured.
+- L'Hôpital (Corollary 7.11, page 240) is pinned and not pictured. Division of power series (Theorem 7.14, page 240) is not pinned and not pictured.
 - The local card stays until the shared practice engine replaces it.
 - The first square is 304px at 1280 so the lede, the claim, and Play share the window. Chapter 5's square is 480 because its lede sits under Play.
 
@@ -1549,3 +1549,13 @@ The camp order that already works once the picture is in view: flag, title, page
 The practice beat. A wrong blank says "Not yet." and the memory line. The next card waits. Stage complete becomes the summit and then "Go to 7.2" or "Go to 7.3", on one screen, with the green edge on the finished card. The two summits that match their pictures: "One N works for the whole set." and "The Taylor series fills the disk out to the nearest singularity, and it stops there."
 
 The source line at the end, Howell & Mathews, Chapter 7, page 210. Nothing under it.
+
+## reviewer (ch7 batch 2)
+
+Branch `cursor/chapter-7`, reviewed at `17c034e` against the 202 Updated Edition PDF (471 pages). Verdict: accept with fixes. The fixes are on this branch.
+
+One lap of the green point on \(z^2\) moves the purple point through \(4\pi\). The sentence "went around twice, order 2" matches that drawing. A wiggle no longer spends path length as if it were a lap. \(\sin z/z\) at 0 is the removable example on page 233: the series \(1 - z^2/3! + \cdots\) has no negative powers for \(z \neq 0\), and the value that fills the hole is 1. Theorem 7.15 is stated on page 240. The closing line now carries Theorem 7.13's hypotheses: a connected domain, and not identically zero.
+
+The uniform sentence says the curve is back only at \(n = 44\), when the drawn edge \(x = 0.92\) is inside the band. Inside the Taylor disk, a partial sum that has not caught the value no longer says that it agrees. The blank grader accepts an equal value (`1/-7` for \(-\frac{1}{7}\)) and rejects "positive" for non-negative powers. Generators stay `generate(seed, params)`. `map-route.js` matches the kit copy. No live import from `kit/`.
+
+`node tools/check_vectors.mjs`, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. Headless Chrome at 390×844 and 1280×800, light and dark: no sideways scroll, no console errors. Play on the first screen ends at y=793 (phone) and y=785 (wide).
