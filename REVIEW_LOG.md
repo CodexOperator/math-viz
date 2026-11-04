@@ -5748,7 +5748,7 @@ Headless Chrome, served under `/math-viz/`, light and dark, widths 1280, 700, an
 ### For the builder, in this order
 
 1. **Draw Chapter 5, starting with the exponential.** The page lists 5.1–5.5 and links the current and the impedance from 5.4. The exponential, the logarithm, and the powers are named and not drawn. One picture, with a sentence the gesture can make false, is the next batch. Keep the section titles and the printed pages above.
-2. **Leave the index reveal of Exercise 6 where it is, unless the path is supposed to be the only copy of that card.** §4.4 Exercise 6 on the chapter page has a closed hint and a copy with no answer. The same id on the index is still the older likely card, and Show the check added for this site still opens the modulus comparison. The two pages are doing different jobs on purpose today.
+2. **Leave the index reveal of Exercise 6.** The chapter card has a closed hint and a copy with no answer. The same id on the index is still the older likely card, and Show the check added for this site still opens the modulus comparison. That reveal was already on the index before this batch. The chapter path is the walk. Stripping the index would hide a check the likely filter already offered.
 3. **Leave the combined Theorem 4.11 pins on the older stops.** The chapter pin now opens the criterion. The concept page, the flat paper, and the playground still use `Fixed_point_Def` for a sentence that also names Definitions 4.9 and 4.10, which is that anchor. Splitting those sentences is a later pass.
 
 **accept with fixes**
