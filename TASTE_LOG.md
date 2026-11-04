@@ -1378,3 +1378,49 @@ The i^275 card is the right question. The other three buttons are i, −1, and 1
 The circle card is the distinction Exercise 3 is for. The four buttons are “on the circle, not inside,” “less than 2, so inside,” “greater than 2, so outside,” and “the centre.” Tapping the inside button said “Not that one.” The right note says the length is 2 and inside means strictly less.
 
 The division generator computes a new pair, checks a + bi, and cites Definition 1.4. Cards stay one at a time, and the back stays closed until Show the back.
+
+## ux-veteran (ch1 batch 1)
+
+Preview https://ch1-preview.complexanalysis.pages.dev at `6fec695`. Headless Chrome, 390×844 with a coarse pointer, then 1280×800, light and dark. Fresh storage, then the same phone again after stage 1.1 was marked. No product code was changed. No console errors. No failed requests. No sideways scroll (`scrollWidth` 390 at 390, 1265 at 1280).
+
+### How the walk went
+
+**First screen, 390×844, light.** The site name fits. The header icons are 44×44. Under them: THE BOOK at 69×17, the title, the lede “Six stages. The first three are walked. Mark a stage when you have worked it.”, the source line, and “Next is stage 1.1. 0 of 3 stages.” The Go button is hidden, which is right, because 1.1 is the stage on the page. The stage card then spends the rest of the screen on Why you’d care. THE PICTURE label sits at y = 640. The plane is 321×321 and starts at y = 716, so the fold at 844 cuts it after about 128px. Times i runs from y = 1079 to 1123. The claim sits with the button. A finger on the first screen can see a purple dot and cannot press the thing that moves it. At 1280×800 the same stack ends in the top of the grid. The plane there is 512×512 in a 985px column, so Times i is under a picture taller than the screen that is left.
+
+Chapter 5, on this same preview, still puts Play on the phone: the button ends at y = 637. Its lede is under the picture. Chapter 1 puts a second lede, a why paragraph, and a full-width plane in front of the control.
+
+Pressing Times i four times does the four sentences, and the second one is “Two turns. i² landed on −1.” The 4+3i chip is 68×44. Pressed, the claim is “The length is 5. This is the book’s 4+3i.” Dragging the green point on 1.2, hit target 44×44 once the pointer is coarse (the drawn dot is 14px), changes the sentence to “Times i is a quarter turn. The product is not real.” The handle takes `is-pointer-focus` and the outline stays none. No box around the plane. The line under that picture, “Green is the point you drag,” is on screen when the section title is brought to the top. It is not on the chapter’s first screen.
+
+**After the tick.** Mark stage complete sits at y = 2767, 44px tall, under the summit sentence. Pressing it there changes the flag to DONE and the button to Stage complete. The summit is on that screen: “Bombelli’s real 4 is what is left when a conjugate pair of square roots of −1 adds.” Go to 1.2 is not. It lives in the status card, which was 1693px above the viewport. The hash stays `#chapter-1`.
+
+**Back.** From scroll 900, THE BOOK opens `#book` at scroll 0. Browser Back returns to `#chapter-1` at scroll 0, not to the stage. From 1.3 at scroll 7830, Back does the same. `#chapter-1-1-3` already works: the 1.3 title lands at y = 96, 40px under the 56px header. Go to 1.2 never writes that hash. It only scrolls (y = 2888, hash unchanged).
+
+`#book` after the 1.1 tick still says “Next is §4.1, Exercise 3. 0 of 8 exercises.” The button is still Walk Chapter 4. Chapter 1 is on the first screen, flagged OPEN, and its 1.1 row reads Done and its 1.2 row reads Next. Tapping the 1.2 row leaves the hash on `#book`. The chapter title is the only link. The phone menu is The Book and eleven chapters, each row 44px, Chapter 1 marked current. Tapping 2 Complex Functions opens the book, scrolled to that Later card (scroll 994), and the current row becomes The Book.
+
+**What a student has to read.** The 1.2 pin is the characters `$i=(0,1)$ and $i^2=-1$, page 13`, 23px tall. The worked heading is `Multiply $(0,1)$ by itself`. The body under it is set in type. Stage 1.4 shows `Definition 1.10, $\arg z$, page 23` and `Definition 1.11, $\operatorname{Arg} z$, page 23`. The why paragraphs and the claims render. The pins and that heading do not.
+
+The practice block is a white card inside the white stage card. Both are 1px `rgb(216, 210, 196)`, radius 10. The inner card is 324px wide in the 358px stage. Check, the choices, Show the back, and Next card are 44px. One card shows at a time, and the back stays closed until Show. A right choice opens the next step and the one-line why.
+
+Dark matches the light stack. Paper `rgb(13, 18, 28)`, title `rgb(233, 237, 245)`. Light paper is `rgb(246, 243, 236)`. The title is Iowan Old Style, 25.85px and weight 600 at 390, 36px at 1280, `rgb(26, 34, 48)` in the light. The lede is 16.8px `rgb(81, 91, 108)`. The primary button is 44px, radius 6, fill `rgb(47, 62, 92)`. Same tokens as the station pages.
+
+### Verdict
+
+ANOTHER BATCH. The three pictures work, and the type is already the site’s. The first screen does not hold the gesture, the way back sends you to Chapter 4, and the pins are source code.
+
+### Ranked cut or fix
+
+1. **Put Times i on the first screen.** At 390 the plane starts at y = 716 and the button ends at y = 1123. At 1280×800 the first screen is the top of the grid. Chapter 5 already keeps Play on the phone by capping the square. Change: one lede, the gesture, in the lede’s type (“Press Times i. The purple point turns.”). Then the source line, then the plane capped with the same `min(100%, calc(100dvh - 20rem))` the exponential square uses, then the claim and Times i. Move Why you’d care under the button. Cut the “THE PICTURE” label. The test is the one Chapter 5 already locked: at 390×844 and at 1280×800 the button is on the screen, light and dark.
+
+2. **The book should send you back to the stage you just did.** After 1.1 is marked, `#book` still offers Walk Chapter 4, and the row that says Next is not a link. Change: the status card follows the chapter 1 tally (“Next is stage 1.2. 1 of 3 stages.”) and the button is Go to 1.2, href `#chapter-1-1-2`. Each 1.1–1.6 row is that same kind of link. A later chapter in the drawer should not pretend to open and then highlight The Book.
+
+3. **The way forward has to survive Back.** Go to 1.2 scrolls and leaves the hash on `#chapter-1`. Back from the book returns to scroll 0. The tick that earns the next stage is at y = 2767, and Go to 1.2 is off that screen. Change: the primary button in the stage’s action row, beside Mark stage complete, is the jump, and it sets `#chapter-1-1-2` (or `#book` when the three stages are done). `#chapter-1-1-3` already lands the title 40px under the header. Use that, and stop scrolling without a hash.
+
+4. **Render the pins and the worked heading.** The 1.2 link’s HTML is the literal `$i=(0,1)$ and $i^2=-1$, page 13`. Stage 1.4 prints `$\arg z$` and `$\operatorname{Arg} z$`. The worked title prints `Multiply $(0,1)$ by itself` while the paragraph under it is set. Change: those strings go through the same rich text the why paragraph already uses. Leave the link the size of body text. Do not invent a new chip.
+
+5. **Make the up control a control you can hit.** THE BOOK is 69×17. Back to the book, at the bottom of a 13816px page, is 134×23. The nav rows and the header icons are already 44. Change: both links are the existing `.station-link` (min-height 44). Same words.
+
+6. **One box around the practice.** The stage is a white card. Each practice item and each flashcard is a second white card, same border, same radius, 324px inside 358px. Change: keep the stage card, and let the prompt, the blank, and Check sit in it the way a station exercise sits in one card. No new chrome.
+
+### What to keep
+
+The four colours, the Iowan title, the muted lede, the paper, and the accent button, in light and in dark. Times i, the 44px coarse hit on the green point, the 14px dot, and a drag that does not draw a focus box. The 4+3i chip at 44px, pressed only while the point is that point. Check, the choices, Show the back, Next card, and Mark stage complete, all 44px, one card at a time, the back closed until Show. The summit sentence at the tick. The status count. The chapter menu with Chapter 1 marked on the first screen. The deep link that brings a stage title clear of the header.
