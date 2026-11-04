@@ -1490,3 +1490,19 @@ What was wrong, and the change:
 Left as is: within \(0.06\) of the green circle the sentence says the pole is on it and the integral is not defined. Exactly on the circle that is true. A hair inside, the integral of \(1/z\) is still \(2\pi i\). The band is the width of the orange dot.
 
 Keep: the three pictures, the page cites above, Example 6.1's \(-5/4\), the eight-step sum beside \(\exp(2+i\pi/4)-1\), Cauchy's proof blanks (the split, Green's theorem, Cauchy-Riemann, and \(0\)), and the computed generators.
+
+## Chapter 6, batch 2
+
+Branch `cursor/chapter-6`. Headless Chrome, light and dark, 390×844 and 1280×800. Fresh storage. The first screen, then Play through the full turn, the bend, the Cauchy point, and the Liouville circle. No console errors. No sideways scroll.
+
+The colour paragraph is gone. One gesture line sits above each square. The status card is under Play. Play ends at y = 821 in the 844 window and at y = 777 in the 800 window, in both themes. The square is 324px on the phone and 320px on the laptop, both wider than 16rem. The green mark is 16 viewBox units. The pole-on-the-circle band is one pixel of that plane: exactly on is undefined, and 0.98 is still inside.
+
+6.1 opens at a quarter turn, both blanks empty. 6.2 opens at 0 steps. 6.3 and 6.5 open on the edge. 6.4 opens on the straight segment. 6.6 opens before the estimate collapses. The 6.1 worked line is \(2i\) and \(0\). Example 6.1's \(-5/4\) is a practice card. The 6.3 worked line is the \(1/z\) drag. The sheet no longer reprints the picture blanks, and the four-theorem flash is gone.
+
+6.4, 6.5, and 6.6 are stages. Bend the path and the integral of \(z\) stays \(4+2i\). Drag inside the unit circle and \(z/(z-z_0)\) returns the green point. Drag the radius and \(1/R\) collapses, which is Liouville. The page tail is one header, not a viewport.
+
+`ch6-circle` and `ch6-segment` export `generate(seed, params)`. The math functions use that order too, so nothing swaps the arguments.
+
+## Next
+
+Goursat's triangle subdivision, the remaining contour exercises (6.2.5, 6.2.9, 6.3.1–6.3.4), and Examples 6.17–6.19 on the antiderivative. Hand the cards to the practice engine when that branch lands. Do not edit its registry.

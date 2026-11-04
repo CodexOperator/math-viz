@@ -3,42 +3,42 @@
 // lives in the same memory as the other chapters.
 
 import { sectionHref } from '../data/book.js';
-import { CHAPTER_6, chapter4ExerciseIds, chapter5ExerciseIds } from '../data/book-path.js';
+import { CHAPTER_6, chapter4ExerciseIds, chapter5ExerciseIds, chapter6StageIds } from '../data/book-path.js';
 import { loadSharedTicks, saveSharedTicks, toggleTick, sectionFinished, chapterTally } from '../book/progress.js';
 import { h, appendRich, sourceTag } from './test2-ui.js';
-import { mountRealIntegral, mountContourSum, mountDeform } from './ch6-pictures.js';
+import { mountRealIntegral, mountContourSum, mountDeform, mountBend, mountCauchy, mountLiouville } from './ch6-pictures.js';
 import { mountPractice } from './ch6-cards.js';
 
 const PICTURES = {
   real: mountRealIntegral,
   sum: mountContourSum,
   deform: mountDeform,
+  bend: mountBend,
+  cauchy: mountCauchy,
+  liouville: mountLiouville,
 };
 
 const STAGES = [
   {
     id: '6.1',
-    why: 'A contour integral is going to become one of these. If you can integrate the real part and the imaginary part, the complex integral is finished.',
-    observe: 'Drag the green point around the orange circle. Purple is the integral.',
+    gesture: 'Drag the green point around the orange circle. Purple is the integral.',
     picture: 'real',
     read: [
       { pin: 'Definition 6.1, page 163', href: sectionHref('sec_complex-integrals.html', 'Integral_Def_1') },
       { pin: 'Example 6.1, page 163', href: sectionHref('sec_complex-integrals.html', 'Int_ex') },
     ],
-    workedPin: 'Example 6.1, page 163',
-    workedHref: sectionHref('sec_complex-integrals.html', 'Int_ex'),
-    worked: 'Split $(t-i)^{3}$ into $t^{3}-3t$ and $i(1-3t^{2})$. From $0$ to $1$ the real integral is $-5/4$ and the imaginary integral is $0$. The value is $-5/4$.',
+    workedPin: 'Definition 6.1, page 163',
+    workedHref: sectionHref('sec_complex-integrals.html', 'Integral_Def_1'),
+    worked: 'From $0$ to $\\pi$, $\\int e^{it}\\,dt=2i$. From $0$ to $2\\pi$ it is $0$.',
     sheet: [
       'Definition 6.1, page 163: $\\int(u+iv)=\\int u+i\\int v$.',
       'An antiderivative $U+iV$ is evaluated at the ends.',
-      'From $0$ to $\\pi$, $\\int e^{it}\\,dt=2i$. From $0$ to $2\\pi$ it is $0$. Any full period is $0$. A half period is $2i$ only when it starts at a multiple of $2\\pi$.',
     ],
     summit: 'On a real interval, a complex integral is the real integral plus $i$ times the imaginary integral.',
   },
   {
     id: '6.2',
-    why: 'The path now lives in the plane. The integral is a sum of $f(z)$ times the step $\\Delta z$ along that path.',
-    observe: 'Drag the green point along the segment. Orange points are the eight samples.',
+    gesture: 'Drag the green point along the segment. Orange points are the eight samples.',
     picture: 'sum',
     read: [
       { pin: 'Definition 6.2, page 170', href: sectionHref('sec_contour-integrals.html', 'Contoe_fnt_Def') },
@@ -52,14 +52,13 @@ const STAGES = [
       'Theorem 6.1, page 172: $\\int_C f(z)\\,dz=\\int_a^b f(z(t))z\'(t)\\,dt$.',
       'A segment from $A$ to $B$ is $z(t)=A+(B-A)t$.',
       'The opposite contour changes the sign.',
-      'Eight midpoint steps on Example 6.6 land beside $\\exp(2+i\\pi/4)-1$.',
+      'Theorem 6.3, page 177: if $|f|\\le M$ on $C$ and $L$ is the length, then $|\\int_C f\\,dz|\\le ML$.',
     ],
     summit: 'Parametrize the contour, multiply by $z\'(t)$, and the contour integral is an ordinary integral on a real interval.',
   },
   {
     id: '6.3',
-    why: 'Once the function is analytic, the path can move and the integral does not have to be computed again.',
-    observe: 'Drag the green handle. Both circles are positively oriented and the integrand is $1/z$. Orange is the pole. The purple circle stays put.',
+    gesture: 'Drag the green handle. The integrand is $1/z$.',
     picture: 'deform',
     read: [
       { pin: 'Theorem 6.5, page 183', href: sectionHref('sec_cauchy-goursat.html', 'CG_Thm') },
@@ -68,7 +67,7 @@ const STAGES = [
     ],
     workedPin: 'Example 6.12, page 186',
     workedHref: sectionHref('sec_cauchy-goursat.html', 'sec_cauchy-goursat-18'),
-    worked: '$e^{z}$, $\\cos z$, and $z^{n}$ for a positive integer $n$ are entire. Theorem 6.5 says each of them integrates to $0$ on any simple closed contour.',
+    worked: 'Both circles are positively oriented and the integrand is $1/z$. While the pole stays inside both, both integrals are $2\\pi i$. When the green circle drops the pole, its integral is $0$ and the purple circle stays $2\\pi i$.',
     sheet: [
       'Analytic inside and on a simple closed curve: Theorem 6.5, page 183, the integral is $0$.',
       'Same singularity inside two closed curves, analytic between them: Theorem 6.6, page 187, the integrals match.',
@@ -77,31 +76,56 @@ const STAGES = [
     ],
     summit: 'Deforming a closed contour through analytic points leaves the integral unchanged.',
   },
-];
-
-const LATER = [
   {
     id: '6.4',
-    why: 'An antiderivative turns the integral from $z_0$ to $z_1$ into $F(z_1)-F(z_0)$.',
+    gesture: 'Drag the green bend. The ends stay put, and the integrand is $z$.',
+    picture: 'bend',
     read: [
       { pin: 'Theorem 6.8, page 193', href: sectionHref('sec_integration-theorems.html', 'Antideriv_Thm') },
       { pin: 'Theorem 6.9, page 194', href: sectionHref('sec_integration-theorems.html', 'DInt_Thm') },
     ],
+    workedPin: 'Theorem 6.9, page 194',
+    workedHref: sectionHref('sec_integration-theorems.html', 'DInt_Thm'),
+    worked: 'The ends stay at $-1-i$ and $3+i$. An antiderivative of $z$ is $z^{2}/2$, so the integral is $4+2i$ on every path between those ends.',
+    sheet: [
+      'Theorem 6.9, page 194: in a simply connected domain, $\\int_{z_0}^{z_1} f = F(z_1)-F(z_0)$.',
+      'An analytic integrand does not care which path you draw between the same ends.',
+    ],
+    summit: 'For an analytic integrand, the integral is the antiderivative at the end minus the antiderivative at the start.',
   },
   {
     id: '6.5',
-    why: 'The value at a point inside is an integral on the boundary.',
+    gesture: 'Drag the green point. The integrand is $z/(z-z_0)$ on the unit circle.',
+    picture: 'cauchy',
     read: [
       { pin: 'Theorem 6.10, page 197', href: sectionHref('sec_cauchy-integral-formulas.html') },
+      { pin: 'Example 6.21, page 198', href: sectionHref('sec_cauchy-integral-formulas.html', 'Cauchy_Int_Ex') },
     ],
+    workedPin: 'Theorem 6.10, page 197',
+    workedHref: sectionHref('sec_cauchy-integral-formulas.html'),
+    worked: 'For $f(z)=z$ on the unit circle, $\\dfrac{1}{2\\pi i}\\int \\dfrac{z}{z-z_0}\\,dz$ equals the green point while it stays inside, and equals $0$ once the point leaves the circle.',
+    sheet: [
+      'Theorem 6.10, page 197: $f(z_0)=\\dfrac{1}{2\\pi i}\\int_C \\dfrac{f(z)}{z-z_0}\\,dz$ when $z_0$ is inside $C$.',
+      'Example 6.21, page 198: $\\int_{|z|=2} e^{z}/(z-1)\\,dz = 2\\pi i\\, e$.',
+    ],
+    summit: 'The value inside a contour is an integral on the boundary.',
   },
   {
     id: '6.6',
-    why: 'Morera is the converse of Cauchy-Goursat. Liouville says a bounded entire function is constant.',
+    gesture: 'Drag the green radius. Purple is the estimate $1/R$ of the derivative.',
+    picture: 'liouville',
     read: [
       { pin: 'Theorem 6.13, page 203', href: sectionHref('sec_morera-liouville.html', 'Morera_s_Thm') },
       { pin: 'Theorem 6.18, page 206', href: sectionHref('sec_morera-liouville.html', 'Liouville_s_Thm') },
     ],
+    workedPin: 'Theorem 6.18, page 206',
+    workedHref: sectionHref('sec_morera-liouville.html', 'Liouville_s_Thm'),
+    worked: 'If $|f|\\le M$ on every circle, Cauchy\'s estimate says $|f\'(z_0)|\\le M/R$. Let the radius grow. The only number that survives every $R$ is $0$, so $f$ is constant.',
+    sheet: [
+      'Theorem 6.13, page 203: if $f$ is continuous and every triangle integrates to $0$, then $f$ is analytic.',
+      'Theorem 6.18, page 206: a bounded entire function is constant.',
+    ],
+    summit: 'An entire function that stays bounded is constant.',
   },
 ];
 
@@ -146,21 +170,21 @@ function setTick(tick, on, ready) {
 
 export function mount(section, ctx) {
   const store = ctx.store;
-  const owned = new Set([...chapter4ExerciseIds(), ...chapter5ExerciseIds(), '6.1', '6.2', '6.3']);
+  const owned = new Set([...chapter4ExerciseIds(), ...chapter5ExerciseIds(), ...chapter6StageIds()]);
   let ticks = loadSharedTicks(store, (id) => owned.has(id), chapter4ExerciseIds());
   const stops = [];
   let dead = false;
 
   const status = h('p', { class: 'book-status', id: 'chapter-status' });
   const nextBtn = h('button', { type: 'button', class: 'btn btn-primary', id: 'chapter-next' }, 'Next');
-  const path = h('ol', { class: 'chapter-path', id: 'chapter-path' });
+  const path = h('ol', { class: 'chapter-path ch6-path', id: 'chapter-path' });
   const blanks = {};
   const ticksBtn = {};
 
   function paintStatus() {
     const t = chapterTally(liveSections(), ticks);
     if (t.complete) {
-      status.textContent = `Done. ${t.exercisesTicked} of ${t.exerciseTotal} stages. Sections 6.4, 6.5, and 6.6 are next.`;
+      status.textContent = `Done. ${t.exercisesTicked} of ${t.exerciseTotal} stages.`;
       nextBtn.hidden = false;
       nextBtn.textContent = 'Back to the book';
       nextBtn.dataset.jump = 'book';
@@ -195,12 +219,9 @@ export function mount(section, ctx) {
 
   for (const stage of STAGES) {
     const scope = `chapter-section-${slug(stage.id)}`;
-    const why = h('p', { class: 'section-idea', id: `${scope}-why` });
-    appendRich(why, stage.why);
+    const gesture = h('p', { class: 'ch6-gesture', id: `${scope}-gesture` });
+    appendRich(gesture, stage.gesture);
     const picture = h('div', { class: 'ch6-picture', id: `ch6-picture-${slug(stage.id)}` });
-    const observe = h('p', { class: 'ch6-observe', id: `${scope}-observe` });
-    appendRich(observe, stage.observe);
-    picture.append(observe);
     stops.push(PICTURES[stage.picture](picture));
     const read = h('ul', { class: 'book-read', id: `${scope}-read` });
     stage.read.forEach((item, i) => {
@@ -224,9 +245,18 @@ export function mount(section, ctx) {
     } else if (stage.id === '6.2') {
       blanks.exact = blankLine('ch6-blank-exact', 'The exact value is ');
       blankHost.append(blanks.exact);
-    } else {
+    } else if (stage.id === '6.3') {
       blanks.pole = blankLine('ch6-blank-pole', 'The integral of $1/z$ over the green circle is ');
       blankHost.append(blanks.pole);
+    } else if (stage.id === '6.4') {
+      blanks.bend = blankLine('ch6-blank-bend', 'The integral of $z$ is ');
+      blankHost.append(blanks.bend);
+    } else if (stage.id === '6.5') {
+      blanks.cauchy = blankLine('ch6-blank-cauchy', 'The formula returns ');
+      blankHost.append(blanks.cauchy);
+    } else {
+      blanks.liouville = blankLine('ch6-blank-liouville', 'The derivative is ');
+      blankHost.append(blanks.liouville);
     }
     const practice = h('div', { class: 'chapter-exercises', id: `ch6-practice-${slug(stage.id)}` });
     const summit = h('p', { class: 'ch6-summit', id: `${scope}-summit` });
@@ -241,14 +271,18 @@ export function mount(section, ctx) {
       paintAll();
     });
     ticksBtn[stage.id] = tick;
-    path.append(h('li', {
-      class: 'section-node', id: scope, 'data-section': stage.id, 'data-state': 'ahead',
-    },
+    const head = [
       h('p', { class: 'book-flag', id: `${scope}-flag` }, stage.id),
       h('h2', { id: `${scope}-title` }, CHAPTER_6.sections.find((s) => s.id === stage.id).title),
       h('p', { class: 'book-page' }, `Page ${CHAPTER_6.sections.find((s) => s.id === stage.id).page}`),
-      why,
+      gesture,
       picture,
+    ];
+    if (stage.id === '6.1') head.push(h('div', { class: 'book-next', id: 'chapter-next-row' }, status, nextBtn));
+    path.append(h('li', {
+      class: 'section-node', id: scope, 'data-section': stage.id, 'data-state': 'ahead',
+    },
+      ...head,
       read,
       h('p', { class: 'book-label', id: `${scope}-worked-label` }, 'Worked example'),
       sourceTag({ pin: stage.workedPin, href: stage.workedHref }),
@@ -261,31 +295,13 @@ export function mount(section, ctx) {
       h('div', { class: 'problem-actions' }, tick)));
   }
 
-  for (const stage of LATER) {
-    const scope = `chapter-section-${slug(stage.id)}`;
-    const why = h('p', { class: 'section-idea', id: `${scope}-why` });
-    appendRich(why, stage.why);
-    const read = h('ul', { class: 'book-read', id: `${scope}-read` });
-    stage.read.forEach((item, i) => {
-      read.append(h('li', null, h('a', {
-        href: item.href, target: '_blank', rel: 'noopener noreferrer', id: `${scope}-read-${i + 1}`,
-      }, item.pin)));
-    });
-    const meta = CHAPTER_6.sections.find((s) => s.id === stage.id);
-    path.append(h('li', {
-      class: 'section-node', id: scope, 'data-section': stage.id, 'data-state': 'later',
-    },
-      h('p', { class: 'book-flag' }, 'Later'),
-      h('h2', null, `${stage.id} ${meta.title}`),
-      h('p', { class: 'book-page' }, `Page ${meta.page}`),
-      why,
-      read));
-  }
-
   function paintAll() {
     const real = section.querySelector('#ch6-real-stage');
     const sum = section.querySelector('#ch6-sum-stage');
     const deform = section.querySelector('#ch6-deform-stage');
+    const bend = section.querySelector('#ch6-bend-stage');
+    const cauchy = section.querySelector('#ch6-cauchy-stage');
+    const liouville = section.querySelector('#ch6-liouville-stage');
     const phase = real && real.dataset.phase;
     fillGap(blanks.half, phase === 'half' ? '$2i$' : '');
     fillGap(blanks.full, phase === 'full' ? '$0$' : '');
@@ -293,9 +309,16 @@ export function mount(section, ctx) {
     fillGap(blanks.exact, steps === 8 ? '$\\exp(2+i\\pi/4)-1$' : '');
     const where = deform && deform.dataset.where;
     fillGap(blanks.pole, where === 'inside' ? '$2\\pi i$' : (where === 'outside' ? '$0$' : ''));
+    fillGap(blanks.bend, bend && bend.dataset.bent === 'true' ? '$4+2i$' : '');
+    const spot = cauchy && cauchy.dataset.where;
+    fillGap(blanks.cauchy, spot === 'inside' ? 'the green point' : (spot === 'outside' ? '$0$' : ''));
+    fillGap(blanks.liouville, liouville && liouville.dataset.collapsed === 'true' ? '$0$' : '');
     setTick(ticksBtn['6.1'], ticks['6.1'] === true, phase === 'full');
     setTick(ticksBtn['6.2'], ticks['6.2'] === true, steps === 8);
     setTick(ticksBtn['6.3'], ticks['6.3'] === true, where === 'inside');
+    setTick(ticksBtn['6.4'], ticks['6.4'] === true, bend && bend.dataset.bent === 'true');
+    setTick(ticksBtn['6.5'], ticks['6.5'] === true, spot === 'inside');
+    setTick(ticksBtn['6.6'], ticks['6.6'] === true, liouville && liouville.dataset.collapsed === 'true');
     paintStatus();
   }
 
@@ -303,7 +326,7 @@ export function mount(section, ctx) {
     const node = section.querySelector(selector);
     if (!node) return;
     const observer = new MutationObserver(paintAll);
-    observer.observe(node, { attributes: true, attributeFilter: ['data-phase', 'data-steps', 'data-where', 'data-holds'] });
+    observer.observe(node, { attributes: true, attributeFilter: ['data-phase', 'data-steps', 'data-where', 'data-holds', 'data-bent', 'data-collapsed'] });
     stops.push(() => observer.disconnect());
   }
 
@@ -311,16 +334,17 @@ export function mount(section, ctx) {
     h('header', { class: 'station-header' },
       h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back' }, 'The Book')),
       h('h1', { id: 'chapter-title' }, 'Chapter 6. Complex Integration'),
-      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Six stages. The integral starts on a real interval, moves onto a contour, and then the contour can move.'),
-      h('p', { class: 'section-idea', id: 'chapter-colours' }, 'Blue is the axes. Orange marks the path or the pole. Green is the point you drag. Purple is the integral.'),
-      sourceTag({ pin: CHAPTER_6.pin, href: CHAPTER_6.href })),
-    h('div', { class: 'book-next', id: 'chapter-next-row' }, status, nextBtn),
+      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Six stages, from a real interval to a contour you can move.')),
     path,
+    sourceTag({ pin: CHAPTER_6.pin, href: CHAPTER_6.href }),
     h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
 
   watch('#ch6-real-stage');
   watch('#ch6-sum-stage');
   watch('#ch6-deform-stage');
+  watch('#ch6-bend-stage');
+  watch('#ch6-cauchy-stage');
+  watch('#ch6-liouville-stage');
   paintAll();
 
   const focus = ctx.book && ctx.book.focus;

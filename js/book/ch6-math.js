@@ -187,10 +187,17 @@ export function claim62(k) {
 export const DEFORM_RADIUS = 1;
 export const DEFORM_OUT = 1.55;
 
+// The deformation plane is span 5.6 on a 480 viewBox. One pixel of that plane.
+export const DEFORM_EDGE = 5.6 / 480;
+
+export function deformEdgeU() {
+  return 1 - DEFORM_RADIUS / DEFORM_OUT;
+}
+
 export function deformState(cx) {
   const x = Number(cx);
   const d = Math.abs(x);
-  if (Math.abs(d - DEFORM_RADIUS) <= 0.06) return 'edge';
+  if (Math.abs(d - DEFORM_RADIUS) <= DEFORM_EDGE) return 'edge';
   return d < DEFORM_RADIUS ? 'inside' : 'outside';
 }
 
@@ -205,6 +212,73 @@ export function claim63(cx) {
     return { holds: false, where, text: 'The pole of $1/z$ is on the green circle. The integral over that circle is not defined.' };
   }
   return { holds: false, where, text: 'The green circle has dropped the pole of $1/z$. Its integral is $0$. The purple circle still encloses the pole, so its integral is $2\\pi i$.' };
+}
+
+// Theorem 6.9. Ends fixed, integrand z, so every path gives the same value.
+export const BEND_A = Object.freeze({ re: -1, im: -1 });
+export const BEND_B = Object.freeze({ re: 3, im: 1 });
+export const BEND_EDGE = 6.5 / 480;
+
+export function bendValue() {
+  return { re: 4, im: 2, tex: '4+2i' };
+}
+
+export function distToSegment(p, a, b) {
+  const dx = b.re - a.re;
+  const dy = b.im - a.im;
+  const len2 = dx * dx + dy * dy;
+  let t = ((p.re - a.re) * dx + (p.im - a.im) * dy) / len2;
+  if (t < 0) t = 0;
+  if (t > 1) t = 1;
+  return Math.hypot(p.re - (a.re + t * dx), p.im - (a.im + t * dy));
+}
+
+export function bendStraight(p) {
+  return distToSegment(p, BEND_A, BEND_B) <= BEND_EDGE;
+}
+
+export function claim64(p) {
+  if (bendStraight(p)) {
+    return { holds: false, bent: false, text: 'The path is the straight segment. Bend the green point.' };
+  }
+  return { holds: true, bent: true, text: 'The path has bent. The integral of $z$ is still $4+2i$.' };
+}
+
+// Theorem 6.10 for f(z)=z on the unit circle. Inside, the formula returns z0.
+export const CAUCHY_EDGE = 3.4 / 480;
+
+export function cauchyWhere(z) {
+  const d = Math.hypot(z.re, z.im);
+  if (Math.abs(d - 1) <= CAUCHY_EDGE) return 'edge';
+  return d < 1 ? 'inside' : 'outside';
+}
+
+export function claim65(z) {
+  const where = cauchyWhere(z);
+  if (where === 'inside') {
+    return { holds: true, where, text: 'Inside, $\\dfrac{1}{2\\pi i}\\int \\dfrac{z}{z-z_0}\\,dz$ is the green point.' };
+  }
+  if (where === 'edge') {
+    return { holds: false, where, text: 'The green point is on the circle. The formula stops.' };
+  }
+  return { holds: false, where, text: 'Outside, that integral is $0$.' };
+}
+
+// Liouville via Cauchy's estimate |f'| ≤ M/R with M = 1.
+export const LIOUVILLE_M = 1;
+export const LIOUVILLE_COLLAPSE = 3;
+
+export function liouvilleEstimate(radius) {
+  const R = Math.max(0.4, Number(radius) || 0);
+  return LIOUVILLE_M / R;
+}
+
+export function claim66(radius) {
+  const R = Math.max(0.4, Number(radius) || 0);
+  if (R >= LIOUVILLE_COLLAPSE) {
+    return { holds: true, collapsed: true, radius: R, text: 'The estimate has collapsed. A bound on every circle forces the derivative to $0$.' };
+  }
+  return { holds: false, collapsed: false, radius: R, text: 'On this circle the estimate of the derivative has not collapsed.' };
 }
 
 export function onSegment(pole, start, end) {
@@ -286,8 +360,9 @@ export function circleIntegral(center, radius, pole, n) {
   return { re: 0, im: 0, tex: '0', inside };
 }
 
-export function generateCircle(params, seed) {
+export function generateCircle(seed, params) {
   const rng = mulberry32(seed);
+  params = params || {};
   const nR = params.n || [-4, 4];
   const rR = params.r || [1, 3];
   const aR = params.a || [-2, 2];
@@ -361,8 +436,9 @@ function cleanLog(start, end, pole) {
   return null;
 }
 
-export function generateSegment(params, seed) {
+export function generateSegment(seed, params) {
   const rng = mulberry32(seed);
+  params = params || {};
   const nR = params.n || [-3, 3];
   const box = params.box || [-2, 2];
   for (let guard = 0; guard < 50; guard++) {

@@ -3,7 +3,10 @@
     "id": "ch6-6.1-def-flash",
     "chapter": 6,
     "section": "6.1",
-    "cite": { "ref": "Definition 6.1", "page": 163 },
+    "cite": {
+      "ref": "Definition 6.1",
+      "page": 163
+    },
     "kind": "flash",
     "prompt": "Definition 6.1. What is \\(\\int_a^b (u(t)+iv(t))\\,dt\\)?",
     "steps": [
@@ -20,24 +23,30 @@
     "id": "ch6-6.1-full-flash",
     "chapter": 6,
     "section": "6.1",
-    "cite": { "ref": "Definition 6.1", "page": 163 },
+    "cite": {
+      "ref": "Definition 6.1",
+      "page": 163
+    },
     "kind": "flash",
-    "prompt": "What is \\(\\int_0^{2\\pi} e^{it}\\,dt\\)?",
+    "prompt": "A half period of \\(e^{it}\\) starts at \\(\\alpha\\), not at \\(0\\). What is the integral?",
     "steps": [
       {
         "text": "",
-        "answer": "\\(0\\). A full turn of \\(e^{it}\\) returns the integral to the origin.",
-        "why": "\\(\\int_0^{2\\pi}\\cos t\\,dt = 0\\) and \\(\\int_0^{2\\pi}\\sin t\\,dt = 0\\)."
+        "answer": "\\(2ie^{i\\alpha}\\). It equals \\(2i\\) only when \\(\\alpha\\) is a multiple of \\(2\\pi\\).",
+        "why": "The picture half turn starts at 0, so that one is \\(2i\\). A half period that starts at \\(\\alpha\\) is rotated by \\(e^{i\\alpha}\\)."
       }
     ],
     "generator": null,
-    "memory": "From \\(0\\) to \\(2\\pi\\) the integral is \\(0\\). From \\(0\\) to \\(\\pi\\) it is \\(2i\\). A half period that starts somewhere else need not be \\(2i\\)."
+    "memory": "Any full period of \\(e^{it}\\) is \\(0\\). A half period is \\(2ie^{i\\alpha}\\)."
   },
   {
     "id": "ch6-6.2-thm-flash",
     "chapter": 6,
     "section": "6.2",
-    "cite": { "ref": "Theorem 6.1", "page": 172 },
+    "cite": {
+      "ref": "Theorem 6.1",
+      "page": 172
+    },
     "kind": "flash",
     "prompt": "Theorem 6.1. You have a parametrization \\(z(t)\\). What is \\(\\int_C f(z)\\,dz\\)?",
     "steps": [
@@ -54,7 +63,10 @@
     "id": "ch6-6.2-exp-mc",
     "chapter": 6,
     "section": "6.2",
-    "cite": { "ref": "Example 6.7", "page": 172 },
+    "cite": {
+      "ref": "Example 6.7",
+      "page": 172
+    },
     "kind": "next-step-mc",
     "prompt": "Evaluate \\(\\int_C e^{z}\\,dz\\), where \\(C\\) is the segment from \\(0\\) to \\(2+i\\pi/4\\). What is the parametrization?",
     "steps": [
@@ -78,20 +90,31 @@
     "id": "ch6-6.2-exp-blank",
     "chapter": 6,
     "section": "6.2",
-    "cite": { "ref": "Example 6.7", "page": 172 },
+    "cite": {
+      "ref": "Example 6.7",
+      "page": 172
+    },
     "kind": "next-step-blank",
     "prompt": "Continue Example 6.7. \\(z(t)=(2+i\\pi/4)t\\).",
     "steps": [
       {
         "text": "Then \\(z'(t)=\\) ___ .",
         "answer": "2+i\\pi/4",
-        "accept": ["2+i\\pi/4", "2+\\frac{i\\pi}{4}", "2+i*pi/4"],
+        "accept": [
+          "2+i\\pi/4",
+          "2+\\frac{i\\pi}{4}",
+          "2+i*pi/4"
+        ],
         "why": "\\(z(t)\\) is linear, so the derivative is the constant \\(2+i\\pi/4\\)."
       },
       {
         "text": "The integral equals ___ .",
         "answer": "\\exp(2+i\\pi/4)-1",
-        "accept": ["e^{2+i\\pi/4}-1", "\\exp(2+i\\pi/4)-1", "exp(2+i*pi/4)-1"],
+        "accept": [
+          "e^{2+i\\pi/4}-1",
+          "\\exp(2+i\\pi/4)-1",
+          "exp(2+i*pi/4)-1"
+        ],
         "why": "\\(\\int_0^1 e^{Bt} B\\,dt = e^{B}-1\\)."
       }
     ],
@@ -102,7 +125,10 @@
     "id": "ch6-6.2-semi-mc",
     "chapter": 6,
     "section": "6.2",
-    "cite": { "ref": "§6.2, Exercise 3", "page": 178 },
+    "cite": {
+      "ref": "§6.2, Exercise 3",
+      "page": 178
+    },
     "kind": "next-step-mc",
     "prompt": "\\(C\\) is the upper unit semicircle from \\(1\\) to \\(-1\\), and the integrand is \\(z^{2}\\). Which parametrization matches the book's positive direction?",
     "steps": [
@@ -125,20 +151,30 @@
     "id": "ch6-6.2-semi-blank",
     "chapter": 6,
     "section": "6.2",
-    "cite": { "ref": "§6.2, Exercise 3", "page": 178 },
+    "cite": {
+      "ref": "§6.2, Exercise 3",
+      "page": 178
+    },
     "kind": "next-step-blank",
     "prompt": "Continue the semicircle. \\(z(t)=e^{it}\\), \\(dz=ie^{it}\\,dt\\), and \\(f(z)=z^{2}\\).",
     "steps": [
       {
         "text": "The product \\(f(z(t))z'(t)\\) is ___ .",
         "answer": "ie^{3it}",
-        "accept": ["i e^{3it}", "ie^{3it}", "i\\exp(3it)"],
+        "accept": [
+          "i e^{3it}",
+          "ie^{3it}",
+          "i\\exp(3it)"
+        ],
         "why": "\\(z^{2}=e^{2it}\\) and \\(z'=ie^{it}\\), so the product is \\(ie^{3it}\\)."
       },
       {
         "text": "The integral equals ___ .",
         "answer": "-2/3",
-        "accept": ["-2/3", "-\\frac{2}{3}"],
+        "accept": [
+          "-2/3",
+          "-\\frac{2}{3}"
+        ],
         "why": "\\(\\int_0^{\\pi} ie^{3it}\\,dt = (e^{3i\\pi}-1)/3 = -2/3\\)."
       }
     ],
@@ -149,7 +185,10 @@
     "id": "ch6-6.2-segment-gen",
     "chapter": 6,
     "section": "6.2",
-    "cite": { "ref": "Theorem 6.1", "page": 172 },
+    "cite": {
+      "ref": "Theorem 6.1",
+      "page": 172
+    },
     "kind": "blank",
     "prompt": "A segment.",
     "steps": [
@@ -162,7 +201,16 @@
     ],
     "generator": {
       "template": "ch6-segment",
-      "params": { "n": [-3, 3], "box": [-2, 2] }
+      "params": {
+        "n": [
+          -3,
+          3
+        ],
+        "box": [
+          -2,
+          2
+        ]
+      }
     },
     "memory": "Compute \\((z-a)^{n+1}/(n+1)\\) at the two ends when \\(n\\ne -1\\). For \\(n=-1\\), take the change in argument along the segment."
   },
@@ -170,26 +218,40 @@
     "id": "ch6-6.3-cg-blank",
     "chapter": 6,
     "section": "6.3",
-    "cite": { "ref": "Theorem 6.5", "page": 184 },
+    "cite": {
+      "ref": "Theorem 6.5",
+      "page": 184
+    },
     "kind": "proof-blank",
     "prompt": "Cauchy's proof of Theorem 6.5, as the book gives it on page 184. Assume \\(f'\\) is continuous and \\(C\\) is positively oriented.",
     "steps": [
       {
         "text": "The book writes \\(\\int_C f(z)\\,dz = \\int_C (u\\,dx - v\\,dy) + i\\int_C\\) ___ .",
         "answer": "v dx + u dy",
-        "accept": ["v\\,dx+u\\,dy", "v dx + u dy", "(v dx + u dy)"],
+        "accept": [
+          "v\\,dx+u\\,dy",
+          "v dx + u dy",
+          "(v dx + u dy)"
+        ],
         "why": "Equation (6.28) splits the integral into those two real line integrals."
       },
       {
         "text": "Green's theorem turns the real part into \\(\\iint (-v_x - u_y)\\,dx\\,dy\\). The imaginary part becomes \\(\\iint\\) ___ \\(dx\\,dy\\).",
         "answer": "u_x - v_y",
-        "accept": ["u_x-v_y", "u_x - v_y", "ux-vy"],
+        "accept": [
+          "u_x-v_y",
+          "u_x - v_y",
+          "ux-vy"
+        ],
         "why": "Green's theorem with \\(P=v\\) and \\(Q=u\\) produces \\(u_x-v_y\\)."
       },
       {
         "text": "Cauchy-Riemann says \\(u_x=v_y\\) and \\(u_y=-v_x\\), so the integral equals ___ .",
         "answer": "0",
-        "accept": ["0", "0+0i"],
+        "accept": [
+          "0",
+          "0+0i"
+        ],
         "why": "Both double integrals are integrals of \\(0\\)."
       }
     ],
@@ -200,7 +262,10 @@
     "id": "ch6-6.3-cg-mc",
     "chapter": 6,
     "section": "6.3",
-    "cite": { "ref": "Theorem 6.5", "page": 184 },
+    "cite": {
+      "ref": "Theorem 6.5",
+      "page": 184
+    },
     "kind": "proof-mc",
     "prompt": "The same proof. Pick the step the book actually uses.",
     "steps": [
@@ -231,27 +296,13 @@
     "memory": "Reach for Theorem 6.5 when \\(f\\) is analytic inside and on a simple closed contour. The integral is \\(0\\)."
   },
   {
-    "id": "ch6-6.3-which-flash",
-    "chapter": 6,
-    "section": "6.3",
-    "cite": { "ref": "Theorem 6.5", "page": 183 },
-    "kind": "flash",
-    "prompt": "Which theorem do I reach for?",
-    "steps": [
-      {
-        "text": "",
-        "answer": "Analytic inside and on a simple closed curve: Theorem 6.5, the integral is 0. The same singularity inside two closed curves, analytic between them: Theorem 6.6, the integrals match. Only a parametrization: Theorem 6.1, multiply by z'. 1/(z-z0) with z0 inside: Corollary 6.1, 2πi, and every other integer power is 0.",
-        "why": "Page 183, page 187, page 172, and page 188 are the four doors."
-      }
-    ],
-    "generator": null,
-    "memory": "Closed and analytic: 0. Deform around a hole: same value. No theorem yet: parametrize. Pole of order 1 inside: \\(2\\pi i\\)."
-  },
-  {
     "id": "ch6-6.3-which-mc",
     "chapter": 6,
     "section": "6.3",
-    "cite": { "ref": "Theorem 6.6", "page": 187 },
+    "cite": {
+      "ref": "Theorem 6.6",
+      "page": 187
+    },
     "kind": "mc",
     "prompt": "The pole sits inside both closed contours, and \\(f\\) is analytic between them. The two integrals are equal. Which result is that?",
     "steps": [
@@ -274,7 +325,10 @@
     "id": "ch6-6.3-cor-flash",
     "chapter": 6,
     "section": "6.3",
-    "cite": { "ref": "Corollary 6.1", "page": 188 },
+    "cite": {
+      "ref": "Corollary 6.1",
+      "page": 188
+    },
     "kind": "flash",
     "prompt": "\\(C\\) is a simple closed contour, positively oriented, and \\(z_0\\) is inside \\(C\\). What are \\(\\int_C dz/(z-z_0)\\) and \\(\\int_C dz/(z-z_0)^n\\) for an integer \\(n\\ne 1\\)?",
     "steps": [
@@ -291,7 +345,10 @@
     "id": "ch6-6.3-circle-gen",
     "chapter": 6,
     "section": "6.3",
-    "cite": { "ref": "Corollary 6.1", "page": 188 },
+    "cite": {
+      "ref": "Corollary 6.1",
+      "page": 188
+    },
     "kind": "blank",
     "prompt": "A circle.",
     "steps": [
@@ -304,8 +361,301 @@
     ],
     "generator": {
       "template": "ch6-circle",
-      "params": { "n": [-4, 4], "r": [1, 3], "a": [-2, 2], "c": [-1, 1] }
+      "params": {
+        "n": [
+          -4,
+          4
+        ],
+        "r": [
+          1,
+          3
+        ],
+        "a": [
+          -2,
+          2
+        ],
+        "c": [
+          -1,
+          1
+        ]
+      }
     },
     "memory": "Look first: is the pole inside, and is the power exactly \\(-1\\)? That is the only case that is not \\(0\\)."
+  },
+  {
+    "id": "ch6-6.1-ex1",
+    "chapter": 6,
+    "section": "6.1",
+    "cite": {
+      "ref": "Example 6.1",
+      "page": 163
+    },
+    "kind": "next-step-blank",
+    "prompt": "Example 6.1. Evaluate \\(\\int_0^1 (t-i)^3\\,dt\\) by splitting the real and imaginary parts.",
+    "steps": [
+      {
+        "text": "The value is ___ .",
+        "answer": "-5/4",
+        "accept": [
+          "-5/4",
+          "-\\frac{5}{4}",
+          "-1.25"
+        ],
+        "why": "\\((t-i)^3=(t^3-3t)+i(1-3t^2)\\). From 0 to 1 the real integral is \\(-5/4\\) and the imaginary integral is 0."
+      }
+    ],
+    "generator": null,
+    "memory": "Split \\(u+iv\\), integrate each part, and add them with \\(i\\) on the second."
+  },
+  {
+    "id": "ch6-6.2-ml-flash",
+    "chapter": 6,
+    "section": "6.2",
+    "cite": {
+      "ref": "Theorem 6.3",
+      "page": 177
+    },
+    "kind": "flash",
+    "prompt": "Theorem 6.3, the ML inequality. If \\(|f|\\le M\\) on \\(C\\) and \\(L\\) is the length of \\(C\\), what bounds the integral?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "\\(|\\int_C f(z)\\,dz|\\le ML\\).",
+        "why": "Theorem 6.3, page 177. The bound is the length times a bound on the modulus."
+      }
+    ],
+    "generator": null,
+    "memory": "Length times a bound: \\(|\\int_C f\\,dz|\\le ML\\)."
+  },
+  {
+    "id": "ch6-6.3-ex14",
+    "chapter": 6,
+    "section": "6.3",
+    "cite": {
+      "ref": "Example 6.14",
+      "page": 189
+    },
+    "kind": "next-step-mc",
+    "prompt": "Example 6.14. \\(\\int_{|z|=2} 2z/(z^2+2)\\,dz\\). Partial fractions split the integrand into \\(1/(z+i\\sqrt{2})\\) and \\(1/(z-i\\sqrt{2})\\).",
+    "steps": [
+      {
+        "text": "Both poles lie inside \\(|z|=2\\), so the integral equals ___ .",
+        "answer": "\\(4\\pi i\\)",
+        "choices": [
+          "\\(4\\pi i\\)",
+          "\\(2\\pi i\\)",
+          "\\(0\\)",
+          "\\(-2\\pi i\\)"
+        ],
+        "why": "Corollary 6.1 gives \\(2\\pi i\\) for each pole. The sum is \\(4\\pi i\\)."
+      }
+    ],
+    "generator": null,
+    "memory": "Each interior simple pole of \\(1/(z-z_0)\\) contributes \\(2\\pi i\\)."
+  },
+  {
+    "id": "ch6-6.3-ex15",
+    "chapter": 6,
+    "section": "6.3",
+    "cite": {
+      "ref": "Example 6.15",
+      "page": 190
+    },
+    "kind": "next-step-mc",
+    "prompt": "Example 6.15. The same integrand on \\(|z-i|=1\\). Which pole is inside that circle?",
+    "steps": [
+      {
+        "text": "The inside pole is ___ , so the integral is \\(2\\pi i\\).",
+        "answer": "\\(i\\sqrt{2}\\)",
+        "choices": [
+          "\\(i\\sqrt{2}\\)",
+          "\\(-i\\sqrt{2}\\)",
+          "both \\(\\pm i\\sqrt{2}\\)",
+          "neither pole"
+        ],
+        "why": "\\(i\\sqrt{2}\\) is inside \\(|z-i|=1\\). \\(-i\\sqrt{2}\\) is outside, so that term is \\(0\\) by Theorem 6.5."
+      }
+    ],
+    "generator": null,
+    "memory": "A pole outside a simple closed curve contributes \\(0\\)."
+  },
+  {
+    "id": "ch6-6.3-ex16",
+    "chapter": 6,
+    "section": "6.3",
+    "cite": {
+      "ref": "Example 6.16",
+      "page": 190
+    },
+    "kind": "next-step-blank",
+    "prompt": "Example 6.16. On the figure-eight contour, \\((z-2)/(z^2-z)=2/z-1/(z-1)\\).",
+    "steps": [
+      {
+        "text": "The integral equals ___ .",
+        "answer": "-6\\pi i",
+        "accept": [
+          "-6\\pi i",
+          "-6\\pi{}i"
+        ],
+        "why": "The \\(2/z\\) term contributes \\(-4\\pi i\\) and the \\(1/(z-1)\\) term contributes \\(-2\\pi i\\)."
+      }
+    ],
+    "generator": null,
+    "memory": "On a figure eight, track the orientation of each loop before you quote \\(2\\pi i\\)."
+  },
+  {
+    "id": "ch6-6.4-ftc-flash",
+    "chapter": 6,
+    "section": "6.4",
+    "cite": {
+      "ref": "Theorem 6.9",
+      "page": 194
+    },
+    "kind": "flash",
+    "prompt": "Theorem 6.9. \\(f\\) is analytic in a simply connected domain, and \\(F'=f\\). What is the integral from \\(z_0\\) to \\(z_1\\)?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "\\(F(z_1)-F(z_0)\\). The path does not matter.",
+        "why": "Theorem 6.9, page 194."
+      }
+    ],
+    "generator": null,
+    "memory": "Analytic on a simply connected domain: evaluate the antiderivative at the ends."
+  },
+  {
+    "id": "ch6-6.4-ends",
+    "chapter": 6,
+    "section": "6.4",
+    "cite": {
+      "ref": "Theorem 6.9",
+      "page": 194
+    },
+    "kind": "next-step-blank",
+    "prompt": "\\(C\\) joins \\(-1-i\\) to \\(3+i\\), and the integrand is \\(z\\). An antiderivative is \\(z^2/2\\).",
+    "steps": [
+      {
+        "text": "The integral equals ___ .",
+        "answer": "4+2i",
+        "accept": [
+          "4+2i",
+          "4+2\\,i"
+        ],
+        "why": "\\(((3+i)^2-(-1-i)^2)/2=(8+6i-2i)/2=4+2i\\)."
+      }
+    ],
+    "generator": null,
+    "memory": "For \\(z\\), the antiderivative is \\(z^2/2\\)."
+  },
+  {
+    "id": "ch6-6.5-cif-flash",
+    "chapter": 6,
+    "section": "6.5",
+    "cite": {
+      "ref": "Theorem 6.10",
+      "page": 197
+    },
+    "kind": "flash",
+    "prompt": "Theorem 6.10. Write \\(f(z_0)\\) as a contour integral.",
+    "steps": [
+      {
+        "text": "",
+        "answer": "\\(f(z_0)=\\dfrac{1}{2\\pi i}\\int_C \\dfrac{f(z)}{z-z_0}\\,dz\\), with \\(z_0\\) inside the positively oriented simple closed curve \\(C\\).",
+        "why": "Cauchy's integral formula, page 197."
+      }
+    ],
+    "generator": null,
+    "memory": "The value inside is \\(1/(2\\pi i)\\) times the integral of \\(f(z)/(z-z_0)\\)."
+  },
+  {
+    "id": "ch6-6.5-ex21",
+    "chapter": 6,
+    "section": "6.5",
+    "cite": {
+      "ref": "Example 6.21",
+      "page": 198
+    },
+    "kind": "next-step-blank",
+    "prompt": "Example 6.21. \\(C\\) is \\(|z|=2\\), positively oriented, and \\(1\\) is inside \\(C\\).",
+    "steps": [
+      {
+        "text": "\\(\\int_C e^{z}/(z-1)\\,dz\\) equals ___ .",
+        "answer": "2\\pi i e",
+        "accept": [
+          "2\\pi i e",
+          "2\\pi i\\,e",
+          "2\\pi i \\exp(1)"
+        ],
+        "why": "Theorem 6.10 with \\(f(z)=e^{z}\\) and \\(z_0=1\\) gives \\(2\\pi i\\, e\\)."
+      }
+    ],
+    "generator": null,
+    "memory": "\\(e^{z}\\) at \\(1\\) is \\(e\\), then multiply by \\(2\\pi i\\)."
+  },
+  {
+    "id": "ch6-6.6-morera-flash",
+    "chapter": 6,
+    "section": "6.6",
+    "cite": {
+      "ref": "Theorem 6.13",
+      "page": 203
+    },
+    "kind": "flash",
+    "prompt": "Morera's theorem. \\(f\\) is continuous, and the integral of \\(f\\) over every closed triangle in the domain is \\(0\\). What follows?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "\\(f\\) is analytic.",
+        "why": "Theorem 6.13, page 203, is the converse of Cauchy-Goursat."
+      }
+    ],
+    "generator": null,
+    "memory": "Integrals of triangles vanish, and \\(f\\) is continuous: \\(f\\) is analytic."
+  },
+  {
+    "id": "ch6-6.6-liouville-flash",
+    "chapter": 6,
+    "section": "6.6",
+    "cite": {
+      "ref": "Theorem 6.18",
+      "page": 206
+    },
+    "kind": "flash",
+    "prompt": "Liouville's theorem. \\(f\\) is entire and \\(|f|\\) is bounded on the whole plane. What is \\(f\\)?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "A constant.",
+        "why": "Theorem 6.18, page 206. Cauchy's estimate \\(|f'|\\le M/R\\) goes to \\(0\\) as \\(R\\) grows."
+      }
+    ],
+    "generator": null,
+    "memory": "Bounded and entire means constant."
+  },
+  {
+    "id": "ch6-6.6-which",
+    "chapter": 6,
+    "section": "6.6",
+    "cite": {
+      "ref": "Theorem 6.18",
+      "page": 206
+    },
+    "kind": "mc",
+    "prompt": "\\(e^{z}\\) is entire. Does Liouville say it is constant?",
+    "steps": [
+      {
+        "text": "Reach for ___ .",
+        "answer": "No. \\(e^{z}\\) is unbounded",
+        "choices": [
+          "No. \\(e^{z}\\) is unbounded",
+          "Yes. Every entire function is constant",
+          "Yes. \\(|e^{z}|=1\\) everywhere",
+          "No. Liouville needs a pole"
+        ],
+        "why": "\\(|e^{z}|=e^{x}\\) grows with \\(x\\). Liouville needs a bound on the whole plane."
+      }
+    ],
+    "generator": null,
+    "memory": "Entire is not enough. The function also has to be bounded."
   }
 ]

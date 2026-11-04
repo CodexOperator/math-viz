@@ -1,6 +1,8 @@
-// Deterministic segment integrals. The practice engine imports generate(params, seed).
+// Deterministic segment integrals. The practice engine calls generate(seed, params).
 import { generateSegment } from '../../book/ch6-math.js';
 
-export function generate(params, seed) {
-  return generateSegment(params || {}, seed);
+export const id = 'ch6-segment';
+
+export function generate(seed, params) {
+  return generateSegment(seed, params || {});
 }

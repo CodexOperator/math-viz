@@ -112,7 +112,7 @@ function prepared(item, seed) {
   if (!item.generator) return { prompt: item.prompt, steps: item.steps, seed };
   const gen = GENS[item.generator.template];
   if (!gen) return { prompt: item.prompt, steps: item.steps, seed };
-  const made = gen(item.generator.params || {}, seed);
+  const made = gen(seed, item.generator.params || {});
   return {
     prompt: made.prompt || item.prompt,
     steps: made.steps || item.steps,

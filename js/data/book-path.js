@@ -270,9 +270,9 @@ export const CHAPTER_6 = deepFreeze({
     { id: '6.1', title: 'Complex Integrals', page: 163, exercises: ['6.1'] },
     { id: '6.2', title: 'Contours and Contour Integrals', page: 167, exercises: ['6.2'] },
     { id: '6.3', title: 'The Cauchy-Goursat Theorem', page: 181, exercises: ['6.3'] },
-    { id: '6.4', title: 'The Fundamental Theorems of Integration', page: 193, exercises: [] },
-    { id: '6.5', title: 'Cauchy Integral Formulas', page: 197, exercises: [] },
-    { id: '6.6', title: 'The Theorems of Morera and Liouville', page: 203, exercises: [] },
+    { id: '6.4', title: 'The Fundamental Theorems of Integration', page: 193, exercises: ['6.4'] },
+    { id: '6.5', title: 'Cauchy Integral Formulas', page: 197, exercises: ['6.5'] },
+    { id: '6.6', title: 'The Theorems of Morera and Liouville', page: 203, exercises: ['6.6'] },
   ],
 });
 

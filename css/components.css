@@ -1239,8 +1239,13 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .ch6-sheet { padding-left: 1.2rem; }
 .ch6-sheet li { margin: 0.15rem 0; }
 
+.chapter-path.ch6-path { padding-bottom: var(--header-h); }
+
+.ch6-gesture { max-width: 62ch; margin: 0; }
+
 .ch6-stage {
-  width: min(100%, 16rem);
+  /* Wider than 16rem, and short enough that Play stays on the first screen. */
+  width: min(100%, calc(100dvh - 30rem));
   max-width: 100%;
   aspect-ratio: 1;
   touch-action: none;

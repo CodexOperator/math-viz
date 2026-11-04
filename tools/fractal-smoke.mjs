@@ -6,7 +6,8 @@ import { stationsForMap, stationForTopic, stationForProblem, stationById, thread
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
 import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, CHAPTER_6, OPEN_CHAPTERS, chapter4ExerciseIds, chapter5ExerciseIds, chapter6StageIds } from '../js/data/book-path.js';
-import { realIntegral, turnPhase, riemannPartial, exactSegmentExp, fixed2, example69, upperSemicircleZ2, generateCircle, generateSegment, quadSegment, circleIntegral, claim63 } from '../js/book/ch6-math.js';
+import { realIntegral, turnPhase, riemannPartial, exactSegmentExp, fixed2, example69, upperSemicircleZ2, generateCircle, generateSegment, quadSegment, circleIntegral, claim63, claim64, claim65, claim66, bendValue } from '../js/book/ch6-math.js';
+import { generate as circleGenerate } from '../js/practice/gen/ch6-circle.js';
 import { chapterTally, sectionFinished, foldLegacyExercises, saveSharedTicks, toggleTick } from '../js/book/progress.js';
 import { EXP_DURATION, expFrame, finishedStops } from '../js/core/live-film.js';
 import { compile } from '../js/core/parse.js';
@@ -219,17 +220,22 @@ check('a junk token on chapter 7 is still not a page', parseRoute('#chapter-7-ex
   check('Example 6.6 eight steps round to 4.23 + 5.20i', fixed2(sum.re) === '4.23' && fixed2(sum.im) === '5.20' && Math.abs(exact.re - 4.224851674) < 1e-8 && Math.abs(exact.im - 5.224851674) < 1e-8);
   check('Example 6.9 on the segment is 4+2i', ends && ends.tex === '4+2i');
   check('Exercise 6.2.3 on the semicircle is -2/3', Math.abs(arc.re + 2 / 3) < 1e-4 && Math.abs(arc.im) < 1e-4);
-  check('the pole inside both circles holds', claim63(0).holds === true && claim63(1.55).holds === false && claim63(1).where === 'edge');
-  check('chapter 6 stages are 6.1 through 6.3', chapter6StageIds().join() === '6.1,6.2,6.3' && CHAPTER_6.sections.map((s) => s.page).join() === '163,167,181,193,197,203');
+  check('the pole inside both circles holds', claim63(0).holds === true && claim63(1.55).holds === false && claim63(1).where === 'edge' && claim63(0.98).where === 'inside' && claim63(1.02).where === 'outside');
+  check('a bent path keeps the integral of z', bendValue().tex === '4+2i' && claim64({ re: 1, im: 0 }).bent === false && claim64({ re: 1, im: 1.6 }).holds === true);
+  check('Cauchy formula returns the inside point', claim65({ re: 0.4, im: 0 }).holds === true && claim65({ re: 1, im: 0 }).where === 'edge' && claim65({ re: 1.4, im: 0 }).where === 'outside');
+  check('Liouville estimate collapses only on a large circle', claim66(1).holds === false && claim66(3).holds === true);
+  const seeded = circleGenerate(3, { n: [-4, 4], r: [1, 3], a: [-2, 2], c: [-1, 1] });
+  check('the circle generator takes the seed first', seeded && seeded.prompt && circleGenerate(3, { n: [-4, 4], r: [1, 3], a: [-2, 2], c: [-1, 1] }).prompt === seeded.prompt);
+  check('chapter 6 stages are 6.1 through 6.6', chapter6StageIds().join() === '6.1,6.2,6.3,6.4,6.5,6.6' && CHAPTER_6.sections.map((s) => s.page).join() === '163,167,181,193,197,203');
   let circleOk = true;
   let segmentOk = true;
   for (let seed = 1; seed <= 24; seed++) {
-    const circle = generateCircle({ n: [-4, 4], r: [1, 3], a: [-2, 2], c: [-1, 1] }, seed);
+    const circle = generateCircle(seed, { n: [-4, 4], r: [1, 3], a: [-2, 2], c: [-1, 1] });
     const v = circle.values;
     const again = circleIntegral({ re: v.cx, im: v.cy }, v.radius, { re: v.ax, im: v.ay }, v.n);
     if (!again || Math.abs(again.im - v.im) > 1e-9 || Math.abs(again.re - v.re) > 1e-9) circleOk = false;
     if ((v.n === -1 && Math.hypot(v.ax - v.cx, v.ay - v.cy) < v.radius) !== (v.im !== 0)) circleOk = false;
-    const seg = generateSegment({ n: [-3, 3], box: [-2, 2] }, seed);
+    const seg = generateSegment(seed, { n: [-3, 3], box: [-2, 2] });
     const sv = seg.values;
     const quad = quadSegment({ re: sv.sx, im: sv.sy }, { re: sv.ex, im: sv.ey }, { re: sv.ax, im: sv.ay }, sv.n, 20000);
     if (Math.hypot(quad.re - sv.re, quad.im - sv.im) > 2e-4) segmentOk = false;
@@ -243,7 +249,10 @@ check('a junk token on chapter 7 is still not a page', parseRoute('#chapter-7-ex
     && kinds.has('proof-blank') && kinds.has('proof-mc') && kinds.has('next-step-blank') && kinds.has('next-step-mc') && kinds.has('flash')
     && practice.some((item) => item.generator && item.generator.template === 'ch6-circle')
     && practice.some((item) => item.generator && item.generator.template === 'ch6-segment')
-    && practice.some((item) => /which theorem/i.test(item.prompt)));
+    && practice.some((item) => item.id === 'ch6-6.3-which-mc')
+    && !practice.some((item) => item.id === 'ch6-6.3-which-flash')
+    && practice.some((item) => item.section === '6.4' && item.memory)
+    && practice.some((item) => item.id === 'ch6-6.6-liouville-flash'));
 }
 check('the shipped route rule matches the kit helper',
   readFileSync(new URL('../js/core/map-route.js', import.meta.url), 'utf8')

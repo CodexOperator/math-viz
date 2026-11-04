@@ -1,4 +1,4 @@
-// Three pictures for Chapter 6. Each one has one drag and one Play button.
+// Six pictures for Chapter 6. Each one has one drag and one Play button.
 // Play is the only clock. A second Play pauses the first. Reduced motion steps.
 
 import { createMotion, prefersReducedMotion } from '../core/anim.js';
@@ -6,12 +6,14 @@ import { h, appendRich } from './test2-ui.js';
 import {
   SEGMENT_END, DEFORM_OUT, DEFORM_RADIUS,
   realIntegral, wrapTurn, claim61, claim62, claim63, riemannPartial,
+  deformEdgeU, BEND_A, BEND_B, claim64, claim65, claim66, LIOUVILLE_COLLAPSE,
 } from '../book/ch6-math.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 const SIZE = 480;
 const HIT = 22;
 const PICK = 4;
+const MARK = 16;
 let silence = null;
 
 function svgEl(name, attrs) {
@@ -178,7 +180,7 @@ export function mountRealIntegral(parent) {
   const axisY = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2' });
   const unit = svgEl('circle', { fill: 'none', stroke: 'var(--polar)', 'stroke-width': '2' });
   const trail = svgEl('circle', { fill: 'none', stroke: 'var(--output)', 'stroke-width': '1.5', 'stroke-dasharray': '6 6' });
-  const handle = svgEl('circle', { r: '8', fill: 'var(--input)' });
+  const handle = svgEl('circle', { r: String(MARK), fill: 'var(--input)' });
   const value = svgEl('circle', { r: '8', fill: 'var(--output)' });
   stage.append(axisX, axisY, trail, unit, value, handle);
   line(axisX, map.X(-2.6), map.Y(0), map.X(2.6), map.Y(0));
@@ -208,7 +210,7 @@ export function mountRealIntegral(parent) {
     }
   }
   const clock = player(play, prefersReducedMotion, 2800, paint, [0.25, 0.5, 0.75, 1]);
-  clock.set(0.5);
+  clock.set(0.25);
 
   function fromEvent(ev) {
     const p = clientToLocal(stage, ev);
@@ -251,7 +253,7 @@ export function mountContourSum(parent) {
   const axisY = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2' });
   const whole = svgEl('line', { stroke: 'var(--polar)', 'stroke-width': '3', 'stroke-linecap': 'round' });
   const walked = svgEl('line', { stroke: 'var(--input)', 'stroke-width': '5', 'stroke-linecap': 'round' });
-  const handle = svgEl('circle', { r: '8', fill: 'var(--input)' });
+  const handle = svgEl('circle', { r: String(MARK), fill: 'var(--input)' });
   const dots = [];
   for (let k = 1; k <= 8; k++) {
     dots.push(svgEl('circle', { r: '5', fill: 'var(--polar)' }));
@@ -291,7 +293,7 @@ export function mountContourSum(parent) {
   }
   const steps = [0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1];
   const clock = player(play, prefersReducedMotion, 3200, paint, steps);
-  clock.set(0.25);
+  clock.set(0);
 
   function fromEvent(ev) {
     const p = clientToLocal(stage, ev);
@@ -331,7 +333,7 @@ export function mountDeform(parent) {
   const outer = svgEl('circle', { fill: 'none', stroke: 'var(--output)', 'stroke-width': '2.5' });
   const inner = svgEl('circle', { fill: 'none', stroke: 'var(--input)', 'stroke-width': '2.5' });
   const pole = svgEl('circle', { r: '7', fill: 'var(--polar)' });
-  const handle = svgEl('circle', { r: '8', fill: 'var(--input)' });
+  const handle = svgEl('circle', { r: String(MARK), fill: 'var(--input)' });
   stage.append(axisX, axisY, outer, inner, pole, handle);
   line(axisX, map.X(-2.8), map.Y(0), map.X(2.8), map.Y(0));
   line(axisY, map.X(0), map.Y(-2.8), map.X(0), map.Y(2.8));
@@ -362,7 +364,7 @@ export function mountDeform(parent) {
     }
   }
   const clock = player(play, prefersReducedMotion, 2400, paint, [0, 1]);
-  clock.set(0);
+  clock.set(deformEdgeU());
 
   function fromEvent(ev) {
     const p = clientToLocal(stage, ev);
@@ -379,6 +381,217 @@ export function mountDeform(parent) {
     const next = cx + (ev.key === 'ArrowRight' ? 0.15 : -0.15);
     const clamped = Math.min(DEFORM_OUT, Math.max(0, next));
     clock.set(1 - clamped / DEFORM_OUT);
+  }
+  stage.addEventListener('keydown', onKey);
+  return function stop() {
+    drop();
+    stage.removeEventListener('keydown', onKey);
+    clock.destroy();
+  };
+}
+
+function clampWorld(re, im, span, cx, cy) {
+  const half = span / 2 - 0.2;
+  return {
+    re: Math.min(cx + half, Math.max(cx - half, re)),
+    im: Math.min(cy + half, Math.max(cy - half, im)),
+  };
+}
+
+export function mountBend(parent) {
+  const { stage, claim, play } = mountShell(parent, {
+    stage: 'ch6-bend-stage',
+    claim: 'ch6-bend-claim',
+    play: 'ch6-bend-play',
+    frame: 'ch6-bend-frame',
+  }, 'A path from -1 minus i to 3 plus i. Drag the green bend. The integral of z stays 4 plus 2 i.');
+  const span = 6.5;
+  const cx = 1;
+  const cy = 0.4;
+  const map = world(span, cx, cy);
+  const axisX = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2' });
+  const axisY = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2' });
+  const chord = svgEl('line', { stroke: 'var(--polar)', 'stroke-width': '2', 'stroke-dasharray': '6 6' });
+  const legA = svgEl('line', { stroke: 'var(--input)', 'stroke-width': '3', 'stroke-linecap': 'round' });
+  const legB = svgEl('line', { stroke: 'var(--input)', 'stroke-width': '3', 'stroke-linecap': 'round' });
+  const handle = svgEl('circle', { r: String(MARK), fill: 'var(--input)' });
+  stage.append(axisX, axisY, chord, legA, legB, handle);
+  line(axisX, map.X(cx - span / 2), map.Y(0), map.X(cx + span / 2), map.Y(0));
+  line(axisY, map.X(0), map.Y(cy - span / 2), map.X(0), map.Y(cy + span / 2));
+  line(chord, map.X(BEND_A.re), map.Y(BEND_A.im), map.X(BEND_B.re), map.Y(BEND_B.im));
+  const mid = { re: (BEND_A.re + BEND_B.re) / 2, im: (BEND_A.im + BEND_B.im) / 2 };
+  const far = { re: 1, im: 1.6 };
+  let pos = { ...mid };
+  let claimText = '';
+  function paintPos() {
+    line(legA, map.X(BEND_A.re), map.Y(BEND_A.im), map.X(pos.re), map.Y(pos.im));
+    line(legB, map.X(pos.re), map.Y(pos.im), map.X(BEND_B.re), map.Y(BEND_B.im));
+    handle.setAttribute('cx', map.X(pos.re));
+    handle.setAttribute('cy', map.Y(pos.im));
+    const sentence = claim64(pos);
+    stage.dataset.holds = sentence.holds ? 'true' : 'false';
+    stage.dataset.bent = sentence.bent ? 'true' : 'false';
+    if (sentence.text !== claimText) {
+      claimText = sentence.text;
+      claim.replaceChildren();
+      appendRich(claim, claimText);
+    }
+  }
+  const clock = player(play, prefersReducedMotion, 2200, (u) => {
+    pos = { re: mid.re + (far.re - mid.re) * u, im: mid.im + (far.im - mid.im) * u };
+    paintPos();
+  }, [0, 1]);
+  clock.set(0);
+  const drop = bindDrag(stage, handle, () => clock.stop(), (ev) => {
+    const p = clientToLocal(stage, ev);
+    pos = clampWorld(map.re(p.x), map.im(p.y), span, cx, cy);
+    paintPos();
+  });
+  function onKey(ev) {
+    if (ev.key !== 'ArrowRight' && ev.key !== 'ArrowLeft' && ev.key !== 'ArrowUp' && ev.key !== 'ArrowDown') return;
+    ev.preventDefault();
+    clock.stop();
+    const step = 0.2;
+    if (ev.key === 'ArrowRight') pos.re += step;
+    if (ev.key === 'ArrowLeft') pos.re -= step;
+    if (ev.key === 'ArrowUp') pos.im += step;
+    if (ev.key === 'ArrowDown') pos.im -= step;
+    pos = clampWorld(pos.re, pos.im, span, cx, cy);
+    paintPos();
+  }
+  stage.addEventListener('keydown', onKey);
+  return function stop() {
+    drop();
+    stage.removeEventListener('keydown', onKey);
+    clock.destroy();
+  };
+}
+
+export function mountCauchy(parent) {
+  const { stage, claim, play } = mountShell(parent, {
+    stage: 'ch6-cauchy-stage',
+    claim: 'ch6-cauchy-claim',
+    play: 'ch6-cauchy-play',
+    frame: 'ch6-cauchy-frame',
+  }, 'The unit circle and f of z equals z. Drag the green point. Inside, the integral returns that point. Outside, the integral is 0.');
+  const span = 3.4;
+  const map = world(span, 0, 0);
+  const axisX = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2' });
+  const axisY = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2' });
+  const circle = svgEl('circle', { fill: 'none', stroke: 'var(--polar)', 'stroke-width': '2.5' });
+  const value = svgEl('circle', { r: '11', fill: 'var(--output)' });
+  const ring = svgEl('circle', { r: String(MARK + 8), fill: 'none', stroke: 'var(--output)', 'stroke-width': '3' });
+  const handle = svgEl('circle', { r: String(MARK), fill: 'var(--input)' });
+  stage.append(axisX, axisY, circle, value, ring, handle);
+  line(axisX, map.X(-span / 2), map.Y(0), map.X(span / 2), map.Y(0));
+  line(axisY, map.X(0), map.Y(-span / 2), map.X(0), map.Y(span / 2));
+  circle.setAttribute('cx', map.X(0));
+  circle.setAttribute('cy', map.Y(0));
+  circle.setAttribute('r', map.X(1) - map.X(0));
+  let pos = { re: 1, im: 0 };
+  let claimText = '';
+  function paintPos() {
+    const sentence = claim65(pos);
+    const back = sentence.where === 'inside' ? pos : { re: 0, im: 0 };
+    value.setAttribute('cx', map.X(back.re));
+    value.setAttribute('cy', map.Y(back.im));
+    value.setAttribute('opacity', sentence.where === 'edge' ? '0' : '1');
+    ring.setAttribute('cx', map.X(pos.re));
+    ring.setAttribute('cy', map.Y(pos.im));
+    ring.setAttribute('opacity', sentence.where === 'inside' ? '1' : '0');
+    handle.setAttribute('cx', map.X(pos.re));
+    handle.setAttribute('cy', map.Y(pos.im));
+    stage.dataset.holds = sentence.holds ? 'true' : 'false';
+    stage.dataset.where = sentence.where;
+    if (sentence.text !== claimText) {
+      claimText = sentence.text;
+      claim.replaceChildren();
+      appendRich(claim, claimText);
+    }
+  }
+  const clock = player(play, prefersReducedMotion, 2000, (u) => {
+    pos = { re: 1 + (0.4 - 1) * u, im: 0 };
+    paintPos();
+  }, [0, 1]);
+  clock.set(0);
+  const drop = bindDrag(stage, handle, () => clock.stop(), (ev) => {
+    const p = clientToLocal(stage, ev);
+    pos = clampWorld(map.re(p.x), map.im(p.y), span, 0, 0);
+    paintPos();
+  });
+  function onKey(ev) {
+    if (ev.key !== 'ArrowRight' && ev.key !== 'ArrowLeft' && ev.key !== 'ArrowUp' && ev.key !== 'ArrowDown') return;
+    ev.preventDefault();
+    clock.stop();
+    const step = 0.12;
+    if (ev.key === 'ArrowRight') pos.re += step;
+    if (ev.key === 'ArrowLeft') pos.re -= step;
+    if (ev.key === 'ArrowUp') pos.im += step;
+    if (ev.key === 'ArrowDown') pos.im -= step;
+    pos = clampWorld(pos.re, pos.im, span, 0, 0);
+    paintPos();
+  }
+  stage.addEventListener('keydown', onKey);
+  return function stop() {
+    drop();
+    stage.removeEventListener('keydown', onKey);
+    clock.destroy();
+  };
+}
+
+export function mountLiouville(parent) {
+  const { stage, claim, play } = mountShell(parent, {
+    stage: 'ch6-liouville-stage',
+    claim: 'ch6-liouville-claim',
+    play: 'ch6-liouville-play',
+    frame: 'ch6-liouville-frame',
+  }, 'A circle whose radius you drag. Purple is the estimate 1 over R of the derivative. It collapses as the circle grows.');
+  const span = 10;
+  const map = world(span, 0, 0);
+  const axisX = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2' });
+  const axisY = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2' });
+  const circle = svgEl('circle', { fill: 'none', stroke: 'var(--polar)', 'stroke-width': '2.5' });
+  const value = svgEl('circle', { r: '11', fill: 'var(--output)' });
+  const handle = svgEl('circle', { r: String(MARK), fill: 'var(--input)' });
+  stage.append(axisX, axisY, circle, value, handle);
+  line(axisX, map.X(-span / 2), map.Y(0), map.X(span / 2), map.Y(0));
+  line(axisY, map.X(0), map.Y(-span / 2), map.X(0), map.Y(span / 2));
+  circle.setAttribute('cy', map.Y(0));
+  circle.setAttribute('cx', map.X(0));
+  let claimText = '';
+  function paintR(u) {
+    const R = 1 + 3 * Math.min(1, Math.max(0, u));
+    const sentence = claim66(R);
+    circle.setAttribute('r', map.X(R) - map.X(0));
+    handle.setAttribute('cx', map.X(R));
+    handle.setAttribute('cy', map.Y(0));
+    value.setAttribute('cx', map.X(1 / R));
+    value.setAttribute('cy', map.Y(0));
+    stage.dataset.holds = sentence.holds ? 'true' : 'false';
+    stage.dataset.collapsed = sentence.collapsed ? 'true' : 'false';
+    stage.dataset.radius = String(R);
+    if (sentence.text !== claimText) {
+      claimText = sentence.text;
+      claim.replaceChildren();
+      appendRich(claim, claimText);
+    }
+  }
+  const collapseU = (LIOUVILLE_COLLAPSE - 1) / 3;
+  const clock = player(play, prefersReducedMotion, 2400, paintR, [0, collapseU, 1]);
+  clock.set(0);
+  const drop = bindDrag(stage, handle, () => clock.stop(), (ev) => {
+    const p = clientToLocal(stage, ev);
+    let R = map.re(p.x);
+    if (R < 1) R = 1;
+    if (R > 4) R = 4;
+    clock.set((R - 1) / 3);
+  });
+  function onKey(ev) {
+    if (ev.key !== 'ArrowRight' && ev.key !== 'ArrowLeft') return;
+    ev.preventDefault();
+    const R = Number(stage.dataset.radius || '1') + (ev.key === 'ArrowRight' ? 0.25 : -0.25);
+    const clamped = Math.min(4, Math.max(1, R));
+    clock.set((clamped - 1) / 3);
   }
   stage.addEventListener('keydown', onKey);
   return function stop() {

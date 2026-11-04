@@ -1,6 +1,8 @@
-// Deterministic circle integrals. The practice engine imports generate(params, seed).
+// Deterministic circle integrals. The practice engine calls generate(seed, params).
 import { generateCircle } from '../../book/ch6-math.js';
 
-export function generate(params, seed) {
-  return generateCircle(params || {}, seed);
+export const id = 'ch6-circle';
+
+export function generate(seed, params) {
+  return generateCircle(seed, params || {});
 }
