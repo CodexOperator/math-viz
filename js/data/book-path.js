@@ -6,6 +6,7 @@
 // one, and no new page.
 
 import { sectionHref } from './book.js';
+import { OPEN_CHAPTER_NUMBERS, SHELL_LAST_CHAPTER } from '../book/registry.js';
 
 const S41 = 'sec_sequences-series.html';
 const S42 = 'sec_julia-mandelbrot.html';
@@ -21,8 +22,13 @@ function deepFreeze(o) {
   return o;
 }
 
-// Chapters the router will open as their own page. 1–3 and 6–11 stay on the book.
-export const OPEN_CHAPTERS = Object.freeze([4, 5]);
+// Chapters the router will open as their own page. The list is the registry,
+// so a chapter loop adds a module there instead of editing this array.
+export const OPEN_CHAPTERS = OPEN_CHAPTER_NUMBERS;
+
+export function shellChapters() {
+  return BOOK_CHAPTERS.filter((ch) => ch.n <= SHELL_LAST_CHAPTER);
+}
 
 export const BOOK_CHAPTERS = deepFreeze([
   {
@@ -206,6 +212,10 @@ export const CHAPTER_4 = deepFreeze({
 
 export function bookChapter(n) {
   return BOOK_CHAPTERS.find((ch) => ch.n === n) || null;
+}
+
+export function shellChapter(n) {
+  return shellChapters().find((ch) => ch.n === n) || null;
 }
 
 export function chapter4Section(id) {

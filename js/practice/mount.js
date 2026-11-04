@@ -2,6 +2,9 @@
 // and Leitner flashcards. The two existing test maps stay behind their own links.
 
 import { h } from '../stations/test2-ui.js';
+import { mount as mountProblems } from '../stations/problems.js';
+import { mount as mountIndex } from '../stations/test2-index.js';
+import { stationById, threadsForMap } from '../registry.js';
 import { BOOK_CHAPTERS } from '../data/book-path.js';
 import { PRACTICE, realize } from './catalog.js';
 import { selectItems, sectionOfFocus, practiceEntries } from './queue.js';
@@ -96,12 +99,10 @@ export function mountPrep(el, ctx, spec) {
     });
   }
   const stage = h('div', { class: 'practice-stage', id: 'practice-stage' });
-  const doors = h('section', { class: 'practice-doors', id: 'practice-doors' },
-    h('h2', { id: 'practice-doors-title' }, 'The two tests'),
-    h('p', null, 'Test 1 and Test 2 keep their own maps.'),
-    h('p', { class: 'chips' },
-      h('a', { class: 'chip', id: 'practice-to-test1', href: '#problems' }, 'Test 1 exercises'),
-      h('a', { class: 'chip', id: 'practice-to-test2', href: '#index' }, 'Test 2 index')));
+  const fold1 = h('section', { id: 'prep-test-1', class: 'prep-fold' });
+  const fold2 = h('section', { id: 'prep-test-2', class: 'prep-fold' });
+  let stop1 = function stopProblems() {};
+  let stop2 = function stopIndex() {};
 
   function currentEntry() {
     return queue[index] || null;
@@ -281,7 +282,32 @@ export function mountPrep(el, ctx, spec) {
     h('div', { class: 'book-next', id: 'practice-next-row' }, status, back),
     h('div', { class: 'practice-toolbar', id: 'practice-toolbar' }, modeRow, hasGenerator ? endlessBtn : null),
     stage,
-    doors);
+    fold1,
+    fold2);
+  const indexStation = stationById('index');
+  const problemsUnmount = mountProblems(fold1, {
+    store: ctx.store,
+    navigate: ctx.navigate,
+    map: 'test1',
+    station: stationById('problems'),
+    threads: threadsForMap('test1'),
+    preset: null,
+    embedTitle: 'Test 1',
+  });
+  const indexUnmount = mountIndex(fold2, {
+    store: ctx.store,
+    navigate: ctx.navigate,
+    map: 'test2',
+    station: indexStation,
+    threads: threadsForMap('test2'),
+    preset: null,
+    embedTitle: 'Test 2',
+  });
+  if (typeof problemsUnmount === 'function') stop1 = problemsUnmount;
+  if (typeof indexUnmount === 'function') stop2 = indexUnmount;
   paint();
-  return function unmount() {};
+  return function unmount() {
+    stop1();
+    stop2();
+  };
 }

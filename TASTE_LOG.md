@@ -1346,3 +1346,13 @@ The mix does not change from visit to visit. The seed is the chapter number. A s
 ## Next
 
 Vary the interleave by day. Keep the typed answer when a hint opens. Shuffle choices. Store a short record of which steps were missed, in the same mergeable shape as the boxes. Leave chapter files to the chapter loops.
+
+# Practice engine — batch 2, the shell
+
+The drawer is one list on every page: Chapters 1–7, then Test prep. The menu button says Chapters. `#home` opens the status card and one Continue button, and the count is the exercises in Chapters 4 and 5 together (10), not Chapter 4 alone. Chapter and section rows are links. Chapters 8–11 stay in the data and off the list. The line under a title is the part-label type. The way up is the 44px station link. A chapter hash is a history entry, and Back puts the book back where it was scrolled. The site name wraps instead of truncating at 360px. Test prep is the one door: the practice set, then Test 1, then Test 2. `#problems` and `#index` still open, and their ticks stay in `progress` and `progress.test2`. Chapter loops add one line to `js/book/registry.js`.
+
+Checked in headless Chrome at 360×780: the full site name, the seven chapters, Continue, the labelled drawer, the Chapter 5 up control, scroll restored after Back, both indexes inside Test prep, and the 2 of 10 count after a Chapter 4 tick and a Chapter 5 tick. No console errors.
+
+## Next
+
+The home map and the Test 2 map still exist behind a thread hash. Pictures for Chapters 1–3 and 6–7 are not inside those chapter pages yet; those loops register the pages. The interleave seed, choice order, and unsaved practice attempts are unchanged from batch 1.

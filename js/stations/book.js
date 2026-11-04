@@ -2,11 +2,12 @@
 // A section is finished when its exercises are ticked. The tick is the same
 // memory as the Test 2 index. Hints stay closed. No answer key on these cards.
 
-import { stationById } from '../registry.js';
 import { BOOK, sectionHref } from '../data/book.js';
-import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, bookChapter, chapter4ExerciseIds, chapter5ExerciseIds, CHAPTER_PICTURE, pictureHref } from '../data/book-path.js';
+import { shellChapters, CHAPTER_4, CHAPTER_5, bookChapter, chapter4ExerciseIds, chapter5ExerciseIds, CHAPTER_PICTURE, pictureHref, OPEN_CHAPTERS } from '../data/book-path.js';
 import { test2ProblemById } from '../data/test2-problems.js';
 import { loadSharedTicks, saveSharedTicks, toggleTick, sectionFinished, chapterTally } from '../book/progress.js';
+import { continueSentence, continueTarget, walkSections } from '../book/continue.js';
+import { chapterHash } from '../book/route.js';
 import { h, appendRich, sourceTag } from './test2-ui.js';
 import { mountExpPicture } from './exp-picture.js';
 import { mountPrep } from '../practice/mount.js';
@@ -16,8 +17,16 @@ function slug(id) {
   return String(id).replace(/\./g, '-');
 }
 
+function tickOwned(id) {
+  return !!test2ProblemById(id) || chapter5ExerciseIds().includes(id);
+}
+
 function ticksOf(store) {
-  return loadSharedTicks(store, (id) => !!test2ProblemById(id), chapter4ExerciseIds());
+  return loadSharedTicks(store, tickOwned, chapter4ExerciseIds());
+}
+
+function upLink(id, href, label) {
+  return h('a', { class: 'station-link', id, href, 'data-dir': 'prev' }, label);
 }
 
 function exerciseHint(section, problem) {
@@ -26,11 +35,8 @@ function exerciseHint(section, problem) {
   return local || '';
 }
 
-function nextSentence(t) {
-  if (t.complete) return `Done. ${t.exercisesTicked} of ${t.exerciseTotal} exercises.`;
-  const problem = test2ProblemById(t.nextExercise);
-  const name = problem ? problem.pin : t.nextExercise;
-  return `Next is ${name}. ${t.exercisesTicked} of ${t.exerciseTotal} exercises.`;
+function nextSentence(ticks) {
+  return continueSentence(ticks);
 }
 
 export function mount(section, ctx) {
@@ -42,88 +48,84 @@ export function mount(section, ctx) {
   return mountRoadmap(section, ctx, { kind: 'roadmap', chapter: null, focus: null });
 }
 
-function mountRoadmap(el, ctx, spec) {
-  const store = ctx.store;
-  let ticks = ticksOf(store);
-  const tally = () => chapterTally(CHAPTER_4.sections, ticks);
+function sectionList(ch) {
+  if (ch.n === 4) return CHAPTER_4.sections;
+  if (ch.n === 5) return bookChapter(5).sections;
+  return ch.sections || [];
+}
 
+export function mountBookHome(el, ctx, spec) {
+  const store = ctx.store;
+  const ticks = ticksOf(store);
+  const target = continueTarget(ticks);
+  const tally = target.tally;
   const status = h('p', { class: 'book-status', id: 'book-status' });
-  const walk = h('a', { class: 'btn btn-primary', id: 'book-walk', href: '#chapter-4' }, 'Walk Chapter 4');
-  const prep = h('a', { class: 'btn', id: 'book-test-prep', href: '#test-prep' }, 'Test prep');
+  status.textContent = nextSentence(ticks);
+  const walk = h('a', { class: 'btn btn-primary', id: 'book-continue', href: target.href }, 'Continue');
   const list = h('ol', { class: 'book-path', id: 'book-path' });
 
-  function paint() {
-    const t = tally();
-    if (t.complete) {
-      status.textContent = `${nextSentence(t)} Chapter 5 is next.`;
-      walk.textContent = 'Open Chapter 5';
-      walk.setAttribute('href', '#chapter-5');
-    } else {
-      status.textContent = nextSentence(t);
-      walk.textContent = 'Walk Chapter 4';
-      walk.setAttribute('href', '#chapter-4');
-    }
-    for (const node of list.querySelectorAll('.book-node')) {
-      const n = Number(node.getAttribute('data-chapter'));
-      let state = 'later';
-      if (n === 4) state = t.complete ? 'done' : 'next';
-      else if (n === 5) state = 'open';
-      node.setAttribute('data-state', state);
-      const flag = node.querySelector('.book-flag');
-      if (!flag) continue;
-      if (n === 4) flag.textContent = t.complete ? 'Done' : 'Next';
-      else if (n === 5) flag.textContent = 'Open';
-      else flag.textContent = 'Later';
-    }
-    for (const row of list.querySelectorAll('[data-section]')) {
-      const id = row.getAttribute('data-section');
-      const section = CHAPTER_4.sections.find((s) => s.id === id);
-      if (!section) continue;
-      const finished = sectionFinished(section, ticks);
-      row.setAttribute('data-state', finished ? 'done' : (t.nextId === id ? 'next' : 'ahead'));
-      const mark = row.querySelector('.book-section-mark');
-      if (mark) mark.textContent = finished ? 'Done' : (t.nextId === id ? 'Next' : '');
-    }
-  }
-
-  for (const ch of BOOK_CHAPTERS) {
-    const head = h('div', { class: 'book-node-head' },
+  for (const ch of shellChapters()) {
+    const open = OPEN_CHAPTERS.includes(ch.n);
+    const href = `#chapter-${ch.n}`;
+    const head = h('a', { class: 'book-row', id: `book-open-${ch.n}`, href },
       h('p', { class: 'book-flag', id: `book-flag-${ch.n}` }, 'Later'),
       h('h2', { id: `book-title-${ch.n}` },
         h('span', { class: 'book-num' }, String(ch.n)),
         document.createTextNode(` ${ch.title}`)),
       h('p', { class: 'book-page', id: `book-page-${ch.n}` }, `Page ${ch.page}`));
     const kids = [head];
-    if (ch.n === 4) {
-      const sections = h('ol', { class: 'book-sections', id: 'book-sections-4' });
-      for (const s of ch.sections) {
+    if (open) {
+      const sections = h('ol', { class: 'book-sections', id: `book-sections-${ch.n}` });
+      for (const s of sectionList(ch)) {
+        const sectionHrefHash = ch.n === 4 || s.id === '5.1'
+          ? `#${chapterHash(ch.n, s.id)}`
+          : href;
         sections.append(h('li', { 'data-section': s.id, id: `book-section-${slug(s.id)}` },
-          h('span', null, `${s.id} ${s.title}`),
-          h('span', { class: 'book-section-page' }, `p. ${s.page}`),
-          h('span', { class: 'book-section-mark' }, '')));
+          h('a', { class: 'book-section-link', href: sectionHrefHash },
+            h('span', null, `${s.id} ${s.title}`),
+            h('span', { class: 'book-section-page' }, `p. ${s.page}`),
+            h('span', { class: 'book-section-mark' }, ''))));
       }
       kids.push(sections);
     }
-    if (!ch.open && ch.door) {
-      const st = stationById(ch.door);
-      if (st) {
-        kids.push(h('p', { class: 'book-door', id: `book-door-${ch.n}` },
-          'Already drawn: ',
-          h('a', { href: `#${st.id}` }, st.title),
-          '.'));
-      }
-    }
-    list.append(h('li', { class: 'book-node', id: `book-node-${ch.n}`, 'data-chapter': String(ch.n), 'data-state': 'later' }, ...kids));
+    list.append(h('li', {
+      class: 'book-node', id: `book-node-${ch.n}`, 'data-chapter': String(ch.n), 'data-state': 'later',
+    }, ...kids));
   }
 
-  paint();
+  for (const node of list.querySelectorAll('.book-node')) {
+    const n = Number(node.getAttribute('data-chapter'));
+    const mine = walkSections().filter((s) => s.chapter === n);
+    let state = 'later';
+    let flag = 'Later';
+    if (mine.length) {
+      const done = mine.every((s) => sectionFinished(s, ticks));
+      const current = mine.some((s) => s.id === tally.nextId);
+      if (done) { state = 'done'; flag = 'Done'; }
+      else if (current) { state = 'next'; flag = 'Next'; }
+      else { state = 'open'; flag = 'Open'; }
+    }
+    node.setAttribute('data-state', state);
+    const flagEl = node.querySelector('.book-flag');
+    if (flagEl) flagEl.textContent = flag;
+  }
+  for (const row of list.querySelectorAll('[data-section]')) {
+    const id = row.getAttribute('data-section');
+    const section = walkSections().find((s) => s.id === id);
+    if (!section) continue;
+    const finished = sectionFinished(section, ticks);
+    row.setAttribute('data-state', finished ? 'done' : (tally.nextId === id ? 'next' : 'ahead'));
+    const mark = row.querySelector('.book-section-mark');
+    if (mark) mark.textContent = finished ? 'Done' : (tally.nextId === id ? 'Next' : '');
+  }
 
   el.append(
     h('header', { class: 'station-header' },
+      h('p', { class: 'where-line', id: 'where-line' }, 'The book · Chapters 1–7'),
       h('h1', { id: 'book-title' }, 'The Book'),
-      h('p', { class: 'station-lede', id: 'book-lede' }, 'Eleven chapters, in the order Howell and Mathews print them.'),
+      h('p', { class: 'station-lede', id: 'book-lede' }, 'Chapters 1 to 7, in the order Howell and Mathews print them.'),
       sourceTag({ pin: '202 Updated Edition, table of contents, pages i–ii', href: BOOK.html })),
-    h('div', { class: 'book-next', id: 'book-next' }, status, walk, prep),
+    h('div', { class: 'book-next', id: 'book-next' }, status, walk),
     list);
 
   const focus = spec && spec.chapter;
@@ -135,6 +137,10 @@ function mountRoadmap(el, ctx, spec) {
   return function unmount() {};
 }
 
+function mountRoadmap(el, ctx, spec) {
+  return mountBookHome(el, ctx, spec);
+}
+
 function mountChapter4(el, ctx, focus) {
   const store = ctx.store;
   let ticks = ticksOf(store);
@@ -143,7 +149,6 @@ function mountChapter4(el, ctx, focus) {
 
   const status = h('p', { class: 'book-status', id: 'chapter-status' });
   const nextBtn = h('button', { type: 'button', class: 'btn btn-primary', id: 'chapter-next' }, 'Next');
-  const prep = h('a', { class: 'btn', id: 'chapter-test-prep', href: '#test-prep-4' }, 'Test prep');
 
   function tally() {
     return chapterTally(CHAPTER_4.sections, ticks);
@@ -151,7 +156,7 @@ function mountChapter4(el, ctx, focus) {
 
   function paint() {
     const t = tally();
-    status.textContent = nextSentence(t);
+    status.textContent = nextSentence(ticks);
     if (t.complete) {
       nextBtn.hidden = false;
       nextBtn.textContent = 'Back to the book';
@@ -266,13 +271,14 @@ function mountChapter4(el, ctx, focus) {
 
   el.append(
     h('header', { class: 'station-header' },
-      h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back' }, 'The Book')),
+      upLink('chapter-back', '#book', 'The Book'),
       h('h1', { id: 'chapter-title' }, 'Chapter 4. Sequences, Series, and Fractals'),
+      h('p', { class: 'where-line', id: 'where-line' }, 'Chapter 4 · Sequences, Series, and Fractals'),
       h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Four sections. Tick an exercise when you have worked it. The hint stays closed until you ask.'),
       sourceTag({ pin: CHAPTER_4.pin, href: CHAPTER_4.href })),
-    h('div', { class: 'book-next', id: 'chapter-next-row' }, status, nextBtn, prep),
+    h('div', { class: 'book-next', id: 'chapter-next-row' }, status, nextBtn),
     path,
-    h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
+    upLink('chapter-back-end', '#book', 'The Book'));
 
   if (focus) {
     const card = cards.find((c) => c.getAttribute('data-problem') === focus);
@@ -385,16 +391,16 @@ function mountChapter5(el, ctx, focus) {
 
   el.append(
     h('header', { class: 'station-header' },
-      h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back' }, 'The Book')),
-      h('h1', { id: 'chapter-title' }, 'Chapter 5. The exponential')),
+      upLink('chapter-back', '#book', 'The Book'),
+      h('h1', { id: 'chapter-title' }, 'Chapter 5. The exponential'),
+      h('p', { class: 'where-line', id: 'where-line' }, 'Chapter 5 · The exponential')),
     picture,
     h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Section 5.1. A blank fills when the picture makes it true. The hint stays closed until you ask.'),
-    h('div', { class: 'book-next', id: 'chapter-next-row' }, status,
-      h('a', { class: 'btn', id: 'chapter-test-prep', href: '#test-prep-5' }, 'Test prep')),
+    h('div', { class: 'book-next', id: 'chapter-next-row' }, status),
     walk,
     later,
     sourceTag({ pin: 'Chapter 5, Elementary Functions, page 130', href: sectionHref('sec_exponential-function.html') }),
-    h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
+    upLink('chapter-back-end', '#book', 'The Book'));
 
   paint();
 
