@@ -167,7 +167,7 @@ export const CHAPTER_4 = deepFreeze({
       id: '4.1',
       title: 'Sequences and Series',
       page: 102,
-      idea: 'A sequence settles when its terms eventually sit in every disk around the limit.',
+      idea: 'An orbit is a sequence. The next landing is the same rule, applied to where you just were.',
       summit: 'A sequence settles when its terms eventually sit in every disk around the limit.',
       read: [
         { pin: 'Definition 4.1, page 103', href: sectionHref(S41, 'Seq_Lim_Def') },
@@ -179,7 +179,7 @@ export const CHAPTER_4 = deepFreeze({
       id: '4.2',
       title: 'Julia and Mandelbrot Sets',
       page: 109,
-      idea: 'The Julia set of $z^2+c$ is one piece exactly when the orbit of $0$ stays bounded.',
+      idea: 'An orbit is the sequence from §4.1. The picture records every start, not one list.',
       summit: 'The Julia set of $z^2+c$ is one piece exactly when the orbit of $0$ stays bounded.',
       read: [
         { pin: 'Theorem 4.9, page 113', href: sectionHref(S42, 'Kc_Connected') },
@@ -190,7 +190,7 @@ export const CHAPTER_4 = deepFreeze({
       id: '4.3',
       title: 'Geometric Series and Convergence Theorems',
       page: 118,
-      idea: 'Inside the unit disk, the geometric series sums to $1/(1-z)$.',
+      idea: 'A series is a sequence of partial sums. Inside the unit disk that sequence settles.',
       summit: 'Inside the unit disk, the geometric series sums to $1/(1-z)$.',
       read: [
         { pin: 'Theorem 4.12, page 118', href: sectionHref(S43, 'Geometric_Series') },
@@ -201,8 +201,8 @@ export const CHAPTER_4 = deepFreeze({
       id: '4.4',
       title: 'Power Series Functions',
       page: 123,
-      idea: 'A power series converges inside a disk and diverges outside it.',
-      summit: 'A power series lives inside a disk and diverges outside it.',
+      idea: 'The disk of a power series is the disk from §4.1, drawn around a centre.',
+      summit: 'A power series lives inside a disk and diverges outside it. That disk is the one from §4.1.',
       read: [
         { pin: 'Theorem 4.15, page 124', href: sectionHref(S44, 'Regions_of_Convergence') },
         { pin: 'Theorem 4.16, page 125', href: sectionHref(S44, 'th15') },
@@ -243,8 +243,8 @@ export const CHAPTER_5 = deepFreeze({
       id: '5.1',
       title: 'The Complex Exponential Function',
       page: 130,
-      idea: 'Identity (5.1), page 132: $e^{z} = e^{x}(\\cos y + i \\sin y)$. The modulus is $e^{x}$ and the angle is $y$.',
-      summit: '$e^{z}$ is the radius $e^{x}$ turned by the angle $y$, and $\\pm i\\pi$ land on the same point.',
+      idea: 'Drag changes the radius. Play turns the angle. The value is that radius times a turn.',
+      summit: 'Identity (5.1), page 132: $e^{z}$ is the radius $e^{x}$ turned by the angle $y$, and $\\pm i\\pi$ land on the same point.',
       read: [
         { pin: 'Definition 5.1, page 130', href: sectionHref(S51, 'exp_z__Def') },
         { pin: 'Figure 5.2, page 133', href: sectionHref(S51, 'fig_ch-05-02') },
@@ -259,7 +259,7 @@ export const CHAPTER_5 = deepFreeze({
       statement: 'Using Definition 5.1, explain why $\\exp(0) = e^{0} = 1$.',
       hint: 'Definition 5.1, page 130, is the series for $e^{z}$. At $z = 0$ every later term is $0$, so the sum is $1$, the right-hand point of the unit circle.',
       blank: '$\\exp(0)$ is ',
-      answer: '$1$',
+      answer: '$1$, because every term of the series after the constant is $0$',
     },
     '5.1.2': {
       pin: '§5.1, Exercise 2, page 135',
@@ -329,7 +329,7 @@ export const STAGE_NEXT = deepFreeze({
   '4.2': { href: '#chapter-4-4-3', label: '4.3 Geometric Series and Convergence Theorems' },
   '4.3': { href: '#chapter-4-4-4', label: '4.4 Power Series Functions' },
   '4.4': { href: '#chapter-5', label: 'Chapter 5, the exponential' },
-  '5.1': { href: '#chapter-5-5-2', label: '5.2 The Complex Logarithm' },
+  '5.1': { later: true, label: '5.2 The Complex Logarithm is later. It has no picture yet.' },
 });
 
 export function stageNext(id) {

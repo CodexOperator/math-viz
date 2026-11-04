@@ -114,5 +114,23 @@
     },
     "memory": "For $z=x+iy$, $|e^z|=e^x$ and $\\operatorname{Arg}(e^z)$ is $y$ reduced into $(-\\pi,\\pi]$. Identity (5.1), page 132, and Equations (5.6)–(5.7), page 133.",
     "formula": "$|e^{x+iy}|=e^x$, $\\operatorname{Arg}(e^{x+iy})\\equiv y \\pmod{2\\pi}$."
+  },
+  {
+    "id": "ch5-5.1-stage-flash",
+    "chapter": 5,
+    "section": "5.1",
+    "cite": { "ref": "Identity (5.1)", "page": 132, "href": "https://complexanalysis.org/web/sec_exponential-function.html#exp_z__Def" },
+    "kind": "flash",
+    "prompt": "What is $e^{z}$ for $z=x+iy$?",
+    "steps": [
+      {
+        "text": "What is $e^{z}$ for $z=x+iy$?",
+        "answer": "$e^{x}(\\cos y+i\\sin y)$. The modulus is $e^{x}$ and the angle is $y$.",
+        "why": "Identity (5.1), page 132."
+      }
+    ],
+    "generator": null,
+    "memory": "1. Write $e^{z}=e^{x}(\\cos y+i\\sin y)$. 2. The modulus is $e^{x}$. 3. The angle is $y$.",
+    "formula": "$e^{x+iy}=e^{x}(\\cos y+i\\sin y)$."
   }
 ]

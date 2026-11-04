@@ -171,7 +171,7 @@ check('One Newton Step keeps Example 4.7', /Example 4\.7, page 110/.test(readFil
     && /left-hand point/.test(card2.hint)
     && CHAPTER_5.sections[0].read[0].href.endsWith('#exp_z__Def')
     && CHAPTER_5.sections[0].read[1].href.endsWith('#fig_ch-05-02')
-    && CHAPTER_5.sections[0].idea.includes('Identity (5.1)')
+    && (CHAPTER_5.sections[0].summit.includes('Identity (5.1)'))
     && !readFileSync(new URL('../js/stations/book.js', import.meta.url), 'utf8').includes('vertical segment'));
   check('the index does not gain the section 5.1 cards',
     !readFileSync(new URL('../js/data/test2-problems.js', import.meta.url), 'utf8').includes("id: '5.1.1'")

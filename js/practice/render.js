@@ -118,7 +118,7 @@ export function renderCard(host, vm, act) {
     }
     if (actions.length) kids.push(h('div', { class: 'problem-actions' }, ...actions));
   } else {
-    const why = rich(step.why || '', { class: 'practice-why', id: 'practice-why' });
+    const why = rich((vm.why || step.why) || '', { class: 'practice-why', id: 'practice-why' });
     const verdict = h('p', {
       class: 'practice-verdict',
       id: 'practice-verdict',

@@ -686,6 +686,7 @@ body[data-station="wave-phase"] #colour-key-circuit { display: grid; }
 .btn:hover { background: var(--surface-2); }
 .btn:active { transform: translateY(1px); }
 .btn[disabled], .btn[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; transform: none; }
+.btn[hidden] { display: none; }
 .btn-primary { border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
 .btn-primary:hover { background: var(--accent); filter: brightness(1.12); }
 .btn-quiet { border-color: transparent; background: transparent; }
@@ -1110,20 +1111,21 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 }
 
 .exp-stage {
-  /* The square takes the column, and stops short of the height that would
-     push Play off the first screen. */
+  /* On a phone the square is the column, about 358px, and Play stays on screen. */
   width: min(100%, calc(100dvh - 20rem));
   max-width: 100%;
   aspect-ratio: 1;
   touch-action: none;
 }
 
-/* A short window already spent its top on the lede and the source line.
-   The square gives that height back so the status card stays on the screen. */
-@media (max-height: 800px) {
+/* A wide window has room beside the column. Size the square from the space
+   above Play, about 440px, and do not inherit the phone's height cap. */
+@media (min-width: 52rem) {
   .exp-stage {
-    width: min(100%, calc(100dvh - 33rem));
-    max-height: calc(100dvh - 33rem);
+    /* About 440px when the window is tall enough that Play still fits.
+       25rem is the title, the lede, the source, the claim, and Play. */
+    width: min(100%, 440px, calc(100dvh - 25rem));
+    max-height: none;
   }
 }
 
@@ -1296,6 +1298,13 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 
 .chapter-need { margin: 0; color: var(--text-muted); }
 .chapter-need[hidden] { display: none; }
+
+.stage-done { margin-top: var(--space-3); }
+.stage-done[hidden] { display: none; }
+.chapter-fade[hidden] { display: none; }
+.chapter-orbit { margin: 0; font-family: var(--font-mono); font-size: 0.92rem; }
+.chapter-off { margin: 0; color: var(--text-muted); }
+.chapter-off[hidden] { display: none; }
 
 .chapter-sets {
   display: grid;

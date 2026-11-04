@@ -4,22 +4,27 @@
 import { fillJulia, paintJulia, parseCssColor } from '../core/fractal.js';
 import { fillMandelbrot } from '../core/deep-fill.js';
 
-const EDGE = 160;
-
 function tokenRgb(name, fallback) {
   let raw = '';
   try { raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim(); } catch { raw = ''; }
   return parseCssColor(raw) || fallback;
 }
 
-export function paintSetStill(canvas, kind) {
-  if (!canvas || typeof canvas.getContext !== 'function') return;
+export function paintSetStill(canvas, kind, cssPx) {
+  if (!canvas || typeof canvas.getContext !== 'function') return false;
+  const dpr = typeof window !== 'undefined' && window.devicePixelRatio ? Math.min(2, window.devicePixelRatio) : 1;
+  const shown = Math.round(Number(cssPx) || canvas.clientWidth || 0);
+  if (shown < 8) return false;
+  const edge = Math.max(8, Math.round(shown * dpr));
+  if (canvas.dataset.edge === String(edge) && canvas.dataset.kind === kind) return true;
   const ctx = canvas.getContext('2d', { alpha: false });
-  if (!ctx) return;
-  const w = EDGE;
-  const h = EDGE;
+  if (!ctx) return false;
+  const w = edge;
+  const h = edge;
   canvas.width = w;
   canvas.height = h;
+  canvas.dataset.edge = String(edge);
+  canvas.dataset.kind = kind;
   const field = new Float32Array(w * h);
   const iter = kind === 'julia' ? 40 : 48;
   const view = kind === 'julia'
@@ -35,4 +40,5 @@ export function paintSetStill(canvas, kind) {
     tokenRgb('--surface-2', { r: 236, g: 232, b: 222 }),
   );
   ctx.putImageData(img, 0, 0);
+  return true;
 }

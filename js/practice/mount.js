@@ -9,6 +9,15 @@ import { BOOK_CHAPTERS } from '../data/book-path.js';
 import { PRACTICE, realize } from './catalog.js';
 import { selectItems, sectionOfFocus, practiceEntries } from './queue.js';
 import { answersMatch } from './check.js';
+
+function missWhy(step, value) {
+  const list = Array.isArray(step && step.misses) ? step.misses : [];
+  for (const miss of list) {
+    const target = miss && (miss.choice != null ? miss.choice : miss.match);
+    if (target && answersMatch(value, target, miss.accept)) return miss.why || step.why;
+  }
+  return step && step.why;
+}
 import { loadDeck, saveDeck, reviewCard, dueOrder, localDay } from './leitner.js';
 import { renderCard, renderSheet, renderFlash } from './render.js';
 
@@ -70,6 +79,7 @@ export function mountPrep(el, ctx, spec) {
   let hint = 0;
   let phase = 'ask';
   let right = false;
+  let toldWhy = '';
   let done = false;
   let deck = loadDeck(ctx.store);
   let flashShow = false;
@@ -176,6 +186,7 @@ export function mountPrep(el, ctx, spec) {
     if (!item || phase !== 'ask') return;
     const s = item.steps[step];
     right = answersMatch(value, s.answer, s.accept);
+    toldWhy = right ? s.why : missWhy(s, value);
     phase = 'told';
     paint();
   }
@@ -205,6 +216,7 @@ export function mountPrep(el, ctx, spec) {
       hint,
       phase: entry.view === 'worked' ? 'ask' : phase,
       right,
+      why: toldWhy,
       kindLabel: KIND_LABEL[item.kind] || 'Practice',
       count: `Step ${Math.min(step + 1, item.steps.length)} of ${item.steps.length}`,
       showGenerate: !!(item.generator && phase === 'told' && step >= item.steps.length - 1 && !endless),

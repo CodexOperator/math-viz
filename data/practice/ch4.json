@@ -1028,6 +1028,12 @@
           "(3-i)/2",
           "\\frac{3-i}{2}",
           "(2+i)/(1+i)"
+        ],
+        "misses": [
+          {
+            "match": "0",
+            "why": "That treats $i^2$ as $+1$, so $(1+i)(1-i)$ looks like $0$. A conjugate product is $|z|^2$, which is positive. Exercise 1(b), page 122."
+          }
         ]
       }
     ],
@@ -1057,9 +1063,23 @@
         ],
         "choices": [
           "$|z+i|<2$",
-          "$|z|<2$",
-          "$|z+i|>2$",
+          "$\\dfrac{z+i}{2}<1$",
+          "$\\left|\\dfrac{z+i}{2}\\right|<2$",
           "$|z+i|<1$"
+        ],
+        "misses": [
+          {
+            "choice": "$\\dfrac{z+i}{2}<1$",
+            "why": "That compares the complex ratio to $1$. The test is $|w|<1$, the modulus. Theorem 4.12, page 118."
+          },
+          {
+            "choice": "$\\left|\\dfrac{z+i}{2}\\right|<2$",
+            "why": "$2$ bounds $|z+i|$, not $|w|$. Rescale $w=(z+i)/2$, so the threshold on $|w|$ is $1$. Exercise 2, page 122."
+          },
+          {
+            "choice": "$|z+i|<1$",
+            "why": "That forgot the rescale. $|w|<1$ with $w=(z+i)/2$ is $|z+i|<2$."
+          }
         ]
       }
     ],
@@ -1166,5 +1186,238 @@
     },
     "memory": "For $\\sum (z-\\alpha)^n/c^n$ the radius is $|c|$. The centre does not change it. Theorem 4.16, page 125.",
     "formula": "$\\rho=|c|$ for $\\sum (z-\\alpha)^n/c^n$."
+  },
+  {
+    "id": "ch4-4.1-yn-blank",
+    "chapter": 4,
+    "section": "4.1",
+    "cite": { "ref": "Theorem 4.1", "page": 104, "href": "https://complexanalysis.org/web/sec_sequences-series.html#Lim_Zn_Thm" },
+    "kind": "proof-blank",
+    "prompt": "Theorem 4.1, page 104. From $z_n\\to\\zeta$, bound the imaginary parts.",
+    "steps": [
+      {
+        "text": "$|y_n-v|$ is at most ___.",
+        "answer": "$|z_n-\\zeta|$",
+        "why": "The imaginary part of a number is at most its modulus. Theorem 4.1, page 104.",
+        "accept": ["|z_n-\\zeta|", "|zn-zeta|", "|z_n-zeta|"],
+        "misses": [
+          { "match": "0", "why": "Zero is the limit of the terms in a convergent series, not this bound. $|y_n-v|\\le|z_n-\\zeta|$. Theorem 4.1, page 104." }
+        ]
+      }
+    ],
+    "generator": null,
+    "memory": "$|y_n-v|\\le|z_n-\\zeta|$. Theorem 4.1, page 104."
+  },
+  {
+    "id": "ch4-4.1-stage-flash",
+    "chapter": 4,
+    "section": "4.1",
+    "cite": { "ref": "Definition 4.1", "page": 103, "href": "https://complexanalysis.org/web/sec_sequences-series.html#Seq_Lim_Def" },
+    "kind": "flash",
+    "prompt": "How do you check that a sequence settles?",
+    "steps": [
+      {
+        "text": "How do you check that a sequence settles?",
+        "answer": "Draw a disk of radius $\\varepsilon$. Find $N$ so the tail sits in it. A smaller disk may need a later $N$.",
+        "why": "Definition 4.1, page 103."
+      }
+    ],
+    "generator": null,
+    "memory": "1. Draw a disk of radius $\\varepsilon$ around the limit. 2. Find $N$ so the tail sits in that disk. 3. A smaller disk may need a later $N$.",
+    "formula": "$|z_n-\\zeta|<\\varepsilon$ for all $n>N$."
+  },
+  {
+    "id": "ch4-4.2-stage-flash",
+    "chapter": 4,
+    "section": "4.2",
+    "cite": { "ref": "Theorem 4.9", "page": 113, "href": "https://complexanalysis.org/web/sec_julia-mandelbrot.html#Kc_Connected" },
+    "kind": "flash",
+    "prompt": "When is the Julia set of $z^2+c$ one piece?",
+    "steps": [
+      {
+        "text": "When is the Julia set of $z^2+c$ one piece?",
+        "answer": "Exactly when the orbit of $0$ stays bounded.",
+        "why": "Theorem 4.9, page 113."
+      }
+    ],
+    "generator": null,
+    "memory": "1. Start at $0$ and iterate $z^2+c$. 2. If that orbit stays bounded, the Julia set is one piece. 3. If it leaves, the Julia set is dust.",
+    "formula": "$K_c$ is connected iff the orbit of $0$ is bounded."
+  },
+  {
+    "id": "ch4-4.2-dyadic-mc",
+    "chapter": 4,
+    "section": "4.2",
+    "cite": { "ref": "Example 4.9", "page": 113, "href": "https://complexanalysis.org/web/sec_julia-mandelbrot.html#K-0" },
+    "kind": "mc",
+    "prompt": "On the unit circle, $z_0$ is a $2^n$-th root of unity. Its argument is ___. Example 4.9, page 113.",
+    "steps": [
+      {
+        "text": "The argument is ___.",
+        "answer": "$\\dfrac{2\\pi m}{2^n}$",
+        "why": "A $2^n$-th root of unity sits at angle $2\\pi m/2^n$. Example 4.9, page 113, keeps that point on the unit circle.",
+        "choices": [
+          "$\\dfrac{2\\pi m}{2^n}$",
+          "$\\dfrac{m}{2^n}$",
+          "$\\dfrac{\\pi m}{2^n}$",
+          "$2^n$"
+        ],
+        "misses": [
+          { "choice": "$\\dfrac{m}{2^n}$", "why": "That drops the $2\\pi$. A $2^n$-th root of unity sits at angle $2\\pi m/2^n$, not $m/2^n$." },
+          { "choice": "$\\dfrac{\\pi m}{2^n}$", "why": "Half a turn is not the full circle. The angle is $2\\pi m/2^n$." },
+          { "choice": "$2^n$", "why": "That is the order of the root, not its argument." }
+        ]
+      }
+    ],
+    "generator": null,
+    "memory": "A $2^n$-th root of unity has argument $2\\pi m/2^n$. Example 4.9, page 113."
+  },
+  {
+    "id": "ch4-4.3-stage-flash",
+    "chapter": 4,
+    "section": "4.3",
+    "cite": { "ref": "Theorem 4.12", "page": 118, "href": "https://complexanalysis.org/web/sec_convergence-theorems.html#Geometric_Series" },
+    "kind": "flash",
+    "prompt": "How do you sum a geometric series inside the unit disk?",
+    "steps": [
+      {
+        "text": "How do you sum a geometric series inside the unit disk?",
+        "answer": "Check $|z|$ against $1$. Write $S_n=(1-z^n)/(1-z)$. Inside the disk, $z^n\\to 0$.",
+        "why": "Theorem 4.12, page 118."
+      }
+    ],
+    "generator": null,
+    "memory": "1. Compare $|z|$ with $1$, not $z$ with $1$. 2. Write $S_n=(1-z^n)/(1-z)$. 3. Inside the disk, $z^n\\to 0$, so the sum is $1/(1-z)$.",
+    "formula": "$\\sum_{n=0}^{\\infty} z^n=1/(1-z)$ for $|z|<1$."
+  },
+  {
+    "id": "ch4-4.3-nth-term-mc",
+    "chapter": 4,
+    "section": "4.3",
+    "cite": { "ref": "Theorem 4.5", "page": 106, "href": "https://complexanalysis.org/web/sec_sequences-series.html" },
+    "kind": "next-step-mc",
+    "prompt": "You have shown $|z|>1$ for $\\sum z^n$. What is the next step before you conclude divergence? Theorem 4.5, page 106, and Theorem 4.12, page 118.",
+    "steps": [
+      {
+        "text": "The next step is ___.",
+        "answer": "Apply the nth-term test: the terms do not go to $0$.",
+        "why": "Showing $|z|>1$ is not the last line. The terms $z^n$ do not go to $0$, so Theorem 4.5, page 106, says the series diverges.",
+        "choices": [
+          "Apply the nth-term test: the terms do not go to $0$.",
+          "Stop. $|z|>1$ already says the series diverges.",
+          "Compare $z$ with $1$, without a modulus.",
+          "Say the radius goes to $0$."
+        ],
+        "misses": [
+          { "choice": "Stop. $|z|>1$ already says the series diverges.", "why": "Showing $|w|>1$ skips the nth-term step. The next line is that the terms do not go to $0$. Theorem 4.5, page 106." },
+          { "choice": "Compare $z$ with $1$, without a modulus.", "why": "That compares a complex number to $1$. The test is $|z|<1$, the modulus." },
+          { "choice": "Say the radius goes to $0$.", "why": "A radius is $R=\\infty$ or $R=0$, not something that goes to $0$. The divergence step is still the nth-term test." }
+        ]
+      }
+    ],
+    "generator": null,
+    "memory": "If the terms do not go to $0$, the series diverges. Theorem 4.5, page 106."
+  },
+  {
+    "id": "ch4-4.4-stage-flash",
+    "chapter": 4,
+    "section": "4.4",
+    "cite": { "ref": "Theorem 4.15", "page": 124, "href": "https://complexanalysis.org/web/sec_power-series.html#Regions_of_Convergence" },
+    "kind": "flash",
+    "prompt": "How does convergence spread inside a power series?",
+    "steps": [
+      {
+        "text": "How does convergence spread inside a power series?",
+        "answer": "Convergence at $z_1$ spreads to every point closer to the centre. The set is a disk. Write $R=\\infty$ or $R=0$ when that is the radius.",
+        "why": "Theorem 4.15, page 124, and Theorem 4.16, page 125."
+      }
+    ],
+    "generator": null,
+    "memory": "1. Convergence at $z_1$ spreads to every point closer to the centre. 2. The set of convergence is a disk, the disk from §4.1. 3. Write $R=\\infty$ or $R=0$. The radius does not go to $\\infty$.",
+    "formula": "Convergence at $z_1$ implies convergence for $|z-\\alpha|<|z_1-\\alpha|$."
+  },
+  {
+    "id": "ch4-4.4-factorial-mc",
+    "chapter": 4,
+    "section": "4.4",
+    "cite": { "ref": "Theorem 4.16", "page": 125, "href": "https://complexanalysis.org/web/sec_power-series.html#th15" },
+    "kind": "next-step-mc",
+    "prompt": "In a ratio for the radius, $\\dfrac{(2n)!}{(2n+2)!}$ simplifies to ___. Theorem 4.16, page 125.",
+    "steps": [
+      {
+        "text": "The ratio of those factorials is ___.",
+        "answer": "$\\dfrac{1}{(2n+1)(2n+2)}$",
+        "why": "$(2n+2)!=(2n+2)(2n+1)(2n)!$, so the ratio is $1/((2n+1)(2n+2))$. Theorem 4.16, page 125.",
+        "choices": [
+          "$\\dfrac{1}{(2n+1)(2n+2)}$",
+          "$\\dfrac{n!}{(n+2)!}$",
+          "$\\dfrac{1}{(n+1)(n+2)}$",
+          "$\\dfrac{(2n+2)!}{(2n)!}$"
+        ],
+        "misses": [
+          { "choice": "$\\dfrac{n!}{(n+2)!}$", "why": "That replaces $(2n)!$ with $n!$. The factorial ratio keeps the $2n$ in the argument: $(2n)!/(2n+2)!$ is not $n!/(n+2)!$." },
+          { "choice": "$\\dfrac{1}{(n+1)(n+2)}$", "why": "That is the ratio for $n!$, not for $(2n)!$. Keep the $2n$." },
+          { "choice": "$\\dfrac{(2n+2)!}{(2n)!}$", "why": "That inverts the ratio. The coefficient ratio $(2n)!/(2n+2)!$ gets smaller." }
+        ]
+      }
+    ],
+    "generator": null,
+    "memory": "$(2n)!/(2n+2)!=1/((2n+1)(2n+2))$. Do not replace $(2n)!$ by $n!$. Theorem 4.16, page 125."
+  },
+  {
+    "id": "ch4-4.4-radius-wording-mc",
+    "chapter": 4,
+    "section": "4.4",
+    "cite": { "ref": "Theorem 4.16", "page": 125, "href": "https://complexanalysis.org/web/sec_power-series.html#th15" },
+    "kind": "mc",
+    "prompt": "The series $\\sum z^n/n!$ converges for every $z$. The radius is ___. Theorem 4.16, page 125.",
+    "steps": [
+      {
+        "text": "The radius is ___.",
+        "answer": "$R=\\infty$",
+        "why": "The radius is $R=\\infty$. It does not go to $\\infty$. Theorem 4.16, page 125.",
+        "choices": [
+          "$R=\\infty$",
+          "$R$ goes to $\\infty$",
+          "$R=0$",
+          "$R$ goes to $0$"
+        ],
+        "misses": [
+          { "choice": "$R$ goes to $\\infty$", "why": "The radius does not go anywhere. Write $R=\\infty$." },
+          { "choice": "$R=0$", "why": "$R=0$ is the series that converges only at the centre. This one converges everywhere, so $R=\\infty$." },
+          { "choice": "$R$ goes to $0$", "why": "Write $R=0$ when that is the radius. It does not go to $0$." }
+        ]
+      }
+    ],
+    "generator": null,
+    "memory": "Write $R=\\infty$ or $R=0$. The radius does not go to $\\infty$. Theorem 4.16, page 125."
+  },
+  {
+    "id": "ch4-4.4-ratio-term-mc",
+    "chapter": 4,
+    "section": "4.4",
+    "cite": { "ref": "Theorem 4.13", "page": 120, "href": "https://complexanalysis.org/web/sec_convergence-theorems.html" },
+    "kind": "next-step-mc",
+    "prompt": "For $\\sum a_n z^n$, the ratio test uses the limit of ___. Theorem 4.13, page 120.",
+    "steps": [
+      {
+        "text": "The ratio is of ___.",
+        "answer": "$\\left|\\dfrac{a_{n+1} z^{n+1}}{a_n z^n}\\right|$",
+        "why": "The test reads the full term $a_n z^n$, then takes the modulus. Theorem 4.13, page 120.",
+        "choices": [
+          "$\\left|\\dfrac{a_{n+1} z^{n+1}}{a_n z^n}\\right|$",
+          "$\\left|\\dfrac{a_{n+1}}{a_n}\\right|$",
+          "$\\dfrac{a_{n+1} z^{n+1}}{a_n z^n}$",
+          "$\\left|\\dfrac{a_n}{a_{n+1}}\\right|$"
+        ],
+        "misses": [
+          { "choice": "$\\left|\\dfrac{a_{n+1}}{a_n}\\right|$", "why": "That is the coefficient $a_n$ alone. The ratio test uses the full term $a_n z^n$." },
+          { "choice": "$\\dfrac{a_{n+1} z^{n+1}}{a_n z^n}$", "why": "That drops the modulus. Compare $|a_{n+1} z^{n+1}/(a_n z^n)|$ with $1$, not the complex ratio with $1$." },
+          { "choice": "$\\left|\\dfrac{a_n}{a_{n+1}}\\right|$", "why": "That inverts the ratio and still uses only the coefficient $a_n$, not the term $a_n z^n$." }
+        ]
+      }
+    ],
+    "generator": null,
+    "memory": "The ratio test uses $|a_{n+1} z^{n+1}/(a_n z^n)|$, the full term, not the coefficient alone. Theorem 4.13, page 120."
   }
 ]

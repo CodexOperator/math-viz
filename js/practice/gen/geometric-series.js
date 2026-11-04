@@ -105,6 +105,13 @@ function sumItem(rand, seed) {
           'Compare $|z|$ with 1.',
           converges ? 'The square of the modulus is smaller than 1.' : 'The square of the modulus is at least 1.',
         ],
+        misses: [
+          {
+            match: 'z<1',
+            accept: ['z < 1', 'w<1', 'w < 1', 'z<1'],
+            why: 'That compares the complex number to 1. The test is $|z|<1$, the modulus. Theorem 4.12, page 118.',
+          },
+        ],
       },
       {
         text: 'The sum is ___.',
@@ -139,7 +146,14 @@ function radiusItem(rand) {
         why: `Theorem 4.16, page 125: dividing by $(${coeff})^n$ makes the radius $|${coeff}|$. The centre does not change it.`,
         hints: [
           'The centre $\\alpha$ does not appear in the radius.',
-          'For $\\sum (z-\\alpha)^n/c^n$ the radius is $|c|$.',
+          'For $\\sum (z-\\alpha)^n/c^n$ the radius is $|c|$. The ratio uses the full term, not the coefficient alone.',
+        ],
+        misses: [
+          {
+            match: String(cx),
+            accept: [String(cy), 'goes to infinity', 'R goes to \\infty'],
+            why: 'The centre is not the radius, and a radius does not go to $\\infty$. Theorem 4.16, page 125, gives $|c|$, or $R=\\infty$ when that is the case. The ratio is of the full terms $a_n z^n$, not of the coefficients alone.',
+          },
         ],
       },
     ],

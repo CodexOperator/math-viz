@@ -1592,3 +1592,15 @@ The Chapters button is labeled and is 118×44. The site name wraps to two lines,
 Chapter rows and the section rows that have a page are real doors. 4.1 opens with "Sequences and Series" under the header. Continue, after a Chapter 4 tick and a Chapter 5 tick, says "Next is §4.1, Exercise 13. 2 of 10 exercises" and opens that card with the title at 163px, below the 58px header. A lone 5.1.2 tick is "1 of 10", and Chapter 5 reads Open. Back puts the book back at the 900px it left, and puts a chapter back at the 1600px it left. On `#home-t1`, Test 2 pushes `#home-f2`, and Back returns with Test 1 pressed.
 
 Chapter 5's first screen is the 44px up link, the title, the where-line, the square, and Play, at 390 and at 1280. That screen can stay.
+
+## Chapter 4 and 5, batch 2
+
+Merged `cursor/practice-engine` at `4030750`. Continue, the 44px up link, and Test prep stayed. The chapter stages stayed.
+
+At 390×844, light, the Chapter 4 status ends at y = 392, inside 800. The first section opens "An orbit is a sequence." The Julia and Mandelbrot stills are under "The orbit is the sequence from §4.1." in §4.2. The Julia canvas is 169 CSS pixels and 169 bitmap pixels. Both sequence chips, then the `|y_n-v|` blank, then the ticks. Before that work the tick is `display: none`.
+
+Chapter 5 opens on the bottom. There is no modulus blank. At z = 0 the card keeps "1, because every term of the series after the constant is 0" after the point leaves. `e^{iπ/2}` then lands at i and stays. A drag off radius 1 says "This question is about the unit circle." §§5.2–5.5 are plain Later rows, no link. The phone square is 358px and Play ends at 790.
+
+At 1280×800, light and dark, the square is 400px and Play ends at 798. The cap is 440px when the window is taller. No sideways scroll (`scrollWidth` 1265).
+
+A wrong choice on the rescale, the conjugate product, the missing 2π, the factorial argument, "R goes to ∞", the skipped nth-term step, or `a_n` instead of `a_n z^n` names that slip. Cites stay on the 202 Updated Edition pages.
