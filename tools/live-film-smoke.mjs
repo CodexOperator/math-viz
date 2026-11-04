@@ -12,13 +12,16 @@ import { createMotion } from '../js/core/anim.js';
 import { filmStops } from '../js/core/film.js';
 import {
   DURATION,
+  EXP_DURATION,
   SETTLED,
   TAIL,
   WINDOW,
   beatsFor,
   createLivePlayer,
+  expFrame,
   fateOf,
   finishedStops,
+  placeReal,
   placeSeed,
   powers,
   settleFrame,
@@ -106,6 +109,32 @@ const mod = Math.hypot(SETTLED.re, SETTLED.im);
   }
   check('the stop cut is the film panel cut', JSON.stringify(finishedStops(2, [0, 0.5, 1.2, 2])) === JSON.stringify(filmStops(2, [0, 0.5, 1.2, 2])));
   check('fate is the circle', fateOf(0.2) === 'settle' && fateOf(1) === 'stay' && fateOf(1.2) === 'leave');
+}
+
+{ // §5.1: the clock owns the angle, the hand owns the radius
+  const end = expFrame(EXP_DURATION, { re: 0 });
+  check('a full turn of e^{iy} lands on -1', end.snapped && Math.abs(end.y - Math.PI) < 1e-9 && Math.abs(end.re + 1) < 1e-9 && end.claim.holds);
+  const mid = expFrame(EXP_DURATION / 2, { x: 0 });
+  check('halfway, e^{iy} is on the positive real axis', Math.abs(mid.y) < 1e-9 && Math.abs(mid.re - 1) < 1e-9 && Math.abs(mid.im) < 1e-9);
+  const grown = expFrame(EXP_DURATION / 2, { re: Math.log(2) });
+  check('a larger x keeps the angle and doubles the radius', Math.abs(grown.y) < 1e-9 && Math.abs(grown.radius - 2) < 1e-9 && grown.claim.holds === false);
+  check('a near-zero real part snaps onto the imaginary axis', placeReal(0.04).snapped && placeReal(0.04).x === 0);
+  const F = fakeEnv();
+  const draws = [];
+  const player = createLivePlayer({
+    duration: EXP_DURATION,
+    params: { re: 0, im: 0 },
+    scene: (t, params) => expFrame(t, params),
+    motion: createMotion(F.env),
+    onFrame: (scene) => draws.push(scene),
+  });
+  player.toggle();
+  F.frame(16);
+  for (let i = 0; i < 20; i += 1) F.frame(16);
+  const t0 = player.t;
+  const y0 = player.scene().y;
+  player.setParams({ re: Math.log(2), im: 0 });
+  check('changing x while e^z plays does not rewind the angle', player.t === t0 && Math.abs(player.scene().y - y0) < 1e-9 && Math.abs(player.scene().radius - 2) < 1e-9 && player.playing);
 }
 
 { // opens on the finished frame, and a paused player draws nothing

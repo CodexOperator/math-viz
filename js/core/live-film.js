@@ -23,6 +23,9 @@ export const TAIL = 0.35;
 export const WINDOW = 1.35;
 export const CIRCLE_SNAP = 0.06;
 export const SETTLED = Object.freeze({ re: 0.5, im: 0.25 });
+export const EXP_DURATION = 8;
+export const EXP_X_MAX = 1.2;
+export const EXP_X_SNAP = 0.06;
 
 const END_EPS = 1e-3;
 
@@ -119,6 +122,48 @@ export function settleClaim(fate, termMod, index) {
   };
 }
 
+// §5.1. The clock owns y, from −π to π. The hand owns x.
+// w = e^x (cos y + i sin y). Dragging x changes the radius and does not rewind y.
+export function placeReal(x) {
+  let v = Number(x);
+  if (!Number.isFinite(v)) v = 0;
+  v = clamp(v, -EXP_X_MAX, EXP_X_MAX);
+  if (Math.abs(v) <= EXP_X_SNAP) return { x: 0, snapped: true };
+  return { x: v, snapped: false };
+}
+
+export function expClaim(x, snapped) {
+  if (snapped) {
+    return { holds: true, text: 'On the imaginary axis the image stays on the unit circle. The angle is the clock.' };
+  }
+  if (x > 0) return { holds: false, text: 'The radius is e^x, larger than 1. The angle is still the clock.' };
+  return { holds: false, text: 'The radius is e^x, smaller than 1. The angle is still the clock.' };
+}
+
+export function expFrame(t, params, opts = {}) {
+  const D = opts.duration || EXP_DURATION;
+  const u = clamp((Number(t) || 0) / D, 0, 1);
+  const y = -Math.PI + 2 * Math.PI * u;
+  const raw = params && Number.isFinite(+params.x) ? +params.x : (params && Number.isFinite(+params.re) ? +params.re : 0);
+  const seed = placeReal(raw);
+  const radius = Math.exp(seed.x);
+  const w = { re: radius * Math.cos(y), im: radius * Math.sin(y) };
+  return {
+    t: clamp(Number(t) || 0, 0, D),
+    x: seed.x,
+    y,
+    snapped: seed.snapped,
+    radius,
+    re: w.re,
+    im: w.im,
+    w,
+    mod: radius,
+    fate: seed.snapped ? 'stay' : (seed.x > 0 ? 'leave' : 'settle'),
+    beats: [0, D / 2, D],
+    claim: expClaim(seed.x, seed.snapped),
+  };
+}
+
 export function settleFrame(t, params, opts = {}) {
   const D = opts.duration || DURATION;
   const N = opts.terms || TERMS;
@@ -161,10 +206,12 @@ export function createLivePlayer(env = {}) {
   const motion = env.motion || createMotion();
   const reduced = typeof env.reduced === 'function' ? env.reduced : () => false;
   const sceneOf = typeof env.scene === 'function' ? env.scene : (t, params) => settleFrame(t, params, { duration: D });
-  let params = placeSeed(
-    env.params && env.params.re !== undefined ? env.params.re : SETTLED.re,
-    env.params && env.params.im !== undefined ? env.params.im : SETTLED.im,
-  );
+  // The scene owns snapping. The player only keeps finite numbers, so a film
+  // whose hand is a real part is not forced onto the unit circle.
+  let params = {
+    re: env.params && Number.isFinite(+env.params.re) ? +env.params.re : SETTLED.re,
+    im: env.params && Number.isFinite(+env.params.im) ? +env.params.im : SETTLED.im,
+  };
   let t = D;
   let playing = false;
   let watched = false;
@@ -274,10 +321,10 @@ export function createLivePlayer(env = {}) {
   function setParams(next) {
     if (dead) return;
     const prev = params;
-    params = placeSeed(
-      next && Number.isFinite(+next.re) ? +next.re : prev.re,
-      next && Number.isFinite(+next.im) ? +next.im : prev.im,
-    );
+    params = {
+      re: next && Number.isFinite(+next.re) ? +next.re : (next && Number.isFinite(+next.x) ? +next.x : prev.re),
+      im: next && Number.isFinite(+next.im) ? +next.im : prev.im,
+    };
     // Playing: this paints the frame the hand just asked for, at the current t.
     // The clock is already scheduled and will paint the next one. t is not moved.
     // Paused: this one paint is the whole draw. Nothing is scheduled.
