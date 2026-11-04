@@ -1503,3 +1503,35 @@ Flash cards are one at a time. The back of "What is a complex function…" stays
 ### Keep
 
 The card titles carry the section and the page: Exercise 13 page 54, Theorem 2.1 page 62, Definition 2.1 page 55, Section 2.4 page 68, Section 2.5 page 72. Exercise 1(b), the branch card, and the circle card name the mistake and leave the other choices open. The linear generator computes the image, rejects a wrong number, and accepts \(3-7*i\). Flashes are one card, the back stays closed, and the cite is the title, pages 43 through 64. The \(x = 2\) parabola is asked after \(x = 1\) is worked, and the claim does not print the equation. The \(1/z\) card asks for \(x = 1\) after \(x = 2\) is worked. At both widths and in both themes the claim is on the first screen, the controls are 44px, nothing scrolls sideways, and the console stays quiet.
+
+## unslop (ch2 batch 2)
+
+Read heydamir/unslop at `a6f121ee` (polish only; `kit/SKILL.md` wins where they disagree). Preview https://ch2-preview.complexanalysis.pages.dev matches this tip: `js/stations/chapter2.js` and `js/stations/ch2-picture.js` are the files at `a0946d2`. Headless Chrome, 390×844 then 1280×800, light then dark, `#chapter-2`, all five stages. A drag on each picture in the light, and a drag of §2.4 to the left edge. No product code changed. No console errors. No sideways scroll: `scrollWidth` was 390 and 1280.
+
+The page is already this book. Warm paper, a serif title, four teaching colours on the planes, quiet chrome. Light paper is `#f6f3ec`, dark paper is `#0d121c`. Blue, orange, green, and purple are `#0b63ad`, `#a84300`, `#006e53`, `#9d3a8a` in the light and `#62adf2`, `#ff9d5c`, `#3fd0a0`, `#e48fd2` in the dark. No gradient, no glow, no emoji, no badge, no pulsing control. The uppercase kickers are the book path. This pass leaves them.
+
+The moment is the pair of planes. At 390 the first screen holds both squares and the claim: the squares are 158×158 from y = 448, and the claim ends at y = 694, in the light and in the dark. At 1280 the squares are 268×268, the pair is 544px wide inside a 952px card, and the claim ends at y = 718 in an 800px window, again in both themes. A drag on §2.1 moves the sentence from “on or above Im w = 2” to “below.” The square’s outline stays `none`.
+
+### Verdict
+
+ANOTHER BATCH
+
+One batch, these six, then this lens rests. The picture, the colours, and the first screen already hold. What is left is copy and marks that still look like the draft: an empty heading, a sentence about a different line, caret math on the buttons, and a 5px dot the frame can cut.
+
+### Ranked
+
+1. **Hide the Summit heading until the sentence is there.** On every stage, at both sizes and in both themes, the heading SUMMIT is showing and the sentence under it is hidden. The next thing is the disabled Stage complete bar. On §2.4 that is the block under the flash card: the heading, then a grey “Stage complete.” Change: hide that heading with the sentence. When the stage is earned, show the heading and the sentence together. The button stays, and it stays disabled until then.
+
+2. **The §2.5 worked paragraph should be the line on the screen.** The picture opens on \(x = 1\), and the claim says \(1/z\) sits on the orange circle. The paragraph under Worked is the algebra for \(x = 2\), and then the sentence “The picture uses a different vertical line.” The practice card under it asks for the circle of the line the picture already shows. Change: the worked lines are \(x = 1\) and \(|w - 1/2| = 1/2\). The circle for \(x = 2\) stays in the practice, and the sentence that the picture is a different line goes.
+
+3. **The practice formulas should be the same math as the paragraph above them.** §2.2’s buttons read `u = 4 - v^2/16`, `u = 4 - v^2/4`, `v = 4 - u^2/16`, and `u = 2 - v^2/16`, each 143×44, under a prompt set in KaTeX. §2.5’s buttons read `|w - 1/2| = 1/2` and `|w - 1/4| = 1/4`. §2.3’s prompt says “u0 + iv0”, and one choice says `|z - z_0|`. Change: render those labels and that prompt with the same math as the worked paragraph, so the caret and the underscores go. The plain forms can stay in the accepted answers.
+
+4. **The four root choices should be one row.** On §2.4, at both widths and in both themes, the choices are `-i`, `i`, `1`, and `-1`, each 49×44, stacked. The card beside them is 358px on the phone. Change: one row of four targets, each at least 44px, the same height. Four symbols fit in the card (four 44px targets and the gaps are about 200px).
+
+5. **§2.2 says the worked answer twice, and then says the parabola was computed.** The worked paragraph gives \(u = 1 - v^2/4\) for \(x = 1\). The card directly under it says “The line \(x = 1\) was \(u = 1 - v^2/4\).” The next card opens with “Another vertical line under z^2. The parabola is computed.” Change: the \(x = 2\) card asks for the image and leaves the line just worked in the paragraph above. The generator prompt ends at “Another vertical line under \(z^2\).”
+
+6. **The mark is 5.4px on the phone, and the frame cuts it at the edge.** Each square is 158×158 at 390, and the green circle is radius 11 in a 320 viewBox, which draws at 5.4px. At 1280 it is 9.2px in a 268px square. Dragging §2.4 to the left edge put the centre 2px inside the border with that 5.4px radius, so the mark crosses the frame. The claim on that still was “On the negative real axis, Arg jumps.” The outline stayed none. Change: paint the green mark and the purple mark at about 14px on the phone. The 44px hit stays. Clamp the centre in by that radius so the whole mark stays inside the square.
+
+### Keep
+
+The paper, the serif title, and the four teaching colours. The header is the name, the theme button, and the menu, and it stays quiet in both themes. The lede is the colour key, one time, and the captions under the squares say “z plane” and “w plane.” The uppercase kickers (The Book, Worked, Practice, Further reading) stay. They are the book path. Show the back stays the card’s own full-width button, and the back stays closed until asked. Stage complete stays 44px and stays disabled until the claim has been both true and false. The 544px cap on the pair stays, so the claim can end at y = 718 inside the 800px window. A drag leaves the square unframed. Memory stays hidden until the card is finished. The status line, “0 of 5 stages marked.”, sits under the five stages.
