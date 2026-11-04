@@ -10,7 +10,10 @@ import { chapterTally, sectionFinished, foldLegacyExercises, saveSharedTicks, to
 import { EXP_DURATION, expFrame, finishedStops } from '../js/core/live-film.js';
 import { compile } from '../js/core/parse.js';
 import { parseBookRoute } from '../js/book/route.js';
-import { uniformClaim, taylorClaim, laurentClaim, answerMatches } from '../js/core/ch7-series.js';
+import { uniformClaim, taylorClaim, laurentClaim, answerMatches, windingFrame, removableClaim } from '../js/core/ch7-series.js';
+import { chapter7WalkSections } from '../js/data/chapter-7.js';
+import { id as laurentGenId } from '../js/practice/gen/laurent-annulus.js';
+import { id as orderGenId } from '../js/practice/gen/singularity-order.js';
 import { generate as laurentProblem, sampleAgrees } from '../js/practice/gen/laurent-annulus.js';
 import { generate as orderProblem } from '../js/practice/gen/singularity-order.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
@@ -244,8 +247,25 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
   check('taylor partial sums agree inside the disk and not past ±i',
     taylorClaim(0.3, 0, 1).holds === true
     && taylorClaim(1.3, 0, 8).holds === false
-    && /nearest singularity/.test(taylorClaim(1.3, 0, 8).text)
+    && /circle through/.test(taylorClaim(1.3, 0, 8).text)
+    && taylorClaim(0.3, 0, 1, false).text === 'This partial sum agrees with the function.'
     && taylorClaim(1, 0, 4).holds === false);
+  check('uniform play changes the sentence at the opening point',
+    uniformClaim(0.35, 4).holds === true
+    && /still leaves it/.test(uniformClaim(0.35, 4).text)
+    && /brought the curve back/.test(uniformClaim(0.35, 16).text));
+  check('chapter 7 exports five stages and the generators are seed-first',
+    chapter7WalkSections().map((s) => s.id).join() === '7.1,7.2,7.3,7.4,7.5'
+    && chapter7WalkSections()[0].exercises[0] === 'ch7-stage-7.1'
+    && laurentGenId === 'laurent-annulus'
+    && orderGenId === 'singularity-order'
+    && windingFrame(0.4, 0).holds === false
+    && windingFrame(Math.PI * 2, Math.PI * 2).text.includes('order 2')
+    && removableClaim(1.4).holds === false
+    && /removable/.test(removableClaim(0.1).text)
+    && /slip/.test(practice.find((item) => item.id === 'ch7-7.1-mtest-blank').steps[2].why)
+    && readFileSync(new URL('../js/app.js', import.meta.url), 'utf8').includes('if (ch.n > 7) continue')
+    && !/next batch|cards are written/.test(readFileSync(new URL('../js/data/chapter-7.js', import.meta.url), 'utf8')));
   const inside = laurentClaim(0.4, 0.1, 8);
   const between = laurentClaim(1.5, 0, 12);
   const outside = laurentClaim(2.8, 0.1, 12);

@@ -5,6 +5,7 @@
 import { stationById } from '../registry.js';
 import { BOOK, sectionHref } from '../data/book.js';
 import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, bookChapter, chapter4ExerciseIds, chapter5ExerciseIds, CHAPTER_PICTURE, pictureHref } from '../data/book-path.js';
+import { chapter7WalkSections } from '../data/chapter-7.js';
 import { test2ProblemById } from '../data/test2-problems.js';
 import { loadSharedTicks, saveSharedTicks, toggleTick, sectionFinished, chapterTally } from '../book/progress.js';
 import { h, appendRich, sourceTag } from './test2-ui.js';
@@ -18,6 +19,12 @@ function slug(id) {
 function ticksOf(store) {
   return loadSharedTicks(store, (id) => !!test2ProblemById(id), chapter4ExerciseIds());
 }
+
+function chapter7Ticks(store) {
+  return loadSharedTicks(store, (id) => typeof id === 'string' && id.startsWith('ch7-stage-'), []);
+}
+
+const SHELL_LAST = 7;
 
 function exerciseHint(section, problem) {
   if (problem && problem.hint) return problem.hint;
@@ -46,13 +53,25 @@ function mountRoadmap(el, ctx, spec) {
   let ticks = ticksOf(store);
   const tally = () => chapterTally(CHAPTER_4.sections, ticks);
 
+  const stages7 = chapter7WalkSections();
+  const ticks7 = chapter7Ticks(store);
+  const done7 = stages7.filter((s) => ticks7[s.exercises[0]] === true).length;
+  const onChapter7 = done7 > 0;
   const status = h('p', { class: 'book-status', id: 'book-status' });
-  const walk = h('a', { class: 'btn btn-primary', id: 'book-walk', href: '#chapter-4' }, 'Walk Chapter 4');
+  const walk = h('a', { class: 'btn btn-primary', id: 'book-walk', href: onChapter7 ? '#chapter-7' : '#chapter-4' }, onChapter7 ? 'Open Chapter 7' : 'Walk Chapter 4');
   const list = h('ol', { class: 'book-path', id: 'book-path' });
 
   function paint() {
     const t = tally();
-    if (t.complete) {
+    if (onChapter7) {
+      const next = stages7.find((s) => ticks7[s.exercises[0]] !== true);
+      const at = next ? stages7.indexOf(next) + 1 : stages7.length;
+      status.textContent = next
+        ? `${next.title} · Stage ${at} of ${stages7.length}`
+        : `Done · ${stages7.length} of ${stages7.length} stages.`;
+      walk.textContent = 'Open Chapter 7';
+      walk.setAttribute('href', '#chapter-7');
+    } else if (t.complete) {
       status.textContent = `${nextSentence(t)} Chapter 5 is next.`;
       walk.textContent = 'Open Chapter 5';
       walk.setAttribute('href', '#chapter-5');
@@ -65,12 +84,14 @@ function mountRoadmap(el, ctx, spec) {
       const n = Number(node.getAttribute('data-chapter'));
       const ch = BOOK_CHAPTERS.find((item) => item.n === n);
       let state = 'later';
-      if (n === 4) state = t.complete ? 'done' : 'next';
+      if (onChapter7 && n === 7) state = 'next';
+      else if (n === 4) state = t.complete ? 'done' : 'next';
       else if (ch && ch.open) state = 'open';
       node.setAttribute('data-state', state);
       const flag = node.querySelector('.book-flag');
       if (!flag) continue;
-      if (n === 4) flag.textContent = t.complete ? 'Done' : 'Next';
+      if (onChapter7 && n === 7) flag.textContent = 'Next';
+      else if (n === 4) flag.textContent = t.complete ? 'Done' : 'Next';
       else if (ch && ch.open) flag.textContent = 'Open';
       else flag.textContent = 'Later';
     }
@@ -86,7 +107,12 @@ function mountRoadmap(el, ctx, spec) {
   }
 
   for (const ch of BOOK_CHAPTERS) {
-    const head = h('div', { class: 'book-node-head' },
+    if (ch.n > SHELL_LAST) continue;
+    const headTag = ch.n === 7 ? 'a' : 'div';
+    const headAttrs = ch.n === 7
+      ? { class: 'book-node-head book-row', id: 'book-open-7', href: '#chapter-7' }
+      : { class: 'book-node-head' };
+    const head = h(headTag, headAttrs,
       h('p', { class: 'book-flag', id: `book-flag-${ch.n}` }, 'Later'),
       h('h2', { id: `book-title-${ch.n}` },
         h('span', { class: 'book-num' }, String(ch.n)),
@@ -102,11 +128,6 @@ function mountRoadmap(el, ctx, spec) {
           h('span', { class: 'book-section-mark' }, '')));
       }
       kids.push(sections);
-    }
-    if (ch.n === 7) {
-      kids.push(h('p', { class: 'book-door', id: 'book-door-7' },
-        h('a', { href: '#chapter-7', id: 'book-open-7' }, 'Open Chapter 7'),
-        '.'));
     }
     if (!ch.open && ch.door) {
       const st = stationById(ch.door);
@@ -125,7 +146,7 @@ function mountRoadmap(el, ctx, spec) {
   el.append(
     h('header', { class: 'station-header' },
       h('h1', { id: 'book-title' }, 'The Book'),
-      h('p', { class: 'station-lede', id: 'book-lede' }, 'Eleven chapters, in the order Howell and Mathews print them.'),
+      h('p', { class: 'station-lede', id: 'book-lede' }, 'Chapters 1 to 7, in the order Howell and Mathews print them.'),
       sourceTag({ pin: '202 Updated Edition, table of contents, pages i–ii', href: BOOK.html })),
     h('div', { class: 'book-next', id: 'book-next' }, status, walk),
     list);

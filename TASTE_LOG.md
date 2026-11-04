@@ -1450,3 +1450,22 @@ Title Iowan Old Style, 25.85px, weight 600, `rgb(26, 34, 48)` at 390. Lede 16.8p
 ### What to keep
 
 The four colours, and the sentence that flips: inside the band, then outside it; agreement that stops at the circle through ±i; the annulus, then the disk of non-negative powers. Play, Pause, and the freeze on the second click. Next step when motion is reduced. Check, the choices, Show the back, and Go to, all at 44px, and a wrong blank that says "Not yet." The type, the paper, the white card, and the accent button, in light and in dark. The menu row that marks chapter 7 while you are on it. The green edge on a stage that is done.
+
+## Chapter 7, batch 2
+
+Pulled `1ffe343` (the three 202-edition corrections) before editing. The first screen is the move, then the picture, the claim, and Play. At 390×844 Play ends at y=793. At 1280×800 the square is 304px so the lede can sit above it and Play still ends at y=785. The green point is 44px. A tap anywhere on the graph moves it. Play from the opening point changes the sentence from “near 1, this n still leaves it” to “a larger n has brought the curve back.”
+
+7.2 opens on “This partial sum agrees with the function.” The circle-through-±i sentence appears when the point crosses. 7.3 opens on “You are between the two orange circles.” The powers sentence appears after a crossing. A miss shows “Not yet” and the memory line. The next card stays hidden. The disabled stage button says “Answer the practice to finish this stage.” After the press the summit appears and the button says “Go to 7.2”.
+
+The Book is a 44px row. Returning to the chapter restores the scroll. The menu stops at Chapter 7. Pin rows are 44px. There is no draft note and no empty viewport under 7.5.
+
+7.4 is the winding of \(z^2\): one lap, the image goes around twice, order 2. 7.5 is \(\sin z/z\). Away from 0 it is analytic. At 0 the values stay near 1 and the singularity is removable. The chapter ends on “A non-zero analytic function has isolated zeros.” `chapter7WalkSections()` exports the five stages for Continue. Generators are `generate(seed, params)`.
+
+Checked in headless Chrome at 390 and 1280, light and dark. No sideways scroll. No console errors.
+
+## Still open
+
+- §7.3 Exercise 10 (three annuli) and §7.4 Exercise 3 (essential singularities) are not cards yet.
+- L'Hôpital and division of series are pinned, not pictured.
+- The local card stays until the shared practice engine replaces it.
+- The first square is 304px at 1280 so the lede, the claim, and Play share the window. Chapter 5's square is 480 because its lede sits under Play.

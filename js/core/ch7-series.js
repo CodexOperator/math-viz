@@ -54,19 +54,21 @@ export function placeUniform(x) {
 }
 
 // True while the green point sits inside the orange band. False once it leaves.
+// A point near 1. Small n leaves it outside the band. A larger n brings it back.
+export function bandHoldsNearOne(n) {
+  return uniformGap(0.7, n) < UNIFORM_EPS;
+}
+
 export function uniformClaim(x, n) {
   const px = placeUniform(x);
   const gap = uniformGap(px, n);
   const holds = gap < UNIFORM_EPS;
-  return {
-    holds,
-    x: px,
-    n: n | 0,
-    gap,
-    text: holds
-      ? 'At this x, the partial sum sits inside the band.'
-      : 'At this x, the same partial sum has left the band.',
-  };
+  const broughtBack = bandHoldsNearOne(n);
+  let text;
+  if (!holds) text = 'At this x, the same partial sum has left the band.';
+  else if (!broughtBack) text = 'At this x, the partial sum sits inside the band. Near 1, this n still leaves it.';
+  else text = 'At this x, the partial sum sits inside the band. A larger n has brought the curve back.';
+  return { holds, x: px, n: n | 0, gap, broughtBack, text };
 }
 
 // 1/(1+z^2) = sum_{k=0}^{n} (-1)^k z^{2k}, inside the disk out to ±i.
@@ -109,16 +111,17 @@ export function placeTaylor(re, im) {
   return { re: x, im: y, snapped: false, mod };
 }
 
-export function taylorClaim(re, im, n) {
+export function taylorClaim(re, im, n, revealed = true) {
   const z = placeTaylor(re, im);
   const err = z.snapped ? Infinity : taylorError(z, n);
+  const outside = z.snapped || z.mod >= 1 - 1e-9;
   let text;
   let holds;
-  if (z.snapped || Math.abs(z.mod - 1) <= 1e-9) {
-    text = 'The point sits on the circle through the nearest singularities, at $\\pm i$.';
-    holds = false;
-  } else if (z.mod > 1) {
-    text = 'Past the nearest singularity, this partial sum does not settle.';
+  if (!revealed && !outside) {
+    text = 'This partial sum agrees with the function.';
+    holds = err < TAYLOR_SETTLE;
+  } else if (outside) {
+    text = 'The agreement stops at the circle through $\\pm i$.';
     holds = false;
   } else if (err < TAYLOR_SETTLE) {
     text = 'This partial sum agrees with the function. The agreement stops at the circle through $\\pm i$.';
@@ -127,7 +130,7 @@ export function taylorClaim(re, im, n) {
     text = 'Inside the disk, this partial sum has not caught the value yet.';
     holds = false;
   }
-  return { holds, text, err, n: n | 0, re: z.re, im: z.im, mod: z.mod, snapped: z.snapped };
+  return { holds, text, err, n: n | 0, re: z.re, im: z.im, mod: z.mod, snapped: z.snapped, outside };
 }
 
 // Example 7.7, page 228. f(z) = 3/(2+z-z^2), poles at -1 and 2.
@@ -210,11 +213,12 @@ export function laurentError(z, n) {
   return cdist(example77Partial(z, n, region), example77(z));
 }
 
-export function laurentClaim(re, im, n) {
+export function laurentClaim(re, im, n, revealed = true) {
   const z = placeLaurent(re, im);
   const err = z.region === 'wall' ? Infinity : laurentError(z, n);
   let text;
-  if (z.region === 'wall') text = 'The point sits on a circle through a pole.';
+  if (!revealed && z.region === 'annulus') text = 'You are between the two orange circles.';
+  else if (z.region === 'wall') text = 'The point sits on a circle through a pole.';
   else if (z.region === 'disk') text = 'Inside both poles, every power in this series is non-negative.';
   else if (z.region === 'out') text = 'Outside both poles, every power in this series is negative.';
   else text = 'Between the poles, the series uses negative powers from the inner pole and non-negative powers from the outer one.';
@@ -228,6 +232,52 @@ export function laurentClaim(re, im, n) {
     mod: z.mod,
     region: z.region,
     settled: z.region !== 'wall' && err < LAURENT_SETTLE,
+  };
+}
+
+// z^2 on the unit circle. One full turn of the green point winds the image twice.
+export function windingFrame(theta, travel) {
+  const t = Number(theta) || 0;
+  const walked = Math.max(0, Number(travel) || 0);
+  const z = { re: Math.cos(t), im: Math.sin(t) };
+  const w = { re: Math.cos(2 * t), im: Math.sin(2 * t) };
+  const revealed = walked >= 2 * Math.PI - 0.05;
+  return {
+    z,
+    w,
+    theta: t,
+    travel: walked,
+    revealed,
+    text: revealed
+      ? 'The purple image went around twice. The zero has order 2.'
+      : 'The green point walks a circle about the zero.',
+    holds: revealed,
+  };
+}
+
+// sin(x)/x on the real axis. The limit at 0 is 1, so the singularity is removable.
+export function sinc(x) {
+  if (Math.abs(x) < 1e-4) return 1;
+  return Math.sin(x) / x;
+}
+
+export function placeReal(x) {
+  const v = Number(x);
+  return clamp(Number.isFinite(v) ? v : 1.4, -2.2, 2.2);
+}
+
+export function removableClaim(x) {
+  const px = placeReal(x);
+  const value = sinc(px);
+  const near = Math.abs(px) <= 0.45;
+  return {
+    x: px,
+    value,
+    near,
+    holds: near,
+    text: near
+      ? 'The values stay near 1. The singularity at 0 is removable.'
+      : 'Away from 0, $\\sin(z)/z$ is analytic.',
   };
 }
 

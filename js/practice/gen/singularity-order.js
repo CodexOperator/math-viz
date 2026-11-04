@@ -1,6 +1,9 @@
 // Order of a zero or a pole of (z-a)^m / (z-b)^k, computed by cancelling.
 // Rational, so the order is exact. seed 1 with the default params is the
 // instance stored in data/practice/ch7.json.
+// generate(seed, params): the seed is the first argument.
+
+export const id = 'singularity-order';
 
 function lcg(seed) {
   let s = (Number(seed) >>> 0) || 1;

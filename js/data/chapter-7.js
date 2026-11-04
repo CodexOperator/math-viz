@@ -29,9 +29,9 @@ export const CHAPTER_7 = deepFreeze({
       stub: false,
       picture: 'uniform',
       why: 'A series can converge at every point of a disk and still refuse to settle at one speed. Integrating term by term needs the stronger promise.',
-      observe: 'Drag the green point along the partial sum. Play raises the number of terms.',
+      observe: 'Drag the green point toward 1 until it leaves the orange band. Press Play and watch it come back.',
       key: 'Blue is the axis. Orange is the band of width ε. Green is the partial sum and the point you drag. Purple is the limit.',
-      summit: 'Uniform convergence means one N works for the whole set, which is what lets a limit pass through an integral.',
+      summit: 'One N works for the whole set.',
       worked: {
         pin: 'Example 7.2, page 214',
         href: sectionHref(S71, 'Swap_Application'),
@@ -58,7 +58,7 @@ export const CHAPTER_7 = deepFreeze({
       stub: false,
       picture: 'taylor',
       why: 'Analytic functions equal their Taylor series. The real graph of $1/(1+x^2)$ hides the singularities that stop the series.',
-      observe: 'Drag the green point. Play raises the partial sum. Purple marks where it has settled.',
+      observe: 'Drag past the orange circle.',
       key: 'Blue axes. Orange is the circle through the nearest singularities, at $\\pm i$. Green is the point you drag. Purple is where the partial sum has settled.',
       summit: 'The Taylor series fills the disk out to the nearest singularity, and it stops there.',
       worked: {
@@ -87,7 +87,7 @@ export const CHAPTER_7 = deepFreeze({
       stub: false,
       picture: 'laurent',
       why: 'A Taylor disk cannot cross a pole. Between two poles the function is still analytic, and the series has to use negative powers.',
-      observe: 'Drag the green point across a circle. Purple fills only the region whose series you are in.',
+      observe: 'Drag across an orange circle.',
       key: 'Blue axes. Orange circles pass through the poles at $-1$ and $2$. Green is the point you drag. Purple is the region whose series is in use.',
       summit: 'Between singularities the Laurent series is a geometric series aimed inward on one side and outward on the other.',
       worked: {
@@ -112,13 +112,17 @@ export const CHAPTER_7 = deepFreeze({
       id: '7.4',
       title: 'Singularities, Zeros, and Poles',
       page: 232,
-      stub: true,
-      picture: null,
-      why: 'The negative powers name the singularity: none, a finite string, or an infinite tail. The order is that count. The winding picture is the next batch.',
-      observe: '',
-      key: '',
-      summit: '',
-      worked: null,
+      stub: false,
+      picture: 'winding',
+      why: 'The negative powers name the singularity: none, a finite string, or an infinite tail. The order is how many times the image winds.',
+      observe: 'Drag the green point once around the orange circle.',
+      key: 'Blue axes. Orange is the circle about the zero. Green is the point you drag. Purple is $z^2$, and it winds twice.',
+      summit: 'The order is the number of times the image winds on one trip around the point.',
+      worked: {
+        pin: 'Definition 7.5, page 232, and Theorem 7.12, page 235',
+        href: sectionHref(S74, 'sec_singularities-4'),
+        body: 'On the picture, $f(z)=z^2$ has a zero of order 2 at 0: one lap of the green point sends the purple image around twice. A simple pole is the opposite winding. $1/z$ sends the image once the other way, which is a pole of order 1. Theorem 7.12 writes a pole of order $k$ as $h(z)/(z-\\alpha)^k$ with $h(\\alpha)\\neq 0$.',
+      },
       memory: [
         'No negative powers: removable. Lowest power $-k$: a pole of order $k$. Infinitely many: essential (Definition 7.5, page 232).',
         'Pole of order $k$: $f(z)=h(z)/(z-\\alpha)^k$ with $h(\\alpha)\\neq 0$ (Theorem 7.12, page 235).',
@@ -133,15 +137,20 @@ export const CHAPTER_7 = deepFreeze({
       id: '7.5',
       title: 'Applications of Taylor and Laurent Series',
       page: 239,
-      stub: true,
-      picture: null,
-      why: 'The same series prove that zeros are isolated, that L’Hôpital still applies, and that a bounded isolated singularity is removable. That walk is the next batch.',
-      observe: '',
-      key: '',
-      summit: '',
-      worked: null,
+      stub: false,
+      picture: 'removable',
+      why: 'The series tell you two things you can say on an exam: zeros of a non-zero analytic function are isolated, and a bounded isolated singularity can be filled in.',
+      observe: 'Drag the green point toward 0.',
+      key: 'Blue is the axis. Orange is the line at height 1, and the hole at 0. Green is the point you drag. Purple is $\\sin(z)/z$.',
+      summit: 'A non-zero analytic function has isolated zeros.',
+      worked: {
+        pin: 'Theorem 7.13, page 239, and Theorem 7.15, page 241',
+        href: sectionHref(S75, 'Isolated_Zeros_Thm'),
+        body: 'The zeros of $\\sin z$ are at $n\\pi$. Each one has a disk around it that contains no other zero, which is Theorem 7.13. On the picture, $\\sin z/z$ has no negative powers once you set the value at 0 equal to 1. Theorem 7.15 says a bounded isolated singularity is removable.',
+      },
       memory: [
         'A non-zero analytic function has isolated zeros (Theorem 7.13, page 239).',
+        'A bounded isolated singularity is removable (Theorem 7.15, page 241). $\\sin z/z$ at 0 is filled in by the value 1.',
       ],
       read: [
         { pin: 'Theorem 7.13, page 239', href: sectionHref(S75, 'Isolated_Zeros_Thm') },
@@ -153,4 +162,16 @@ export const CHAPTER_7 = deepFreeze({
 
 export function chapter7Stage(id) {
   return CHAPTER_7.stages.find((s) => s.id === id) || null;
+}
+
+// The list Continue can count. One exercise id per stage: the stage-complete tick.
+// walkSections on the practice engine appends these beside Chapters 4 and 5.
+export function chapter7WalkSections() {
+  return CHAPTER_7.stages.map((stage) => ({
+    id: stage.id,
+    title: stage.title,
+    page: stage.page,
+    chapter: 7,
+    exercises: [`ch7-stage-${stage.id}`],
+  }));
 }

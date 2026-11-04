@@ -1230,13 +1230,51 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 }
 
 .ch7-stage {
-  width: min(100%, 22rem);
-  max-width: 100%;
-  aspect-ratio: 1;
+  position: relative;
   touch-action: none;
 }
 
-.ch7-stage-wide { aspect-ratio: 3 / 2; }
+.ch7-dot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 44px;
+  height: 44px;
+  margin-left: -22px;
+  margin-top: -22px;
+  border-radius: 50%;
+  background: var(--input);
+  pointer-events: none;
+}
+
+.ch7-hero .exp-stage { width: min(100%, calc(100dvh - 31rem)); }
+@media (max-width: 40rem) {
+  .ch7-hero .exp-stage { width: min(100%, calc(100dvh - 36rem)); }
+}
+
+.ch7-head { margin-bottom: var(--space-2); }
+.ch7-head .station-lede { margin-bottom: var(--space-2); }
+.ch7-where { margin: 0 0 var(--space-2); }
+.ch7-up { width: max-content; max-width: 100%; margin-bottom: var(--space-2); }
+.chapter-path.ch7-path { padding-bottom: var(--space-4); }
+
+.ch7-pins {
+  list-style: none;
+  padding: 0;
+}
+.ch7-pins a {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap);
+}
+.book-row {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: var(--tap);
+  color: inherit;
+  text-decoration: none;
+}
 
 .ch7-stage svg {
   display: block;
@@ -1320,7 +1358,14 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 
 .ch7-blank[data-right="false"] { border-color: var(--polar); }
 
-.ch7-miss { margin: 0; color: var(--text-muted); }
+.ch7-miss { margin: 0; max-width: 62ch; color: var(--text-muted); }
+
+.ch7-path .btn {
+  white-space: normal;
+  text-align: center;
+  max-width: 100%;
+  height: auto;
+}
 
 .ch7-answered { margin: 0; max-width: 62ch; }
 

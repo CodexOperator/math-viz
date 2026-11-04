@@ -2,6 +2,9 @@
 // Coefficients are computed from partial fractions and the geometric series.
 // seed is an integer. The same seed and params always return the same problem.
 // data/practice/ch7.json stores seed 1 with the default params.
+// generate(seed, params): the seed is the first argument.
+
+export const id = 'laurent-annulus';
 
 function lcg(seed) {
   let s = (Number(seed) >>> 0) || 1;

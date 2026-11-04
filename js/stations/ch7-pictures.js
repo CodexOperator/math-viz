@@ -21,11 +21,12 @@ import {
   laurentClaim,
   laurentError,
   laurentRegion,
+  windingFrame,
+  placeReal,
+  removableClaim,
 } from '../core/ch7-series.js';
 
 const NS = 'http://www.w3.org/2000/svg';
-const HIT = 22;
-const PICK = 4;
 
 function svgEl(name, attrs) {
   const node = document.createElementNS(NS, name);
@@ -116,30 +117,28 @@ function bindMotion(button, steps, onN, initial) {
   };
 }
 
-function bindDrag(stage, hit, onAt) {
+function bindDrag(stage, onAt) {
   let drag = null;
   function down(ev) {
     if (ev.button != null && ev.button !== 0) return;
-    if (!hit(ev)) return;
     ev.preventDefault();
-    drag = { id: ev.pointerId, x0: ev.clientX, y0: ev.clientY, moved: false };
+    drag = { id: ev.pointerId };
     stage.style.cursor = 'grabbing';
+    onAt(ev);
     try { stage.setPointerCapture(ev.pointerId); } catch { /* already gone */ }
   }
   function move(ev) {
     if (!drag || ev.pointerId !== drag.id) {
-      stage.style.cursor = hit(ev) ? 'grab' : 'default';
+      stage.style.cursor = 'grab';
       return;
     }
-    if (!drag.moved && Math.hypot(ev.clientX - drag.x0, ev.clientY - drag.y0) < PICK) return;
-    drag.moved = true;
     onAt(ev);
   }
   function up(ev) {
     if (!drag || ev.pointerId !== drag.id) return;
-    if (drag.moved) onAt(ev);
+    onAt(ev);
     drag = null;
-    stage.style.cursor = hit(ev) ? 'grab' : 'default';
+    stage.style.cursor = 'grab';
     try { stage.releasePointerCapture(ev.pointerId); } catch { /* already released */ }
   }
   stage.addEventListener('pointerdown', down);
@@ -170,7 +169,18 @@ function localOf(stage, ev, vw, vh) {
   };
 }
 
-const U = { w: 480, h: 320, x0: -0.95, x1: 0.95, y0: -0.5, y1: 6.2 };
+const U = { w: 480, h: 480, x0: -1.05, x1: 1.05, y0: -0.6, y1: 5.4 };
+
+function addDot(frame) {
+  const dot = h('span', { class: 'ch7-dot', 'aria-hidden': 'true' });
+  frame.append(dot);
+  return dot;
+}
+
+function moveDot(dot, cx, cy, vw, vh) {
+  dot.style.left = `${(cx / vw) * 100}%`;
+  dot.style.top = `${(cy / vh) * 100}%`;
+}
 function uX(x) {
   return ((x - U.x0) / (U.x1 - U.x0)) * (U.w - 40) + 28;
 }
@@ -213,8 +223,7 @@ export function mountUniform(parent) {
   const limit = svgEl('g', { fill: 'none', stroke: 'var(--output)', 'stroke-width': '2.5' });
   const band = svgEl('g', { fill: 'none', stroke: 'var(--polar)', 'stroke-width': '1.5', 'stroke-dasharray': '5 4' });
   const partial = svgEl('g', { fill: 'none', stroke: 'var(--input)', 'stroke-width': '2.5' });
-  const probe = svgEl('circle', { r: '7', fill: 'var(--input)' });
-  stage.append(axis, band, limit, partial, probe);
+  stage.append(axis, band, limit, partial);
 
   const xs = [];
   for (let x = -0.9; x <= 0.92; x += 0.02) xs.push(Number(x.toFixed(3)));
@@ -225,17 +234,18 @@ export function mountUniform(parent) {
   const claim = h('p', { id: 'chapter-uniform-claim', class: 'ch7-claim', 'aria-live': 'polite' });
   const read = h('p', { id: 'chapter-uniform-read', class: 'ch7-read' });
   const play = h('button', { type: 'button', class: 'btn', id: 'chapter-uniform-play' }, 'Play');
-  parent.append(h('div', { class: 'ch7-stage ch7-stage-wide', id: 'chapter-uniform-frame' }, stage), claim, read, play);
+  const frame = h('div', { class: 'exp-stage ch7-stage', id: 'chapter-uniform-frame' }, stage);
+  const dot = addDot(frame);
+  parent.append(frame, claim, read, play);
 
-  let x = 0.2;
+  let x = 0.35;
   let claimText = '';
   function paint(n) {
     partial.replaceChildren();
     for (const pts of polyPoints(xs, (t) => geometricPartial(t, n))) partial.append(svgEl('polyline', { points: pts }));
     const y = geometricPartial(x, n);
     const dotY = Math.min(U.y1, Math.max(U.y0, y));
-    probe.setAttribute('cx', uX(x).toFixed(2));
-    probe.setAttribute('cy', uY(dotY).toFixed(2));
+    moveDot(dot, uX(x), uY(dotY), U.w, U.h);
     const scene = uniformClaim(x, n);
     if (scene.text !== claimText) {
       claimText = scene.text;
@@ -248,16 +258,12 @@ export function mountUniform(parent) {
     stage.dataset.holds = scene.holds ? 'true' : 'false';
   }
   const steps = [];
-  for (let n = 1; n <= 20; n += 1) steps.push(n);
-  const stopMotion = bindMotion(play, steps, paint);
-  function hit(ev) {
-    const dot = clientOf(stage, Number(probe.getAttribute('cx')), Number(probe.getAttribute('cy')), U.w, U.h);
-    return Math.hypot(ev.clientX - dot.x, ev.clientY - dot.y) <= HIT;
-  }
-  const stopDrag = bindDrag(stage, hit, (ev) => {
+  for (let n = 4; n <= 20; n += 1) steps.push(n);
+  const stopMotion = bindMotion(play, steps, paint, 4);
+  const stopDrag = bindDrag(stage, (ev) => {
     const local = localOf(stage, ev, U.w, U.h);
     x = placeUniform(uFromX(local.x));
-    paint(Number(stage.dataset.n) || 1);
+    paint(Number(stage.dataset.n) || 4);
   });
   stage.addEventListener('keydown', onKey);
   function onKey(ev) {
@@ -312,15 +318,17 @@ export function mountTaylor(parent) {
   });
   const singHi = svgEl('circle', { cx: p.X(0), cy: p.Y(1), r: '5', fill: 'var(--polar)' });
   const singLo = svgEl('circle', { cx: p.X(0), cy: p.Y(-1), r: '5', fill: 'var(--polar)' });
-  const probe = svgEl('circle', { r: '7', fill: 'var(--input)' });
-  stage.append(...axes(p), circle, dots, singHi, singLo, probe);
+  stage.append(...axes(p), circle, dots, singHi, singLo);
 
   const claim = h('p', { id: 'chapter-taylor-claim', class: 'ch7-claim', 'aria-live': 'polite' });
   const read = h('p', { id: 'chapter-taylor-read', class: 'ch7-read' });
   const play = h('button', { type: 'button', class: 'btn', id: 'chapter-taylor-play' }, 'Play');
-  parent.append(h('div', { class: 'ch7-stage', id: 'chapter-taylor-frame' }, stage), claim, read, play);
+  const frame = h('div', { class: 'exp-stage ch7-stage', id: 'chapter-taylor-frame' }, stage);
+  const dot = addDot(frame);
+  parent.append(frame, claim, read, play);
 
   let z = { re: 0.2, im: 0 };
+  let revealed = false;
   let claimText = '';
   let drawnN = -1;
   function fill(n) {
@@ -338,10 +346,11 @@ export function mountTaylor(parent) {
   }
   function paint(n) {
     fill(n);
-    const scene = taylorClaim(z.re, z.im, n);
+    const placed = placeTaylor(z.re, z.im);
+    if (placed.mod >= 1 - 1e-9 || placed.snapped) revealed = true;
+    const scene = taylorClaim(z.re, z.im, n, revealed);
     z = { re: scene.re, im: scene.im };
-    probe.setAttribute('cx', p.X(z.re).toFixed(2));
-    probe.setAttribute('cy', p.Y(z.im).toFixed(2));
+    moveDot(dot, p.X(z.re), p.Y(z.im), p.size, p.size);
     if (scene.text !== claimText) {
       claimText = scene.text;
       rich(claim, scene.text);
@@ -356,11 +365,7 @@ export function mountTaylor(parent) {
   const steps = [];
   for (let n = 0; n <= 12; n += 1) steps.push(n);
   const stopMotion = bindMotion(play, steps, paint);
-  function hit(ev) {
-    const dot = clientOf(stage, Number(probe.getAttribute('cx')), Number(probe.getAttribute('cy')), p.size, p.size);
-    return Math.hypot(ev.clientX - dot.x, ev.clientY - dot.y) <= HIT;
-  }
-  const stopDrag = bindDrag(stage, hit, (ev) => {
+  const stopDrag = bindDrag(stage, (ev) => {
     const local = localOf(stage, ev, p.size, p.size);
     const re = -p.span + (local.x / p.size) * 2 * p.span;
     const im = p.span - (local.y / p.size) * 2 * p.span;
@@ -401,15 +406,17 @@ export function mountLaurent(parent) {
   });
   const poleIn = svgEl('circle', { cx: p.X(-1), cy: p.Y(0), r: '5', fill: 'var(--polar)' });
   const poleOut = svgEl('circle', { cx: p.X(2), cy: p.Y(0), r: '5', fill: 'var(--polar)' });
-  const probe = svgEl('circle', { r: '7', fill: 'var(--input)' });
-  stage.append(...axes(p), inner, outer, dots, poleIn, poleOut, probe);
+  stage.append(...axes(p), inner, outer, dots, poleIn, poleOut);
 
   const claim = h('p', { id: 'chapter-laurent-claim', class: 'ch7-claim', 'aria-live': 'polite' });
   const read = h('p', { id: 'chapter-laurent-read', class: 'ch7-read' });
   const play = h('button', { type: 'button', class: 'btn', id: 'chapter-laurent-play' }, 'Play');
-  parent.append(h('div', { class: 'ch7-stage', id: 'chapter-laurent-frame' }, stage), claim, read, play);
+  const frame = h('div', { class: 'exp-stage ch7-stage', id: 'chapter-laurent-frame' }, stage);
+  const dot = addDot(frame);
+  parent.append(frame, claim, read, play);
 
   let z = { re: 1.45, im: 0.25 };
+  let revealed = false;
   let claimText = '';
   let drawnKey = '';
   function fill(n, region) {
@@ -431,11 +438,12 @@ export function mountLaurent(parent) {
     }
   }
   function paint(n) {
-    const scene = laurentClaim(z.re, z.im, n);
+    const placed = placeLaurent(z.re, z.im);
+    if (placed.region !== 'annulus') revealed = true;
+    const scene = laurentClaim(z.re, z.im, n, revealed);
     z = { re: scene.re, im: scene.im };
     fill(n, scene.region);
-    probe.setAttribute('cx', p.X(z.re).toFixed(2));
-    probe.setAttribute('cy', p.Y(z.im).toFixed(2));
+    moveDot(dot, p.X(z.re), p.Y(z.im), p.size, p.size);
     if (scene.text !== claimText) {
       claimText = scene.text;
       rich(claim, scene.text);
@@ -451,11 +459,7 @@ export function mountLaurent(parent) {
   const steps = [];
   for (let n = 1; n <= 18; n += 1) steps.push(n);
   const stopMotion = bindMotion(play, steps, paint, 8);
-  function hit(ev) {
-    const dot = clientOf(stage, Number(probe.getAttribute('cx')), Number(probe.getAttribute('cy')), p.size, p.size);
-    return Math.hypot(ev.clientX - dot.x, ev.clientY - dot.y) <= HIT;
-  }
-  const stopDrag = bindDrag(stage, hit, (ev) => {
+  const stopDrag = bindDrag(stage, (ev) => {
     const local = localOf(stage, ev, p.size, p.size);
     z = {
       re: -p.span + (local.x / p.size) * 2 * p.span,
@@ -472,6 +476,156 @@ export function mountLaurent(parent) {
     paint(Number(stage.dataset.n) || 1);
   }
   stage.addEventListener('keydown', onKey);
+  return function unmount() {
+    stopMotion();
+    stopDrag();
+    stage.removeEventListener('keydown', onKey);
+  };
+}
+
+export function mountWinding(parent) {
+  const size = 480;
+  const X = (re) => ((re + 1.4) / 2.8) * size;
+  const Y = (im) => ((1.4 - im) / 2.8) * size;
+  const stage = svgEl('svg', {
+    id: 'chapter-winding-stage',
+    viewBox: `0 0 ${size} ${size}`,
+    tabindex: '0',
+    role: 'img',
+    'aria-label': 'A circle about a zero of order 2. Drag the green point around the circle. Purple is z squared and winds twice.',
+  });
+  const axisX = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2', x1: X(-1.4), y1: Y(0), x2: X(1.4), y2: Y(0) });
+  const axisY = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2', x1: X(0), y1: Y(-1.4), x2: X(0), y2: Y(1.4) });
+  const circle = svgEl('circle', { cx: X(0), cy: Y(0), r: (1 / 2.8) * size, fill: 'none', stroke: 'var(--polar)', 'stroke-width': '2', 'stroke-dasharray': '6 5' });
+  const image = svgEl('circle', { r: '6', fill: 'var(--output)' });
+  stage.append(axisX, axisY, circle, image);
+  const claim = h('p', { id: 'chapter-winding-claim', class: 'ch7-claim', 'aria-live': 'polite' });
+  const read = h('p', { id: 'chapter-winding-read', class: 'ch7-read' });
+  const play = h('button', { type: 'button', class: 'btn', id: 'chapter-winding-play' }, 'Play');
+  const frame = h('div', { class: 'exp-stage ch7-stage', id: 'chapter-winding-frame' }, stage);
+  const dot = addDot(frame);
+  parent.append(frame, claim, read, play);
+
+  let theta = 0.5;
+  let last = 0.5;
+  let travel = 0;
+  let claimText = '';
+  function show(scene) {
+    moveDot(dot, X(scene.z.re), Y(scene.z.im), size, size);
+    image.setAttribute('cx', X(scene.w.re).toFixed(1));
+    image.setAttribute('cy', Y(scene.w.im).toFixed(1));
+    if (scene.text !== claimText) {
+      claimText = scene.text;
+      rich(claim, scene.text);
+    }
+    claim.dataset.holds = scene.holds ? 'true' : 'false';
+    stage.dataset.holds = scene.holds ? 'true' : 'false';
+    stage.dataset.travel = String(scene.travel);
+    read.textContent = scene.revealed ? 'order 2' : 'walking';
+  }
+  function apply(next) {
+    let d = next - last;
+    while (d > Math.PI) d -= 2 * Math.PI;
+    while (d < -Math.PI) d += 2 * Math.PI;
+    travel += Math.abs(d);
+    last = next;
+    theta = next;
+    show(windingFrame(theta, travel));
+  }
+  const steps = [];
+  for (let i = 0; i <= 24; i += 1) steps.push(0.5 + (i / 24) * Math.PI * 2);
+  const stopMotion = bindMotion(play, steps, apply, 0.5);
+  const stopDrag = bindDrag(stage, (ev) => {
+    const local = localOf(stage, ev, size, size);
+    const re = -1.4 + (local.x / size) * 2.8;
+    const im = 1.4 - (local.y / size) * 2.8;
+    apply(Math.atan2(im, re));
+  });
+  stage.addEventListener('keydown', onKey);
+  function onKey(ev) {
+    const step = ev.shiftKey ? 0.4 : 0.15;
+    const move = { ArrowRight: step, ArrowLeft: -step, ArrowUp: step, ArrowDown: -step }[ev.key];
+    if (move === undefined) return;
+    ev.preventDefault();
+    apply(theta + move);
+  }
+  return function unmount() {
+    stopMotion();
+    stopDrag();
+    stage.removeEventListener('keydown', onKey);
+  };
+}
+
+const RBOX = { w: 480, h: 480, x0: -2.4, x1: 2.4, y0: -0.35, y1: 1.45 };
+function rX(x) {
+  return ((x - RBOX.x0) / (RBOX.x1 - RBOX.x0)) * (RBOX.w - 48) + 24;
+}
+function rY(y) {
+  return ((RBOX.y1 - y) / (RBOX.y1 - RBOX.y0)) * (RBOX.h - 36) + 16;
+}
+function rFromX(px) {
+  return RBOX.x0 + ((px - 24) / (RBOX.w - 48)) * (RBOX.x1 - RBOX.x0);
+}
+
+export function mountRemovable(parent) {
+  const stage = svgEl('svg', {
+    id: 'chapter-removable-stage',
+    viewBox: `0 0 ${RBOX.w} ${RBOX.h}`,
+    tabindex: '0',
+    role: 'img',
+    'aria-label': 'The graph of sin z over z. Drag the green point toward 0. Purple is the value. It stays near 1, so the singularity is removable.',
+  });
+  const axis = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2', x1: rX(RBOX.x0), y1: rY(0), x2: rX(RBOX.x1), y2: rY(0) });
+  const one = svgEl('line', { stroke: 'var(--polar)', 'stroke-width': '1.5', 'stroke-dasharray': '5 4', x1: rX(RBOX.x0), y1: rY(1), x2: rX(RBOX.x1), y2: rY(1) });
+  const hole = svgEl('circle', { cx: rX(0), cy: rY(1), r: '5', fill: 'none', stroke: 'var(--polar)', 'stroke-width': '2' });
+  const curve = svgEl('polyline', { fill: 'none', stroke: 'var(--output)', 'stroke-width': '2.5' });
+  const pts = [];
+  for (let x = -2.2; x <= 2.2; x += 0.04) {
+    if (Math.abs(x) < 0.08) continue;
+    pts.push(`${rX(x).toFixed(1)},${rY(Math.sin(x) / x).toFixed(1)}`);
+  }
+  curve.setAttribute('points', pts.join(' '));
+  const value = svgEl('circle', { r: '6', fill: 'var(--output)' });
+  stage.append(axis, one, curve, hole, value);
+  const claim = h('p', { id: 'chapter-removable-claim', class: 'ch7-claim', 'aria-live': 'polite' });
+  const read = h('p', { id: 'chapter-removable-read', class: 'ch7-read' });
+  const play = h('button', { type: 'button', class: 'btn', id: 'chapter-removable-play' }, 'Play');
+  const frame = h('div', { class: 'exp-stage ch7-stage', id: 'chapter-removable-frame' }, stage);
+  const dot = addDot(frame);
+  parent.append(frame, claim, read, play);
+
+  let x = 1.5;
+  let claimText = '';
+  function paint(px) {
+    x = placeReal(px);
+    const scene = removableClaim(x);
+    moveDot(dot, rX(scene.x), rY(0), RBOX.w, RBOX.h);
+    value.setAttribute('cx', rX(scene.x).toFixed(1));
+    value.setAttribute('cy', rY(scene.value).toFixed(1));
+    if (scene.text !== claimText) {
+      claimText = scene.text;
+      rich(claim, scene.text);
+    }
+    claim.dataset.holds = scene.holds ? 'true' : 'false';
+    stage.dataset.probeRe = String(scene.x);
+    stage.dataset.holds = scene.holds ? 'true' : 'false';
+    read.textContent = `x = ${scene.x.toFixed(2)}`;
+  }
+  const steps = [];
+  for (let i = 0; i <= 16; i += 1) steps.push(Number((1.5 * (1 - i / 16)).toFixed(3)));
+  const stopMotion = bindMotion(play, steps, paint, 1.5);
+  const stopDrag = bindDrag(stage, (ev) => {
+    const local = localOf(stage, ev, RBOX.w, RBOX.h);
+    paint(rFromX(local.x));
+  });
+  stage.addEventListener('keydown', onKey);
+  function onKey(ev) {
+    const step = ev.shiftKey ? 0.3 : 0.1;
+    const move = { ArrowRight: step, ArrowLeft: -step }[ev.key];
+    if (move === undefined) return;
+    ev.preventDefault();
+    paint(x + move);
+  }
   return function unmount() {
     stopMotion();
     stopDrag();

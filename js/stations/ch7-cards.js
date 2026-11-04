@@ -76,7 +76,14 @@ export function mountPracticeItem(item, opts) {
         btn.addEventListener('click', () => {
           const right = answerMatches(choice, step);
           why.hidden = false;
-          rich(why, showMath(step.why));
+          if (right) rich(why, showMath(step.why));
+          else {
+            why.replaceChildren();
+            why.append(document.createTextNode('Not yet. '));
+            const mem = document.createElement('span');
+            rich(mem, showMath(item.memory));
+            why.append(mem);
+          }
           btn.setAttribute('aria-pressed', 'true');
           btn.dataset.right = right ? 'true' : 'false';
           if (right) {
@@ -99,7 +106,7 @@ export function mountPracticeItem(item, opts) {
       'aria-label': 'Fill the blank',
     });
     const check = h('button', { type: 'button', class: 'btn', id: `ch7-check-${id}-${i + 1}` }, 'Check');
-    const note = h('p', { class: 'ch7-miss', id: `ch7-miss-${id}-${i + 1}`, hidden: '' }, 'Not yet.');
+    const note = h('p', { class: 'ch7-miss', id: `ch7-miss-${id}-${i + 1}`, hidden: '' });
     function grade() {
       if (answerMatches(input.value, step)) {
         state[i] = true;
@@ -108,6 +115,11 @@ export function mountPracticeItem(item, opts) {
         return;
       }
       note.hidden = false;
+      note.replaceChildren();
+      note.append(document.createTextNode('Not yet. '));
+      const mem = document.createElement('span');
+      rich(mem, showMath(item.memory));
+      note.append(mem);
       input.dataset.right = 'false';
     }
     check.addEventListener('click', grade);

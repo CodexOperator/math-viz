@@ -1,5 +1,29 @@
 [
   {
+    "id": "ch7-7.1-picture",
+    "chapter": 7,
+    "section": "7.1",
+    "cite": {
+      "ref": "Definition 7.1",
+      "page": 211
+    },
+    "kind": "next-step-blank",
+    "prompt": "What did the picture just show?",
+    "steps": [
+      {
+        "text": "Near 1, the partial sum leaves the orange band until ___ is large enough.",
+        "answer": "n",
+        "accept": [
+          "N",
+          "the number of terms"
+        ],
+        "why": "One N has to work for the whole set. A small n still loses the band near 1."
+      }
+    ],
+    "generator": null,
+    "memory": "One $N$ works for the whole set. If $N$ needs $z$, the convergence is only pointwise."
+  },
+  {
     "id": "ch7-7.1-mtest-blank",
     "chapter": 7,
     "section": "7.1",
@@ -36,7 +60,7 @@
           "converges to a limit",
           "has a limit"
         ],
-        "why": "The book’s write-up points at a completeness theorem. The statement that a Cauchy sequence converges is Theorem 4.3, page 105."
+        "why": "The line on page 212 says Theorem 4.2. That is a slip: Theorem 4.2 is that a convergent sequence is bounded. A Cauchy sequence converges by Theorem 4.3, page 105."
       },
       {
         "text": "The same tail bounds $|f(z)-S_n(z)|$ at every $z$, so the convergence is ___.",
@@ -129,6 +153,32 @@
     "memory": "Bound by constants, sum the constants."
   },
   {
+    "id": "ch7-7.2-picture",
+    "chapter": 7,
+    "section": "7.2",
+    "cite": {
+      "ref": "Corollary 7.3",
+      "page": 218
+    },
+    "kind": "next-step-blank",
+    "prompt": "What did the picture just show?",
+    "steps": [
+      {
+        "text": "The partial sums agree inside the disk and stop at the circle through ___.",
+        "answer": "\\pm i",
+        "accept": [
+          "±i",
+          "i and -i",
+          "+i and -i",
+          "plus or minus i"
+        ],
+        "why": "The singularities of $1/(1+z^2)$ are at $\\pm i$, both at distance 1 from 0."
+      }
+    ],
+    "generator": null,
+    "memory": "Radius = distance from the centre to the nearest nonremovable singularity."
+  },
+  {
     "id": "ch7-7.2-radius-blank",
     "chapter": 7,
     "section": "7.2",
@@ -219,6 +269,30 @@
     ],
     "generator": null,
     "memory": "You may substitute, multiply, or integrate. Uniqueness says the result is still the Taylor series."
+  },
+  {
+    "id": "ch7-7.3-picture",
+    "chapter": 7,
+    "section": "7.3",
+    "cite": {
+      "ref": "Example 7.7",
+      "page": 228
+    },
+    "kind": "next-step-blank",
+    "prompt": "What did the picture just show?",
+    "steps": [
+      {
+        "text": "Between the two circles the series uses negative powers and ___ powers.",
+        "answer": "non-negative",
+        "accept": [
+          "nonnegative",
+          "positive"
+        ],
+        "why": "Example 7.7, page 228. The outer pole contributes the powers $z^n$ for $n\\ge 0$, including the constant."
+      }
+    ],
+    "generator": null,
+    "memory": "Between the poles the series faces both ways: negative powers inside, non-negative powers outside."
   },
   {
     "id": "ch7-7.3-ex1-mc",
@@ -355,6 +429,30 @@
     "memory": "Between the poles the series faces both ways."
   },
   {
+    "id": "ch7-7.4-picture",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": {
+      "ref": "Definition 7.6",
+      "page": 234
+    },
+    "kind": "next-step-blank",
+    "prompt": "What did the picture just show?",
+    "steps": [
+      {
+        "text": "The purple image went around twice, so the zero has order ___.",
+        "answer": "2",
+        "accept": [
+          "two",
+          "order 2"
+        ],
+        "why": "One trip of $z$ around 0 sends $z^2$ around twice. The order is that winding."
+      }
+    ],
+    "generator": null,
+    "memory": "No negative powers: removable. Lowest power $-k$: a pole of order $k$. Infinitely many: essential."
+  },
+  {
     "id": "ch7-7.4-ex2a-mc",
     "chapter": 7,
     "section": "7.4",
@@ -469,6 +567,55 @@
     "memory": "Read the principal part. Finite and nonempty is a pole. Empty is removable. Infinite is essential."
   },
   {
+    "id": "ch7-7.5-picture",
+    "chapter": 7,
+    "section": "7.5",
+    "cite": {
+      "ref": "Theorem 7.15",
+      "page": 241
+    },
+    "kind": "next-step-blank",
+    "prompt": "What did the picture just show?",
+    "steps": [
+      {
+        "text": "Near 0, $\\sin(z)/z$ stays near ___, so the singularity is removable.",
+        "answer": "1",
+        "accept": [
+          "one"
+        ],
+        "why": "Theorem 7.15, page 241. The values stay bounded, and the missing value is the limit 1."
+      }
+    ],
+    "generator": null,
+    "memory": "A bounded isolated singularity is removable. $\\sin z/z$ at 0 is filled in by the value 1."
+  },
+  {
+    "id": "ch7-7.5-isolated-mc",
+    "chapter": 7,
+    "section": "7.5",
+    "cite": {
+      "ref": "Theorem 7.13",
+      "page": 239
+    },
+    "kind": "next-step-mc",
+    "prompt": "Theorem 7.13, page 239. $f$ is analytic in a domain and not identically zero.",
+    "steps": [
+      {
+        "text": "A zero of $f$ is",
+        "answer": "isolated: some disk about it contains no other zero",
+        "choices": [
+          "isolated: some disk about it contains no other zero",
+          "a pole of order 1",
+          "an essential singularity",
+          "a point every neighbourhood of which contains another zero"
+        ],
+        "why": "Theorem 7.13. If the zeros accumulated, $f$ would be identically zero."
+      }
+    ],
+    "generator": null,
+    "memory": "A non-zero analytic function has isolated zeros."
+  },
+  {
     "id": "ch7-7.5-flash-zeros",
     "chapter": 7,
     "section": "7.5",
@@ -487,5 +634,25 @@
     ],
     "generator": null,
     "memory": "Zeros of a non-zero analytic function are isolated. Identity theorems start there."
+  },
+  {
+    "id": "ch7-7.5-flash-removable",
+    "chapter": 7,
+    "section": "7.5",
+    "cite": {
+      "ref": "Theorem 7.15",
+      "page": 241
+    },
+    "kind": "flash",
+    "prompt": "When is an isolated singularity removable?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "When $f$ is bounded in the punctured disk. The value that fills it in is the limit. For $\\sin z/z$ that value is 1.",
+        "why": "Theorem 7.15, page 241."
+      }
+    ],
+    "generator": null,
+    "memory": "Bounded isolated singularity: removable."
   }
 ]

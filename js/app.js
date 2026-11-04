@@ -213,7 +213,7 @@ export function start() {
     const note = document.getElementById('site-footer-note');
     if (!note) return;
     if (bookRoute) {
-      note.textContent = 'The book path for MAT 412. Chapters 4, 5, and 7 are open. The other chapters are later. It runs in your browser and works offline.';
+      note.textContent = 'The book path for MAT 412, Chapters 1 to 7. It runs in your browser and works offline.';
       return;
     }
     note.textContent = mapId === 'test2'
@@ -230,6 +230,7 @@ export function start() {
       ])));
     const list = el('ul', { class: 'nav-list', id: 'nav-chapters', 'aria-label': 'Chapters' });
     for (const ch of BOOK_CHAPTERS) {
+      if (ch.n > 7) continue;
       list.append(el('li', {}, el('a', {
         class: 'nav-link', id: `nav-chapter-${ch.n}`, href: `#chapter-${ch.n}`, 'data-chapter': String(ch.n),
       }, [
