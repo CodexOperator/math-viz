@@ -1275,9 +1275,9 @@ The modulus blank stays. The other two notes kept it. This pass leaves it.
 
 ## Verdict
 
-Rest. The tick holds while the point is within 0.35 radians of its end, Play stays where it is, and the turn is a steady 60 frames a second.
+One more batch. The tick holds while the point is within 0.35 radians of its end, Play stays where it is, and the turn is a steady 60 frames a second. A mouse drag then draws a frame around the square.
 
-The finger still owns the radius and the clock still owns the angle. A touch on Play says Pause and the point moves. A second press says Play and the angle is the same 400ms later. The claim under the square is the sentence that changes, and it is on the first screen at both sizes, in both themes. Nothing real is left of this walk's touch.
+The finger still owns the radius and the clock still owns the angle. A touch on Play says Pause and the point moves. A second press says Play and the angle is the same 400ms later. The claim under the square is the sentence that changes, and it is on the first screen at both sizes, in both themes. The frame is what is left.
 
 ## The finger
 
@@ -1286,6 +1286,8 @@ At rest the real part is 0 and the angle is π. The claim is "The point sits on 
 A drag that starts in the middle of the square does not scroll the page and does not move the radius.
 
 Through a full turn the phone's Play stays at y = 593 and the claim box stays 52.7px, including the short line "The point sits on the unit circle." A touch that changes the word from Play to Pause moves the button from 593 to 594, one pixel. On the laptop the same word change is 700.9 and 701.9.
+
+A touch drag leaves the square unframed. The stage is not focused, and the outline stays none. A mouse drag, at 390 and at 1280, focuses the stage. `:focus-visible` stays false, and the outline is `auto`, 5px. On the light page that edge is rgb(16, 16, 16). On the dark laptop it is rgb(238, 238, 238), a white box around the picture. The page's own ring is the 3px focus colour, and it is the one that shows for the keyboard.
 
 ## The tick
 
@@ -1311,13 +1313,13 @@ On the laptop the square is 480px, from y = 179 to 659, in the 800px window. The
 
 In the dark the page is rgb(13, 18, 28) and the sentence is rgb(233, 237, 245). The axes stay blue, the circle and the ray stay orange, the handle stays green, and the point stays purple. The same positions, the same Play and Pause, the same hold.
 
-The four later sections are titles, marked Later. They sit under the ticks. This lens leaves them.
+The four later sections are titles, marked Later. They sit under the ticks. This lens leaves them. The tick does not share the first screen, so this lens does not need it above the question.
 
 `#chapter-5-5-1-1` opens at angle 0, with Exercise 1 filled and its tick live, and the picture above the window. The page a student opens is `#chapter-5`.
 
 ## Cut
 
-Nothing.
+- The auto outline on the square. A pointer drag leaves the plane unframed. The keyboard ring stays the 3px focus colour, on `:focus-visible`.
 
 ## Add
 
@@ -1325,4 +1327,6 @@ Nothing. No slider, no scrubber, no spring, no second clock.
 
 ## Another batch
 
-No. The hold, the button, and the frame clock are the lesson, and they hold. Nothing real is left of this walk's touch.
+Yes. One batch, then stop. It is the one cut above.
+
+The hold, the button, and the frame clock are the lesson, and they hold. Something real is left, and it is the frame a mouse drag draws around the square. A touch does not draw it. After that frame is gone, nothing real is left of this walk's touch.
