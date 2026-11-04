@@ -762,3 +762,63 @@ Yes. One batch, then stop. Four fixes, in this order.
 4. **The wide page gets the circle.** Drop the cap that holds the picture at 304px in a 937px column. Play stays on the first screen at 1280×800 and at 390×844.
 
 When those four are done, stop. The turn is already the lesson, and it already runs at a steady 60 frames a second. A batch that adds the §5.1 exercises, a scrubber, or a second picture is the packet again.
+
+## taste-skill (batch 5)
+
+Branch `cursor/book-chapter-path-df29`, commit `5375bcaf`. Used like a MAT 412 student on https://book-preview.complexanalysis.pages.dev, light and dark. `#chapter-5` at 1280×800 and at 390×844. Play through the bottom of the circle and through the right-hand point, a pause, a drag of the green dot while the turn kept going, a press in the middle of the plane, a press on the green dot with no move, a drag out and a drag in. Reduced motion through the four steps. The chapter menu on the phone. The Chapter 5 node on `#book`, and the book again after the eight Chapter 4 ticks. No console errors. No sideways scroll at either width (`scrollWidth` matched the window).
+
+### Verdict
+
+The thing to be able to do is watch the angle go round, then change the real part and see that only the radius moves. That gesture is on the page. Play walks the purple point once around the dashed circle. A drag of the green dot changes the radius and leaves the angle with the clock. Next step lands on the bottom, the right, the top, and the left.
+
+The sentence under the picture names the frame you land on, and it stays after the point has left. At the bottom, at the top, and on the right, the line still says the point sits on the left of the real axis. Another batch is worth doing. It is that sentence. After that, stop.
+
+### What I could actually do
+
+`#chapter-5` opens on THE BOOK, the title Chapter 5. The exponential, and one square. The title is one line at both widths, 36px on the laptop and 26px on the phone. The kicker, the title, the square, the claim, Play, the cite, and the way back share one left edge.
+
+At 1280 the square is 480×480, from x = 304, in a column whose title runs 952px. The dashed circle is 133px across. Play is 44px tall and ends at 745px in an 800px window. The cite ends at 795px. Back to the book starts at 828px. At rest the real part is 0 and the angle is π. The purple point sits on the left of the dashed circle. The green dot sits on the right, 12px across. The sentence is “The point sits on the left of the unit circle, on the real axis.”
+
+Play becomes Pause. At two seconds the angle is −π/2 and the purple point is at the bottom of the circle. The sentence is still the left-hand sentence. At four seconds the angle is about 0 and the purple point sits on the green dot, on the right. The sentence is still the left-hand sentence. Pause held the angle at about 0.10, and four hundred milliseconds later it was the same number. The next press continued. A drag during that turn, while the button still said Pause, took the real part from 0 to about 0.79 and the angle from 0.34 to 0.82. The sentence became “The radius is e^x, larger than 1,” with e^x set as math. A press in the middle of the plane left the real part at 0.79 while the angle kept going, on to 0.98.
+
+From a fresh rest, a press on the green dot with no movement kept the real part at 0. A drag to the right set it to about 0.86, the angle stayed at π, and the sentence said the radius is larger than 1. A drag inward clamped the real part at −1.2, the angle stayed at π, and the sentence said the radius is smaller than 1. The same math is on the phone.
+
+Reduced motion opens on the left-hand still and the button says Next step. The four presses land on −π/2, 0, π/2, and π. The button becomes Start again. It never says Pause. The sentence stays the left-hand sentence on every one of those stills, including the bottom, the right, and the top.
+
+On the phone the square is 358px in a 390px window, with 16px margins. The dashed circle is 99px across. The green dot is 9px across. The claim wraps to two lines. Play, the cite, and Back to the book sit on the 844px screen. The way back ends at 762px. The menu is the eleven chapters, Chapter 5 is the current row, and the drawer covers the page. A drag of the green dot grew the circle, and the real part went to about 0.88.
+
+In the dark the sentence is rgb(233, 237, 245) on rgb(13, 18, 28). The axes stay blue, the circle and the ray stay orange, the handle stays green, and the point stays purple. The same sentences, the same Play and Pause, and the same layout.
+
+The book card for Chapter 5 says Open, Elementary Functions, Page 130. The fresh status is still “Next is §4.1, Exercise 3. 0 of 8 exercises.” After the eight ticks the status is “Done. 8 of 8 exercises. Chapter 5 is next.” and the button is Open Chapter 5.
+
+### What clicks
+
+One picture, one button, one drag. The clock owns the angle. The green dot owns the radius. A press off the dot leaves the radius alone. A press on it keeps the value until the finger moves, and then the dot stays under the finger along the real axis. A drag during the turn leaves the angle running.
+
+The colours are the course colours, and they sit on the marks in light and in dark. The button tells the truth: Play, Pause, Play again, and under reduced motion Next step and Start again. The way back is one link. The cite is Howell and Mathews, Chapter 5, Elementary Functions, page 130.
+
+The title names the exponential. The line under the picture is gone. The book card keeps Open, the title, and the page. The finished chapter says Chapter 5 is next, and it stops there.
+
+The phone composition is the one the picture wants. The square fills the width, and the sentence sits under it. The laptop square is the height that leaves Play on the first screen.
+
+### What gets in the way
+
+**The unit-circle sentence is one frame.** It is true at rest, and at the end of the sweep, where the point sits on the left of the real axis. Play leaves that frame in the first second, and the words stay. Next step’s first still is the bottom of the circle, and the words still say left, on the real axis. The right-hand still is the same sentence with the point on the right. The two radius sentences are the ones that flip, and they flip honestly. The unit-circle sentence does not.
+
+On the right-hand still the purple point covers the green dot. The drag still starts on that spot. The purple point is the mark the clock moves. Leave the stacking.
+
+The laptop square is 480px of a 952px column, so a field of the paper colour sits to its right. That is the height budget that keeps Play on the first screen. Leave the size.
+
+A drag draws the focus ring around the square. That is the ring. Leave it. The kicker, the blue axes, and the four teaching colours are the shell. Leave them.
+
+### Cut
+
+- “On the left” and “on the real axis.” While the radius is 1 the sentence has to be true at the bottom, the right, and the top, and at the frame you land on. “The point stays on the unit circle.” The two radius sentences stay, with the math.
+
+### Add
+
+Nothing. No logarithm, no powers, no exercise cards, no second plane, no colour key, no scrubber.
+
+### Another batch
+
+Yes. One batch, then stop. It is the one cut above. The handle, the quarter-turn steps, the title, and the book card have landed. Something real is left, and it is the sentence: for the whole turn it names a frame the point has left. A §5.1 list of exercises, hung on this picture, would point the cards at a line that is false for three of the four steps.
