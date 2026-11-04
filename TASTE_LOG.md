@@ -1330,3 +1330,180 @@ Nothing. No slider, no scrubber, no spring, no second clock.
 Yes. One batch, then stop. It is the one cut above.
 
 The hold, the button, and the frame clock are the lesson, and they hold. Something real is left, and it is the frame a mouse drag draws around the square. A touch does not draw it. After that frame is gone, nothing real is left of this walk's touch.
+
+## ux-veteran (mobile audit)
+
+Production https://complexanalysis.pages.dev at `f6d439c`. Headless Chrome, touch, 390×844 and 360×780, light and dark. No product code was changed. Shots are in `logs/ux-audit/`. No console errors. No sideways scroll on the pages walked (`scrollWidth` matched the window at both widths, both themes).
+
+### Verdict
+
+A student who opens the link on a phone lands on a page called The Map, is told to drag a dot and find a map, and can see neither. The book, which is the only door to Chapter 5, sits behind an icon with no label, and once you are in it the menu throws away Test 1, Test 2, and both problem indexes. The type, the paper, the white cards, and the blue buttons are already one system; the chapter pages need to be put back in the station order, and the phone needs one list — Chapters 1 through 7, then Test prep — that stays put while the shared practice engine grows.
+
+### How the walk went
+
+**(a) What is this, and where do I start.** 390×844, light, fresh storage. The first screen (`390-light-home-first.png`) is the site name, WHICH TEST with Test 1 pressed, the heading The Map, a lede about 29 recipes, four thread pills (T1, T2, T3, C1), and two buttons: "Start with One Point, Two Addresses" and "Open the problem index". The word book, the word chapter, and MAT 412 are absent. The lede says to drag the dot and then find the problem on the map. The dot's block starts at y = 1548. The map panel starts at y = 4785. A 700px swipe still shows "Pick a topic" (`390-light-home-swipe.png`). Tapping a thread pill does nothing: they are `<span>`s, and the only extra text they carry is a `title`, which a finger never sees. The finder, at y = 1277, answers "5.1" and "chapter 5" and "Julia" with "Nothing matches". "exponential" returns three Test 1 hits about polar form. The menu is a hamburger. Its accessible name is Places, and the screen shows no word. Inside it (`390-light-nav-test1.png`) are The Book, the two tests, and 21 Test 1 places. Julia and Mandelbrot are absent. Two taps (the icon, then The Book) are the whole successful path, after the searches and the swipe have already failed.
+
+**(b) Chapter 5, section 5.1, one exercise.** The roadmap's first screen (`390-light-book.png`) is the lede "Eleven chapters…", a card that says "Next is §4.1, Exercise 3. 0 of 8 exercises.", the button Walk Chapter 4, and three cards flagged LATER (chapters 1–3). Chapter 4's card starts at y = 908, Chapter 5 at y = 1249, on a page 2358px tall. The Chapter 5 heading is not a link: tapping it leaves the hash on `#book`. The four section rows under Chapter 4 (4.1 through 4.4) contain no links either. The only forward control is Walk Chapter 4. Opening the menu again replaces it (`390-light-nav-book.png`): The Book and eleven chapter titles. Test 1, Test 2, the indexes, and Julia are gone. "5 Elementary Functions" does open `#chapter-5`.
+
+The chapter's first screen (`390-light-ch5-first.png`, and the same frame in the dark at 360, `360-dark-ch5.png`) is THE BOOK, the title, a square, the sentence "The point sits on the left of the unit circle, on the real axis.", and Play. At 390 Play runs from y = 593 to 637, so it is on the screen. The lede, "Section 5.1. A blank fills when the picture makes it true.", runs from 661 to 739. The status card runs from 796 to 849 and is cut by the 844px edge; at 360×780 (Play ends at 607, the lede starts at 631) that card is the line that falls off. Exercise 1 starts at y = 1180 on a page 2758px tall, so the question is one more screen down (`390-light-ch5-exercise.png`). The green dot is drawn 9px across (8px at 360). The words "drag the green dot" exist only as the square's `aria-label`. The grab cursor is set from a pointer move, which a finger does not do. Two dots sit on the circle, purple and green, and the sentence calls one of them "the point".
+
+Exercise 1 asks why exp(0) = 1 and its Tick is disabled until the picture is near the right-hand point. Dragging the green dot right, to real part about 0.46, flips the claim to "The radius is e^x, larger than 1" and leaves Tick disabled, because the angle is still π. Exercise 2 is already answered on arrival. The question is on the card, then the blank already reads "land together at −1", and Tick is enabled before any gesture. Pressing it changes the button to Ticked and the status to "Next is §5.1, Exercise 1, page 135. 1 of 2 exercises." The card gains no sentence about what that landing means. `localStorage['mv:progress.test2']` becomes `{"5.1.2":true}`.
+
+**(c) Back to the roadmap, then to test prep.** THE BOOK at the top of Chapter 5 is a 69×17 link. It does go to `#book`. That page contains none of the words test, prep, index, practice, or homework, and its menu is the eleven chapters. The site title is the way out: it opens `#home` on Test 1, whose buttons are the same two as the landing. "Open the problem index" is Test 1's index, 29 cards, titled The Problem Index. Test 2 has a second page with the same title. Reaching it means tapping Test 2, which writes the map and does not push a history entry, then the same button words. Browser Back from that switch returned to `#book` and left the stored map on Test 2, so the back button undid the page and kept the switch. From `#chapter-4`, scrolled to 900px, Back landed on `#book` at scroll 0. Hash changes do stack. The router then scrolls to the top on every one of them (`history.scrollRestoration` is manual).
+
+**(d) Find the Mandelbrot picture and read it.** From a fresh Test 1 menu the set is not listed, and the finder does not know the word Julia. The path is: open the menu, tap Test 2 (the menu closes and you are on a home with five buttons: Open the flat paper, Start with a sequence, Open the problem index, Playground, Open the Julia picture), open the menu again, then "7 The Mandelbrot Set", which sits at y = 617 in that drawer, low on the first screen. The Mandelbrot page's first screen (`390-light-mandelbrot.png`) is a paragraph of Example 4.11 and Theorem 4.9. The canvas starts at y = 882, below an 844px window. The Live / Rendered film controls on the way there are 20×20. Julia, once found, is the page that does explain itself (`390-light-julia.png`): the lede says blue stayed and orange left, and the disk is on the first screen. Its zoom buttons are 40×40, and the same lede also points at the flat paper and a hollow square that this picture does not draw.
+
+**(e) Come back and find the tick.** After Exercise 2 was ticked, `#home` still has no Continue, no "1 of 2", and no Chapter 5. `#book` still says "Next is §4.1, Exercise 3. 0 of 8 exercises." and the button still says Walk Chapter 4. The Chapter 5 tick is stored, and the roadmap's tally only reads Chapter 4. A reload of `#chapter-5` does restore the tick, because the hash and `localStorage` are on this phone. A later phone, or a cleared browser, has nothing to restore. There is no account.
+
+Same shapes in the dark and at 360. The one layout change at 360 is the site name: it truncates to "One Point, Two Addre…" in both themes (`360-light-home.png`, `360-dark-home.png`). At 390 the full name fits.
+
+### Where you are
+
+The header is the site name, a theme icon, and the menu icon. It does not name the page. The name is the home link, and at 360 it is cut off, so the thing you would tap to get home is an ellipsis. Chapter pages add a 17px "THE BOOK" over the title. Station pages end in a row of `.station-link`s, each at least 44px, and that row is below the fold.
+
+The hierarchy book, chapter, section, exercise is visible only after you are already on the chapter: Chapter 4 shows "4.1 Sequences and Series" and then the exercise card. The roadmap draws the chapters and, for Chapter 4, the section names, and none of those rows navigate. The menu on a station is a flat list of places grouped by a part letter. The menu on a chapter is a different list. A student never sees both at once.
+
+Hash routes do cooperate with Back: `#book` then `#chapter-4` then Back returns to `#book`. What Back does not restore is the scroll position, and what it does not record is the Test 1 / Test 2 switch. The first screen of each page tells you a title. It tells you the next action on Chapter 4 (tick an exercise; Exercise 3 is already on screen) and on Julia (the colours, and the disk). It tells you a title and a picture on Chapter 5, and withholds the gesture. It tells you to walk Chapter 4 while showing three Later chapters. It tells you to drag a dot and find a map, and shows topics.
+
+### Style mismatch
+
+The station pages are the style to keep. Measured at 390, light, on home, the book, Chapter 4, Chapter 5, addresses, both problem indexes, sequence, Julia, and Mandelbrot: the title is Iowan Old Style, 25.85px, weight 600, `rgb(26, 34, 48)`; the body is system-ui at 17px; the lede is 16.8px in `rgb(81, 91, 108)`; a primary button is 17px, 44px tall, radius 6px, fill `rgb(47, 62, 92)`, white label; a card is white, 1px `rgb(216, 210, 196)`, radius 10px, 16px of padding; the paper is `rgb(246, 243, 236)` in the light and `rgb(13, 18, 28)` in the dark. Chapter pages already use those tokens. Nothing here asks for a new type, a new colour, or a new card.
+
+What has drifted, and the cut that brings it back. The polish is the one this log's three passes keep making (taste-skill, unslop, appllama): the first screen stays the picture, the sentence, and Play; a second telling of the same sentence goes; the finger's control stays at the 44px the buttons already are; no new ornament.
+
+1. Chapter 5's order is the kicker, the title, the square, then the lede, and the source tag sits at y = 2506, under the Later sections. Julia and addresses put the lede and the source tag in the header, then the picture. Put one lede under the title — the gesture, in the lede's existing type — then the source tag, then the square, the claim, and Play. Delete the second lede under Play and the source tag at the bottom. On a 390 screen the square is 358px and Play currently ends at 637; a short lede above the square still leaves Play on the screen, which is the condition the Chapter 5 passes already locked. At 360 the status card is the piece that should move up when the duplicate lede is cut.
+
+2. The way up is a 12.5px uppercase "THE BOOK", 69×17, letter-spacing 0.75px. Station pages already have the up control: `.station-link`, min-height 44px, with an arrow. Use that, label "The Book", at the top of the chapter and again at the end. The 17px kicker goes.
+
+3. Chapter 4 draws a white card inside a white section box (`390-light-ch4-first.png`). The problem index uses one `.card` per exercise. Keep one box. The section keeps the idea and the two read links; the exercise keeps the card the index already uses.
+
+4. `.chapter-path` adds 788px of padding on this phone. "Back to the book" sits at y = 5679 on a page 5863px tall. Station pages have no blank screen at the end. Cut the padding.
+
+5. Later rows are transparent (`background` alpha 0) while every station panel is a white card on the paper. Paint those rows with the card colour the panels already use. The LATER / NEXT flag can stay; it is the same uppercase 12.5px label the menu's part titles already use.
+
+6. The chips that leave an exercise for its picture ("The disk in Definition 4.1", "One Newton Step") are 36px tall. Problem chips on addresses are 32px. Julia's zoom buttons are 40×40. The site's own `--tap` is 44px, and the primary buttons already meet it. Bring these controls up to that height. Same chip, same button, taller.
+
+### What the pages ask
+
+A student can tell they are in a textbook. The cite is on every card, and Chapter 4's lede says to tick an exercise when you have worked it. What they are being asked to *do*, and what the picture is for, is where the page goes quiet.
+
+**4.1 Sequences and Series.** The idea line is a real lesson: a sequence settles when its terms eventually sit in every disk around the limit. Under it, Exercise 3 says "Show that" the conjugate of the limit is the limit of the conjugates, and Exercise 13 says "Complete the proof of Theorem 4.1." Both Ticks are enabled on load. The chip "The disk in Definition 4.1" is the right picture and the label doesn't say so. The hint stays closed, which is right, and there is no worked step on the card (the book solution for these two is empty on purpose). Missing: one sentence that says the disk is the thing the proof has to enter, a single worked inequality for one of the two, and a Tick that waits until that picture has been opened. After Tick the button renames itself. The page owes one sentence: the terms have entered the disk, here is the next exercise.
+
+**4.2 Julia and Mandelbrot.** The idea line states the theorem (one piece exactly when the orbit of 0 stays bounded). The cards then assign the proofs (4.2.3, 4.2.4, 4.2.5) and offer chips whose names are station titles. A student who doesn't already know Theorem 4.9 cannot tell that "The Orbit of 0, c = −2" is the check for "show the Julia set is connected." The aha is the idea line. It should be the sentence the card repeats after the chip, in the lede's type, and Tick should wait until that station has been opened.
+
+**4.3 and 4.4.** The idea lines are the lessons (the geometric series sums to 1/(1−z) inside the unit disk; a power series has a disk and a wall). The cards are the same shape as 4.1, including a Tick that does not check the picture. 4.4.6's hint says the card will not tell you which point is closer. That is a fair puzzle only after the radius picture has been the thing you moved.
+
+**5.1 The exponential.** The identity is on the page, under the fold (the section starts at y = 890): modulus e^x, angle y. The picture shows that, if you drag or press Play. The first screen never says which dot to drag, and it calls the purple point "the point" while the green one is the handle. Exercise 1 asks for an explanation from Definition 5.1 (the series) and the blank wants the number 1, which is what the right-hand point shows. Those are two different reasons, and only the closed hint connects them. Exercise 2 asks the right question and then prints the answer in the blank, with Tick already live. The payoff (the two ends of the strip are one point) is given away, and ticking adds no further sentence. Missing, in the lede that already exists: "Drag the green dot for the radius. Play turns the angle. A blank fills when this picture makes it true." The blank for Exercise 2 stays empty until the point is on the left, the way Exercise 1 already waits for the right. After both ticks, one sentence: e^z is a radius and a turn, and ±iπ land on the same point.
+
+**5.2 through 5.5.** Titles and page numbers, flagged Later. They ask nothing. That is honest while they have no picture. 5.4 already has two stations on Test 1 (complex current, complex impedance). Those belong to 5.4's picture beat when that section opens, and they are currently a different menu.
+
+**After Tick, on every card.** The change is the word Ticked and a counter. There is no worked line, no "this is why", and no door that says the next stage in a sentence. The counter on the book ignores a Chapter 5 tick entirely.
+
+### A range of seven, and one practice engine
+
+The owner is taking the site out to Chapters 1–7, each chapter a loop, with one practice engine shared across them: proof blanks, multiple choice, pick-the-next-step, deterministic generators, and memory sheets for the night before a test. The phone cannot grow a new home for each of those. It already has three homes (Test 1's map, Test 2's map, the book), two indexes with one name, a topic list, a night-before plan, and a playground. Test 2's menu alone is about thirty rows, and the book's menu swaps them all out for eleven chapters, including 8 through 11, which this range is leaving behind.
+
+The list that survives that growth is the book's list, stopped at 7, with one more row. The drawer is always:
+
+1. Complex Numbers
+2. Complex Functions
+3. Analytic and Harmonic Functions
+4. Sequences, Series, and Fractals
+5. Elementary Functions
+6. Complex Integration
+7. Taylor and Laurent Series
+8. Test prep
+
+It does not change when you enter a chapter. Test 1 and Test 2 stop being homes. Their pictures become the picture beat inside the chapter they already cite. The side rooms after the flat paper (the twin, the bulbs, the cascade, and the rest) stay inside Chapter 4's Julia stage, as a further list, and leave the drawer. Chapters 8–11 leave the phone list. A chapter with no picture yet still has a row, using the Later flag that exists today, so Chapter 6 and Chapter 7 are visible and don't pretend to be done.
+
+Each chapter is the same four beats, stacked on the chapter page, in the card style the index already uses:
+
+1. **Picture.** The stations that exist. One gesture, the kit's rule. Chapter 1 is the address plane through the sets. Chapter 2 is the motions through limits. Chapter 3 is the derivative and Cauchy–Riemann. Chapter 4 is the four sections below. Chapter 5 starts with the exponential; 5.4's picture is the circuit pair already drawn.
+2. **The book's exercises.** The cards that exist for Chapters 4 and 5, and the Test 1 cards for Chapters 1–3, moved under their chapter.
+3. **Practice.** The shared engine, scoped to this chapter: a blank in a proof, a choice, pick the next step, a generated problem. Same `.card`. Generators live here. They do not become a second control on the picture.
+4. **Recall.** The memory sheet and the flashcards for this chapter, one card at a time, which is the rule the deck already follows.
+
+A beat is done when its own check passes: the picture's sentence has been true once, the exercise tick has waited for that, a practice set has been answered, a recall card has been turned. The chapter is done when the four beats are. The range shows that with the flag the book already uses (Done, Next, Later) and the one status card it already has ("Next is …"). That card is the ascent. A drawing of a mountain would be a second style, and this pass is not adding one. Nothing is locked. Next is the suggestion; any of the seven rows still opens, because a student studying for Thursday needs Chapter 3 on a Tuesday.
+
+Test prep is the recall beat with the filter set to "the chapters I have open", plus the generators if they want a mixed set. One name. The two Problem Index pages fold into it. The night-before plan's sentences can live on that page. They leave the home screen.
+
+The first screen of the site is that status card and one button: Continue, with the chapter and the beat, or Start at Chapter 1 when nothing is ticked. The finder can sit under it. The topic chips, the five Test 2 buttons, and the map of thirty places move inside the chapter they belong to.
+
+**Chapter 4, the stages that already have content.**
+
+| Stage | What you do | Done when |
+| --- | --- | --- |
+| 4.1 Sequences settle | Open A Sequence Has a Fate. The disk is the definition. Exercises 4.1.3 and 4.1.13. | Both ticks, after the disk has been opened. |
+| 4.2 One piece, or dust | The orbit of 0, then the Julia disk, then the set of c. Exercises 4.2.3, 4.2.4, 4.2.5. The sentence you should be able to say: the Julia set is one piece exactly when that orbit stays bounded. | Those three ticks, after the orbit station. |
+| 4.3 Inside the disk | Geometric Series. Exercises 4.3.1 and 4.3.2. | Both ticks, after the inside/outside chip. |
+| 4.4 A radius, then a wall | A Radius, Then a Wall. Exercise 4.4.6, hint and no worked solution. | The tick, after the radius picture. Summit of the chapter: you can say where a series lives. |
+
+**Chapter 5, the stages the current pages can support.**
+
+| Stage | What you do | Done when |
+| --- | --- | --- |
+| 5.1 A radius and a turn | The exponential square. Drag the green dot, press Play. Exercises 5.1.1 and 5.1.2, blanks empty until the picture fills them. | Both ticks. Summit line: e^z is e^x turned by y, and ±iπ land together. |
+| 5.2 Logarithm, 5.3 exponents, 5.5 inverse trig | Titles and pages, Later, until a picture exists. The practice beat can still hold cards. | Nothing yet. The row must not read Done. |
+| 5.4 The circuit | The two stations already drawn, complex current and complex impedance. | When those pictures and their cards are the beat, not a leftover on Test 1. |
+
+Chapters 1–3 use the same four beats over the stations and the Test 1 cards that already exist. Chapters 6 and 7 use the same beats on the day a picture exists, and until then the row is the title, the page, and Later.
+
+### Accounts
+
+Progress today is `localStorage` under the prefix `mv:`. Chapter ticks, including the Chapter 5 tick from this walk, live in `mv:progress.test2` as a map of exercise id to `true`. Test 1 ticks live in `mv:progress`. The remembered test is `mv:map`. Theme is `mv:theme` and stays on the device. The site is a static Cloudflare Pages project, `complexanalysis`, on https://complexanalysis.pages.dev. Signed-out use has to keep working, exactly as it does now. Sign-in is how a second phone picks up the same Continue card.
+
+The smallest sound version is Pages Functions plus one KV namespace. The value is one JSON blob per person: the two tick maps, the remembered chapter, and an updated time. No table. D1 is the step up if you later want a class looking at many students; you don't need it to keep one student's ticks.
+
+The owner creates the credentials and is the first person to sign in, after the functions are deployed. Register these exactly. No trailing slash, no hash, production only. A preview URL (`something.complexanalysis.pages.dev`) will not match, and that is fine until you want to test sign-in on a preview.
+
+**Google** (Cloud Console, APIs & Services):
+
+- Consent screen: External. App name "One Point, Two Addresses". Support email is yours. Scope `openid` only, so the site stores a stable id and not your address book. While the app is in Testing, add your own Google account as a test user, or the first login returns access denied.
+- Credentials, OAuth client, type Web application.
+- Authorized JavaScript origin: `https://complexanalysis.pages.dev`
+- Authorized redirect URI: `https://complexanalysis.pages.dev/api/auth/google/callback`
+- Copy the client id and the client secret.
+
+**X** (developer.x.com, a project and an app with user authentication):
+
+- OAuth 2.0, Web App, confidential client. Read permission. The scope you need is the one that identifies the user (`users.read`). Skip write scopes, and skip offline access; the session cookie is ours, so we don't keep X's refresh token.
+- Website URL: `https://complexanalysis.pages.dev`
+- Callback URI: `https://complexanalysis.pages.dev/api/auth/x/callback`
+- Copy the OAuth 2.0 client id and client secret. X has to approve the developer account before this login works. That approval is the long pole, and it is outside the repo.
+
+**Cloudflare** (Workers & Pages, project `complexanalysis`, production):
+
+- Create a KV namespace and bind it as `PROGRESS`.
+- Secrets, production, encrypted, not in the repo:
+  - `GOOGLE_CLIENT_ID`
+  - `GOOGLE_CLIENT_SECRET`
+  - `X_CLIENT_ID`
+  - `X_CLIENT_SECRET`
+  - `SESSION_SECRET`, which you generate (`openssl rand -base64 32`). Google and X do not give you this one.
+- After deploy, on your phone, sign in with Google once, then with X once. You are the first user. Each first success creates your row. A redirect mismatch is a callback character that doesn't match the two URIs above.
+
+What the blob holds: the provider (`google` or `x`), that provider's stable user id, the tick maps, the chapter you were on, and a timestamp. It does not hold a password, a drag log, or the theme. Email and the X handle are optional and this feature doesn't need them; leave them out of the request. A "delete my progress" control removes the KV row. The cookie is HttpOnly, Secure, SameSite=Lax, and it holds a random session id, not the ticks.
+
+First sign-in merges. The phone's ticks and the server's ticks are united: an exercise ticked on either side stays ticked. That merged blob is written back to KV and to `localStorage`. After that, the signed-in blob is the source of truth and the phone keeps a copy so the train still works. Sign-out leaves the copy on the phone. It does not wipe `localStorage`. Signed out, nothing in this design changes today's site.
+
+Effort L for both providers, the merge, delete, and the signed-out path. Google alone, with the same KV blob, is M, and the X callback above can be added when the developer account is approved. The owner steps are the lists above. They happen once, on the day the functions exist, and the first sign-in is the test.
+
+### Ranked fixes
+
+Ordered by how much each one helps a student who is lost on a phone, and by whether it still holds when Chapters 1–7 and the practice engine are in place.
+
+1. **One list, and one Continue.** The landing, the Test 2 home, and the book are three products, and the menu swaps between them. Evidence: the first screen has no book; the book menu has no index and no Julia; Test 2 home offers five buttons; a Chapter 5 tick does not change the book's "0 of 8". Change: the drawer is always Chapters 1–7 and Test prep. The first screen is the status card that already exists, with one button, Continue or Start at Chapter 1. Pictures live inside their chapter. The practice engine is the third beat of that chapter, and Test prep is its recall filter, so the new question types don't become another home. Effort M for the shell. The engine itself is the larger build, and it has a place to land.
+
+2. **Say where I am, and give me an up control I can hit.** The header is the site name, cut off at 360, and it only goes home. THE BOOK is 69×17. Back from a scrolled chapter returns to the top, and Back does not undo Test 2. Change: one line under the title, in the part-label type the menu already uses, reading "Chapter 5 · The exponential". The up control is the existing `.station-link` at 44px. Opening a chapter or a test is a hash change, and the router keeps the scroll it has. Effort S.
+
+3. **Make the rows the doors.** Tapping the Chapter 5 title does nothing. The 4.1–4.4 rows have no links. Chapter 4 starts at y = 908, under the fold, while the button talks about it. Chapter 5's tick is invisible on the roadmap. Change: every chapter row and every section row is a link, Chapters 1–7, and the status card counts the chapter you actually worked, including 5.1.2. Effort S.
+
+4. **The first screen says the one gesture, and the picture is on it.** Chapter 5 hides "drag the green dot" in an aria-label, draws that dot 9px wide, and arrives with Exercise 2 already filled. Mandelbrot's set starts at y = 882. The home lede points at a dot (y = 1548) and a map (y = 4785). Change: one lede, the gesture, then the picture. Blanks start empty and fill when the picture makes them true. On Mandelbrot, the set comes above the theorem paragraph, the way Julia already puts the disk on the first screen. The paragraph stays; it moves down. Effort S.
+
+5. **Put the chapter pages back in the station order.** Same Iowan title, same lede colour, same white card, same source line, same accent button. Cut the duplicate lede, the source tag at the bottom, the card inside the card, the 788px tail, and the transparent Later rows. Raise the 36px picture chips and the 40px zoom buttons to the 44px the primary buttons already are. The three taste passes are the check: Play stays on the phone, the sentence is said once, and no new chrome appears. Effort S.
+
+6. **A finished stage says what you just learned, then names the next one.** Tick currently renames a button. Chapter 4 lets you tick a proof without opening the disk. Two indexes share the title The Problem Index. Change: Tick waits until the picture beat has happened, then one sentence (the terms entered the disk; ±iπ land together), then the next beat. Practice and recall are beats 3 and 4 of the chapter, in the card you already have. Test prep is one door. Generators stay on the practice beat, off the picture, so the picture keeps one gesture. Effort M for the sentence and the door. Effort L once the engine's four question types are real.
+
+7. **Sign in, so Continue survives a new phone.** The tick from this walk lives in `mv:progress.test2` on one browser. Change: Pages Functions, KV namespace `PROGRESS`, Google and X as above, union on first sign-in, site fully usable signed out. The owner's lists are in Accounts. Effort L for both providers. Google alone is M.
+
+8. **Stop the phone list at Chapter 7.** The menu already lists Residue Theory through the Laplace transform, and the roadmap's lede says eleven chapters. With a seven-chapter range those rows are doors to nowhere, stacked under the chapters a student can actually open. Change: the drawer and the roadmap show 1–7 and Test prep. Chapters 8–11 stay in the data and off this list. Effort S, and it should ship with fix 1 so the menu is only rewritten once.
