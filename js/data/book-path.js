@@ -172,7 +172,6 @@ export const CHAPTER_4 = deepFreeze({
       idea: 'The Julia set of $z^2+c$ is one piece exactly when the orbit of $0$ stays bounded.',
       read: [
         { pin: 'Theorem 4.9, page 113', href: sectionHref(S42, 'Kc_Connected') },
-        { pin: 'Theorem 4.11, page 116', href: sectionHref(S42, 'Attracting_Thm') },
       ],
       exercises: ['4.2.3', '4.2.4', '4.2.5'],
     },

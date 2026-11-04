@@ -123,10 +123,11 @@ check('chapter 4 exercises are the homework set plus 4.4.6', chapter4ExerciseIds
   const reads = CHAPTER_4.sections.flatMap((s) => s.read);
   const href = (pin) => reads.find((r) => r.pin === pin)?.href || '';
   check('Theorem 4.1 opens the limit theorem', href('Theorem 4.1, page 103').endsWith('#Lim_Zn_Thm'));
-  check('Theorem 4.11 opens the attracting-fixed-point theorem', href('Theorem 4.11, page 116').endsWith('#Attracting_Thm'));
+  check('section 4.2 cites Theorem 4.9 and not Theorem 4.11', CHAPTER_4.sections[1].read.length === 1 && href('Theorem 4.9, page 113').endsWith('#Kc_Connected') && !href('Theorem 4.11, page 116'));
   check('Theorem 4.15 opens the disk of convergence', href('Theorem 4.15, page 124').endsWith('#Regions_of_Convergence'));
   check('Theorem 4.16 opens the radius formulas', href('Theorem 4.16, page 125').endsWith('#th15'));
 }
+check('One Newton Step keeps Example 4.7', /Example 4\.7, page 110/.test(readFileSync(new URL('../js/stations/concept.js', import.meta.url), 'utf8')));
 check('chapter 5 opens on the exponential, not the front matter',
   readFileSync(new URL('../js/stations/book.js', import.meta.url), 'utf8').includes("sectionHref('sec_exponential-function.html')")
   && readFileSync(new URL('../js/stations/book.js', import.meta.url), 'utf8').includes('are not drawn here yet'));

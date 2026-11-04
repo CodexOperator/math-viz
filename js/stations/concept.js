@@ -136,6 +136,7 @@ function sequencePanel() {
     { id: 'sequence-cycle', label: '((1+i)/√2)^n', z: { re: Math.SQRT1_2, im: Math.SQRT1_2 }, kind: 'cycle' },
   ];
   let current = modes[0];
+  let fromChapter = false;
   const buttons = [];
   function publish() {
     const section = host.closest('section.station');
@@ -146,7 +147,9 @@ function sequencePanel() {
     const pts = orbit(current.z, 8);
     show(host, pts.map((p, i) => `n = ${i + 1}: ${fmtCart(p, 4)}, modulus ${fmtNum(Math.hypot(p.re, p.im), 4)}`));
     note.textContent = current.kind === 'settle'
-      ? 'Settles at 0. The modulus is (√5 / 4)^n, which goes to 0. Exercise 1(a) asks for this limit. What the book prints is closed on the index.'
+      ? (fromChapter
+        ? 'Settles at 0. The modulus is (√5 / 4)^n, which goes to 0. These terms are the disk in Definition 4.1.'
+        : 'Settles at 0. The modulus is (√5 / 4)^n, which goes to 0. Exercise 1(a) asks for this limit. What the book prints is closed on the index.')
       : 'Stays. The modulus is 1, and the point visits the eighth roots of unity. It does not settle. Exercise 7 asks whether the limit exists. What the book prints is closed on the index.';
     publish();
   }
@@ -164,11 +167,12 @@ function sequencePanel() {
   const panel = h('section', { class: 'panel', 'aria-labelledby': 'sequence-title' },
     h('h2', { id: 'sequence-title' }, 'Two sequences from section 4.1'),
     h('p', null, 'A limit means the terms eventually sit in every disk you draw around one point. Bounded is weaker: convergent sequences are bounded, and section 4.2 uses that word for orbits.'),
-    chips, host, h('div', { id: 'sequence-film-slot', 'data-film-slot': '' }), note);
+    chips, host, note, h('div', { id: 'sequence-film-slot', 'data-film-slot': '' }));
   // The page is built once. A later visit from an exercise has to press that exercise's chip.
   panel.applyChip = (id) => {
     const i = modes.findIndex((m) => m.id === id);
     if (i < 0) return;
+    fromChapter = true;
     current = modes[i];
     buttons.forEach((btn, j) => btn.setAttribute('aria-pressed', String(j === i)));
     draw();
@@ -403,9 +407,9 @@ function zeroPanel(ctx) {
   return h('section', { class: 'panel', 'aria-labelledby': 'zero-title' },
     h('h2', { id: 'zero-title' }, 'Only the start at 0'),
     h('p', null, 'Theorem 4.9, page 113: the Julia set of z² + c is connected exactly when this one orbit stays bounded. The book then collects those c into the Mandelbrot set. That picture is the next stop. On the flat paper, c is a hollow square.'),
+    chips, host, note,
     filmTie,
-    h('div', { id: 'zero-film-slot', 'data-film-slot': '' }),
-    chips, host, note);
+    h('div', { id: 'zero-film-slot', 'data-film-slot': '' }));
 }
 
 const BOOK_NEWTON = [
@@ -438,10 +442,10 @@ function newtonStepPanel() {
     h('h2', { id: 'newton-step-title' }, 'The book’s five steps, and a line'),
     h('p', null, 'The step is z − f(z)/f′(z). The table is Example 4.7, page 110, a quadratic. Exercise 3 is the line az + b. The derivative in the denominator is the zoom from Test 1.'),
     host, note,
-    h('div', { id: 'newton-step-film-slot', 'data-film-slot': '' }),
-    h('p', null, 'The film walks these five steps from the start in the table. On the flat paper the same formula flips: drag the plant and the sentence changes from which root to leaves, when the plant is real.'),
     h('h3', null, 'Degree 1'),
     lineHost,
+    h('p', null, 'The film walks these five steps from the start in the table. On the flat paper the same formula flips: drag the plant and the sentence changes from which root to leaves, when the plant is real.'),
+    h('div', { id: 'newton-step-film-slot', 'data-film-slot': '' }),
     h('p', null, h('a', { href: '#newton' }, 'Open the Newton picture')));
 }
 

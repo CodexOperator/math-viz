@@ -870,3 +870,21 @@ Branch `cursor/book-chapter-path-df29`, after the close review at `cec19d0`. One
 **Verified.** `node tools/fractal-smoke.mjs` exits 0, including the tick-only rule and the four anchors. `node tools/check_vectors.mjs` is 234/234. `node kit/smoke.mjs` exits 0. The router does not import `kit/`. Headless Chrome, light and dark, at 1280, 700, and 390: no console errors, no exceptions, no failed assets, no sideways scroll, and 0 animation frames on the book and on Chapter 4. The chapter title is on screen. Exercise 5 lands on c = −2 and the link back is `#chapter-4-4-2-5`. A tick on the chapter is pressed on the index. Screenshots: `/opt/cursor/artifacts/book-1280-light.png`, `chapter4-1280-light.png`, `orbit-ex5-1280-light.png`, `chapter5-1280-light.png`, `book-390-dark.png`, `chapter4-390-light.png`.
 
 **Stop.** The cutting batch is done. Chapter 5 is not built in this shape.
+
+## Book path — batch 3 (the doors)
+
+Branch `cursor/book-chapter-path-df29`, after the batch 2 review at `7069e060`. One cutting batch, then stop. Nothing added. Chapter 5 stays the one sentence.
+
+**Choice.** The film is the worked example, and it was sitting on top of the chip the chapter named. The chip and its list are the page. The film follows them. The sequence note keeps the chapter’s name for the picture when the door was the chapter, and keeps Exercise 1(a) when it was not.
+
+### The five cuts
+
+1. On The Orbit of 0, the chips, the list, and the Theorem 4.9 line come before the film. The sequence film and the Newton film move under the same way: the named chip, or the degree-1 line, then the film.
+2. Opened from Exercise 3 or 13, the sequence note calls the terms the disk in Definition 4.1. It does not call them Exercise 1(a).
+3. Go to 4.2, 4.3, and 4.4 puts that section’s title under the header. The previous tick stays above the window. The last section can scroll up because the path keeps a screen of room under it.
+4. Section 4.2 cites Theorem 4.9 only. Theorem 4.11 leaves the section. One Newton Step still cites Example 4.7, page 110.
+5. The seven homework hints drop the last sentence that said the card does not print the proof, the count, the orbit, the sum, the criterion, or the ε. Exercise 6 still does not say which point is closer.
+
+**Verified.** `node tools/fractal-smoke.mjs`, `node tools/check_vectors.mjs` (234/234), `node kit/smoke.mjs`, and `node tools/film-smoke.mjs` exit 0. The router does not import `kit/`. Headless Chrome at 1280×800: c = −2, the list 0, −2, 2, 2, …, and the Theorem 4.9 line are on the first screen, and the film starts under that list. The same list starts on screen at 390px, with no sideways scroll. The sequence note names Definition 4.1. The three Go to jumps hide the previous tick. No console errors and no failed assets. Screenshot: `/opt/cursor/artifacts/orbit-first-screen.png`, `goto-4-2-1280.png`.
+
+**Stop.** No Chapter 5 sections.

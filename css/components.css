@@ -1055,6 +1055,9 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   gap: var(--space-3);
 }
 
+/* The last section can still scroll its title up under the header. */
+.chapter-path { padding-bottom: calc(100dvh - var(--header-h)); }
+
 .book-node,
 .section-node {
   min-width: 0;
@@ -1062,7 +1065,9 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface);
-  scroll-margin-top: calc(var(--header-h) + var(--space-3));
+  /* html already insets by the header plus a gap. A negative margin cancels that gap,
+     so the section title sits on the header and the previous tick stays above it. */
+  scroll-margin-top: calc(-1 * var(--space-3));
 }
 
 .book-node[data-state="next"],
