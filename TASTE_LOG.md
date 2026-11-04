@@ -935,3 +935,72 @@ Yes. One batch, then stop. It is that one line.
 The gesture is the one a student came for, and the page around it is the page. When the line you can read at the bottom, the right, and the top is true of those frames, the loop should rest. A batch that adds the §5.1 exercises will hang the cards on a sentence that still says the point is on the left.
 
 Something real is left, and it is that sentence. The rest of the last note is on the page. After this line, nothing real is left.
+
+## taste-skill (batch 6)
+
+Branch `cursor/book-chapter-path-df29`, commit `6071a5a`. Used like a MAT 412 student on https://book-preview.complexanalysis.pages.dev/#chapter-5, light and dark. The live picture, the walk, and the stylesheet match this commit. `#chapter-5` at 1280×800 and at 390×844. From the still: a drag of the green dot out and a drag in, Play while that radius held, reduced motion through the four steps from a fresh load, the Exercise 1 hint, the Exercise 2 card, and a tick of Exercise 2. `#chapter-5-5-1-1` opens the picture at 0. No console errors. No sideways scroll at either width (`scrollWidth` matched the window).
+
+### Verdict
+
+The picture still does the exponential, and the sentence under it follows the point: left, bottom, right, top. The walk under the picture is the part that is still wrong. At 1280 the claim and Play sit below the first screen. The strip blank names a figure the square does not draw. Exercise 2 is a paragraph about that figure, and its blank is already filled. Four empty Later cards close the page.
+
+Another batch is worth doing. It is the four cuts below. After that, stop.
+
+### What I could actually do
+
+`#chapter-5` opens on THE BOOK, the title Chapter 5. The exponential, a grey line about blanks, a bar that says “Next is §5.1, Exercise 1, page 135. 0 of 2 exercises,” and the square.
+
+At 1280, in light and in dark, the square is 480×480 and its bottom is at 811 in an 800px window. The claim starts at 819: “The point sits on the left of the unit circle, on the real axis.” Play is 44px tall and runs from 853 to 897. The first screen ends on the lower axis.
+
+On the phone the square is 358×358. The claim wraps to two lines and ends at 790. Play ends at 842 in an 844px window. The walk starts under that.
+
+A drag of the green dot to the right set the real part to about 0.79, left the angle at π, and the claim and the modulus blank both said the radius is \(e^{x}\), larger than 1. A drag inward clamped the real part at −1.2 and both lines said smaller than 1. The strip blank stayed empty while the point was on the axis. Play then kept that small radius, the button said Pause, and the angle kept moving. Once the point left the axis the strip blank filled with \(e^{x}\).
+
+Reduced motion, from a fresh load, radius 1, button Next step:
+
+- The left. The modulus blank is empty. The strip blank is empty. Exercise 2 reads “land together at −1” and Tick is live.
+- The bottom. The claim says the point sits on the bottom of the unit circle. The strip blank fills with \(e^{x}\). Exercise 2’s blank is empty and its Tick is off.
+- The right. The claim says the right-hand point. Exercise 1 fills with 1 and Tick wakes. The strip blank is empty.
+- The top. The strip blank fills with \(e^{x}\) again.
+- The left, and the button says Start again. Exercise 2 fills again. The button never says Pause.
+
+`#chapter-5-5-1-1` opens at real part 0 and angle 0. The claim says the right-hand point, Exercise 1 is filled with 1, and the page is scrolled to that card. Ticking Exercise 2 on the left-hand still writes `5.1.2` into `mv:progress.test2`, and the status becomes “Next is §5.1, Exercise 1, page 135. 1 of 2 exercises.”
+
+In the dark the page is rgb(13, 18, 28) and the sentence is rgb(233, 237, 245). The empty blank’s line is that same light ink. The axes stay blue, the circle and the ray stay orange, the handle stays green, and the point stays purple.
+
+### What clicks
+
+The claim names the frame it is on. The two radius sentences still say larger and smaller, with the math. A drag of the green dot is what fills the modulus blank, and that blank stays empty on the unit circle.
+
+Exercise 1’s blank stays empty until the point is the right-hand point of the unit circle, and then it says 1. Exercise 2’s blank is empty at the bottom, the right, and the top, and it fills on the left. The hint stays closed until you ask. Tick is 44px. The tick that is live is the one that reaches the shared store.
+
+The phone gives the square the width of the page, and Play is on that screen. The cite under the walk is Howell and Mathews, Chapter 5, Elementary Functions, page 130.
+
+### What gets in the way
+
+**The first screen lost the sentence and the button.** The lede is two lines on the laptop and three on the phone. The Next bar is another row. That height puts the square’s bottom at 811 and Play at 853. On the phone the same rows leave Play 2px above the edge of the window.
+
+**The strip blank describes a picture that is not on the page.** “A vertical segment in the strip lands on the circle of radius” fills at the bottom and at the top, with \(e^{x}\). The square is one point. The idea line above the blanks already says the modulus is \(e^{x}\), and the next line is “The modulus is” with an empty rule under the answer.
+
+**Exercise 2 is Figure 5.2’s shading.** The card quotes the lighter shading, the circle \(s_{1}^{*}\), and the rays \(r_{1}\), \(r_{2}\), and \(r_{3}\). Those marks are not on this square. The blank is part (c) only, and on the frame the page opens on, the words “land together at −1” are already written and Tick is live. Exercise 1’s hint says the blank waits until the picture is at 0. The page opens with the real part at 0, on the left, and that blank is empty there. The right-hand point is the one that fills it.
+
+**Four Later cards.** 5.2, 5.3, 5.4, and 5.5 are the same empty box: a small-caps Later, a title, and a page, 119px each, 522px together on the laptop. The cite and Back to the book sit under them.
+
+The hint button stretches with the card, 884px on the laptop and 290px on the phone. That is the card. The kicker, the four colours, and the 480px square stay. The paper to the right of the square is the height that keeps Play on the screen once the rows above the square are gone.
+
+### Cut
+
+- The rows above the square. The claim and Play are on the first screen at 1280×800, and Play has air under it at 390×844. The Next line sits with the walk.
+- The strip blank. The idea stops at the identity. The modulus blank is the first line that names \(e^{x}\), and it fills when the radius leaves 1, with larger and smaller.
+- Exercise 2’s shading, \(s_{1}^{*}\), and \(r_{1}\), \(r_{2}\), \(r_{3}\). The card is part (c). The blank keeps filling on the left, including the frame the page opens on, because that frame is the answer. Exercise 1’s hint names the right-hand point of the unit circle.
+- The four Later cards on this page. The walk ends at the cite and Back to the book.
+
+### Add
+
+Nothing. No logarithm, no powers, no second plane, no scrubber, no colour key.
+
+### Another batch
+
+Yes. One batch, then stop. It is the four cuts above, in that order.
+
+The clock, the handle, and the sentence that follows the point are on the page. Something real is left, and it is the walk under the picture: the first screen, the strip blank, Exercise 2’s figure, and the Later cards. After those four, nothing real is left.
