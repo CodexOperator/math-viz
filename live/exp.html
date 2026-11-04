@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The exponential keeps its angle</title>
+  <link rel="stylesheet" href="../css/theme.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="settle.css">
+</head>
+<body>
+  <a class="skip-link" href="#plane">Skip to the plane</a>
+  <header class="live-mast">
+    <a href="../index.html">Story Map</a>
+    <a href="settle.html">The sequence film</a>
+    <span class="live-kicker">Live film · §5.1</span>
+  </header>
+  <main id="main" class="live-wrap">
+    <h1>The exponential keeps its angle</h1>
+    <p class="lede">e<sup>z</sup> = e<sup>x</sup> (cos y + i sin y). The clock owns y. Drag to set x. The radius changes, and the turn does not start over.</p>
+    <section class="panel" aria-labelledby="live-title">
+      <h2 id="live-title" class="panel-title">A vertical line, while you hold x</h2>
+      <p id="observe">Drag in the plane. Distance from 0 sets the radius e<sup>x</sup>. The clock keeps the angle.</p>
+      <div class="live-stage">
+        <svg id="plane" viewBox="0 0 480 480" tabindex="0" role="img" aria-label="The image of e to the z. Drag to change the radius. Purple is the walking point. Green is the radius on the real axis. Orange is the unit circle.">
+          <line id="axis-x" stroke="var(--cart)" stroke-width="2"></line>
+          <line id="axis-y" stroke="var(--cart)" stroke-width="2"></line>
+          <circle id="unit" fill="none" stroke="var(--polar)" stroke-width="2" stroke-dasharray="6 6"></circle>
+          <circle id="orbit" fill="none" stroke="var(--output)" stroke-width="1.5" opacity="0.55"></circle>
+          <line id="ray" stroke="var(--polar)" stroke-width="3" stroke-linecap="round"></line>
+          <circle id="walker" r="8" fill="var(--output)"></circle>
+          <circle id="radius-dot" r="11" fill="var(--input)"></circle>
+        </svg>
+      </div>
+      <p id="claim" class="live-claim" data-holds="false" data-readout></p>
+      <p class="live-key"><b class="key-in">Green</b> is the radius the hand is holding, drawn on the real axis. <b class="key-out">Purple</b> is e<sup>z</sup>, walking that radius. <b class="key-cart">Blue</b> is the axes. <b class="key-polar">Orange</b> is the unit circle, the image of the imaginary axis.</p>
+      <div class="film-controls slider-row">
+        <button type="button" class="btn film-play" id="play">Play</button>
+        <input type="range" id="scrub" min="0" max="240" step="1" value="240" aria-label="Film time">
+        <output id="time" for="scrub"></output>
+      </div>
+      <div class="readout" id="readout" aria-live="off"></div>
+      <p class="source-tag">Howell &amp; Mathews, <a href="https://complexanalysis.org/web/sec_exponential-function.html">Complex Analysis, §5.1, The Complex Exponential Function, page 130</a>. Identity (5.1): e<sup>z</sup> = e<sup>x</sup> (cos y + i sin y), so the modulus is e<sup>x</sup> and the angle is y. A vertical line in the fundamental strip lands on a circle. CC BY 4.0.</p>
+    </section>
+  </main>
+  <script type="module" src="exp.js"></script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The terms land, or they do not</title>
+  <link rel="stylesheet" href="../css/theme.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="settle.css">
+</head>
+<body>
+  <a class="skip-link" href="#plane">Skip to the plane</a>
+  <header class="live-mast">
+    <a href="../index.html">Story Map</a>
+    <span class="live-kicker">Live film · §4.1</span>
+  </header>
+  <main id="main" class="live-wrap">
+    <h1>The terms land, or they do not</h1>
+    <p class="lede">This is the sequence film, rebuilt so the hand can move <span class="key-in">z</span> while the terms are walking. The clock does not start over.</p>
+    <section class="panel" aria-labelledby="live-title">
+      <h2 id="live-title" class="panel-title">z<sup>n</sup>, while you hold z</h2>
+      <p id="observe">Drag anywhere in the plane. The green point is z. The walk keeps its place in time.</p>
+      <div class="live-stage">
+        <svg id="plane" viewBox="0 0 480 480" tabindex="0" role="img" aria-label="Drag the green point z. Purple points are the powers. Orange is the unit circle. Blue axes.">
+          <clipPath id="plane-clip"><rect x="8" y="8" width="464" height="464"></rect></clipPath>
+          <g id="grid" stroke="var(--border)" stroke-width="1"></g>
+          <line id="axis-x" stroke="var(--cart)" stroke-width="2"></line>
+          <line id="axis-y" stroke="var(--cart)" stroke-width="2"></line>
+          <circle id="unit" fill="none" stroke="var(--polar)" stroke-width="2" stroke-dasharray="6 6"></circle>
+          <circle id="disk" fill="none" stroke="var(--output)" stroke-width="1.5" stroke-dasharray="3 5" opacity="0.85"></circle>
+          <g id="terms" clip-path="url(#plane-clip)"></g>
+          <polyline id="trail" fill="none" stroke="var(--output)" stroke-width="2" opacity="0.7" clip-path="url(#plane-clip)"></polyline>
+          <circle id="cursor" r="8" fill="var(--output)"></circle>
+          <line id="exit" stroke="var(--output)" stroke-width="3" stroke-linecap="round" visibility="hidden"></line>
+          <circle id="seed" r="11" fill="var(--input)"></circle>
+        </svg>
+      </div>
+      <p id="claim" class="live-claim" data-holds="false" data-readout></p>
+      <p class="live-key"><b class="key-in">Green</b> is z, the point you hold. <b class="key-out">Purple</b> is z<sup>n</sup>, and the small purple circle is a disk around 0. <b class="key-cart">Blue</b> is the axes. <b class="key-polar">Orange</b> is the unit circle, the wall between settling and leaving.</p>
+      <div class="film-controls slider-row">
+        <button type="button" class="btn film-play" id="play">Play</button>
+        <input type="range" id="scrub" min="0" max="240" step="1" value="240" aria-label="Film time">
+        <output id="time" for="scrub"></output>
+      </div>
+      <div class="readout" id="readout" aria-live="off"></div>
+      <p class="source-tag">Howell &amp; Mathews, <a href="https://complexanalysis.org/web/sec_sequences-series.html#Seq_Lim_Def">Complex Analysis, §4.1, Definition 4.1, page 103</a>. CC BY 4.0. The opening point is 1/2 + i/4, the sequence Exercise 1(a) asks about. On the circle, the terms stay, which is the question in Exercise 7. The film this page rebuilds is the one on the sequence stop.</p>
+    </section>
+  </main>
+  <script type="module" src="settle.js"></script>
+</body>
+</html>
