@@ -831,7 +831,7 @@
       {
         "text": "Because $|z|<1$, the powers $z^n$ tend to $0$, so the sum is ___.",
         "answer": "$\\dfrac{1}{1-z}$",
-        "why": "The second term dies. The book asks you to prove $z^n\\to 0$ in the §4.3 exercises, page 122.",
+        "why": "The second term dies. Exercise 6 of §4.3, page 123, asks you to prove $z^n\\to 0$ when $|z|<1$.",
         "hints": [
           "Send $n$ to infinity in the partial-sum formula.",
           "The surviving piece is the first term of that formula."
@@ -978,7 +978,7 @@
       {
         "text": "The number of iterations needed is ___.",
         "answer": "$1$",
-        "why": "Every guess maps to the root in one step. Exercise 3, page 117.",
+        "why": "The first iterate is the root. The selected answer, page 438, also notes that a guess which is already the root stops before that step. Exercise 3, page 117.",
         "hints": [
           "The simplified map ignores the guess.",
           "Count the steps from $z_0$ to the root."

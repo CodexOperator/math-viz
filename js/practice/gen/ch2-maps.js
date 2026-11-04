@@ -1,5 +1,5 @@
-// A linear map w = az + b, the picture in §2.1.
-// Howell & Mathews, page 43. The image is computed here.
+// A linear map w = az + b with real a and b, the special case of w = Az + B in §2.1.
+// Howell & Mathews, page 50. The image is computed here.
 
 import { mulberry32, pickInt } from '../seed.js';
 import { texComplex } from './geometric-series.js';
@@ -28,7 +28,7 @@ export function generate(seed) {
         text: '$w=$ ___',
         answer,
         accept: [answer.replace(/i$/, '*i')],
-        why: `$w=az+b$ sends $x+iy$ to $a x+b$ and $a y$. Section 2.1, page 43.`,
+        why: `$w=az+b$ with real $a$ and $b$ sends $x+iy$ to $ax+b$ and $ay$. The general map $w=Az+B$ is Section 2.1, page 50.`,
         hints: [
           'Multiply the real part and the imaginary part by $a$, then add $b$ to the real part.',
           `The real part is $${a}\\cdot ${x}${b < 0 ? b : `+${b}`}$.`,
