@@ -1,0 +1,199 @@
+/* The singing plane. Colours are the site tokens. Nothing here sets a new hue. */
+
+.hear-page {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-3) var(--space-5);
+}
+
+.hear-back {
+  margin: 0 0 var(--space-3);
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.hear-page h1 {
+  margin-bottom: var(--space-2);
+}
+
+.hear-stage {
+  position: relative;
+  width: 100%;
+  max-width: 40rem;
+  aspect-ratio: 1 / 1;
+  margin: 0 0 var(--space-3);
+  touch-action: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface-2);
+}
+
+.hear-stage:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.hear-stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.hear-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-3);
+}
+
+.hear-audio {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: min(100%, 16rem);
+}
+
+.hear-toggle {
+  min-width: 12rem;
+}
+
+#hear-state {
+  margin: 0;
+  flex: 1 1 12rem;
+  color: var(--text-muted);
+}
+
+.hear-claim {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-left: 4px solid var(--output);
+  background: var(--surface);
+  font-size: 1.08rem;
+}
+
+.hear-readrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: stretch;
+  margin: 0 0 var(--space-3);
+}
+
+.hear-readrow .readout {
+  flex: 1 1 16rem;
+  margin: 0;
+}
+
+.hear-compass-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  min-width: 6.5rem;
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.hear-compass {
+  width: 4.5rem;
+  height: 4.5rem;
+  display: block;
+}
+
+.hear-compass circle {
+  fill: var(--surface-2);
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+}
+
+.hear-compass line {
+  stroke: var(--polar);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+.hear-compass-cap {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.hear-map {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+}
+
+.hear-map div {
+  display: grid;
+  gap: 0.15rem 1rem;
+  grid-template-columns: minmax(0, 9.5rem) minmax(0, 1fr);
+  padding: var(--space-2) 0;
+  border-top: 1px solid var(--border);
+}
+
+.hear-map dt {
+  margin: 0;
+  font-weight: 700;
+}
+
+.hear-map dd {
+  margin: 0;
+}
+
+.hear-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  list-style: none;
+}
+
+.hear-key li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 100%;
+}
+
+.hear-wheel-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-3);
+}
+
+.hear-wheel-row p {
+  margin: 0;
+  flex: 1 1 16rem;
+}
+
+#hear-wheel {
+  width: 5.25rem;
+  height: 5.25rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+
+@media (max-width: 36rem) {
+  .hear-map div {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hear-compass line {
+    transition: none;
+  }
+}
