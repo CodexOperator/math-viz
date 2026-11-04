@@ -120,6 +120,17 @@ check('eleven chapters, 4 and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_CHAPT
 check('chapter 4 sections follow the contents', CHAPTER_4.sections.map((s) => `${s.id} ${s.page}`).join() === '4.1 102,4.2 109,4.3 118,4.4 123');
 check('chapter 4 exercises are the homework set plus 4.4.6', chapter4ExerciseIds().join() === '4.1.3,4.1.13,4.2.3,4.2.4,4.2.5,4.3.1,4.3.2,4.4.6');
 {
+  const reads = CHAPTER_4.sections.flatMap((s) => s.read);
+  const href = (pin) => reads.find((r) => r.pin === pin)?.href || '';
+  check('Theorem 4.1 opens the limit theorem', href('Theorem 4.1, page 103').endsWith('#Lim_Zn_Thm'));
+  check('Theorem 4.11 opens the attracting-fixed-point theorem', href('Theorem 4.11, page 116').endsWith('#Attracting_Thm'));
+  check('Theorem 4.15 opens the disk of convergence', href('Theorem 4.15, page 124').endsWith('#Regions_of_Convergence'));
+  check('Theorem 4.16 opens the radius formulas', href('Theorem 4.16, page 125').endsWith('#th15'));
+}
+check('chapter 5 opens on the exponential, not the front matter',
+  readFileSync(new URL('../js/stations/book.js', import.meta.url), 'utf8').includes("sectionHref('sec_exponential-function.html')")
+  && readFileSync(new URL('../js/stations/book.js', import.meta.url), 'utf8').includes('are not drawn here yet'));
+{
   let progress = sanitizeBookProgress({ sections: { '9.9': true, '4.1': true }, exercises: { '4.1.3': true, 'nope': true } }, CHAPTER_4.sections);
   check('book progress keeps only known ids', progress.sections['4.1'] === true && progress.sections['9.9'] == null && progress.exercises['4.1.3'] === true && progress.exercises.nope == null);
   check('4.1 is unfinished while 4.1.13 is open', sectionFinished(CHAPTER_4.sections[0], progress) === false && chapterTally(CHAPTER_4.sections, progress).nextId === '4.1');

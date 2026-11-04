@@ -5695,3 +5695,60 @@ Exercise 13’s hint does not call the missing half an ε/2 argument. The book a
 `node tools/fractal-smoke.mjs` exits 0, including the homework set, the copy shape, the degree-1 summary, and the Exercise 5 hint. `node tools/check_vectors.mjs` is 234/234. `node kit/smoke.mjs` exits 0. Playground files were not edited, so `playground-smoke` was not rerun.
 
 **accept with fixes**
+
+## Book path, batch 1 — close review
+
+Verdict: **accept with fixes**. Draft pull request 33, branch `cursor/book-chapter-path-df29`, reviewed from `ad216c1`. Scope is Chapters 4 and 5. Not merged.
+
+The book is a third route family. `#book` lists all eleven chapters from the 202 Updated Edition contents (PDF pages 6–7, printed i–ii). Chapter 4 is the walk. Chapter 5 is open and still a list. `#chapter-1` stays on the roadmap. A leftover token on a later chapter is no such place. Visiting the book leaves the remembered test alone. `js/app.js` does not import `kit/`. `js/core/map-route.js` is byte-identical to `kit/template/js/core/map-route.js`.
+
+### Fixed
+
+Theorem 4.1, page 103, opened the top of §4.1. The statement is `Lim_Zn_Thm` on the HTML edition (the same limit of real and imaginary parts the PDF prints as Theorem 4.1). The link now ends there.
+
+Theorem 4.11, page 116, opened `Fixed_point_Def`, which is the fixed-point definition (PDF Definition 4.9, page 115). The attracting-fixed-point criterion on page 116 is `Attracting_Thm`. The chapter pin now opens that theorem.
+
+Theorem 4.16, page 125, opened the same anchor as Theorem 4.15. Theorem 4.15 is the disk (`Regions_of_Convergence`, page 124). Theorem 4.16 is the three formulas for the radius, anchor `th15`.
+
+Chapter 5’s source tag opened the HTML front matter. The pin says Chapter 5, page 130, which is where §5.1 starts. It now opens `sec_exponential-function.html`. The lede said the pictures for the exponential, the logarithm, and the powers were the next page. That page is not on the site. The lede now says those three are not drawn here yet, which is what the section rows already say.
+
+### Citations checked against the professor PDF
+
+Contents titles and printed pages for all eleven chapters, and every section under them, match the table of contents. Chapter 4 is Sequences, Series, and Fractals, page 102: 4.1 page 102, 4.2 page 109, 4.3 page 118, 4.4 page 123. Chapter 5 is Elementary Functions, page 130: 5.1 page 130, 5.2 page 137, 5.3 page 143, 5.4 page 148, 5.5 page 159.
+
+Reading pins match the printed pages. Definition 4.1 and Theorem 4.1 are page 103. Theorem 4.5 is page 106. Example 4.7 is page 110. The Figure 4.3 caption is page 112 (the colouring is discussed on 111; the caption “Newton’s method applied to two different cubics” is on 112). Example 4.9 and Theorem 4.9 are page 113. Figure 4.6 is page 114. Theorem 4.11 is page 116. Theorem 4.12 is page 118. Theorem 4.15 is page 124. Theorem 4.16 is page 125.
+
+Exercise text, flat numbers, printed with the section’s exercises:
+
+- §4.1 Exercise 3, page 108. Suppose the limit of \(z_n\) is \(z_0\), and show the limit of the conjugate is the conjugate. The card quotes that.
+- §4.1 Exercise 13, page 109. Complete Theorem 4.1 for the imaginary part. The card quotes that.
+- §4.2 Exercise 3, page 117. Newton’s method for a degree-1 polynomial, and how many iterations reach \(-b/a\). The card quotes that.
+- §4.2 Exercise 4, page 117. Iterates of \(z^2\), inside, outside, and on the unit circle. The card quotes that.
+- §4.2 Exercise 5, page 117. The Julia set of \(f_{-2}\) is connected. The card quotes that.
+- §4.3 Exercise 1, page 122. The two geometric sums, \((1+i)^n/2^n\) and \(1/(2+i)\). The card quotes both parts. The lead-in on the card says “Evaluate the following”; the PDF says “Evaluate”.
+- §4.3 Exercise 2, page 122. Convergence on \(D_2(-i)\) and divergence outside it. The card quotes that.
+- §4.4 Exercise 6, page 129. A power series \(\sum c_n z^n\) that converges at \(4-i\) and diverges at \(2+3i\). The card quotes that. \(|4-i|=\sqrt{17}\) and \(|2+3i|=\sqrt{13}\), so the answer is no. That comparison stays in `added` on the index data. The chapter card, the closed hint, and Copy Markdown do not print it. A trusted click set Copy Markdown to Copied. The clipboard opened with the statement, the hint that points at A Radius, Then a Wall and Theorem 4.15, a blank solution, and the line that the export omits an answer key.
+
+The seven homework ids are unchanged. Hints on the chapter page start closed. The 4.1.3 hint opens and names Definition 4.1, page 103. Homework copy still points at `#chapter-4` and does not paste an orbit list.
+
+### Progress
+
+A section is finished only when it is marked and every exercise on it is ticked. Ticking all eight exercises, with no section marked, leaves Next on 4.1 and “0 of 4 sections finished.” Marking all four as well reads “Done. 4 of 4 sections, 8 of 8 exercises,” and the roadmap walk opens Chapter 5. Unticking 4.4.6 returns Next to 4.4. Unmarking 4.1, with its exercises still ticked, returns Next to 4.1.
+
+A fresh load of `mv:book.progress` set to broken JSON shows the blank walk, 0 of 4 and 0 of 8, and throws nothing. A record with `"yes"`, the number `1`, and an unknown id is dropped the same way. A full record saved and loaded again restores Done. There is no separate reset control. Turning a mark or a tick off is the reset, and a broken value is ignored until the next save replaces it. The Test 2 ticks stay in `progress.test2`.
+
+### Shell
+
+Headless Chrome, served under `/math-viz/`, light and dark, widths 1280, 700, and 390: `#book`, `#chapter-4`, `#chapter-5`, `#chapter-4-4-4-6`, and `#chapter-1` come up ready, with no console errors, no exceptions, no failed assets, no canvas, no sideways scroll, and 0 animation frames while the page sits. Leaving Julia for the book also leaves 0 frames. `#chapter-4-4-4-6` marks the exercise card and scrolls as far as the page allows; the card is on screen. The footer colour key stays hidden on the book routes.
+
+`#home` on a fresh Test 1 load lists the book and the 24 Test 1 stops, including addresses, and does not list Julia. The Test 2 switch lists Julia and Newton. `#addresses`, `#phasor-current`, `#complex-impedance`, and `#wave-phase` load. The Homework filter still shows the seven cards and “7 shown. Homework.” `playground.html` opens on L0 watch. `playground.html#cross` opens L21, “One number, on the set of c and on the Julia set.” Those pages do not scroll sideways. At 390 the index, the home map, addresses, and the current station do not scroll sideways.
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the four reading anchors and the Chapter 5 link. `node kit/smoke.mjs` exits 0.
+
+### For the builder, in this order
+
+1. **Draw Chapter 5, starting with the exponential.** The page lists 5.1–5.5 and links the current and the impedance from 5.4. The exponential, the logarithm, and the powers are named and not drawn. One picture, with a sentence the gesture can make false, is the next batch. Keep the section titles and the printed pages above.
+2. **Leave the index reveal of Exercise 6 where it is, unless the path is supposed to be the only copy of that card.** §4.4 Exercise 6 on the chapter page has a closed hint and a copy with no answer. The same id on the index is still the older likely card, and Show the check added for this site still opens the modulus comparison. The two pages are doing different jobs on purpose today.
+3. **Leave the combined Theorem 4.11 pins on the older stops.** The chapter pin now opens the criterion. The concept page, the flat paper, and the playground still use `Fixed_point_Def` for a sentence that also names Definitions 4.9 and 4.10, which is that anchor. Splitting those sentences is a later pass.
+
+**accept with fixes**

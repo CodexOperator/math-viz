@@ -5,7 +5,7 @@
 // Later chapters are nodes on the roadmap only.
 
 import { stationById } from '../registry.js';
-import { BOOK } from '../data/book.js';
+import { BOOK, sectionHref } from '../data/book.js';
 import { BOOK_CHAPTERS, CHAPTER_4, bookChapter } from '../data/book-path.js';
 import { test2ProblemById, problemMarkdown } from '../data/test2-problems.js';
 import {
@@ -430,8 +430,8 @@ function mountChapter5(el, ctx, focus) {
     h('header', { class: 'station-header' },
       h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back' }, 'The Book')),
       h('h1', { id: 'chapter-title' }, 'Chapter 5. Elementary Functions'),
-      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Five sections, from the exponential to the inverse functions. The pictures for the exponential, the logarithm, and the powers are the next page. Section 5.4 already has the current and the impedance.'),
-      sourceTag({ pin: 'Chapter 5, Elementary Functions, page 130', href: BOOK.html })),
+      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Five sections, from the exponential to the inverse functions. The exponential, the logarithm, and the powers are not drawn here yet. Section 5.4 already has the current and the impedance.'),
+      sourceTag({ pin: 'Chapter 5, Elementary Functions, page 130', href: sectionHref('sec_exponential-function.html') })),
     path,
     h('p', { class: 'book-footer-link' }, h('a', { href: '#chapter-4', id: 'chapter-to-4' }, 'Chapter 4 is the walk that is open now.')));
 

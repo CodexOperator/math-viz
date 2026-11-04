@@ -161,7 +161,7 @@ export const CHAPTER_4 = deepFreeze({
       idea: 'A sequence settles when its terms eventually sit in every disk around the limit.',
       read: [
         { pin: 'Definition 4.1, page 103', href: sectionHref(S41, 'Seq_Lim_Def') },
-        { pin: 'Theorem 4.1, page 103', href: sectionHref(S41) },
+        { pin: 'Theorem 4.1, page 103', href: sectionHref(S41, 'Lim_Zn_Thm') },
         { pin: 'Theorem 4.5, page 106', href: sectionHref(S41, 'Conv_terms_go_to_0') },
       ],
       stations: ['sequence', 'series'],
@@ -178,7 +178,7 @@ export const CHAPTER_4 = deepFreeze({
         { pin: 'Example 4.9, page 113', href: sectionHref(S42, 'K-0') },
         { pin: 'Theorem 4.9, page 113', href: sectionHref(S42, 'Kc_Connected') },
         { pin: 'Figure 4.6, page 114', href: sectionHref(S42, 'fig_ch-04-cp-6') },
-        { pin: 'Theorem 4.11, page 116', href: sectionHref(S42, 'Fixed_point_Def') },
+        { pin: 'Theorem 4.11, page 116', href: sectionHref(S42, 'Attracting_Thm') },
       ],
       stations: ['newton-step', 'newton', 'disk', 'julia', 'zero', 'mandelbrot', 'bulbs'],
       exercises: ['4.2.3', '4.2.4', '4.2.5'],
@@ -201,7 +201,7 @@ export const CHAPTER_4 = deepFreeze({
       idea: 'A power series converges inside a disk and diverges outside it.',
       read: [
         { pin: 'Theorem 4.15, page 124', href: sectionHref(S44, 'Regions_of_Convergence') },
-        { pin: 'Theorem 4.16, page 125', href: sectionHref(S44, 'Regions_of_Convergence') },
+        { pin: 'Theorem 4.16, page 125', href: sectionHref(S44, 'th15') },
       ],
       stations: ['powerseries'],
       exercises: ['4.4.6'],
