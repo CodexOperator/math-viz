@@ -5879,3 +5879,27 @@ Identity (5.1), page 132, is e^z = e^x (cos y + i sin y). Equation (5.6), page 1
 `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the unit-circle claim, y = π at x = ln 2, and exp(ln 2 + iπ) = −2. `node kit/smoke.mjs` exits 0.
 
 **ACCEPT**
+
+## Book path, batch 5 — close review
+
+Verdict: **ACCEPT WITH FIXES**. Pull request 33, branch `cursor/book-chapter-path-df29`, reviewed from `5375bcaf`. One cutting batch on the Chapter 5 picture. Not merged. One fix landed on the branch: the sentence now follows the point.
+
+The cut is the one the three taste notes asked for. The plane is the column, or `100dvh - 20rem`, whichever is smaller. At 1280×800 it is 480px, wider than the old 304px cap, and Play ends inside the window. At 360×640 the plane is 320px and Play ends at 599px. At 390×844 the plane is 358px and Play ends at 637px. The same holds in the dark theme, and after each Next step. Nothing scrolls sideways. A paused picture schedules 0 frames, and the angle stays where Pause left it.
+
+A fresh page rests at x = 0, y = π. The purple point is −1, the left point of the unit circle, on the real axis. The sentence is “The point sits on the left of the unit circle, on the real axis.” The green dot is the radius handle. A press 21px from its centre picks it up. A press 23px away does nothing, and so does a press on the purple point or in the corner. A 2px twitch keeps the radius. A drag then keeps the dot under the finger and leaves y at π. e^x in the radius sentences is KaTeX. The purple circle is painted after the green one, and at the right-hand quarter turn it is the mark under the finger. The title is “Chapter 5. The exponential.” The “not drawn yet” lines are gone, including the finished-chapter status, which reads “Done. 8 of 8 exercises. Chapter 5 is next.” There is no §5.1 card. Next step says Next step, lands on the bottom, the right, the top, and the left, then says Start again, and never says Pause. It schedules no frame.
+
+Chapter 4 is still “Sequences, Series, and Fractals,” eight cards, hints closed, no exponential picture. A tick on 4.1.3 stays pressed after Chapter 5 and is pressed on the index. The index still has its 30 cards and does not list 5.1.1 or 5.1.2. `js/app.js` does not import `kit/`, and loading the chapter requests nothing under `kit/`.
+
+### The sentence
+
+At `5375bcaf` the resting sentence stayed on screen for the whole turn. Next step put the point on the bottom, the right, and the top, and the line still said it sat on the left of the unit circle, on the real axis. Play did the same. The radius sentences were already true at every angle, because |e^z| = e^x. While this review was open, `c84218e`, `9e136bb`, and `fc851ed` landed. All three only append to `TASTE_LOG.md`, and all three name this sentence as the one thing left. The unit-circle sentence now names the left, the bottom, the right, or the top when the point is there, and “The point sits on the unit circle” between those four. A radius other than 1 still says e^x, larger or smaller than 1. The aria label already says to drag the green dot, and that instruction stays off the claim.
+
+### The math
+
+The HTML of §5.1, which the source tag opens, is the section that starts on printed page 130. Definition 5.1.1 is e^z = Σ z^n/n!. Identity (5.1.1), the PDF’s Identity (5.1) on page 132, is e^z = e^x (cos y + i sin y). Equation (5.1.6), the PDF’s |e^z| = e^x on page 133, is what the green dot and the radius sentences use. The painted point is `compile('exp(z)')`. At rest that is −1. At x = ln 2 and y = π it is −2. The walk runs y from −π to π, the fundamental strip on that page.
+
+### Smoke
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the four quarter sentences. `node kit/smoke.mjs` exits 0.
+
+**ACCEPT WITH FIXES**
