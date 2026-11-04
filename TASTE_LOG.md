@@ -1383,3 +1383,55 @@ Practice. Exercise 13 asks where (2+i)z − 2i sends −2+i. The picture I had j
 ### What to keep
 
 The drag is the one thing that taught me. The green point moves, the purple point follows, and the sentence flips. I saw it in the light and in the dark: below the line, then on or above; off the parabola, then on it. The colour words in the lede are short enough to use. Go to 2.2, once it appeared, is one tap and it moved. The worked paragraph for 2.1, once I found it, is the lesson: a quarter turn, then up by 1, and the half-plane goes to a half-plane. That sentence stays. It is in the wrong place. "One z, one w" is a line I would remember. The other eight, not yet.
+
+## pedagogy (ch2 batch 1)
+
+Preview https://ch2-preview.complexanalysis.pages.dev, branch `cursor/chapter-2`, tip `656f5c92`. Walked as a student in headless Chrome with touch: the book, then Chapter 2, at 390×844 and then 1280×800, light and then dark. No product code was changed. No console errors. No sideways scroll at either size.
+
+### Verdict
+
+ANOTHER BATCH
+
+Each walked stage has the skeleton the chapter asked for: a why, one drag, a worked label, practice, a memory list, a summit sentence, and a Stage complete button. The drag teaches, and the sentence it teaches is a different sentence from the summit. The worked block is a citation. Stage complete can be pressed before any of that, and the page will say Done while §2.4 and §2.5 are still captions.
+
+### How the walk went
+
+The book's first screen at 390 says "Next is §4.1, Exercise 3" and the button is Walk Chapter 4. Chapter 2 is on that same screen, flagged OPEN, with §2.1 through §2.4 as links. Following the button walks a different chapter. Opening Chapter 2 from the link does land on the mountain.
+
+Chapter 2, 390, light, fresh storage. The first screen is the title, the lede "Five stages. Drag the green point. Blue is the set, orange is its image, and purple is where the point lands.", the source line, "Next is 2.1. 0 of 3 stages marked.", the §2.1 why ("a turn, a stretch, then a slide"), both planes, and "Drag the green point across the blue line." The changing sentence starts at y = 838 in an 844px window, so the first screen cuts it. The green dot is 6.9px across. Dragging it from the left of the blue line to the right flips the sentence from "The image is below the line Im w = 2" to "The image is on or above the line Im w = 2", and the purple point crosses the orange line. That correspondence holds. It is the lesson the hand can check. The map on the page is w = iz + i, which turns and slides. The modulus of i is 1, so this picture has no stretch, and the half-plane is the line, not a shaded side.
+
+The same screen in the dark keeps the paper, the type, and the four colours. At 1280×800 the planes are large and the dot is about 20px. The claim sits at y = 1039, under an 800px window, so the first desktop screen is the why and the tops of the two planes.
+
+Under the §2.1 picture the page continues with seven pinned links, the worked paragraph, Exercise 13 as a blank, a generated linear image, a deck of 9 cards, nine memory lines, the summit at y = 2698, and Stage complete. The §2.2 summit is at y = 5290. The §2.3 summit is at y = 8254. The page is 9937px tall.
+
+§2.2. Off the line the sentence is "The image has left the parabola of the line x = 2." With the point on the line (Re z = 2) it becomes "The image sits on the parabola u = 4 − v²/16." The worked paragraph directly above the choices already says "The line x = 2 goes to the parabola u = 4 − v²/16." The first choice is that equation. Choosing u = 4 − v²/4 turns the border red (`rgb(179, 38, 30)`), leaves the other choices open, and shows no sentence. The right choice then explains v = 4y, so y = v/4 and u = 4 − y². The distractors are the real mistakes: the coefficient for a different line, the axes swapped, the wrong constant.
+
+The sector card is where the summit's idea appears. Three presses of Another left it on w = z² and 0 < arg z < π/4, and the true choice stayed 0 < arg w < π/2. The linear Another does write a new map. It moved from (−2 − i)z + i at z = −3 − i to −2z + (−2 + i) at z = 2 − 3i.
+
+§2.3. The why says that two paths into one point can disagree, and then the limit is not there. The picture is the conjugate at 1 + i, a limit that exists. Outside the disk: "The image is outside that disk." On the centre: "Definition 2.4 skips z₀. Move off it." Inside: "The image is inside the disk of radius 0.75. Here δ = ε." Those three sentences match the drag. The summit says the limit exists only when every path agrees, which is the same as the two real limits agreeing. One point is one path.
+
+§2.4 and §2.5 are a flag, a title, a page, the sentence "Title and citations. The picture is a later batch.", and two links. The branch cut and w = 1/z are the payoff the earlier whys point at (roots, the argument, the sphere), and a student cannot walk them.
+
+Pressing Stage complete on §2.1, §2.2, and §2.3, with §2.1 pressed before its practice, sets the status to "Done. 3 of 3 stages. Sections 2.4 and 2.5 are titles." and the button to Back to the book.
+
+A blank answered "nope" on Exercise 13 shows "Not yet." and keeps the reason hidden. The answer −5 − 2i shows "(2 + i)(−2 + i) = −5, then subtract 2i" and a Next step. The memory line stays hidden until the last step. That part is the right shape.
+
+The §2.1 deck opens on "What is a complex function, and what are the image, the domain, and the range?" as card 1 of 9. The page has not stated that definition. Show the back reveals it. Knew it advances. After Knew it through the deck, a card is still offered and the line reads "2 of 9. Not due yet." The memory list under the deck is the nine one-line slogans. "Apply Az + B to each vertex" and the other recipes stay on the problem cards.
+
+### Ranked cut or fix
+
+1. **Make the summit the sentence the drag just made true.** The §2.1 why and summit say a linear map turns, stretches, and slides, and a half-plane stays a half-plane. The drag checks a point against Im w = 2 under w = iz + i. Change: the summit on this picture is "Multiplication by i is a quarter turn, adding i slides the plane up by 1, and Re z ≥ 1 lands on Im w ≥ 2." Shade the half-plane, or leave a short segment so the quarter turn is visible. Keep "turn, stretch, slide" on the memory card, and show a stretch on a map whose multiplier has modulus other than 1. The §2.2 why and summit are about an angle multiplied by n. The drag checks a vertical line against a parabola. Change: the live picture is a ray or a sector whose angle widens, which is the sentence already written. Move the parabola under Worked. The sector card has to change the angle when Another is pressed, and the true choice has to change with it. The §2.3 why promises two paths that disagree. The drag shows three honest states of the conjugate, including the punctured centre. Change: the summit is "For the conjugate, the image disk has the same radius, so δ = ε, and the definition skips z₀." A path that disagrees is a second picture, on a later visit to this stage.
+
+2. **Work one example, then take the steps away.** Worked is one citation sentence. On §2.2 that sentence prints u = 4 − v²/16 in the paragraph above the choices, and the on-line claim prints it again. Change: work the line x = 1 in full, with the algebra visible, then ask x = 2 with the equation removed from the paragraph and from the claim. The claim can say "on the curve" and "off the curve." Exercise 13 should show the image of the first vertex already done, ask for the second, then ask for the third, and then ask what shape the triangle became. The two Theorem 2.1 cards are isolated sentences. Put them after a three-line write-up of one direction, and blank the matching step in the other direction.
+
+3. **A miss should name the next move.** "nope" produces "Not yet." A wrong parabola choice produces a red border and no words. Change: a wrong blank says the form ("a complex number, written 3+4i") and keeps the value hidden. A wrong choice says which mistake it is ("v²/4 belongs to the line x = 1", "v = … swaps the axes") and leaves the remaining choices open. Show the reason you already wrote for the right answer only after the right answer, as the page does now.
+
+4. **Stage complete has to be earned, and the mountain has five camps.** The lede says five stages. The counter says 0 of 3, then Done, while §2.4 and §2.5 still say "a later batch." The button toggles with no drag and no correct item. Change: a stage marks complete after the claim has been both true and false and one faded item is right. The summit sentence appears at that moment, followed by the name of the next stage. Count five. Until §2.4 and §2.5 have a picture, their line is the student sentence ("Arg jumps across the negative real axis"; "1/z swaps lines and circles, and 0 goes to the north pole") plus the page link. They stay ahead, and the chapter does not say Done.
+
+5. **Teach the sentence, then ask for it back.** Card 1 of 9 asks for the definition of a function, which this stage never says. The 1-, 3-, 7-, and 21-day ladder is real, and after every card is marked known the deck still offers a back and says "Not due yet." The memory list is the slogans. The recipes that finish an exam question ("Apply Az + B to each vertex", "on x = a, u = a² − v²/(4a²)", "a polynomial limit is the value at the point", "take the smaller δ") stay buried on the problem. Change: three cards, one for each idea the stage just showed, each one sentence stated on the page before the deck. When nothing is due, the deck says when the next card returns and stops offering the back. The memory list is those three sentences plus the recipes.
+
+6. **Put the worked sentence against the picture.** Seven links on §2.1, and nine on §2.3, sit between the drag and the example. The summit then waits under the memory list, at y = 2698 on a phone. Change: why, picture, claim, worked solution, faded practice, summit, Stage complete. The pinned pages move under the summit, as further reading. The student meets the example while the planes are still the thing they are looking at.
+
+### What to keep
+
+The one drag, the two planes, and the four colours in the lede are the same colours on the picture. The sentence under §2.1 flips when the point crosses the line, and the purple point agrees, in light and in dark. The three sentences on the conjugate picture are the best teaching on the page: outside, on the centre the definition skips z₀, inside the disk with δ = ε. The parabola distractors are mistakes a student actually makes. Cards are one at a time, the back stays closed until asked, and Again / Knew it writes a real gap. "Turn, stretch, slide" is an honest mnemonic for the general linear map and belongs on the card. The labels Why, Worked, Practice, Memory, and Summit are the right camps. The linear Another button already writes a new computed map. Citations name the section and the page. Both planes fit on the phone together.
