@@ -1309,7 +1309,7 @@
           "Say the radius goes to $0$."
         ],
         "misses": [
-          { "choice": "Stop. $|z|>1$ already says the series diverges.", "why": "Showing $|w|>1$ skips the nth-term step. The next line is that the terms do not go to $0$. Theorem 4.5, page 106." },
+          { "choice": "Stop. $|z|>1$ already says the series diverges.", "why": "Showing $|z|>1$ skips the nth-term step. The next line is that the terms $z^n$ do not go to $0$. Theorem 4.5, page 106." },
           { "choice": "Compare $z$ with $1$, without a modulus.", "why": "That compares a complex number to $1$. The test is $|z|<1$, the modulus." },
           { "choice": "Say the radius goes to $0$.", "why": "A radius is $R=\\infty$ or $R=0$, not something that goes to $0$. The divergence step is still the nth-term test." }
         ]
