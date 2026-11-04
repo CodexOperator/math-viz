@@ -304,10 +304,14 @@ export function createLivePlayer(env = {}) {
     motion.cancel();
     playing = false;
     const list = stops();
-    if (!watched || atEnd()) {
+    const onFirst = list.length > 0 && Math.abs(t - list[0]) <= END_EPS;
+    // A fresh film opens on the first stop by stepping there. One that is
+    // already resting on that stop, and is not at the end, moves on.
+    if (atEnd() || (!watched && !onFirst)) {
       watched = true;
       t = list[0];
     } else {
+      watched = true;
       const next = list.find((s) => s > t + END_EPS);
       t = next === undefined ? D : next;
     }

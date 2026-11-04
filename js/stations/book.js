@@ -431,11 +431,21 @@ function mountChapter5(el, ctx, focus) {
   });
   const titleAttrs = linkAttrs(SECTION_DOOR['5.1'], `${scope}-door`);
   titleAttrs.class = 'chapter-door';
+  // #chapter-exp is the picture on this page, not a route. Following the hash
+  // would leave the chapter for "No such place".
+  const titleDoor = h('a', titleAttrs, section.title);
+  titleDoor.addEventListener('click', (ev) => {
+    if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey || ev.button) return;
+    const frame = el.querySelector('#chapter-exp');
+    if (!frame) return;
+    ev.preventDefault();
+    frame.scrollIntoView({ block: 'start' });
+  });
   const walk = h('section', {
     class: 'section-node chapter-stage exp-walk', id: scope, 'data-section': '5.1',
   },
     h('p', { class: 'book-flag', id: `${scope}-flag` }, '5.1'),
-    h('h2', { id: `${scope}-title` }, h('a', titleAttrs, section.title)),
+    h('h2', { id: `${scope}-title` }, titleDoor),
     h('p', { class: 'book-page' }, `Page ${section.page}`),
     idea,
     read,

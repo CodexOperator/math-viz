@@ -7,7 +7,7 @@ import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
 import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, chapter4ExerciseIds, chapter5ExerciseIds, activeWalk, pictureGroup } from '../js/data/book-path.js';
 import { chapterTally, sectionFinished, foldLegacyExercises, saveSharedTicks, toggleTick } from '../js/book/progress.js';
-import { EXP_DURATION, expFrame, finishedStops } from '../js/core/live-film.js';
+import { EXP_DURATION, expFrame, finishedStops, createLivePlayer } from '../js/core/live-film.js';
 import { compile } from '../js/core/parse.js';
 import { parseBookRoute } from '../js/book/route.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
@@ -126,6 +126,8 @@ check('chapter 4 exercises are the homework set plus 4.4.6', chapter4ExerciseIds
   const href = (pin) => reads.find((r) => r.pin === pin)?.href || '';
   check('Theorem 4.1 opens the limit theorem', href('Theorem 4.1, page 103').endsWith('#Lim_Zn_Thm'));
   check('section 4.2 cites Theorem 4.9 and not Theorem 4.11', CHAPTER_4.sections[1].read.length === 1 && href('Theorem 4.9, page 113').endsWith('#Kc_Connected') && !href('Theorem 4.11, page 116'));
+  check('the 4.1 summit keeps eventually, from Definition 4.1', /eventually sit in every disk/.test(CHAPTER_4.sections[0].summit));
+  check('the 4.2 summit is the quadratic Julia set, Theorem 4.9', /z\^2\+c/.test(CHAPTER_4.sections[1].summit) && /orbit of \$0\$/.test(CHAPTER_4.sections[1].summit));
   check('Theorem 4.15 opens the disk of convergence', href('Theorem 4.15, page 124').endsWith('#Regions_of_Convergence'));
   check('Theorem 4.16 opens the radius formulas', href('Theorem 4.16, page 125').endsWith('#th15'));
 }
@@ -137,6 +139,9 @@ check('One Newton Step keeps Example 4.7', /Example 4\.7, page 110/.test(readFil
     && book.includes('Chapter 5. The exponential')
     && !book.includes('not drawn yet')
     && !book.includes('lesson-progress'));
+  check('the 5.1 title scrolls to the picture instead of leaving the chapter',
+    parseRoute('#chapter-exp').station == null && parseRoute('#chapter-exp').book == null
+    && book.includes("querySelector('#chapter-exp')") && book.includes('ev.preventDefault()'));
 }
 {
   const card1 = CHAPTER_5.cards['5.1.1'];
@@ -146,6 +151,7 @@ check('One Newton Step keeps Example 4.7', /Example 4\.7, page 110/.test(readFil
     && card1.statement.includes('exp(0)')
     && card1.href.endsWith('#x5_1_1')
     && /right-hand point/.test(card1.hint)
+    && !/right-hand point of the unit circle is \$z = 0\$/.test(card1.hint)
     && !/blank stays empty/.test(card1.hint)
     && card2.statement.includes('\\pm i\\pi')
     && !/shading|s_\{1\}/.test(card2.statement)
@@ -199,6 +205,30 @@ check('One Newton Step keeps Example 4.7', /Example 4\.7, page 110/.test(readFil
   const between = expFrame(1, { re: 0 });
   check('between the stops the point is on the unit circle', Math.abs(between.x) < 1e-12 && between.claim.text === 'The point sits on the unit circle.');
   check('a larger radius stays the radius sentence off the axis', /\$e\^\{x\}\$/.test(expFrame(stops[0], { re: Math.log(2) }).claim.text) && /larger than 1/.test(expFrame(stops[0], { re: Math.log(2) }).claim.text));
+  const opened = createLivePlayer({
+    duration: EXP_DURATION,
+    start: EXP_DURATION / 4,
+    params: { re: 0, im: 0 },
+    reduced: () => true,
+    scene: (t, params) => expFrame(t, params),
+  });
+  check('the exponential opens on the bottom, with exercise 2 still blank',
+    Math.abs(opened.t - EXP_DURATION / 4) < 1e-9 && /bottom of the unit circle/.test(opened.scene().claim.text) && opened.scene().claim.holds === false);
+  opened.step();
+  check('reduced motion steps off that bottom onto the right-hand point',
+    Math.abs(opened.t - EXP_DURATION / 2) < 1e-6 && /right of the unit circle/.test(opened.scene().claim.text));
+  opened.destroy();
+  const fromEnd = createLivePlayer({
+    duration: EXP_DURATION,
+    params: { re: 0, im: 0 },
+    reduced: () => true,
+    scene: (t, params) => expFrame(t, params),
+  });
+  check('a film with no start opens on the last frame', Math.abs(fromEnd.t - EXP_DURATION) < 1e-9);
+  fromEnd.step();
+  check('a film that opens at the end still steps to the first stop',
+    Math.abs(fromEnd.t - EXP_DURATION / 4) < 1e-6 && Math.abs(fromEnd.scene().y + Math.PI / 2) < 1e-6);
+  fromEnd.destroy();
 }
 {
   const legacy = foldLegacyExercises({ '4.2.4': true }, { exercises: { '4.1.3': true, nope: true }, sections: { '4.1': true } }, chapter4ExerciseIds());

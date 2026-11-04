@@ -162,7 +162,7 @@ export const CHAPTER_4 = deepFreeze({
       title: 'Sequences and Series',
       page: 102,
       idea: 'A sequence settles when its terms eventually sit in every disk around the limit.',
-      summit: 'A sequence settles when its terms sit in every disk around the limit.',
+      summit: 'A sequence settles when its terms eventually sit in every disk around the limit.',
       read: [
         { pin: 'Definition 4.1, page 103', href: sectionHref(S41, 'Seq_Lim_Def') },
         { pin: 'Theorem 4.1, page 103', href: sectionHref(S41, 'Lim_Zn_Thm') },
@@ -174,7 +174,7 @@ export const CHAPTER_4 = deepFreeze({
       title: 'Julia and Mandelbrot Sets',
       page: 109,
       idea: 'The Julia set of $z^2+c$ is one piece exactly when the orbit of $0$ stays bounded.',
-      summit: 'The Julia set is one piece exactly when the orbit of $0$ stays bounded.',
+      summit: 'The Julia set of $z^2+c$ is one piece exactly when the orbit of $0$ stays bounded.',
       read: [
         { pin: 'Theorem 4.9, page 113', href: sectionHref(S42, 'Kc_Connected') },
       ],
@@ -247,7 +247,7 @@ export const CHAPTER_5 = deepFreeze({
       pin: '§5.1, Exercise 1, page 135',
       href: sectionHref(S51, 'x5_1_1'),
       statement: 'Using Definition 5.1, explain why $\\exp(0) = e^{0} = 1$.',
-      hint: 'Definition 5.1, page 130, is the series for $e^{z}$. The right-hand point of the unit circle is $z = 0$.',
+      hint: 'Definition 5.1, page 130, is the series for $e^{z}$. At $z = 0$ every later term is $0$, so the sum is $1$, the right-hand point of the unit circle.',
       blank: '$\\exp(0)$ is ',
       answer: '$1$',
     },
