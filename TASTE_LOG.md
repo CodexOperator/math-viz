@@ -580,3 +580,68 @@ Nothing. No Chapter 5 sections. No new picture. No second score.
 ## Another batch
 
 No. The five doors landed. A student can walk the four sentences, open each picture on the chip the exercise named, come back, and reload with the ticks kept. Chapter 5 stays the sentence it is. The loop should rest.
+
+## taste-skill (batch 4)
+
+Branch `cursor/book-chapter-path-df29`, commit `2dc9cff3c8f9cdd72ed1caf775f9543ef06ec1c9`. Used like a MAT 412 student on a local server of that commit, light theme. `#chapter-5` and `#book` at 1280×800, and `#chapter-5` at 390×844. Play through a full sweep, a pause, a drag while the sweep was running, a pull up from the green dot, the right arrow, and reduced motion from a fresh load. The chapter menu on the phone. No console errors. No sideways scroll at either width (`scrollWidth` matched the window).
+
+### Verdict
+
+The thing to be able to do is watch the angle go round, then change the real part and see that only the radius moves. That gesture is on the page. Play walks the purple point once around the dashed circle and leaves the real part at 0. A drag during that walk changes the radius, the sentence flips between larger than 1 and smaller than 1, and the angle keeps going.
+
+The page you land on hides it. The picture opens with the ray lying on the real axis, in a square 304px wide, and the sentence has to say that the angle is a clock. Another batch is worth doing. It is the cuts below. After that, stop.
+
+### What I could actually do
+
+`#chapter-5` opens on THE BOOK, the title Chapter 5, and one square. At 1280 the square is 304×304, with its left edge at 304px, in a column about 950px wide. The dashed circle on that square is about 84px across. The claim under it is 17px, two lines, and 603px wide. Play is 44px tall and 70px wide. The title is 36px. The cite is 13px. The kicker, the title, the square, the claim, the button, the cite, and the way back share one left edge.
+
+The opening sentence is “On the imaginary axis the image stays on the unit circle. The angle is the clock.” The real part is 0 and the angle is π. The purple point sits on the left of the dashed circle, on the horizontal axis. The green dot sits on the right of that circle, large enough that it reads as outside the stroke.
+
+Play becomes Pause. Over about eight seconds the angle runs from −π back to π, the real part stays 0, and the sentence stays the unit-circle sentence. Pause held the angle where it was. At the end the button says Play again and the point is back on the left of the axis.
+
+A drag during the sweep, while the button said Pause, from a large radius down toward the origin, left the angle running (−2.59, then −1.96, then −1.48) and set the real part to about −0.80. The sentence became “The radius is e^x, smaller than 1. The angle is still the clock.” A faint purple circle sat inside the dashed one. The green dot stayed on the positive axis.
+
+Pulling upward from the green dot, after the sweep had finished, left the dot on the axis. The real part became about 0.66, the sentence said the radius is larger than 1, and the angle stayed at π, so the ray was the horizontal axis again. The right arrow adds 0.1 to the real part.
+
+Reduced motion, from a fresh load, opens on that same still and the button says Next step. The first step sets the angle to about −0.04, so the purple point sits on the green dot. The second step returns the angle to π and the button says Start again. Those are the only two stills.
+
+On the phone the square is 321px in a 390px window, with 16px margins. The sentence, Play, the line about the logarithm, the cite, and Back to the book sit on the 844px screen. The menu is the eleven chapters and it covers the page. Chapter 5 is the current row.
+
+The book card for Chapter 5 says “Open. The walk through these sections is not drawn yet.” The card has no link. The menu row is the door.
+
+### What clicks
+
+One picture, one button, one sentence that changes when the radius leaves 1. The sweep does the angle. The drag during the sweep does the radius. That is the exponential.
+
+The colours are the course colours, and they sit on the marks. Blue is the axes, orange is the dashed circle and the ray, green is the radius, purple is the point. The button, the title, and the menu stay in ink. The footer colour key stays off this route.
+
+Play, Pause, and Play again match the clock. A second press freezes the picture where it is. The way back is one link. The cite is Howell and Mathews, Chapter 5, page 130.
+
+The phone composition is the one the picture wants. The square fills the width, and the sentence sits under it.
+
+### What gets in the way
+
+**The still hides the angle.** The frame the page opens on, the frame the sweep ends on, and both reduced-motion steps put the ray on the real axis. At the first Next step the purple point lies on the green dot, so the image and the radius mark are one dot. The clock is on screen only while Play is running, for about eight seconds, on a circle 84px across. A drag before Play, and a step, both leave two dots on a line under a sentence about a clock.
+
+**The laptop picture is a stamp.** 304px in a column with room for three of them. The empty sheet beside the square is the rest of the first screen. The sentence is twice as wide as the diagram. The 36px title is the largest thing you can read. The idea is the small circle.
+
+**The drag has no handle.** The cursor on the square is the text cursor. The green dot is the large mark, and a pull off the axis leaves it on the axis. The radius becomes the pointer’s distance from the origin. Dragging around the circle leaves the angle with the clock. The second sentence is the only place that split is said, and that sentence is the same on every frame. At radius 1 the green dot sits outside the dashed stroke, so the opening picture looks as if a point has already left the circle.
+
+**Two lines say the page is empty.** Under the picture: “The logarithm and the powers are not drawn yet.” On the book, the Chapter 5 card says the walk is not drawn yet. The picture is the page. The title is the number Chapter 5. The menu already says Elementary Functions.
+
+The cite, the kicker, and Play stay. The kicker is the one small-caps label. Play is the clock.
+
+### Cut
+
+- The resting frames that hide the ray. Open, a pause, the end of the sweep, and Next step land on a quarter turn you can see, straight up or straight down. The sweep can still pass the two ends, where the point lies on the axis.
+- The 38vh cap on the laptop. The square uses the column, and the sentence stays on the first screen. The phone square already uses the width of the phone.
+- “The angle is the clock.” The claim is one sentence, and it flips: on the circle, larger than 1, smaller than 1. Write the exponential the way the rest of the book writes it. The green dot is the handle, and it moves along the real axis with the finger.
+- Both “not drawn yet” lines. The book card keeps Open, the title, and the page. The line under the picture goes.
+
+### Add
+
+Nothing. No logarithm, no powers, no second plane, no exercise cards, no colour key, no scrubber.
+
+### Another batch
+
+Yes. One batch, then stop. It is the four cuts above, in that order. A §5.1 list of exercises, hung on the picture as it stands, would point the cards at a still that hides the angle. When the frame you land on shows the turn, and the drag moves the green dot, the loop should rest.
