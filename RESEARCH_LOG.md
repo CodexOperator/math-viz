@@ -830,3 +830,43 @@ The table of contents is the 202 Updated Edition, printed pages i–ii (PDF page
 **Verified.** `node tools/fractal-smoke.mjs` exits 0, including the book routes, the eleven chapters, the exercise list, and the progress rule. `node tools/check_vectors.mjs` is 234/234. `node kit/smoke.mjs` exits 0. `js/core/map-route.js` is unchanged and matches the kit helper. The router does not import `kit/`. Headless Chrome, light and dark, at 1280, 700, and 390: no console errors, no exceptions, no failed assets, no sideways scroll, no canvas, and 0 animation frames while the page sits. The hint on 4.1.3 opens and names Definition 4.1. The page text does not contain the 4.4.6 added check. A trusted click sets Copy Markdown to Copied. Finishing 4.1 makes the book say Next is 4.2, and the 4.1 row says Done. `#chapter-5` lists five sections and links the current and the impedance from 5.4. `#chapter-1` stays on the roadmap. Screenshots: `/opt/cursor/artifacts/book-1280-light.png`, `book-1280-dark.png`, `book-700-light.png`, `book-390-light.png`, `book-390-dark.png`, `chapter4-1280-light.png`, `chapter4-700-dark.png`, `chapter4-390-light.png`, `chapter4-390-dark.png`, `chapter5-1280-light.png`.
 
 **Next.** Build Chapter 5’s five sections the same way: one sentence, the stations that exist, cited reading, and a few exercises quoted from this PDF. The exponential and the logarithm have no picture yet. One new picture, at most, in that batch. Then the progress feel and the phone path.
+
+## Book path — batch 2 (the cut)
+
+Branch `cursor/book-chapter-path-df29`, after the close review at `cec19d0`. One cutting batch, then stop. No Chapter 5 picture. The reviewer’s anchors stay: Theorem 4.1 at `Lim_Zn_Thm`, Theorem 4.11 at `Attracting_Thm`, Theorem 4.16 at `th15`, Chapter 5 at `sec_exponential-function.html`. Exercise quotes are unchanged. Exercise 6 on the index still hides its added check behind Show. Older stops still use `Fixed_point_Def` when the sentence also names Definitions 4.9 and 4.10.
+
+**Choice.** The taste note asked not to sync two stores, and to drop the index tick on these eight cards. The brief for this batch says one score, shared by the chapter and the index. The ticks live in `progress.test2`. A visit folds any earlier `book.progress` exercise ticks into that memory once, then marks the old record migrated. Section marks are gone. A section is finished when its exercises are ticked. The site shell, the four colours, and the station pictures stay. This is a cut, not a new look.
+
+### Round 1 — One score
+
+**Problem.** A mark could finish a section the ticks had not, and a tick on the chapter left the index card open.
+
+**Change.** Tick is the only control that moves the walk. The status names the next exercise. The same tick shows on the index card.
+
+### Round 2 — The picture is the chip
+
+**Problem.** Exercise 5 opened The Orbit of 0 on c = i. The station sent the exercise back to the index.
+
+**Change.** Each exercise’s picture link opens the chip that exercise uses. Exercise 5 opens `#zero-chapter-4-2-5`, with c = −2 pressed, and the page links back to §4.2, Exercise 5. The eight chapter exercises on a station point at the chapter card. The other index cards are unchanged.
+
+### Round 3 — The dossier
+
+**Problem.** Section 4.2 was a contents list: six readings, seven pictures, a homework banner, and a copy button on every card.
+
+**Change.** Each section is the sentence, the one or two pins the sentence needs (4.4’s size), and the exercises. The pictures row, the homework line, and the per-card Copy Markdown are gone. Copy Markdown remains on the index.
+
+### Round 4 — The book, and the menu
+
+**Problem.** Later chapters printed every section. Chapter 5 ended by calling Chapter 4 the open walk. The menu on the book was Which test.
+
+**Change.** A later chapter is its title, its page, and Later. Chapters 1–3 keep the one station already drawn. Chapter 5 is one sentence and the exponential source tag, with no blank sections and no stale footer. On `#book` and the chapter pages the menu is the eleven chapters.
+
+### Round 5 — Walk opens the title
+
+**Problem.** Walk Chapter 4 opened `#chapter-4-4-1`, so the title sat above the window, and Go to 4.1 pointed at the section already on screen.
+
+**Change.** Walk opens `#chapter-4`. Go to 4.2 appears only once 4.1’s exercises are ticked.
+
+**Verified.** `node tools/fractal-smoke.mjs` exits 0, including the tick-only rule and the four anchors. `node tools/check_vectors.mjs` is 234/234. `node kit/smoke.mjs` exits 0. The router does not import `kit/`. Headless Chrome, light and dark, at 1280, 700, and 390: no console errors, no exceptions, no failed assets, no sideways scroll, and 0 animation frames on the book and on Chapter 4. The chapter title is on screen. Exercise 5 lands on c = −2 and the link back is `#chapter-4-4-2-5`. A tick on the chapter is pressed on the index. Screenshots: `/opt/cursor/artifacts/book-1280-light.png`, `chapter4-1280-light.png`, `orbit-ex5-1280-light.png`, `chapter5-1280-light.png`, `book-390-dark.png`, `chapter4-390-light.png`.
+
+**Stop.** The cutting batch is done. Chapter 5 is not built in this shape.

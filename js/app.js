@@ -15,6 +15,7 @@ import { mapForcedByRoute as mapForcedByRouteBody } from './core/map-route.js';
 import { filmsFor } from './data/films.js';
 import { BOOK } from './data/book.js';
 import { parseBookRoute } from './book/route.js';
+import { BOOK_CHAPTERS } from './data/book-path.js';
 import { cssVar, getTheme, setTheme, onThemeChange, prefersReducedMotion, initTheme } from './core/theme.js';
 import { createStore } from './core/store.js';
 import { watchIds } from './core/ids.js';
@@ -220,6 +221,25 @@ export function start() {
       : 'A study map for MAT 412 Test 1: Chapters 1 to 3, and the §5.4 circuit. It runs in your browser and works offline.';
   }
 
+  function buildBookNav() {
+    nav.replaceChildren();
+    nav.append(el('div', { class: 'nav-book', id: 'nav-book-block' },
+      el('a', { class: 'nav-link', id: 'nav-book', href: '#book' }, [
+        el('span', { class: 'nav-num', 'aria-hidden': 'true' }, '·'),
+        el('span', { class: 'nav-title' }, 'The Book'),
+      ])));
+    const list = el('ul', { class: 'nav-list', id: 'nav-chapters', 'aria-label': 'Chapters' });
+    for (const ch of BOOK_CHAPTERS) {
+      list.append(el('li', {}, el('a', {
+        class: 'nav-link', id: `nav-chapter-${ch.n}`, href: `#chapter-${ch.n}`, 'data-chapter': String(ch.n),
+      }, [
+        el('span', { class: 'nav-num', 'aria-hidden': 'true' }, String(ch.n)),
+        el('span', { class: 'nav-title' }, ch.title),
+      ])));
+    }
+    nav.append(list);
+  }
+
   function buildNav(mapId) {
     nav.replaceChildren();
     nav.append(el('div', { class: 'nav-book', id: 'nav-book-block' },
@@ -281,9 +301,16 @@ export function start() {
     if (ar.top < nr.top || ar.bottom > nr.bottom) nav.scrollTop += ar.top - nr.top - (nr.height - ar.height) / 2;
   }
 
-  function markCurrent(id, bookOn) {
+  function markCurrent(id, bookRoute) {
     for (const a of nav.querySelectorAll('a.nav-link')) {
-      const on = bookOn ? a.id === 'nav-book' : a.dataset.station === id;
+      let on = false;
+      if (bookRoute) {
+        on = bookRoute.kind === 'chapter'
+          ? a.dataset.chapter === String(bookRoute.chapter)
+          : a.id === 'nav-book';
+      } else {
+        on = a.dataset.station === id;
+      }
       if (on) a.setAttribute('aria-current', 'page');
       else a.removeAttribute('aria-current');
     }
@@ -464,7 +491,8 @@ export function start() {
     document.body.dataset.book = route.book ? 'true' : 'false';
     document.body.dataset.station = st ? st.id : '';
     syncFooter(mapId, route.book);
-    buildNav(mapId);
+    if (route.book) buildBookNav();
+    else buildNav(mapId);
 
     setNavOpen(false);
     view.replaceChildren();
@@ -472,7 +500,7 @@ export function start() {
     view.dataset.station = st ? st.id : '';
     view.dataset.map = mapId;
     window.scrollTo(0, 0);
-    markCurrent(st ? st.id : null, Boolean(route.book));
+    markCurrent(st ? st.id : null, route.book);
 
     if (route.book) {
       await renderBook(seq, route, first);

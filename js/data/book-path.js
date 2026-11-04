@@ -162,9 +162,7 @@ export const CHAPTER_4 = deepFreeze({
       read: [
         { pin: 'Definition 4.1, page 103', href: sectionHref(S41, 'Seq_Lim_Def') },
         { pin: 'Theorem 4.1, page 103', href: sectionHref(S41, 'Lim_Zn_Thm') },
-        { pin: 'Theorem 4.5, page 106', href: sectionHref(S41, 'Conv_terms_go_to_0') },
       ],
-      stations: ['sequence', 'series'],
       exercises: ['4.1.3', '4.1.13'],
     },
     {
@@ -173,14 +171,9 @@ export const CHAPTER_4 = deepFreeze({
       page: 109,
       idea: 'The Julia set of $z^2+c$ is one piece exactly when the orbit of $0$ stays bounded.',
       read: [
-        { pin: 'Example 4.7, page 110', href: sectionHref(S42, 'Newton_s_Method_Ex') },
-        { pin: 'Figure 4.3, page 112', href: sectionHref(S42, 'fig_ch-04-cp-1') },
-        { pin: 'Example 4.9, page 113', href: sectionHref(S42, 'K-0') },
         { pin: 'Theorem 4.9, page 113', href: sectionHref(S42, 'Kc_Connected') },
-        { pin: 'Figure 4.6, page 114', href: sectionHref(S42, 'fig_ch-04-cp-6') },
         { pin: 'Theorem 4.11, page 116', href: sectionHref(S42, 'Attracting_Thm') },
       ],
-      stations: ['newton-step', 'newton', 'disk', 'julia', 'zero', 'mandelbrot', 'bulbs'],
       exercises: ['4.2.3', '4.2.4', '4.2.5'],
     },
     {
@@ -191,7 +184,6 @@ export const CHAPTER_4 = deepFreeze({
       read: [
         { pin: 'Theorem 4.12, page 118', href: sectionHref(S43, 'Geometric_Series') },
       ],
-      stations: ['geometric'],
       exercises: ['4.3.1', '4.3.2'],
     },
     {
@@ -203,7 +195,6 @@ export const CHAPTER_4 = deepFreeze({
         { pin: 'Theorem 4.15, page 124', href: sectionHref(S44, 'Regions_of_Convergence') },
         { pin: 'Theorem 4.16, page 125', href: sectionHref(S44, 'th15') },
       ],
-      stations: ['powerseries'],
       exercises: ['4.4.6'],
       hints: {
         '4.4.6': 'Open A Radius, Then a Wall. Theorem 4.15, page 124, says that if the series converges at a point, it converges at every point closer to the centre. This card does not say which of the two points is closer.',
@@ -222,4 +213,29 @@ export function chapter4Section(id) {
 
 export function chapter4ExerciseIds() {
   return CHAPTER_4.sections.flatMap((s) => s.exercises);
+}
+
+// The chip the exercise is. The hash is #station-chapter-4-2-5, and the station
+// opens that chip and links back to the chapter card.
+export const CHAPTER_PICTURE = deepFreeze({
+  '4.1.3': { station: 'sequence', token: 'chapter-4-1-3', chip: 'sequence-settle', label: 'The disk in Definition 4.1' },
+  '4.1.13': { station: 'sequence', token: 'chapter-4-1-13', chip: 'sequence-settle', label: 'The disk in Definition 4.1' },
+  '4.2.3': { station: 'newton-step', token: 'chapter-4-2-3', chip: null, label: 'One Newton Step' },
+  '4.2.4': { station: 'disk', token: 'chapter-4-2-4', chip: null, label: 'When c Is 0, a Disk' },
+  '4.2.5': { station: 'zero', token: 'chapter-4-2-5', chip: 'zero-c-m2', label: 'The Orbit of 0, c = −2' },
+  '4.3.1': { station: 'geometric', token: 'chapter-4-3-1', chip: 'geometric-inside', label: 'Geometric Series' },
+  '4.3.2': { station: 'geometric', token: 'chapter-4-3-2', chip: 'geometric-d2-in', label: 'Inside D₂(−i)' },
+  '4.4.6': { station: 'powerseries', token: 'chapter-4-4-6', chip: 'powerseries-inside', label: 'A Radius, Then a Wall' },
+});
+
+export function pictureHref(id) {
+  const pic = CHAPTER_PICTURE[id];
+  return pic ? `#${pic.station}-${pic.token}` : null;
+}
+
+export function exerciseFromToken(token) {
+  const m = /^chapter-(\d+-\d+-\d+)$/.exec(String(token || ''));
+  if (!m) return null;
+  const id = m[1].replace(/-/g, '.');
+  return CHAPTER_PICTURE[id] ? id : null;
 }

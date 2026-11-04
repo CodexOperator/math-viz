@@ -3,10 +3,11 @@
 
 import { BOOK } from '../data/book.js';
 import { TEST2_PROBLEMS, TEST2_GROUPS, HOMEWORK_SET, test2ProblemById, problemMarkdown } from '../data/test2-problems.js';
+import { chapter4ExerciseIds } from '../data/book-path.js';
+import { loadSharedTicks, saveSharedTicks, toggleTick } from '../book/progress.js';
 import { stationById, threadLabel } from '../registry.js';
 import { h, appendRich, sourceTag, scopeBanner, placeLinks } from './test2-ui.js';
 
-const KEY = 'progress.test2';
 const FILTER_KEY = 'progress.test2.filter';
 
 function loadGroup(store) {
@@ -21,13 +22,7 @@ function saveGroup(store, group) {
 }
 
 function loadTicks(store) {
-  let raw = {};
-  try { raw = store.get(KEY, {}) || {}; } catch { raw = {}; }
-  const out = {};
-  if (raw && typeof raw === 'object') {
-    for (const id of Object.keys(raw)) if (raw[id] === true && test2ProblemById(id)) out[id] = true;
-  }
-  return out;
+  return loadSharedTicks(store, (id) => !!test2ProblemById(id), chapter4ExerciseIds());
 }
 
 function fallbackCopy(text) {
@@ -139,10 +134,8 @@ export function mount(el, ctx) {
     });
     const tick = h('button', { type: 'button', class: 'btn', id: `index-tick-${slug}`, 'aria-pressed': 'false' }, 'Tick');
     tick.addEventListener('click', () => {
-      const on = ticks[p.id] !== true;
-      if (on) ticks[p.id] = true;
-      else delete ticks[p.id];
-      try { store.set(KEY, ticks); } catch { /* the tick still shows for this visit */ }
+      ticks = toggleTick(ticks, p.id);
+      saveSharedTicks(store, ticks);
       paint();
     });
     kids.push(h('div', { class: 'problem-actions' }, copy, tick));

@@ -6,7 +6,7 @@ import { stationsForMap, stationForTopic, stationForProblem, stationById, thread
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
 import { BOOK_CHAPTERS, CHAPTER_4, OPEN_CHAPTERS, chapter4ExerciseIds } from '../js/data/book-path.js';
-import { chapterTally, sanitizeBookProgress, toggleBookFlag, sectionFinished } from '../js/book/progress.js';
+import { chapterTally, sectionFinished, foldLegacyExercises } from '../js/book/progress.js';
 import { parseBookRoute } from '../js/book/route.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
 import { parsePath, evalPath } from '../js/core/path-expr.js';
@@ -131,11 +131,13 @@ check('chapter 5 opens on the exponential, not the front matter',
   readFileSync(new URL('../js/stations/book.js', import.meta.url), 'utf8').includes("sectionHref('sec_exponential-function.html')")
   && readFileSync(new URL('../js/stations/book.js', import.meta.url), 'utf8').includes('are not drawn here yet'));
 {
-  let progress = sanitizeBookProgress({ sections: { '9.9': true, '4.1': true }, exercises: { '4.1.3': true, 'nope': true } }, CHAPTER_4.sections);
-  check('book progress keeps only known ids', progress.sections['4.1'] === true && progress.sections['9.9'] == null && progress.exercises['4.1.3'] === true && progress.exercises.nope == null);
-  check('4.1 is unfinished while 4.1.13 is open', sectionFinished(CHAPTER_4.sections[0], progress) === false && chapterTally(CHAPTER_4.sections, progress).nextId === '4.1');
-  progress = toggleBookFlag(progress, 'exercises', '4.1.13');
-  check('4.1 finishes when it is marked and both exercises are ticked', sectionFinished(CHAPTER_4.sections[0], progress) === true && chapterTally(CHAPTER_4.sections, progress).nextId === '4.2');
+  const legacy = foldLegacyExercises({ '4.2.4': true }, { exercises: { '4.1.3': true, nope: true }, sections: { '4.1': true } }, chapter4ExerciseIds());
+  check('a chapter tick folds into the index memory', legacy['4.1.3'] === true && legacy['4.2.4'] === true && legacy.nope == null);
+  check('a migrated record does not fold again', foldLegacyExercises({}, { migrated: true, exercises: { '4.1.3': true } }, chapter4ExerciseIds())['4.1.3'] == null);
+  const open = { '4.1.3': true };
+  check('ticks alone leave 4.1 open while 4.1.13 is unticked', sectionFinished(CHAPTER_4.sections[0], open) === false && chapterTally(CHAPTER_4.sections, open).nextExercise === '4.1.13');
+  const both = { '4.1.3': true, '4.1.13': true };
+  check('ticks alone finish 4.1 and move next to 4.2', sectionFinished(CHAPTER_4.sections[0], both) === true && chapterTally(CHAPTER_4.sections, both).nextId === '4.2');
 }
 check('the live router does not import kit', !/from\s+['"][^'"]*kit\//.test(readFileSync(new URL('../js/app.js', import.meta.url), 'utf8')));
 check('book route parser matches the router', parseBookRoute('chapter-5').kind === 'chapter' && parseRoute('#chapter-5').book.chapter === 5);

@@ -7,7 +7,9 @@ import { createMotion } from '../core/anim.js';
 import { publishFilmParams } from '../core/film.js';
 import { mountStepControl, quantize, substepsForFrame } from '../core/stepper.js';
 import { fmtCart, fmtNum } from '../core/complex.js';
-import { test2ProblemsAt } from '../data/test2-problems.js';
+import { test2ProblemsAt, test2ProblemById } from '../data/test2-problems.js';
+import { chapter4ExerciseIds, CHAPTER_PICTURE, exerciseFromToken } from '../data/book-path.js';
+import { chapterHash } from '../book/route.js';
 import { sectionHref } from '../data/book.js';
 import { threadLabel } from '../registry.js';
 import { h, richP, sourceTag, scopeBanner, walkList, placeLinks, chipButton, appendRich, storyLinks } from './test2-ui.js';
@@ -39,21 +41,31 @@ function show(host, lines) {
   host.replaceChildren(walkList(lines));
 }
 
+function chapterExerciseId(preset) {
+  const token = preset && preset.kind === 'token' ? preset.token : '';
+  return exerciseFromToken(token);
+}
+
 function problemRow(stationId, preset) {
   const probs = test2ProblemsAt(stationId);
   if (!probs.length) return null;
   const opened = preset && preset.kind === 'problem' ? preset.id : null;
+  const fromChapter = chapterExerciseId(preset);
   const box = h('div', { class: 'chips', id: `${stationId}-problems` });
   for (const p of probs) {
+    const onChapter = chapter4ExerciseIds().includes(p.id);
     const chip = h('a', {
       class: 'chip', id: `${stationId}-ex-${p.id.replace(/\./g, '-')}`,
-      href: `#index-${p.id.replace(/\./g, '-')}`,
+      href: onChapter ? `#${chapterHash(4, p.id)}` : `#index-${p.id.replace(/\./g, '-')}`,
     }, p.pin);
-    if (p.id === opened) chip.setAttribute('aria-current', 'true');
+    if (p.id === opened || p.id === fromChapter) chip.setAttribute('aria-current', 'true');
     box.append(chip);
   }
   const openedProblem = opened ? probs.find((p) => p.id === opened) : null;
   let note;
+  if (fromChapter) {
+    note = 'This picture is the one that exercise names. The statement and the hint are on the chapter. This page does not print a solution.';
+  } else
   if (openedProblem && openedProblem.homework) {
     note = 'This stop is where that exercise is worked. The statement and a map hint are on the index card. The card does not print a solution.';
   } else if (openedProblem) {
@@ -91,6 +103,12 @@ function shell(el, ctx, spec) {
   bits.push(richP(spec.lede, { class: 'station-lede', id: `${id}-lede` }));
   const badges = threadBadges(ctx);
   if (badges) bits.push(badges);
+  const fromChapter = chapterExerciseId(ctx.preset);
+  if (fromChapter) {
+    const problem = test2ProblemById(fromChapter);
+    bits.push(h('p', { id: `${id}-chapter-back` },
+      h('a', { href: `#${chapterHash(4, fromChapter)}` }, problem ? problem.pin : fromChapter)));
+  }
   for (const cite of spec.cites) bits.push(sourceTag(cite));
   el.append(h('header', { class: 'station-header' }, ...bits));
   el.append(spec.panel);
@@ -334,9 +352,12 @@ function zeroPanel(ctx) {
     { id: 'zero-c-quarter', label: 'c = 0.3', c: { re: 0.3, im: 0 }, text: 'Leaves. Real and greater than 1/4. Exercise 8: this c is not in the set of c whose orbit of 0 stays bounded. The terms keep climbing.' },
   ];
   const token = ctx && ctx.preset && ctx.preset.kind === 'token' ? String(ctx.preset.token).toLowerCase() : '';
-  const picked = (token === '0' || token === 'zero' || token === 'zero-c-0') ? samples[0]
-    : (token === 'i' || token === 'zero-c-i') ? samples[1]
-    : null;
+  const fromChapter = exerciseFromToken(token);
+  const wantChip = fromChapter ? CHAPTER_PICTURE[fromChapter].chip : null;
+  const picked = samples.find((s) => s.id === wantChip)
+    || ((token === 'm2' || token === 'zero-c-m2') ? samples[2] : null)
+    || ((token === '0' || token === 'zero' || token === 'zero-c-0') ? samples[0] : null)
+    || ((token === 'i' || token === 'zero-c-i') ? samples[1] : null);
   let current = picked || samples[1];
   const host = h('div', { id: 'zero-walk', 'data-film-sync': '' });
   const note = h('p', { id: 'zero-fate' });
@@ -489,7 +510,7 @@ function pileLines(z, steps) {
   return lines;
 }
 
-function geometricPanel() {
+function geometricPanel(ctx) {
   const samples = [
     {
       id: 'geometric-inside', label: '(1+i)/2', z: { re: 0.5, im: 0.5 },
@@ -512,7 +533,10 @@ function geometricPanel() {
       text: 'Leaves. |z + i| = 4 > 2, so |w| > 1 and the bags run off. The wall of Exercise 2 is the circle |z + i| = 2.',
     },
   ];
-  let current = samples[0];
+  const token = ctx && ctx.preset && ctx.preset.kind === 'token' ? String(ctx.preset.token).toLowerCase() : '';
+  const fromChapter = exerciseFromToken(token);
+  const wantChip = fromChapter ? CHAPTER_PICTURE[fromChapter].chip : null;
+  let current = samples.find((s) => s.id === wantChip) || samples[0];
   const host = h('div', { id: 'geometric-sum' });
   const note = h('p', { id: 'geometric-fate' });
   const buttons = [];
@@ -706,6 +730,7 @@ export function mountConcept(el, ctx) {
     return function unmount() {};
   }
   if (ctx.station.id === 'zero') spec = { ...spec, panel: zeroPanel(ctx) };
+  if (ctx.station.id === 'geometric') spec = { ...spec, panel: geometricPanel(ctx) };
   shell(el, ctx, spec);
   el.querySelectorAll('[data-film-sync]').forEach((n) => n.dispatchEvent(new CustomEvent('mv-sync')));
   return function unmount() {};
