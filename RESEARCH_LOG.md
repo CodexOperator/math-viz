@@ -800,3 +800,14 @@ Branch `cursor/homework-ch4-hints-copy-md-a873`, after the close fixes at `f88fd
 **Change.** The sentence under the `(1+i)/2` sums no longer names Exercise 1(b) or `1/(2+i)`. No chip was added for part (b). The Exercise 5 hint keeps The Orbit of 0 and the chip `c = −2`, and it no longer names the Mandelbrot set or The Crossing. Those two stops left `also`, so the export no longer lists them. The `c = −2` note no longer mentions a pad at 1.6. The Exercise 3 hint no longer names the quadratic film. The index remembers a pressed Homework chip. Opening a homework card from `#index-…` after that press leaves Homework pressed and the scope on Any. A fresh link, with nothing saved, still opens on All and the card’s scope.
 
 **Verified.** `node tools/fractal-smoke.mjs` exits 0. `node tools/check_vectors.mjs` is 234/234. `node kit/smoke.mjs` exits 0. Headless Chrome: the open geometric sentence is “Settles. |z| < 1, so the pile sits down. Theorem 4.12, page 118. The index does not print the sum.” A fresh `#index-4-2-5` is All and Core, 25 shown. After Homework is pressed, the Exercise 5 chip on The Orbit of 0 returns to `#index-4-2-5` with Homework pressed, Any scope, and `7 shown. Homework.` The seven ids are unchanged. The hint names the orbit chip and does not name the other two pictures. The `c = −2` note has no 1.6. At 1280 the index `scrollWidth` is 1265, matching the client. At 390 both are 390. Screenshots: `/opt/cursor/artifacts/homework-geometric-sentence.png`, `/opt/cursor/artifacts/homework-ex5-hint.png`, `/opt/cursor/artifacts/homework-filter-return.png`.
+
+## Council — pedagogy, the closed disk
+
+Branch `cursor/pedagogy-council-e03f`. One lesson, Example 4.9, page 113. Not a Story Map station. The registry is untouched.
+
+1. The hand does one thing: type a blank. The rule box is the second control, and Check becomes Pause or Step.
+2. One mark moves because of that: the purple landing, then the orbit, then the blue disk.
+3. The claim is true of this start and false of another. “The start 1/2 settles at 0” is false of 3/2. “The bounded starts are the closed unit disk” is false of an open disk, because −1 is on the circle and its orbit stays bounded.
+4. The picture is a static plane, blue axes, orange unit circle, green start. `lessons/disk.html`.
+
+The sequence `a^n` is a different node (`4.1.fate`). This lesson is the squaring orbit. KaTeX stays the vendored copy. The formula box is `compile` from `js/core/parse.js`.

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f6f3ec" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0d121c" media="(prefers-color-scheme: dark)">
+  <meta name="description" content="A six-step lesson on Example 4.9: for z squared, the walks that stay bounded are the closed unit disk.">
+  <title>The closed disk · One Point, Two Addresses</title>
+  <link rel="icon" href="../favicon.ico" sizes="48x48">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('mv:theme');
+        if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="../vendor/katex/katex.min.css">
+  <link rel="stylesheet" href="../css/theme.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/lesson.css">
+  <script src="../vendor/katex/katex.min.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#lesson">Skip to the lesson</a>
+  <main id="view" tabindex="-1">
+    <noscript>
+      <div class="panel fatal"><h1 class="panel-title">JavaScript is off</h1><p>This lesson needs JavaScript. Turn it on and reload the page.</p></div>
+    </noscript>
+  </main>
+  <script type="module">
+    import { mountDiskLesson } from '../js/lessons/disk.js';
+    const view = document.getElementById('view');
+    if (location.protocol === 'file:') {
+      view.innerHTML = '<div class="panel fatal"><h1 class="panel-title">Open this from a web server</h1><p>Run a local server in the site folder and open lessons/disk.html.</p></div>';
+    } else {
+      mountDiskLesson(view);
+    }
+  </script>
+</body>
+</html>
