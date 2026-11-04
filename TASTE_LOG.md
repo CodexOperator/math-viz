@@ -1476,3 +1476,32 @@ On 1.3 the worked length is 5, and the first blank is |(1+i)(2+i)|. Nothing asks
 ### What to keep
 
 The six-stage walk, the “n of 6” count, the Done flag, and the summit sentence at the foot of the stage. Times i on the first screen, and a sentence that is false until the second press. The drag, the two chips pressed only on the book’s point, Next root, and the disk that opens outside the circle. The memory lines as written: they are the recipes, at body size, in both themes. One card at a time, the back closed until Show, Got it hidden until the next day, Missed kept in the pile. Exercise 7’s two steps, the four powers on i²⁷⁵, and the triangle item, whose miss does name equality and the cross term. The Iowan title, the paper, the 44px controls, light and dark. No new chrome.
+
+## reviewer (ch1 batch 2)
+
+Preview https://ch1-preview.complexanalysis.pages.dev, tip `e9c541c`, checked against Howell & Mathews, Complex Analysis, 202 Updated Edition (PDF, 471 pages). Fixes pushed on `cursor/chapter-1`.
+
+### Verdict
+
+ACCEPT WITH FIXES. The named pages match the print edition, and the 1.4–1.6 arithmetic that the page states is the book’s. A handful of sentences were false of the state on screen, or pointed at the wrong page. Those are corrected. The four items the track left open are still open, and they are not math errors.
+
+### What the book says
+
+Example 1.13, page 27: \(1+i\) has length \(\sqrt{2}\) and Arg \(\pi/4\). Exercise 7, page 28: \(z_1=-1+i\sqrt{3}\), \(z_2=-\sqrt{3}+i\), and \(\operatorname{Arg}(z_1 z_2)\neq \operatorname{Arg} z_1+\operatorname{Arg} z_2\). The sum of the Args is \(3\pi/2\); the product is \(-4i\), whose Arg is \(-\pi/2\). §1.5 Exercise 2, page 34: \((\sqrt{3}+i)^4=-8+8\sqrt{3}\,i\). Equation (1.43), page 31, is the \(n\)th roots of unity, \(e^{i 2\pi k/n}\). The general roots are Equation (1.45), page 32. Example 1.25, page 38: \(D_1(0)\), \(\varepsilon=1-|z_0|\), exterior \(|z|>1\), boundary \(|z|=1\). Exercise 6, page 41: the open disk is a domain and the closed disk is not. §1.3 Exercise 2(a), page 20: \(2+3i\) and \(4+i\), sum \(6+4i\), difference \(-2+2i\).
+
+Also opened and matching: Definitions 1.9–1.11, pages 22–23, with Arg in \((-\pi,\pi]\); Euler (1.32), page 25; Theorem 1.3, page 26, which is the set \(\arg\), not Arg; De Moivre (1.40) and Theorem 1.4, page 30; Theorem 1.5, page 33; (1.47) and (1.48), page 35; disks (1.50)–(1.52), page 37.
+
+### Fixes
+
+The polar sentence said “length \(\sqrt{2}\)” for any point within 0.08 of \(1+i\). It now holds only at \(1+i\), and the chip is pressed only then. The disk called every radius up to 1.08 the boundary, including 1.1. A keyboard step from the opening point now reads Outside at 1.1, On the boundary at 1, and Inside at 0.9. Equation (1.48) is page 35, not 36. The Example 1.13 link opened §1.4 Exercise 1; it now opens the example. The Example 1.25 link opened the disk formula; it now opens the example. The roots-of-unity card stated the general formula and cited (1.43); the card is now (1.43), and the memory line cites (1.45). The 1.4 summit no longer says a length times an angle. The sum card no longer calls \(6+3i\) the difference.
+
+The grader accepts a parsed value. \(\sqrt{10}\), `sqrt(10)`, and 1.414 for \(\sqrt{2}\) pass; \(\sqrt{2}\) on the product blank, `41+10i`, and 33530000 for \(2^{25}\) fail. `41 + 11*i` and \(-8+8\sqrt{3}i\) pass. `generate(seed, params)` is seed-first and deterministic across 60 seeds of each mode. Arg still rejects a \(2\pi\) shift, so \(-\pi\) is not \(\operatorname{Arg}(-1)\).
+
+`node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. `js/core/map-route.js` is byte-identical to the kit copy. No live file imports `kit/`. Headless Chrome, 390×844 and 1280×800, light and dark: Times i ends at y = 724 and y = 794, The Book is 44px, no console errors, no sideways scroll.
+
+### Still open
+
+1. Stage complete still toggles itself. The 1.4 button went from unpressed to pressed with no practice answered.
+2. The 1.2 deck is still Card 1 of 17. The 1.3 deck is still Card 1 of 8.
+3. Proof of (P1) is still both a blank and a multiple choice.
+4. Arg and polar still draw axis points, where one coordinate is zero, on about half of 200 seeds. The modulus generator does not.

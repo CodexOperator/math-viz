@@ -173,8 +173,7 @@ export function mountPolar(parent) {
   function paint() {
     const c = polarClaim(z);
     say(claim, c.text, c.holds);
-    const on = Math.abs(z.re - 1) <= 0.08 && Math.abs(z.im - 1) <= 0.08;
-    chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+    chip.setAttribute('aria-pressed', c.holds ? 'true' : 'false');
     view.requestDraw();
   }
   chip.addEventListener('click', () => {

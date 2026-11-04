@@ -246,6 +246,9 @@ export function normMath(raw) {
   s = s.replace(/\u2212/g, '-').replace(/\u03c0/g, 'pi').replace(/\$/g, '');
   s = s.replace(/\\frac\s*\{([^{}]+)\}\{([^{}]+)\}/g, '($1)/($2)');
   s = s.replace(/\\sqrt\s*\{([^{}]+)\}/g, 'sqrt($1)');
+  s = s.replace(/\u221a\s*\{([^{}]+)\}/g, 'sqrt($1)');
+  s = s.replace(/\u221a\s*\(([^()]+)\)/g, 'sqrt($1)');
+  s = s.replace(/\u221a\s*(\d+)/g, 'sqrt($1)');
   s = s.replace(/\\left|\\right|\\,|\\!|\\;|\\:/g, '');
   s = s.replace(/\\operatorname\{arg\}|\\arg/g, 'arg');
   s = s.replace(/\\pi/g, 'pi');
@@ -368,7 +371,11 @@ export function parseComplex(raw) {
 }
 
 function close(a, b) {
-  return Math.abs(a - b) <= 1e-3 * Math.max(1, Math.abs(b));
+  const diff = Math.abs(a - b);
+  const scale = Math.max(1, Math.abs(b));
+  // A tenth of a percent on an ordinary size, and never more than half a unit,
+  // so 3.162 matches √10 and 33530000 does not match 2^25.
+  return diff <= 1e-3 * scale && diff <= 0.51;
 }
 
 export function matches(input, spec) {

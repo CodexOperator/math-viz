@@ -220,7 +220,10 @@
           "sqrt(2)",
           "√2"
         ],
-        "why": "$1^2+1^2=2$. Definition 1.8, page 17."
+        "why": "$1^2+1^2=2$. Definition 1.8, page 17.",
+        "value": {
+          "real": 1.4142135623730951
+        }
       },
       {
         "text": "$|2+i|=$ ___",
@@ -230,7 +233,10 @@
           "sqrt(5)",
           "√5"
         ],
-        "why": "$2^2+1^2=5$."
+        "why": "$2^2+1^2=5$.",
+        "value": {
+          "real": 2.23606797749979
+        }
       },
       {
         "text": "The product of the lengths is ___",
@@ -270,7 +276,7 @@
           "$8+4i$",
           "$6+3i$"
         ],
-        "why": "Definition 1.1: $(2+4,\\, 3+1)=(6,4)$. The last choice is the difference.",
+        "why": "Definition 1.1, page 10: $(2+4,\\, 3+1)=(6,4)$.",
         "miss": "Those coordinates were not both added."
       },
       {
@@ -1397,17 +1403,17 @@
       "page": 31
     },
     "kind": "flash",
-    "prompt": "The $n$th roots.",
+    "prompt": "The $n$th roots of unity.",
     "steps": [
       {
-        "text": "The $n$th roots.",
-        "answer": "Length $r^{1/n}$, angles $(\\theta+2\\pi k)/n$, $k=0,\\ldots,n-1$.",
+        "text": "The $n$th roots of unity.",
+        "answer": "$e^{i 2\\pi k/n}$ for $k=0,\\ldots,n-1$.",
         "accept": [],
-        "why": "The roots of unity are Equation (1.43), page 31."
+        "why": "Equation (1.43), page 31. The general roots are Equation (1.45), page 32."
       }
     ],
     "generator": null,
-    "memory": "The roots of unity are Equation (1.43), page 31."
+    "memory": "Equation (1.43), page 31. The general roots are Equation (1.45), page 32."
   },
   {
     "id": "ch1-1.5-quad",
@@ -1435,8 +1441,8 @@
     "chapter": 1,
     "section": "1.6",
     "cite": {
-      "ref": "§1.6, Exercise 1(a)",
-      "page": 36
+      "ref": "Equation (1.48)",
+      "page": 35
     },
     "kind": "flash",
     "prompt": "The segment from $z_0$ to $z_1$.",
@@ -1445,11 +1451,11 @@
         "text": "The segment from $z_0$ to $z_1$.",
         "answer": "$z(t)=z_0+t(z_1-z_0)$, $0\\le t\\le 1$.",
         "accept": [],
-        "why": "Page 36. Exercise 1(a), page 41, is the segment from $0$ to $1+i$."
+        "why": "Equation (1.48), page 35. Exercise 1(a), page 41, is the segment from $0$ to $1+i$."
       }
     ],
     "generator": null,
-    "memory": "Page 36. Exercise 1(a), page 41, is the segment from $0$ to $1+i$."
+    "memory": "Equation (1.48), page 35. Exercise 1(a), page 41, is the segment from $0$ to $1+i$."
   },
   {
     "id": "ch1-1.6-open",

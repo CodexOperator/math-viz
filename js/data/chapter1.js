@@ -120,7 +120,7 @@ export const CHAPTER_1 = deepFreeze({
       title: 'The Geometry of Complex Numbers, Part II',
       page: 22,
       why: 'Multiplication has a direction. The modulus is the length you already have, and Arg is the angle from the positive real axis, kept in $(-\\pi,\\pi]$.',
-      summit: 'Polar form is the length times an angle, and the angle you write down is the one in $(-\\pi,\\pi]$.',
+      summit: 'Polar form is the length times $e^{i\\theta}$, and $\\theta$ is the one angle in $(-\\pi,\\pi]$.',
       idea: 'Example 1.13, page 27: $1+i$ has length $\\sqrt{2}$ and Arg $\\pi/4$.',
       read: [
         { pin: 'Definition 1.9, polar representation, page 22', href: sectionHref(GEO2, 'def_polar_rep') },
@@ -131,7 +131,7 @@ export const CHAPTER_1 = deepFreeze({
       ],
       worked: {
         pin: 'Example 1.13, page 27',
-        href: sectionHref(GEO2, 'x1_4_1'),
+        href: sectionHref(GEO2, 'sec_geometry-2-43'),
         title: '$1+i$ in polar form',
         body: 'Definition 1.8 gives $|1+i|=\\sqrt{2}$. Definition 1.11 puts the angle in $(-\\pi,\\pi]$, and that angle is $\\pi/4$. Definition 1.9 writes $1+i=\\sqrt{2}\\,(\\cos\\pi/4+i\\sin\\pi/4)$. Euler\'s formula, page 25, is the same point as $\\sqrt{2}\\,e^{i\\pi/4}$.',
       },
@@ -156,6 +156,7 @@ export const CHAPTER_1 = deepFreeze({
         { pin: "De Moivre's formula, Equation (1.40), page 30", href: sectionHref(ALG2, 'De_Moivre_s_formula') },
         { pin: 'Theorem 1.4, a degree-n polynomial has n roots, page 30', href: sectionHref(ALG2, 'NRoots') },
         { pin: 'Equation (1.43), the $n$th roots of unity, page 31', href: sectionHref(ALG2, 'Roots_of_Unity') },
+        { pin: 'Equation (1.45), the $n$th roots of a number, page 32', href: sectionHref(ALG2, 'sec_algebra-2-26-2') },
         { pin: 'Definition 1.12, a primitive $n$th root, page 31', href: sectionHref(ALG2, 'Primitive_nth_Root') },
       ],
       worked: {
@@ -166,7 +167,7 @@ export const CHAPTER_1 = deepFreeze({
       },
       memory: [
         'De Moivre, Equation (1.40), page 30: $(\\cos\\theta+i\\sin\\theta)^n=\\cos n\\theta+i\\sin n\\theta$. The length becomes $r^n$.',
-        'The $n$th roots have length $r^{1/n}$ and angles $(\\theta+2\\pi k)/n$, for $k=0,\\ldots,n-1$.',
+        'The $n$th roots have length $r^{1/n}$ and angles $(\\theta+2\\pi k)/n$. Equation (1.45), page 32.',
         'The $n$th roots of unity are $e^{i 2\\pi k/n}$. Equation (1.43), page 31.',
         'A quadratic has both square roots of the discriminant. Theorem 1.5, page 33.',
       ],
@@ -182,18 +183,18 @@ export const CHAPTER_1 = deepFreeze({
       idea: 'Equation (1.50), page 37: $D_\\varepsilon(z_0)=\\{z:\\,|z-z_0|<\\varepsilon\\}$. Exercise 6, page 41: $D_1(0)$ is a domain and the closed disk is not.',
       read: [
         { pin: 'Equation (1.47), a curve, page 35', href: sectionHref(TOP) },
-        { pin: 'Equation (1.48), the segment from $z_0$ to $z_1$, page 36', href: sectionHref(TOP, 'fig_ch-01-25') },
+        { pin: 'Equation (1.48), the segment from $z_0$ to $z_1$, page 35', href: sectionHref(TOP, 'sec_topology-3') },
         { pin: 'Equation (1.50), the open disk $D_\\varepsilon(z_0)$, page 37', href: sectionHref(TOP, 'OpenDisk') },
         { pin: 'Equations (1.51) and (1.52), closed and punctured disks, page 37', href: sectionHref(TOP, 'sec_topology-14') },
       ],
       worked: {
         pin: 'Example 1.25, page 38',
-        href: sectionHref(TOP, 'OpenDisk'),
+        href: sectionHref(TOP, 'TopologyEx'),
         title: 'The open unit disk',
         body: '$S=D_1(0)=\\{z:\\,|z|<1\\}$. Example 1.25 takes a point inside and chooses $\\varepsilon=1-|z_0|$, so a whole disk about that point stays in $S$. The exterior is $|z|>1$ and the boundary is the circle $|z|=1$. Exercise 6, page 41, records the consequence: $S$ is a domain, and the closed disk is not.',
       },
       memory: [
-        'A segment from $z_0$ to $z_1$ is $z(t)=z_0+t(z_1-z_0)$ for $0\\le t\\le 1$. Page 36.',
+        'A segment from $z_0$ to $z_1$ is $z(t)=z_0+t(z_1-z_0)$ for $0\\le t\\le 1$. Equation (1.48), page 35.',
         'The open disk is $|z-z_0|<\\varepsilon$. Equation (1.50), page 37. The boundary is not included.',
         'The closed disk is $|z-z_0|\\le\\varepsilon$. Equation (1.51). The punctured disk leaves out the center.',
         'A boundary point has every neighborhood meeting the set and its complement.',
@@ -247,14 +248,16 @@ const CITE_HREF = {
   'Definition 1.10': sectionHref(GEO2, 'arg_z'),
   'Definition 1.11': sectionHref(GEO2, 'Arg_z'),
   'Theorem 1.3': sectionHref(GEO2, 'thm_arg-sum'),
-  'Example 1.13': sectionHref(GEO2),
+  'Example 1.13': sectionHref(GEO2, 'sec_geometry-2-43'),
   '§1.4, Exercise 7': sectionHref(GEO2, 'x1_4_7'),
   'Equation (1.40)': sectionHref(ALG2, 'De_Moivre_s_formula'),
   'Equation (1.43)': sectionHref(ALG2, 'Roots_of_Unity'),
+  'Equation (1.45)': sectionHref(ALG2, 'sec_algebra-2-26-2'),
   'Theorem 1.5': sectionHref(ALG2, 'Quadratic_Formula'),
   '§1.5, Exercise 2': sectionHref(ALG2, 'x1_5_2a'),
+  'Equation (1.48)': sectionHref(TOP, 'sec_topology-3'),
   'Equation (1.50)': sectionHref(TOP, 'OpenDisk'),
-  'Example 1.25': sectionHref(TOP, 'OpenDisk'),
+  'Example 1.25': sectionHref(TOP, 'TopologyEx'),
   '§1.6, Exercise 6': sectionHref(TOP, 'x1_6_6'),
   '§1.6, Exercise 1(a)': sectionHref(TOP, 'x1_6_1'),
 };
@@ -313,11 +316,11 @@ export function modulusClaim(z) {
   return { holds: false, text: 'The length is the distance to $0$. It is not $5$.' };
 }
 
-// True only at the book's 1+i, Example 1.13, page 27.
+// True only at the book's 1+i, Example 1.13, page 27. A nearby point does not have length √2.
 export function polarClaim(z) {
   const re = Number(z && z.re);
   const im = Number(z && z.im);
-  if (near(re, 1, 0.08) && near(im, 1, 0.08)) {
+  if (near(re, 1, 1e-4) && near(im, 1, 1e-4)) {
     return { holds: true, text: 'Length $\\sqrt{2}$, Arg $\\pi/4$. Example 1.13, page 27.' };
   }
   return { holds: false, text: 'Arg is the angle from the positive real axis, in $(-\\pi,\\pi]$. This point is not $1+i$.' };
@@ -336,12 +339,12 @@ export function rootPoint(k) {
   return { re: Math.cos(t), im: Math.sin(t) };
 }
 
-// True only inside the open unit disk. The circle itself is the boundary.
+// True only inside the open unit disk. The boundary sentence is the circle itself.
 export function diskClaim(z) {
   const re = Number(z && z.re);
   const im = Number(z && z.im);
   const r = Math.hypot(re, im);
-  if (r < 0.98) return { holds: true, text: 'Inside the open unit disk. Example 1.25, page 38.' };
-  if (r <= 1.08) return { holds: false, text: 'On the boundary. The open disk does not include $|z|=1$.' };
+  if (r < 1 - 1e-4) return { holds: true, text: 'Inside the open unit disk. Example 1.25, page 38.' };
+  if (r <= 1 + 1e-4) return { holds: false, text: 'On the boundary. The open disk does not include $|z|=1$.' };
   return { holds: false, text: 'Outside. This is not the open disk $D_1(0)$.' };
 }
