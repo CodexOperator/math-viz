@@ -1,0 +1,405 @@
+[
+  {
+    "id": "ch2-2.1-ex13",
+    "chapter": 2,
+    "section": "2.1",
+    "cite": {"ref": "§2.1, Exercise 13", "page": 54},
+    "kind": "next-step-blank",
+    "prompt": "Exercise 13. \\(w = (2+i)z - 2i\\) maps the triangle with vertices \\(-2+i\\), \\(-2+2i\\), and \\(2+i\\).",
+    "steps": [
+      {
+        "text": "The image of \\(-2+i\\) is ___.",
+        "answer": "-5-2i",
+        "accept": ["-5 - 2i", "-5-2i", "-5+-2i"],
+        "why": "\\((2+i)(-2+i) = -5\\), then subtract \\(2i\\)."
+      },
+      {
+        "text": "The image of \\(2+i\\) is ___.",
+        "answer": "3+2i",
+        "accept": ["3 + 2i", "3+2i"],
+        "why": "\\((2+i)^2 = 3+4i\\), then subtract \\(2i\\)."
+      }
+    ],
+    "generator": null,
+    "memory": "Apply \\(Az+B\\) to each vertex."
+  },
+  {
+    "id": "ch2-2.1-linear-gen",
+    "chapter": 2,
+    "section": "2.1",
+    "cite": {"ref": "§2.1, linear transformation", "page": 50},
+    "kind": "blank",
+    "prompt": "Another linear image. The answer is computed.",
+    "steps": [
+      {"text": "___", "answer": "", "accept": [], "why": "Multiply, then add."}
+    ],
+    "generator": {"template": "ch2-maps", "params": {"kind": "linear", "a": [-3, 3], "b": [-3, 3], "c": [-2, 2], "d": [-2, 2], "x": [-3, 3], "y": [-3, 3]}},
+    "memory": "A linear map is a turn, a stretch, then a slide."
+  },
+  {
+    "id": "ch2-2.1-flash-function",
+    "chapter": 2,
+    "section": "2.1",
+    "cite": {"ref": "§2.1, function", "page": 43},
+    "kind": "flash",
+    "prompt": "What is a complex function, and what are the image, the domain, and the range?",
+    "steps": [
+      {"text": "", "answer": "A rule that sends each z in a set D to exactly one w. w is the image of z. D is the domain. The set of images is the range.", "why": ""}
+    ],
+    "generator": null,
+    "memory": "One z, one w."
+  },
+  {
+    "id": "ch2-2.1-flash-image",
+    "chapter": 2,
+    "section": "2.1",
+    "cite": {"ref": "§2.1, image of a set", "page": 46},
+    "kind": "flash",
+    "prompt": "What is the image of a set A?",
+    "steps": [
+      {"text": "", "answer": "The image of A is {f(z) : z is in A}. f maps A onto that set.", "why": ""}
+    ],
+    "generator": null,
+    "memory": "The image of A is every point f actually hits."
+  },
+  {
+    "id": "ch2-2.1-flash-into",
+    "chapter": 2,
+    "section": "2.1",
+    "cite": {"ref": "§2.1, into", "page": 46},
+    "kind": "flash",
+    "prompt": "When does f map A into S?",
+    "steps": [
+      {"text": "", "answer": "When the image of A is contained in S.", "why": ""}
+    ],
+    "generator": null,
+    "memory": "Into means the image fits inside S."
+  },
+  {
+    "id": "ch2-2.1-flash-inverse",
+    "chapter": 2,
+    "section": "2.1",
+    "cite": {"ref": "§2.1, inverse image", "page": 46},
+    "kind": "flash",
+    "prompt": "What is the inverse image of a point w?",
+    "steps": [
+      {"text": "", "answer": "Every z in the domain with f(z) = w. It may be one point, several, or none.", "why": ""}
+    ],
+    "generator": null,
+    "memory": "Inverse image: who landed here?"
+  },
+  {
+    "id": "ch2-2.1-flash-one",
+    "chapter": 2,
+    "section": "2.1",
+    "cite": {"ref": "§2.1, one-to-one", "page": 46},
+    "kind": "flash",
+    "prompt": "When is f one-to-one?",
+    "steps": [
+      {"text": "", "answer": "When z1 ≠ z2 implies f(z1) ≠ f(z2). Equivalently, f(z1) = f(z2) forces z1 = z2.", "why": ""}
+    ],
+    "generator": null,
+    "memory": "Distinct points stay distinct."
+  },
+  {
+    "id": "ch2-2.1-flash-translation",
+    "chapter": 2,
+    "section": "2.1",
+    "cite": {"ref": "§2.1, translation", "page": 48},
+    "kind": "flash",
+    "prompt": "What is a translation?",
+    "steps": [
+      {"text": "", "answer": "w = z + B slides every point by the fixed vector B.", "why": ""}
+    ],
+    "generator": null,
+    "memory": "Translation adds the same B to every point."
+  },
+  {
+    "id": "ch2-2.1-flash-rotation",
+    "chapter": 2,
+    "section": "2.1",
+    "cite": {"ref": "§2.1, rotation", "page": 49},
+    "kind": "flash",
+    "prompt": "What is a rotation by α?",
+    "steps": [
+      {"text": "", "answer": "w = z e^{iα} turns every point about 0 through the angle α.", "why": ""}
+    ],
+    "generator": null,
+    "memory": "Rotation multiplies by a number of modulus 1."
+  },
+  {
+    "id": "ch2-2.1-flash-magnify",
+    "chapter": 2,
+    "section": "2.1",
+    "cite": {"ref": "§2.1, magnification", "page": 49},
+    "kind": "flash",
+    "prompt": "What is a magnification by K > 0?",
+    "steps": [
+      {"text": "", "answer": "w = Kz multiplies every distance from 0 by K.", "why": ""}
+    ],
+    "generator": null,
+    "memory": "Magnification multiplies lengths by K and leaves angles alone."
+  },
+  {
+    "id": "ch2-2.1-flash-linear",
+    "chapter": 2,
+    "section": "2.1",
+    "cite": {"ref": "§2.1, linear transformation", "page": 50},
+    "kind": "flash",
+    "prompt": "What is the linear transformation w = Az + B?",
+    "steps": [
+      {"text": "", "answer": "With A = K e^{iα} and K > 0, it turns by Arg A, stretches by |A|, then slides by B. It is one-to-one from the plane onto the plane.", "why": ""}
+    ],
+    "generator": null,
+    "memory": "Turn, stretch, slide."
+  },
+  {
+    "id": "ch2-2.2-ex1b",
+    "chapter": 2,
+    "section": "2.2",
+    "cite": {"ref": "§2.2, Exercise 1(b)", "page": 59},
+    "kind": "next-step-mc",
+    "prompt": "Exercise 1(b). The vertical line \\(x = 2\\) under \\(w = z^2\\).",
+    "steps": [
+      {
+        "text": "The image is the parabola",
+        "answer": "u = 4 - v^2/16",
+        "accept": ["u=4-v^2/16", "u = 4 - \\frac{v^2}{16}"],
+        "choices": ["u = 4 - v^2/16", "u = 4 - v^2/4", "v = 4 - u^2/16", "u = 2 - v^2/16"],
+        "why": "\\(v = 4y\\), so \\(y = v/4\\) and \\(u = 4 - y^2\\)."
+      }
+    ],
+    "generator": null,
+    "memory": "On x = a, y = v/(2a) and u = a^2 - y^2."
+  },
+  {
+    "id": "ch2-2.2-line-gen",
+    "chapter": 2,
+    "section": "2.2",
+    "cite": {"ref": "§2.2, Example 2.12", "page": 56},
+    "kind": "mc",
+    "prompt": "Another vertical line under z^2. The parabola is computed.",
+    "steps": [
+      {"text": "___", "answer": "", "accept": [], "choices": [], "why": "Solve y from v = 2ay."}
+    ],
+    "generator": {"template": "ch2-maps", "params": {"kind": "power-line", "a": [1, 3]}},
+    "memory": "z^2 sends a vertical line to a left-opening parabola."
+  },
+  {
+    "id": "ch2-2.2-sector-gen",
+    "chapter": 2,
+    "section": "2.2",
+    "cite": {"ref": "§2.2, the sector for z^n", "page": 59},
+    "kind": "mc",
+    "prompt": "Another sector under z^n. The image angle is computed.",
+    "steps": [
+      {"text": "___", "answer": "", "accept": [], "choices": [], "why": "Multiply the argument by n."}
+    ],
+    "generator": {"template": "ch2-maps", "params": {"kind": "power-sector"}},
+    "memory": "Arguments multiply by n. Moduli rise to the n."
+  },
+  {
+    "id": "ch2-2.2-flash-sqrt",
+    "chapter": 2,
+    "section": "2.2",
+    "cite": {"ref": "Definition 2.1", "page": 55},
+    "kind": "flash",
+    "prompt": "State the principal square root.",
+    "steps": [
+      {"text": "", "answer": "For w ≠ 0, w^{1/2} = |w|^{1/2} e^{i Arg(w)/2}, with −π < Arg w ≤ π.", "why": ""}
+    ],
+    "generator": null,
+    "memory": "Halve the principal argument, and take the positive square root of the modulus."
+  },
+  {
+    "id": "ch2-2.2-flash-nth",
+    "chapter": 2,
+    "section": "2.2",
+    "cite": {"ref": "Definition 2.2", "page": 59},
+    "kind": "flash",
+    "prompt": "State the principal nth root.",
+    "steps": [
+      {"text": "", "answer": "For w ≠ 0 and a positive integer n, w^{1/n} = |w|^{1/n} e^{i Arg(w)/n}.", "why": ""}
+    ],
+    "generator": null,
+    "memory": "Divide Arg w by n. The modulus gets the positive nth root."
+  },
+  {
+    "id": "ch2-2.3-thm21-blank",
+    "chapter": 2,
+    "section": "2.3",
+    "cite": {"ref": "Theorem 2.1", "page": 62},
+    "kind": "proof-blank",
+    "prompt": "Theorem 2.1. The limit of f is u0 + iv0 exactly when the real and imaginary parts have those limits.",
+    "steps": [
+      {
+        "text": "If \\(|f(z) - w_0| < \\varepsilon\\), then \\(|u - u_0| \\le\\) ___.",
+        "answer": "|f(z) - w_0|",
+        "accept": ["|f(z)-w0|", "|f(z)-w_0|", "the modulus of f(z)-w0"],
+        "why": "Each of \\(|u-u_0|\\) and \\(|v-v_0|\\) is at most \\(|f(z)-w_0|\\)."
+      },
+      {
+        "text": "In the other direction, choose \\(\\delta\\) to be the ___ of \\(\\delta_1\\) and \\(\\delta_2\\).",
+        "answer": "minimum",
+        "accept": ["min", "the minimum", "smaller", "the smaller"],
+        "why": "On that smaller disk both \\(|u-u_0| < \\varepsilon/2\\) and \\(|v-v_0| < \\varepsilon/2\\)."
+      }
+    ],
+    "generator": null,
+    "memory": "A complex limit is the pair of real limits."
+  },
+  {
+    "id": "ch2-2.3-thm21-mc",
+    "chapter": 2,
+    "section": "2.3",
+    "cite": {"ref": "Theorem 2.1", "page": 62},
+    "kind": "proof-mc",
+    "prompt": "The converse half of the proof of Theorem 2.1.",
+    "steps": [
+      {
+        "text": "The triangle inequality gives \\(|f(z)-w_0| \\le |u-u_0| + |v-v_0| <\\) ___.",
+        "answer": "ε",
+        "accept": ["epsilon", "\\varepsilon", "e"],
+        "choices": ["ε", "ε/2", "δ", "|z - z_0|"],
+        "why": "The two halves are each less than \\(\\varepsilon/2\\), so the sum is less than \\(\\varepsilon\\)."
+      },
+      {
+        "text": "So f(z) lies in",
+        "answer": "D_ε(w_0)",
+        "accept": ["the epsilon disk about w0", "D_epsilon(w0)"],
+        "choices": ["D_ε(w_0)", "the punctured disk about z_0", "the real axis", "D_δ(z_0)"],
+        "why": "\\(|f(z)-w_0| < \\varepsilon\\) is the disk of radius \\(\\varepsilon\\) about \\(w_0\\)."
+      }
+    ],
+    "generator": null,
+    "memory": "Take the smaller δ, then add the two halves."
+  },
+  {
+    "id": "ch2-2.3-ex1a",
+    "chapter": 2,
+    "section": "2.3",
+    "cite": {"ref": "§2.3, Exercise 1(a)", "page": 66},
+    "kind": "next-step-blank",
+    "prompt": "Exercise 1(a). \\(\\lim_{z \\to 2+i}(z^2 - 4z + 2 + 5i)\\).",
+    "steps": [
+      {
+        "text": "\\((2+i)^2 =\\) ___.",
+        "answer": "3+4i",
+        "accept": ["3 + 4i", "3+4i"],
+        "why": "\\(4 + 4i + i^2 = 3+4i\\)."
+      },
+      {
+        "text": "Then \\(3+4i - 4(2+i) + 2 + 5i =\\) ___.",
+        "answer": "-3+5i",
+        "accept": ["-3 + 5i", "-3+5i"],
+        "why": "The real part is \\(3 - 8 + 2\\) and the imaginary part is \\(4 - 4 + 5\\)."
+      }
+    ],
+    "generator": null,
+    "memory": "A polynomial limit is the value at the point."
+  },
+  {
+    "id": "ch2-2.3-flash-limu",
+    "chapter": 2,
+    "section": "2.3",
+    "cite": {"ref": "Definition 2.3", "page": 61},
+    "kind": "flash",
+    "prompt": "State the limit of a real function u(x, y).",
+    "steps": [
+      {"text": "", "answer": "lim u = u0 means: for every ε > 0 there is a δ > 0 so that |u - u0| < ε whenever 0 < distance from (x, y) to (x0, y0) < δ.", "why": ""}
+    ],
+    "generator": null,
+    "memory": "Every ε disk in the value gets a δ disk in the plane, and the centre itself is not used."
+  },
+  {
+    "id": "ch2-2.3-flash-limf",
+    "chapter": 2,
+    "section": "2.3",
+    "cite": {"ref": "Definition 2.4", "page": 62},
+    "kind": "flash",
+    "prompt": "State the limit of f(z).",
+    "steps": [
+      {"text": "", "answer": "lim f(z) = w0 means: for every ε > 0 there is a δ > 0 so that |f(z) - w0| < ε whenever 0 < |z - z0| < δ.", "why": ""}
+    ],
+    "generator": null,
+    "memory": "f(z) sits in the ε disk about w0 once z is in the punctured δ disk about z0."
+  },
+  {
+    "id": "ch2-2.3-flash-thm21",
+    "chapter": 2,
+    "section": "2.3",
+    "cite": {"ref": "Theorem 2.1", "page": 62},
+    "kind": "flash",
+    "prompt": "State Theorem 2.1.",
+    "steps": [
+      {"text": "", "answer": "lim f(z) = u0 + iv0 if and only if lim u = u0 and lim v = v0.", "why": ""}
+    ],
+    "generator": null,
+    "memory": "The complex limit exists exactly when both real limits do."
+  },
+  {
+    "id": "ch2-2.3-flash-thm22",
+    "chapter": 2,
+    "section": "2.3",
+    "cite": {"ref": "Theorem 2.2", "page": 64},
+    "kind": "flash",
+    "prompt": "State Theorem 2.2.",
+    "steps": [
+      {"text": "", "answer": "If lim f = A and lim g = B, then the limits of f+g, f−g, and fg are A+B, A−B, and AB. The limit of f/g is A/B when B ≠ 0.", "why": ""}
+    ],
+    "generator": null,
+    "memory": "Sums, products, and quotients pass inside a limit, when the denominator's limit is not 0."
+  },
+  {
+    "id": "ch2-2.3-flash-contu",
+    "chapter": 2,
+    "section": "2.3",
+    "cite": {"ref": "Definition 2.5", "page": 64},
+    "kind": "flash",
+    "prompt": "When is u(x, y) continuous at (x0, y0)?",
+    "steps": [
+      {"text": "", "answer": "The limit exists, the value u(x0, y0) exists, and the two are equal.", "why": ""}
+    ],
+    "generator": null,
+    "memory": "Continuous means the limit equals the value."
+  },
+  {
+    "id": "ch2-2.3-flash-contf",
+    "chapter": 2,
+    "section": "2.3",
+    "cite": {"ref": "Definition 2.6", "page": 64},
+    "kind": "flash",
+    "prompt": "When is f continuous at z0?",
+    "steps": [
+      {"text": "", "answer": "The limit exists, f(z0) exists, and the limit equals f(z0).", "why": ""}
+    ],
+    "generator": null,
+    "memory": "Same three checks as in calculus: limit, value, and they match."
+  },
+  {
+    "id": "ch2-2.3-flash-thm23",
+    "chapter": 2,
+    "section": "2.3",
+    "cite": {"ref": "Theorem 2.3", "page": 64},
+    "kind": "flash",
+    "prompt": "State Theorem 2.3.",
+    "steps": [
+      {"text": "", "answer": "f = u + iv is continuous at z0 if and only if u and v are continuous at (x0, y0).", "why": ""}
+    ],
+    "generator": null,
+    "memory": "f is continuous exactly when u and v are."
+  },
+  {
+    "id": "ch2-2.3-flash-thm24",
+    "chapter": 2,
+    "section": "2.3",
+    "cite": {"ref": "Theorem 2.4", "page": 64},
+    "kind": "flash",
+    "prompt": "State Theorem 2.4.",
+    "steps": [
+      {"text": "", "answer": "Sums, differences, products, and compositions of functions continuous at z0 are continuous there. A quotient is continuous there when the denominator is not 0 at z0.", "why": ""}
+    ],
+    "generator": null,
+    "memory": "The algebra of continuous functions stays continuous, away from a zero denominator."
+  }
+]

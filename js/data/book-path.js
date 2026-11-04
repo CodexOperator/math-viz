@@ -1,6 +1,7 @@
 // The textbook as a path. Titles and printed pages are the table of contents of
 // Howell & Mathews, Complex Analysis, 202 Updated Edition (PDF pages 6–7).
-// Chapter 4 is the walk that can be marked done. Chapter 5 opens on the
+// Chapter 2 is open: five stages, and 2.1–2.3 are the walk. Chapter 4 is the
+// walk that can be marked done from its exercises. Chapter 5 opens on the
 // exponential, and §5.1 is the walk under that picture. Sections 5.2–5.5 stay
 // titles. The other chapters are later: a door, when this site already draws
 // one, and no new page.
@@ -21,8 +22,8 @@ function deepFreeze(o) {
   return o;
 }
 
-// Chapters the router will open as their own page. 1–3 and 6–11 stay on the book.
-export const OPEN_CHAPTERS = Object.freeze([4, 5]);
+// Chapters the router will open as their own page. 1, 3, and 6–11 stay on the book.
+export const OPEN_CHAPTERS = Object.freeze([2, 4, 5]);
 
 export const BOOK_CHAPTERS = deepFreeze([
   {
@@ -37,7 +38,7 @@ export const BOOK_CHAPTERS = deepFreeze([
     ],
   },
   {
-    n: 2, title: 'Complex Functions', page: 43, open: false, door: 'mappings',
+    n: 2, title: 'Complex Functions', page: 43, open: true, door: 'mappings',
     sections: [
       { id: '2.1', title: 'Functions and Linear Mappings', page: 43 },
       { id: '2.2', title: 'The Mappings w = zⁿ and w = z¹⁄ⁿ', page: 55 },

@@ -1,0 +1,225 @@
+// A local card for data/practice/ch2.json, until js/practice/ lands.
+// One step at a time. A generator item computes its answer. A flash card is one
+// card: the back stays closed until asked, and Again / Knew it sets the next due date.
+
+import { generate, answerMatches } from '../practice/gen/ch2-maps.js';
+import { loadFlashBox, saveFlashBox } from '../book/ch2-progress.js';
+import { h, appendRich } from './test2-ui.js';
+
+function rich(el, text) {
+  const src = String(text == null ? '' : text).replace(/\\\(/g, '$').replace(/\\\)/g, '$');
+  appendRich(el, src);
+}
+
+function stepOf(item, made) {
+  if (made) {
+    return {
+      text: made.prompt,
+      answer: made.answer,
+      accept: made.accept || [],
+      choices: made.choices || null,
+      why: made.why,
+      values: made.values,
+    };
+  }
+  const step = (item.steps && item.steps[0]) || {};
+  return step;
+}
+
+export function mountPractice(host, items, store) {
+  const list = (items || []).filter((item) => item && item.section === host.dataset.section);
+  const work = list.filter((item) => item.kind !== 'flash');
+  const flashes = list.filter((item) => item.kind === 'flash');
+  if (!work.length && !flashes.length) {
+    host.append(h('p', { class: 'book-page' }, 'No practice on this stage yet.'));
+    return function unmount() {};
+  }
+  for (const item of work) host.append(card(item, store));
+  if (flashes.length) host.append(flashDeck(flashes, store, host.dataset.section || 'stage'));
+  return function unmount() {};
+}
+
+function card(item, store) {
+  const id = item.id;
+  const node = h('article', { class: 'card problem-card chapter-card ch2-card', id: `ch2-card-${id}` });
+  const cite = item.cite ? `${item.cite.ref}, page ${item.cite.page}` : item.section;
+  node.append(h('h3', { id: `ch2-card-title-${id}` }, cite));
+  const prompt = h('div', { id: `ch2-card-prompt-${id}` });
+  node.append(prompt);
+  const why = h('p', { class: 'hint-note', id: `ch2-card-why-${id}`, hidden: '' });
+  const memory = h('p', { class: 'ch2-memory', id: `ch2-card-memory-${id}`, hidden: '' });
+  if (item.memory) rich(memory, item.memory);
+
+  let seed = 1;
+  let made = item.generator ? generate(seed, item.generator.params || {}) : null;
+  let index = 0;
+  const body = h('div', { class: 'ch2-step', id: `ch2-card-step-${id}` });
+  node.append(body, why, memory);
+
+  function current() {
+    if (made) return stepOf(item, made);
+    return (item.steps || [])[index] || {};
+  }
+
+  function paintPrompt() {
+    prompt.replaceChildren();
+    const step = current();
+    const text = made ? made.prompt : (index === 0 ? `${item.prompt} ${step.text || ''}` : step.text || '');
+    rich(prompt, text);
+  }
+
+  function showWhy(step) {
+    why.hidden = false;
+    why.replaceChildren();
+    rich(why, step.why || '');
+    if (!made && index < (item.steps || []).length - 1) {
+      const next = h('button', { type: 'button', class: 'btn', id: `ch2-card-next-${id}` }, 'Next step');
+      next.addEventListener('click', () => {
+        index += 1;
+        why.hidden = true;
+        paintPrompt();
+        paintBody();
+      });
+      why.append(document.createTextNode(' '));
+      why.append(next);
+    } else {
+      memory.hidden = false;
+    }
+  }
+
+  function paintBody() {
+    body.replaceChildren();
+    const step = current();
+    const choices = made ? made.choices : step.choices;
+    const useMc = item.kind.endsWith('mc') || (made && made.kind === 'mc');
+    if (useMc && choices) {
+      const row = h('div', { class: 'ch2-choices', id: `ch2-card-choices-${id}` });
+      choices.forEach((choice, i) => {
+        const b = h('button', { type: 'button', class: 'btn', id: `ch2-card-choice-${id}-${i}` }, '');
+        rich(b, choice);
+        b.addEventListener('click', () => {
+          const ok = answerMatches(choice, { answer: step.answer, accept: step.accept, values: step.values });
+          b.dataset.right = ok ? 'true' : 'false';
+          if (!ok) return;
+          for (const other of row.querySelectorAll('button')) other.disabled = true;
+          showWhy(step);
+        });
+        row.append(b);
+      });
+      body.append(row);
+    } else {
+      const field = h('label', { class: 'ch2-blank', id: `ch2-card-blank-${id}` }, 'Your answer');
+      const input = h('input', { type: 'text', id: `ch2-card-input-${id}`, autocomplete: 'off', spellcheck: 'false' });
+      const check = h('button', { type: 'button', class: 'btn', id: `ch2-card-check-${id}` }, 'Check');
+      const note = h('p', { class: 'book-page', id: `ch2-card-miss-${id}`, hidden: '' }, 'Not yet.');
+      const grade = () => {
+        const ok = answerMatches(input.value, { answer: step.answer, accept: step.accept, values: step.values });
+        input.dataset.right = ok ? 'true' : 'false';
+        note.hidden = ok;
+        if (!ok) return;
+        input.disabled = true;
+        check.disabled = true;
+        showWhy(step);
+      };
+      check.addEventListener('click', grade);
+      input.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter') {
+          ev.preventDefault();
+          grade();
+        }
+      });
+      field.append(input);
+      body.append(field, check, note);
+    }
+    if (item.generator) {
+      const another = h('button', { type: 'button', class: 'btn', id: `ch2-card-another-${id}` }, 'Another');
+      another.addEventListener('click', () => {
+        seed += 1;
+        made = generate(seed, item.generator.params || {});
+        index = 0;
+        why.hidden = true;
+        memory.hidden = true;
+        paintPrompt();
+        paintBody();
+      });
+      body.append(another);
+    }
+  }
+
+  paintPrompt();
+  paintBody();
+  return node;
+}
+
+function flashDeck(items, store, section) {
+  let at = 0;
+  const sid = String(section).replace(/\./g, '-');
+  const node = h('article', { class: 'card problem-card chapter-card ch2-card', id: `ch2-flash-deck-${sid}` });
+  const title = h('h3', { id: `ch2-flash-title-${sid}` }, 'Card');
+  const prompt = h('div', { id: `ch2-flash-prompt-${sid}` });
+  const show = h('button', { type: 'button', class: 'btn', id: `ch2-flash-show-${sid}` }, 'Show the back');
+  const why = h('p', { class: 'hint-note', id: `ch2-flash-back-${sid}`, hidden: '' });
+  const memory = h('p', { class: 'ch2-memory', id: `ch2-flash-memory-${sid}`, hidden: '' });
+  const again = h('button', { type: 'button', class: 'btn', id: `ch2-flash-again-${sid}`, hidden: '' }, 'Again');
+  const knew = h('button', { type: 'button', class: 'btn', id: `ch2-flash-knew-${sid}`, hidden: '' }, 'Knew it');
+  const due = h('p', { class: 'book-page', id: `ch2-flash-due-${sid}` });
+  node.append(title, prompt, show, why, memory, h('div', { class: 'problem-actions' }, again, knew), due);
+
+  function current() {
+    return items[at] || items[0];
+  }
+
+  function paint() {
+    const item = current();
+    const cite = item.cite ? `${item.cite.ref}, page ${item.cite.page}` : item.section;
+    title.textContent = cite;
+    prompt.replaceChildren();
+    rich(prompt, item.prompt);
+    show.hidden = false;
+    why.hidden = true;
+    why.replaceChildren();
+    memory.hidden = true;
+    memory.replaceChildren();
+    if (item.memory) rich(memory, item.memory);
+    again.hidden = true;
+    knew.hidden = true;
+    const box = loadFlashBox(store, item.id);
+    const wait = box.due > Date.now();
+    const place = `${at + 1} of ${items.length}`;
+    due.textContent = wait ? `${place}. Not due yet.` : (box.box ? `${place}. Box ${box.box}.` : place);
+  }
+
+  function openBack() {
+    const item = current();
+    const back = (item.steps && item.steps[0]) || {};
+    show.hidden = true;
+    why.hidden = false;
+    why.replaceChildren();
+    rich(why, back.answer || '');
+    memory.hidden = false;
+    again.hidden = false;
+    knew.hidden = false;
+  }
+
+  function grade(knewIt) {
+    const item = current();
+    saveFlashBox(store, item.id, knewIt, Date.now());
+    const now = Date.now();
+    let next = -1;
+    for (let k = 1; k <= items.length; k += 1) {
+      const i = (at + k) % items.length;
+      if (loadFlashBox(store, items[i].id).due <= now) {
+        next = i;
+        break;
+      }
+    }
+    at = next === -1 ? (at + 1) % items.length : next;
+    paint();
+  }
+
+  show.addEventListener('click', openBack);
+  again.addEventListener('click', () => grade(false));
+  knew.addEventListener('click', () => grade(true));
+  paint();
+  return node;
+}

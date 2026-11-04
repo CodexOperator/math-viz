@@ -5,6 +5,8 @@
 import { stationById } from '../registry.js';
 import { BOOK, sectionHref } from '../data/book.js';
 import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, bookChapter, chapter4ExerciseIds, chapter5ExerciseIds, CHAPTER_PICTURE, pictureHref } from '../data/book-path.js';
+import { loadChapter2Marks } from '../book/ch2-progress.js';
+import { mount as mountChapter2 } from './chapter2.js';
 import { test2ProblemById } from '../data/test2-problems.js';
 import { loadSharedTicks, saveSharedTicks, toggleTick, sectionFinished, chapterTally } from '../book/progress.js';
 import { h, appendRich, sourceTag } from './test2-ui.js';
@@ -34,6 +36,7 @@ function nextSentence(t) {
 export function mount(section, ctx) {
   const spec = ctx.book;
   if (!spec || spec.kind === 'roadmap') return mountRoadmap(section, ctx, spec);
+  if (spec.chapter === 2) return mountChapter2(section, ctx, spec.focus);
   if (spec.chapter === 4) return mountChapter4(section, ctx, spec.focus);
   if (spec.chapter === 5) return mountChapter5(section, ctx, spec.focus);
   return mountRoadmap(section, ctx, { kind: 'roadmap', chapter: null, focus: null });
@@ -42,6 +45,7 @@ export function mount(section, ctx) {
 function mountRoadmap(el, ctx, spec) {
   const store = ctx.store;
   let ticks = ticksOf(store);
+  const ch2 = loadChapter2Marks(store);
   const tally = () => chapterTally(CHAPTER_4.sections, ticks);
 
   const status = h('p', { class: 'book-status', id: 'book-status' });
@@ -62,16 +66,30 @@ function mountRoadmap(el, ctx, spec) {
     for (const node of list.querySelectorAll('.book-node')) {
       const n = Number(node.getAttribute('data-chapter'));
       let state = 'later';
-      if (n === 4) state = t.complete ? 'done' : 'next';
+      if (n === 2) state = 'open';
+      else if (n === 4) state = t.complete ? 'done' : 'next';
       else if (n === 5) state = 'open';
       node.setAttribute('data-state', state);
       const flag = node.querySelector('.book-flag');
       if (!flag) continue;
-      if (n === 4) flag.textContent = t.complete ? 'Done' : 'Next';
+      if (n === 2) flag.textContent = 'Open';
+      else if (n === 4) flag.textContent = t.complete ? 'Done' : 'Next';
       else if (n === 5) flag.textContent = 'Open';
       else flag.textContent = 'Later';
     }
-    for (const row of list.querySelectorAll('[data-section]')) {
+    for (const row of list.querySelectorAll('#book-sections-2 [data-section]')) {
+      const id = row.getAttribute('data-section');
+      const mark = row.querySelector('.book-section-mark');
+      if (id === '2.4' || id === '2.5') {
+        row.setAttribute('data-state', 'ahead');
+        if (mark) mark.textContent = '';
+        continue;
+      }
+      const finished = ch2[id] === true;
+      row.setAttribute('data-state', finished ? 'done' : 'ahead');
+      if (mark) mark.textContent = finished ? 'Done' : '';
+    }
+    for (const row of list.querySelectorAll('#book-sections-4 [data-section]')) {
       const id = row.getAttribute('data-section');
       const section = CHAPTER_4.sections.find((s) => s.id === id);
       if (!section) continue;
@@ -90,17 +108,26 @@ function mountRoadmap(el, ctx, spec) {
         document.createTextNode(` ${ch.title}`)),
       h('p', { class: 'book-page', id: `book-page-${ch.n}` }, `Page ${ch.page}`));
     const kids = [head];
-    if (ch.n === 4) {
-      const sections = h('ol', { class: 'book-sections', id: 'book-sections-4' });
+    if (ch.n === 2 || ch.n === 4) {
+      const sections = h('ol', { class: 'book-sections', id: `book-sections-${ch.n}` });
       for (const s of ch.sections) {
+        const label = `${s.id} ${s.title}`;
+        const name = ch.n === 2
+          ? h('a', { href: `#chapter-2-${slug(s.id)}` }, label)
+          : h('span', null, label);
         sections.append(h('li', { 'data-section': s.id, id: `book-section-${slug(s.id)}` },
-          h('span', null, `${s.id} ${s.title}`),
+          name,
           h('span', { class: 'book-section-page' }, `p. ${s.page}`),
           h('span', { class: 'book-section-mark' }, '')));
       }
       kids.push(sections);
     }
-    if (!ch.open && ch.door) {
+    if (ch.n === 2) {
+      kids.push(h('p', { class: 'book-door', id: 'book-open-2' },
+        h('a', { href: '#chapter-2' }, 'Open Chapter 2'),
+        '.'));
+    }
+    if (ch.door) {
       const st = stationById(ch.door);
       if (st) {
         kids.push(h('p', { class: 'book-door', id: `book-door-${ch.n}` },

@@ -213,7 +213,7 @@ export function start() {
     const note = document.getElementById('site-footer-note');
     if (!note) return;
     if (bookRoute) {
-      note.textContent = 'The book path for MAT 412. Chapters 4 and 5 are open. The other chapters are later. It runs in your browser and works offline.';
+      note.textContent = 'The book path for MAT 412. Chapters 2, 4, and 5 are open. The other chapters are later. It runs in your browser and works offline.';
       return;
     }
     note.textContent = mapId === 'test2'

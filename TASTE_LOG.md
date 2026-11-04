@@ -1330,3 +1330,16 @@ Nothing. No slider, no scrubber, no spring, no second clock.
 Yes. One batch, then stop. It is the one cut above.
 
 The hold, the button, and the frame clock are the lesson, and they hold. Something real is left, and it is the frame a mouse drag draws around the square. A touch does not draw it. After that frame is gone, nothing real is left of this walk's touch.
+
+## Chapter 2, batch 1
+
+Branch `cursor/chapter-2`. The page is a mountain of five stages in the book-path voice. Stages 2.1–2.3 each have one drag: green in the z plane, purple in the w plane, blue the set, orange its image. The claim flips. 2.4 and 2.5 are titles and citations.
+
+Checked in headless Chrome at 390×844 and at a wide window, and by dragging. No sideways scroll at 390 or at 360. Both planes of §2.1 sit on the phone together; the changing sentence starts at the bottom edge of that window. §2.2 shows the line x = 2 and the parabola. §2.3 starts with the point outside the disk and the drag puts the image inside. The linear generator’s Another button writes a new computed map. The three required checks passed.
+
+## Next batch
+
+- Draw §2.4 (the jump across the branch cut) and §2.5 (lines and circles under 1/z). The sphere is already a station.
+- When `js/practice/` lands, render `data/practice/ch2.json` with that engine and retire the local card.
+- Lift the §2.1 claim fully onto the 390px first screen. It currently starts on the last pixels.
+- A disk under a linear map, with centre and radius computed, beside the point generator.

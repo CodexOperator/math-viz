@@ -1,0 +1,329 @@
+// Three Chapter 2 pictures. Each one is a drag: green in the z plane, purple in the w plane.
+// Blue is the set you are testing. Orange is the set it lands on.
+// The claim is true of one place and false of another. No second control, no clock.
+
+import { createFrame } from '../core/anim.js';
+import { h, appendRich } from './test2-ui.js';
+
+const SIZE = 320;
+const HIT = 44;
+const NS = 'http://www.w3.org/2000/svg';
+
+function svgEl(name, attrs) {
+  const node = document.createElementNS(NS, name);
+  for (const [k, v] of Object.entries(attrs || {})) node.setAttribute(k, String(v));
+  return node;
+}
+
+function makeView(cx, cy, half) {
+  const span = half * 2;
+  return {
+    cx, cy, half,
+    X: (re) => ((re - (cx - half)) / span) * SIZE,
+    Y: (im) => ((cy + half - im) / span) * SIZE,
+    R: (radius) => (radius / span) * SIZE,
+    re: (px) => (cx - half) + (px / SIZE) * span,
+    im: (py) => (cy + half) - (py / SIZE) * span,
+    clamp(z) {
+      return {
+        re: Math.min(cx + half, Math.max(cx - half, z.re)),
+        im: Math.min(cy + half, Math.max(cy - half, z.im)),
+      };
+    },
+    inside(z) {
+      return Math.abs(z.re - cx) <= half + 1e-9 && Math.abs(z.im - cy) <= half + 1e-9;
+    },
+  };
+}
+
+function axes(view) {
+  const x = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '1.5' });
+  const y = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '1.5' });
+  x.setAttribute('x1', view.X(view.cx - view.half));
+  x.setAttribute('x2', view.X(view.cx + view.half));
+  x.setAttribute('y1', view.Y(0));
+  x.setAttribute('y2', view.Y(0));
+  y.setAttribute('y1', view.Y(view.cy - view.half));
+  y.setAttribute('y2', view.Y(view.cy + view.half));
+  y.setAttribute('x1', view.X(0));
+  y.setAttribute('x2', view.X(0));
+  return [x, y];
+}
+
+function plane(id, label) {
+  const svg = svgEl('svg', {
+    id, viewBox: `0 0 ${SIZE} ${SIZE}`, tabindex: '0', role: 'img', 'aria-label': label,
+  });
+  svg.classList.add('ch2-stage');
+  return svg;
+}
+
+function putLine(el, view, re1, im1, re2, im2) {
+  el.setAttribute('x1', view.X(re1));
+  el.setAttribute('y1', view.Y(im1));
+  el.setAttribute('x2', view.X(re2));
+  el.setAttribute('y2', view.Y(im2));
+}
+
+// Example 2.9, page 50. w = iz + i sends Re z ≥ 1 onto Im w ≥ 2.
+export function linearImage(z) {
+  return { re: -z.im, im: z.re + 1 };
+}
+
+export function linearClaim(z) {
+  const holds = z.re >= 1 - 1e-9;
+  return {
+    holds,
+    text: holds
+      ? 'The image is on or above the line $\\operatorname{Im} w = 2$.'
+      : 'The image is below the line $\\operatorname{Im} w = 2$.',
+  };
+}
+
+// Example 2.12 and Exercise 1(b), page 59. The line x = 2 maps to u = 4 - v^2/16.
+export function squareImage(z) {
+  return { re: z.re * z.re - z.im * z.im, im: 2 * z.re * z.im };
+}
+
+export const POWER_TOLERANCE = 0.16;
+
+export function powerClaim(z) {
+  const holds = Math.abs(z.re - 2) <= POWER_TOLERANCE;
+  return {
+    holds,
+    text: holds
+      ? 'The image sits on the parabola $u = 4 - v^2/16$.'
+      : 'The image has left the parabola of the line $x = 2$.',
+  };
+}
+
+// Example 2.16, page 62. f(z) = conjugate(z), and δ = ε.
+export const LIMIT_Z0 = Object.freeze({ re: 1, im: 1 });
+export const LIMIT_EPS = 0.75;
+
+export function conjugateImage(z) {
+  return { re: z.re, im: -z.im };
+}
+
+export function limitClaim(z) {
+  const dx = z.re - LIMIT_Z0.re;
+  const dy = z.im - LIMIT_Z0.im;
+  const dist = Math.hypot(dx, dy);
+  if (dist <= 1e-6) {
+    return { holds: false, where: 'at', text: 'Definition 2.4 skips $z_0$. Move off it.' };
+  }
+  if (dist < LIMIT_EPS) {
+    return { holds: true, where: 'in', text: 'The image is inside the disk of radius $0.75$. Here $\\delta = \\varepsilon$.' };
+  }
+  return { holds: false, where: 'out', text: 'The image is outside that disk.' };
+}
+
+function mountPair(parent, opts) {
+  const zView = opts.zView;
+  const wView = opts.wView;
+  const zSvg = plane(`${opts.id}-stage`, opts.aria);
+  const wSvg = plane(`${opts.id}-image`, opts.imageAria);
+  wSvg.setAttribute('tabindex', '-1');
+  zSvg.setAttribute('aria-keyshortcuts', 'ArrowLeft ArrowRight ArrowUp ArrowDown');
+
+  for (const node of axes(zView)) zSvg.append(node);
+  for (const node of axes(wView)) wSvg.append(node);
+  opts.drawZ(zSvg, zView);
+  opts.drawW(wSvg, wView);
+
+  const green = svgEl('circle', { r: '7', fill: 'var(--input)' });
+  const purple = svgEl('circle', { r: '7', fill: 'var(--output)' });
+  zSvg.append(green);
+  wSvg.append(purple);
+
+  const claim = h('p', { id: `${opts.id}-claim`, class: 'ch2-claim', 'aria-live': 'polite' });
+  const observe = h('p', { id: `${opts.id}-observe`, class: 'ch2-observe' }, opts.observe);
+  const maps = h('div', { class: 'ch2-maps', id: `${opts.id}-maps` },
+    h('figure', { class: 'ch2-plane' }, zSvg, h('figcaption', { class: 'book-page' }, 'z plane')),
+    h('figure', { class: 'ch2-plane' }, wSvg, h('figcaption', { class: 'book-page' }, 'w plane')));
+  parent.append(maps, observe, claim);
+
+  let z = { re: opts.start.re, im: opts.start.im };
+  let claimText = '';
+  const frame = createFrame();
+
+  function paint() {
+    const here = zView.clamp(z);
+    z = here;
+    const w = opts.image(here);
+    const spoken = opts.claim(here);
+    green.setAttribute('cx', zView.X(here.re));
+    green.setAttribute('cy', zView.Y(here.im));
+    const shown = wView.inside(w) ? w : wView.clamp(w);
+    purple.setAttribute('cx', wView.X(shown.re));
+    purple.setAttribute('cy', wView.Y(shown.im));
+    purple.setAttribute('opacity', wView.inside(w) ? '1' : '0.45');
+    if (spoken.text !== claimText) {
+      claimText = spoken.text;
+      claim.replaceChildren();
+      appendRich(claim, claimText);
+    }
+    claim.dataset.holds = spoken.holds ? 'true' : 'false';
+    zSvg.dataset.re = String(here.re);
+    zSvg.dataset.im = String(here.im);
+    zSvg.dataset.holds = spoken.holds ? 'true' : 'false';
+  }
+
+  function at(ev) {
+    const rect = zSvg.getBoundingClientRect();
+    const px = ((ev.clientX - rect.left) / Math.max(1, rect.width)) * SIZE;
+    const py = ((ev.clientY - rect.top) / Math.max(1, rect.height)) * SIZE;
+    return zView.clamp({ re: zView.re(px), im: zView.im(py) });
+  }
+
+  function onDot(ev) {
+    const rect = zSvg.getBoundingClientRect();
+    const cx = Number(green.getAttribute('cx'));
+    const cy = Number(green.getAttribute('cy'));
+    const x = rect.left + (cx / SIZE) * rect.width;
+    const y = rect.top + (cy / SIZE) * rect.height;
+    return Math.hypot(ev.clientX - x, ev.clientY - y) <= HIT;
+  }
+
+  let drag = null;
+  function onDown(ev) {
+    if (ev.button != null && ev.button !== 0) return;
+    if (!onDot(ev)) return;
+    drag = { id: ev.pointerId };
+    zSvg.style.cursor = 'grabbing';
+    zSvg.setPointerCapture(ev.pointerId);
+    ev.preventDefault();
+  }
+  function onMove(ev) {
+    if (!drag || ev.pointerId !== drag.id) {
+      zSvg.style.cursor = onDot(ev) ? 'grab' : 'default';
+      return;
+    }
+    z = at(ev);
+    frame.arm(paint);
+  }
+  function onUp(ev) {
+    if (!drag || ev.pointerId !== drag.id) return;
+    z = at(ev);
+    drag = null;
+    zSvg.style.cursor = onDot(ev) ? 'grab' : 'default';
+    frame.stop();
+    paint();
+    try { zSvg.releasePointerCapture(ev.pointerId); } catch { /* already released */ }
+  }
+  zSvg.addEventListener('pointerdown', onDown);
+  zSvg.addEventListener('pointermove', onMove);
+  zSvg.addEventListener('pointerup', onUp);
+  zSvg.addEventListener('pointercancel', onUp);
+  zSvg.addEventListener('keydown', (ev) => {
+    const step = ev.shiftKey ? 0.4 : 0.15;
+    const move = { ArrowRight: [step, 0], ArrowLeft: [-step, 0], ArrowUp: [0, step], ArrowDown: [0, -step] }[ev.key];
+    if (!move) return;
+    ev.preventDefault();
+    z = zView.clamp({ re: z.re + move[0], im: z.im + move[1] });
+    frame.stop();
+    paint();
+  });
+
+  paint();
+
+  return function unmount() {
+    frame.stop();
+    zSvg.removeEventListener('pointerdown', onDown);
+    zSvg.removeEventListener('pointermove', onMove);
+    zSvg.removeEventListener('pointerup', onUp);
+    zSvg.removeEventListener('pointercancel', onUp);
+  };
+}
+
+export function mountLinear(parent) {
+  const zView = makeView(1, 0, 2.5);
+  const wView = makeView(0, 2, 2.6);
+  const cut = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2.5' });
+  const imageLine = svgEl('line', { stroke: 'var(--polar)', 'stroke-width': '2.5' });
+  return mountPair(parent, {
+    id: 'ch2-linear',
+    aria: 'Domain plane. Drag the green point. The blue line is Re z = 1.',
+    imageAria: 'Image plane. The orange line is Im w = 2. Purple is the image of the green point.',
+    observe: 'Drag the green point across the blue line.',
+    zView, wView,
+    start: { re: 0.3, im: 0.4 },
+    image: linearImage,
+    claim: linearClaim,
+    drawZ(svg, view) {
+      putLine(cut, view, 1, view.cy - view.half, 1, view.cy + view.half);
+      svg.append(cut);
+    },
+    drawW(svg, view) {
+      putLine(imageLine, view, view.cx - view.half, 2, view.cx + view.half, 2);
+      svg.append(imageLine);
+    },
+  });
+}
+
+export function mountPower(parent) {
+  const zView = makeView(1.7, 0, 1.5);
+  const wView = makeView(3, 0, 8);
+  const cut = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2.5' });
+  const curve = svgEl('polyline', {
+    fill: 'none', stroke: 'var(--polar)', 'stroke-width': '2.5', 'stroke-linejoin': 'round',
+  });
+  return mountPair(parent, {
+    id: 'ch2-power',
+    aria: 'Domain plane. Drag the green point. The blue line is x = 2.',
+    imageAria: 'Image plane. The orange curve is the parabola u = 4 - v squared over 16. Purple is z squared.',
+    observe: 'Drag the green point onto the blue line.',
+    zView, wView,
+    start: { re: 1, im: 0.5 },
+    image: squareImage,
+    claim: powerClaim,
+    drawZ(svg, view) {
+      putLine(cut, view, 2, view.cy - view.half, 2, view.cy + view.half);
+      svg.append(cut);
+    },
+    drawW(svg, view) {
+      const pts = [];
+      for (let v = -6; v <= 6.01; v += 0.25) {
+        const u = 4 - (v * v) / 16;
+        pts.push(`${view.X(u)},${view.Y(v)}`);
+      }
+      curve.setAttribute('points', pts.join(' '));
+      svg.append(curve);
+    },
+  });
+}
+
+export function mountLimit(parent) {
+  const zView = makeView(LIMIT_Z0.re, LIMIT_Z0.im, 2);
+  const wView = makeView(LIMIT_Z0.re, -LIMIT_Z0.im, 2);
+  const disk = svgEl('circle', { fill: 'none', stroke: 'var(--cart)', 'stroke-width': '2.5' });
+  const eps = svgEl('circle', { fill: 'none', stroke: 'var(--polar)', 'stroke-width': '2.5' });
+  const z0 = svgEl('circle', { r: '3.5', fill: 'var(--cart)' });
+  const w0 = svgEl('circle', { r: '3.5', fill: 'var(--polar)' });
+  return mountPair(parent, {
+    id: 'ch2-limit',
+    aria: 'Domain plane. Drag the green point toward 1 + i. The blue circle has radius 0.75.',
+    imageAria: 'Image plane for the conjugate. The orange circle has radius 0.75 about 1 - i. Purple is the conjugate.',
+    observe: 'Drag the green point into the blue disk, and off the centre.',
+    zView, wView,
+    start: { re: LIMIT_Z0.re + 1.15, im: LIMIT_Z0.im + 0.35 },
+    image: conjugateImage,
+    claim: limitClaim,
+    drawZ(svg, view) {
+      disk.setAttribute('cx', view.X(LIMIT_Z0.re));
+      disk.setAttribute('cy', view.Y(LIMIT_Z0.im));
+      disk.setAttribute('r', view.R(LIMIT_EPS));
+      z0.setAttribute('cx', view.X(LIMIT_Z0.re));
+      z0.setAttribute('cy', view.Y(LIMIT_Z0.im));
+      svg.append(disk, z0);
+    },
+    drawW(svg, view) {
+      eps.setAttribute('cx', view.X(LIMIT_Z0.re));
+      eps.setAttribute('cy', view.Y(-LIMIT_Z0.im));
+      eps.setAttribute('r', view.R(LIMIT_EPS));
+      w0.setAttribute('cx', view.X(LIMIT_Z0.re));
+      w0.setAttribute('cy', view.Y(-LIMIT_Z0.im));
+      svg.append(eps, w0);
+    },
+  });
+}
