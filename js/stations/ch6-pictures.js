@@ -324,7 +324,7 @@ export function mountDeform(parent) {
     claim: 'ch6-deform-claim',
     play: 'ch6-deform-play',
     frame: 'ch6-deform-frame',
-  }, 'Two circles and a pole at the origin. Drag the green handle. The purple circle stays. The integral changes when the pole leaves the green circle.');
+  }, 'Two positively oriented circles and the pole of 1/z at the origin. Drag the green handle. The purple circle stays. The green integral changes when that pole leaves the green circle.');
   const map = world(5.6, 0, 0);
   const axisX = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2' });
   const axisY = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2' });

@@ -1470,3 +1470,23 @@ The gesture is already the one a student came for. Play walks the integral, a dr
 ### What to keep
 
 The three pictures, the one drag, and the one clock. The claim that flips, the full-turn blank that fills at the full turn, and Stage complete at 44px. The four colours on the marks, in light and in dark. The 6.2 choices, the why after the tap, and Another. The cites, the exam lines, and the summit sentences. The kicker and the section card. The outline that a pointer drag leaves off the square.
+
+## reviewer (ch6 batch 1)
+
+Branch `cursor/chapter-6`, draft PR #45, reviewed at `e8841fa` against Howell & Mathews, Complex Analysis, 202 Updated Edition (the PDF at complexanalysis.org, 471 pages). Preview `https://ch6-preview.complexanalysis.pages.dev/#chapter-6` at 390×844, then the fixed page locally at 390×844 and 1280×800, light and dark. No console errors. No sideways scroll. Arrow Left on the green circle carries the pole inside and fills \(2\pi i\). Arrow Right drops it and fills \(0\).
+
+Verdict: **ACCEPT WITH FIXES**. The fixes are on this branch.
+
+Checked against the printed pages: Definition 6.1 and Example 6.1 are page 163, and \((t-i)^3\) from 0 to 1 is \(-5/4\). Definition 6.2 and Example 6.6 are page 170. Theorem 6.1 and Example 6.7 are page 172, and the segment integral is \(\exp(2+i\pi/4)-1\). The eight-step midpoint sum rounds to \(4.23+5.20i\), the total the book prints on page 171. Exercise 6.2.3 starts on page 178, and \(\int z^2\,dz\) on the upper unit semicircle is \(-2/3\). Theorem 6.5 is stated on page 183. Cauchy's proof, Equation (6.28), and the continuous-\(f'\) hypothesis are on page 184, so the proof cards' page 184 is the proof, not a mis-cite of the statement. Example 6.12 is page 186. Theorem 6.6 is page 187. Corollary 6.1 is page 188: \(2\pi i\) for \(1/(z-z_0)\), and \(0\) for every other integer power \(1/(z-z_0)^n\). Theorems 6.8, 6.9, 6.10, 6.13, and 6.18 are pages 193, 194, 197, 203, and 206. Section openers 163, 167, 181, 193, 197, 203 match the contents. Circle and segment generator values match an independent quadrature on 60 seeds. Live code does not import `kit/`. `js/core/map-route.js` still matches the kit copy.
+
+What was wrong, and the change:
+
+1. The 6.3 sentence said both integrals are \(2\pi i\), then \(0\) and \(2\pi i\), and never named a function. That value is \(\int dz/z\) on a positively oriented circle (Corollary 6.1), not the integral of a general pole and not the entire functions in Example 6.12. The claim, the blank, and the instruction now say \(1/z\). Dropping the pole still makes the green integral \(0\) and leaves the purple integral \(2\pi i\).
+2. The exam line "a half period integrates to \(2i\)" is false. \(\int_\alpha^{\alpha+\pi} e^{it}\,dt = 2ie^{i\alpha}\), which is \(2i\) only when \(\alpha\) is a multiple of \(2\pi\). Any full period is \(0\). The sheet and the flash memory now say so. The picture's own half turn, from \(0\) to \(\pi\), is still \(2i\).
+3. Segment cards cited Theorem 6.1, page 172, as the reason an antiderivative is evaluated at the ends. Theorem 6.1 is the parametrization. The note now says that.
+4. Circle cards cited Corollary 6.1 when the pole was outside. The corollary needs \(z_0\) inside. Outside, including a polynomial, the cite is Theorem 6.5, page 183. Inside and not the power \(-1\), the cite stays Corollary 6.1.
+5. The checker rejected equivalents it listed: \(e^{2+i\pi/4}-1\), \(2+\frac{i\pi}{4}\), \(ux-vy\), \(0+0i\), and a parenthesized Green's integrand. Those forms now match.
+
+Left as is: within \(0.06\) of the green circle the sentence says the pole is on it and the integral is not defined. Exactly on the circle that is true. A hair inside, the integral of \(1/z\) is still \(2\pi i\). The band is the width of the orange dot.
+
+Keep: the three pictures, the page cites above, Example 6.1's \(-5/4\), the eight-step sum beside \(\exp(2+i\pi/4)-1\), Cauchy's proof blanks (the split, Green's theorem, Cauchy-Riemann, and \(0\)), and the computed generators.

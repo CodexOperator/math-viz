@@ -26,18 +26,24 @@ function dollars(src) {
 }
 
 function canon(src) {
-  return dollars(src)
-    .toLowerCase()
-    .replace(/\$/g, '')
-    .replace(/\\,/g, '')
-    .replace(/\\ /g, '')
-    .replace(/[{}]/g, '')
-    .replace(/\\frac\s*([a-z0-9]+)\s*([a-z0-9]+)/g, '$1/$2')
-    .replace(/\\pi/g, 'π')
-    .replace(/\\exp/g, 'exp')
-    .replace(/\\/g, '')
-    .replace(/\s+/g, '')
-    .replace(/π/g, 'pi');
+  let s = dollars(src).toLowerCase().replace(/\$/g, '');
+  s = s.replace(/\\,/g, '').replace(/\\ /g, '');
+  s = s.replace(/\\exp/g, 'exp');
+  let prev;
+  do {
+    prev = s;
+    s = s.replace(/\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, '($1)/($2)');
+  } while (s !== prev);
+  s = s.replace(/e\s*\^\s*\{([^{}]*)\}/g, 'exp($1)');
+  s = s.replace(/e\s*\^\s*([a-z0-9]+)/g, 'exp($1)');
+  s = s.replace(/[{}]/g, '');
+  s = s.replace(/\\pi/g, 'π');
+  s = s.replace(/\\/g, '');
+  s = s.replace(/[*_()]/g, '');
+  s = s.replace(/\s+/g, '');
+  s = s.replace(/π/g, 'pi');
+  if (s === '0+0i') s = '0';
+  return s;
 }
 
 function matches(step, typed) {

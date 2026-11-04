@@ -194,15 +194,17 @@ export function deformState(cx) {
   return d < DEFORM_RADIUS ? 'inside' : 'outside';
 }
 
+// Both circles are positively oriented and the integrand is 1/z.
+// Inside: Corollary 6.1, page 188. Outside the green circle: Theorem 6.5, page 183.
 export function claim63(cx) {
   const where = deformState(cx);
   if (where === 'inside') {
-    return { holds: true, where, text: 'The pole stays inside both circles, so both integrals are $2\\pi i$.' };
+    return { holds: true, where, text: 'The pole of $1/z$ stays inside both circles, so both integrals are $2\\pi i$.' };
   }
   if (where === 'edge') {
-    return { holds: false, where, text: 'The pole is on the green circle. The integral stops being defined.' };
+    return { holds: false, where, text: 'The pole of $1/z$ is on the green circle. The integral over that circle is not defined.' };
   }
-  return { holds: false, where, text: 'The green circle has dropped the pole. Its integral is $0$. The purple circle is still $2\\pi i$.' };
+  return { holds: false, where, text: 'The green circle has dropped the pole of $1/z$. Its integral is $0$. The purple circle still encloses the pole, so its integral is $2\\pi i$.' };
 }
 
 export function onSegment(pole, start, end) {
@@ -307,11 +309,7 @@ export function generateCircle(params, seed) {
   const cTex = fmtPole(center.re, center.im);
   const circle = center.re === 0 && center.im === 0 ? `|z|=${radius}` : `|z-(${cTex})|=${radius}`;
   const integrand = powerTex(pole.re, pole.im, n);
-  const why = value.tex === '2\\pi i'
-    ? 'Corollary 6.1, page 188: the pole is inside and the power is $-1$, so the integral is $2\\pi i$.'
-    : (n === -1
-      ? 'The pole is outside the circle. Theorem 6.5, page 183, says the integral is $0$.'
-      : 'Corollary 6.1, page 188: every integer power other than $-1$ integrates to $0$ when the pole is off the circle. A polynomial is the same fact from Theorem 6.5.');
+  const why = circleWhy(n, value.inside);
   return {
     prompt: `Let $C$ be the circle $${circle}$, positively oriented.`,
     steps: [{
@@ -325,6 +323,22 @@ export function generateCircle(params, seed) {
     memory: 'Power $-1$ and the pole inside: $2\\pi i$. Any other integer power, or the pole outside: $0$.',
     values: { re: value.re, im: value.im, n, radius, cx: center.re, cy: center.im, ax: pole.re, ay: pole.im },
   };
+}
+
+function circleWhy(n, inside) {
+  if (n === -1 && inside) {
+    return 'Corollary 6.1, page 188: the pole is inside and the power is $-1$, so the integral is $2\\pi i$.';
+  }
+  if (inside) {
+    return 'Corollary 6.1, page 188: $z_0$ is inside and the integer power is not $-1$, so the integral is $0$.';
+  }
+  if (n === -1) {
+    return 'The pole is outside the circle, so $1/(z-a)$ is analytic inside and on $C$. Theorem 6.5, page 183, says the integral is $0$.';
+  }
+  if (n >= 0) {
+    return 'A non-negative power is entire. Theorem 6.5, page 183, says the integral over this circle is $0$.';
+  }
+  return 'The pole is outside the circle, so this negative power is analytic inside and on $C$. Theorem 6.5, page 183, says the integral is $0$.';
 }
 
 function cleanLog(start, end, pole) {
@@ -374,7 +388,7 @@ function segmentCard(start, end, pole, n, tex, value) {
   const integrand = powerTex(pole.re, pole.im, n);
   const why = n === -1
     ? 'On a straight segment the integral of $1/(z-a)$ is the change in $\\log|z-a|$ plus $i$ times the change in argument.'
-    : `The antiderivative of $(z-a)^{${n}}$ is $(z-a)^{${n + 1}}/${n + 1}$. Theorem 6.1, page 172, lets you evaluate it at the ends.`;
+    : `The antiderivative of $(z-a)^{${n}}$ is $(z-a)^{${n + 1}}/${n + 1}$. Theorem 6.1, page 172, writes the contour integral as an ordinary integral in $t$, and that antiderivative is evaluated at the two ends.`;
   return {
     prompt: `Let $C$ be the segment from $${fmtPole(start.re, start.im)}$ to $${fmtPole(end.re, end.im)}$.`,
     steps: [{

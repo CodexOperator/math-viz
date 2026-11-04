@@ -31,7 +31,7 @@ const STAGES = [
     sheet: [
       'Definition 6.1, page 163: $\\int(u+iv)=\\int u+i\\int v$.',
       'An antiderivative $U+iV$ is evaluated at the ends.',
-      'A full period of $e^{it}$ integrates to $0$. Half a period integrates to $2i$.',
+      'From $0$ to $\\pi$, $\\int e^{it}\\,dt=2i$. From $0$ to $2\\pi$ it is $0$. Any full period is $0$. A half period is $2i$ only when it starts at a multiple of $2\\pi$.',
     ],
     summit: 'On a real interval, a complex integral is the real integral plus $i$ times the imaginary integral.',
   },
@@ -59,7 +59,7 @@ const STAGES = [
   {
     id: '6.3',
     why: 'Once the function is analytic, the path can move and the integral does not have to be computed again.',
-    observe: 'Drag the green handle. Orange is the pole. The purple circle stays put.',
+    observe: 'Drag the green handle. Both circles are positively oriented and the integrand is $1/z$. Orange is the pole. The purple circle stays put.',
     picture: 'deform',
     read: [
       { pin: 'Theorem 6.5, page 183', href: sectionHref('sec_cauchy-goursat.html', 'CG_Thm') },
@@ -67,7 +67,7 @@ const STAGES = [
       { pin: 'Corollary 6.1, page 188', href: sectionHref('sec_cauchy-goursat.html', 'x2Pi_or_zero') },
     ],
     workedPin: 'Example 6.12, page 186',
-    workedHref: sectionHref('sec_cauchy-goursat.html', 'CG_Thm'),
+    workedHref: sectionHref('sec_cauchy-goursat.html', 'sec_cauchy-goursat-18'),
     worked: '$e^{z}$, $\\cos z$, and $z^{n}$ for a positive integer $n$ are entire. Theorem 6.5 says each of them integrates to $0$ on any simple closed contour.',
     sheet: [
       'Analytic inside and on a simple closed curve: Theorem 6.5, page 183, the integral is $0$.',
@@ -198,7 +198,9 @@ export function mount(section, ctx) {
     const why = h('p', { class: 'section-idea', id: `${scope}-why` });
     appendRich(why, stage.why);
     const picture = h('div', { class: 'ch6-picture', id: `ch6-picture-${slug(stage.id)}` });
-    picture.append(h('p', { class: 'ch6-observe', id: `${scope}-observe` }, stage.observe));
+    const observe = h('p', { class: 'ch6-observe', id: `${scope}-observe` });
+    appendRich(observe, stage.observe);
+    picture.append(observe);
     stops.push(PICTURES[stage.picture](picture));
     const read = h('ul', { class: 'book-read', id: `${scope}-read` });
     stage.read.forEach((item, i) => {
@@ -223,7 +225,7 @@ export function mount(section, ctx) {
       blanks.exact = blankLine('ch6-blank-exact', 'The exact value is ');
       blankHost.append(blanks.exact);
     } else {
-      blanks.pole = blankLine('ch6-blank-pole', 'The integral over the green circle is ');
+      blanks.pole = blankLine('ch6-blank-pole', 'The integral of $1/z$ over the green circle is ');
       blankHost.append(blanks.pole);
     }
     const practice = h('div', { class: 'chapter-exercises', id: `ch6-practice-${slug(stage.id)}` });

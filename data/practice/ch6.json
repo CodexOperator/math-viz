@@ -31,7 +31,7 @@
       }
     ],
     "generator": null,
-    "memory": "A full period of \\(e^{it}\\) integrates to \\(0\\). Half a period integrates to \\(2i\\)."
+    "memory": "From \\(0\\) to \\(2\\pi\\) the integral is \\(0\\). From \\(0\\) to \\(\\pi\\) it is \\(2i\\). A half period that starts somewhere else need not be \\(2i\\)."
   },
   {
     "id": "ch6-6.2-thm-flash",
