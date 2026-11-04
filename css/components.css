@@ -86,7 +86,8 @@ body {
   position: sticky;
   top: 0;
   z-index: 30;
-  height: var(--header-h);
+  height: auto;
+  min-height: var(--header-h);
   border-bottom: 1px solid var(--border);
   background: var(--bg);
 }
@@ -95,8 +96,9 @@ body {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  height: 100%;
-  padding: 0 var(--gutter);
+  min-height: var(--header-h);
+  height: auto;
+  padding: 0.35rem var(--gutter);
 }
 
 .brand {
@@ -134,13 +136,11 @@ body {
 .brand-mark .mark-dot { fill: var(--text); }
 
 .site-title-text {
-  overflow: hidden;
   font-family: var(--font-display);
-  font-size: clamp(1rem, 0.9rem + 0.9vw, 1.3rem);
+  font-size: clamp(0.95rem, 0.85rem + 0.6vw, 1.3rem);
   font-weight: 600;
-  line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
 }
 
 .header-actions {
@@ -172,10 +172,54 @@ body {
 .icon-btn .icon-sun { display: var(--icon-sun); }
 .icon-btn .icon-moon { display: var(--icon-moon); }
 
+.nav-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  flex: none;
+  min-height: var(--tap);
+  min-width: var(--tap);
+  padding: 0 0.7rem;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.nav-toggle svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .nav-toggle[aria-expanded="true"] {
   background: var(--surface-2);
   border-color: var(--text);
 }
+
+.where-line {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+a.book-row,
+a.book-section-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.75rem;
+  min-height: var(--tap);
+  color: inherit;
+  text-decoration: none;
+}
+a.book-row { flex-direction: column; align-items: stretch; gap: 0; }
+a.book-row h2 { color: inherit; }
+.prep-fold { margin-top: var(--space-4); min-width: 0; }
 
 /* Navigation: a drawer on phones, a sticky sidebar from 900px up. */
 .site-nav {
@@ -1197,6 +1241,11 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   margin: 0;
   color: var(--text-muted);
 }
+.book-door a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+}
 
 .book-sections { display: flex; flex-direction: column; gap: var(--space-1); margin-top: var(--space-2); }
 
@@ -1304,3 +1353,59 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .chapter-card p { min-width: 0; }
 .section-mark { margin-top: var(--space-2); }
 .book-footer-link { margin-top: var(--space-2); }
+
+/* Test prep. Same cards and buttons as the book pages. */
+.practice-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  min-width: 0;
+}
+.practice-toolbar .chips { min-width: 0; }
+.practice-stage,
+.practice-card,
+.practice-sheet,
+.practice-doors { min-width: 0; max-width: 100%; }
+.practice-card h2,
+.practice-step-text,
+.practice-back,
+.practice-reveal { overflow-wrap: anywhere; }
+.practice-field { width: 100%; }
+.practice-field input { width: 100%; font-family: var(--font-mono); }
+.practice-choices { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.practice-choice {
+  width: 100%;
+  height: auto;
+  justify-content: flex-start;
+  text-align: left;
+  white-space: normal;
+}
+.practice-choice[data-mark="right"] { border-color: var(--ok); }
+.practice-choice[data-mark="wrong"] { border-color: var(--danger); }
+.practice-steps { margin: 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: var(--space-2); }
+.practice-steps li[data-state="ahead"] { color: var(--text-muted); }
+.practice-why {
+  margin: var(--space-2) 0 0;
+  padding: var(--space-2) var(--space-3);
+  border-left: 4px solid var(--ok);
+  background: var(--surface-2);
+}
+.practice-verdict { margin: 0; font-weight: 700; }
+.practice-verdict[data-right="false"] { color: var(--danger); }
+.practice-filled { font-weight: 700; }
+.practice-sheet { display: flex; flex-direction: column; gap: var(--space-3); }
+.practice-sheet-section h3 { margin-bottom: var(--space-2); }
+.practice-memories,
+.practice-formulas { margin: 0; padding-left: 1.2rem; }
+.practice-memories li,
+.practice-formulas li { margin: 0.35rem 0; }
+.practice-doors { margin-top: var(--space-3); }
+.practice-doors h2 { margin-bottom: var(--space-2); }
+.practice-hint-line { margin: 0.2rem 0; }
+
+@media print {
+  .site-header, .site-nav, .site-footer, .practice-toolbar, .book-next, .practice-doors, .skip-link { display: none !important; }
+  .practice-sheet { display: flex !important; }
+  body { background: white; }
+}

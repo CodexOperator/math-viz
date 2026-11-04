@@ -10,12 +10,13 @@
 // helper for sites it scaffolds. This router does not import it from kit/: Cloudflare
 // Pages strips that folder, and a missing module stops the page before start().
 
-import { STATIONS, stationById, stationForProblem, stationForTopic, MAPS, MAP_STORAGE_KEY, stationsForMap, threadsForMap, threadsOn, stationPart, normalizeMapId, mapOf, threadByToken } from './registry.js';
+import { STATIONS, stationById, stationForProblem, stationForTopic, MAP_STORAGE_KEY, stationsForMap, threadsForMap, stationPart, normalizeMapId, mapOf, threadByToken } from './registry.js';
 import { mapForcedByRoute as mapForcedByRouteBody } from './core/map-route.js';
 import { filmsFor } from './data/films.js';
 import { BOOK } from './data/book.js';
 import { parseBookRoute } from './book/route.js';
-import { BOOK_CHAPTERS } from './data/book-path.js';
+import { CHAPTER_MODULES } from './book/registry.js';
+import { shellChapters, bookChapter } from './data/book-path.js';
 import { cssVar, getTheme, setTheme, onThemeChange, prefersReducedMotion, initTheme } from './core/theme.js';
 import { createStore } from './core/store.js';
 import { watchIds } from './core/ids.js';
@@ -116,6 +117,17 @@ export function parseRoute(hash) {
   return miss;
 }
 
+// The page for a book route. A chapter listed in js/book/registry.js loads that
+// module. The path is relative to this file, the same way a station module is.
+// The roadmap and Test prep stay on the book page.
+export function bookModuleFor(spec) {
+  if (spec && spec.kind === 'chapter') {
+    const path = CHAPTER_MODULES[spec.chapter];
+    if (typeof path === 'string' && path) return path;
+  }
+  return './stations/book.js';
+}
+
 // Which map this route forces, or null to keep the map already remembered.
 // A place owned by one test forces that test (#julia, #topic-J1, #addresses).
 // Home is shared, except a thread token. #home-t2 is Test 1. #home-f2 is Test 2.
@@ -162,6 +174,10 @@ function titleNodes(title) {
 const THEME_API = Object.freeze({ cssVar, getTheme, setTheme, onThemeChange, prefersReducedMotion });
 
 let running = null;
+const scrollMem = new Map();
+let lastHash = '';
+let restoreScroll = false;
+let pendingScroll = null;
 
 export function start() {
   if (running) return running.stop;
@@ -201,96 +217,60 @@ export function start() {
     }
   }
 
-  function chooseMap(id) {
-    const next = normalizeMapId(id);
-    if (next === activeMap) return;
-    try { store.set(MAP_STORAGE_KEY, next); } catch { /* the page still switches for this visit */ }
-    activeMap = next;
-    navigate('home');
-  }
-
-  function syncFooter(mapId, bookRoute) {
+  function syncFooter() {
     const note = document.getElementById('site-footer-note');
     if (!note) return;
-    if (bookRoute) {
-      note.textContent = 'The book path for MAT 412. Chapters 4 and 5 are open. The other chapters are later. It runs in your browser and works offline.';
-      return;
-    }
-    note.textContent = mapId === 'test2'
-      ? 'A study map for MAT 412 Test 2, Chapter 4. It runs in your browser and works offline.'
-      : 'A study map for MAT 412 Test 1: Chapters 1 to 3, and the §5.4 circuit. It runs in your browser and works offline.';
+    note.textContent = 'Chapters 1 to 7 for MAT 412. Chapters 4 and 5 are open. It runs in your browser and works offline.';
   }
 
-  function buildBookNav() {
+  // The drawer is the same list on every page: Chapters 1–7, then Test prep.
+  function buildShellNav() {
     nav.replaceChildren();
-    nav.append(el('div', { class: 'nav-book', id: 'nav-book-block' },
-      el('a', { class: 'nav-link', id: 'nav-book', href: '#book' }, [
-        el('span', { class: 'nav-num', 'aria-hidden': 'true' }, '·'),
-        el('span', { class: 'nav-title' }, 'The Book'),
-      ])));
     const list = el('ul', { class: 'nav-list', id: 'nav-chapters', 'aria-label': 'Chapters' });
-    for (const ch of BOOK_CHAPTERS) {
+    for (const ch of shellChapters()) {
       list.append(el('li', {}, el('a', {
         class: 'nav-link', id: `nav-chapter-${ch.n}`, href: `#chapter-${ch.n}`, 'data-chapter': String(ch.n),
+        'aria-label': `${ch.n} ${ch.title}`,
       }, [
         el('span', { class: 'nav-num', 'aria-hidden': 'true' }, String(ch.n)),
         el('span', { class: 'nav-title' }, ch.title),
       ])));
     }
+    list.append(el('li', {}, el('a', {
+      class: 'nav-link', id: 'nav-test-prep', href: '#test-prep', 'aria-label': 'Test prep',
+    }, [
+      el('span', { class: 'nav-num', 'aria-hidden': 'true' }, '·'),
+      el('span', { class: 'nav-title' }, 'Test prep'),
+    ])));
     nav.append(list);
   }
 
-  function buildNav(mapId) {
-    nav.replaceChildren();
-    nav.append(el('div', { class: 'nav-book', id: 'nav-book-block' },
-      el('a', { class: 'nav-link', id: 'nav-book', href: '#book' }, [
-        el('span', { class: 'nav-num', 'aria-hidden': 'true' }, '·'),
-        el('span', { class: 'nav-title' }, 'The Book'),
-      ])));
-    const switchRow = el('div', { class: 'map-switch', id: 'nav-map-switch', role: 'group', 'aria-labelledby': 'nav-map-label' });
-    for (const m of MAPS) {
-      const b = el('button', {
-        type: 'button', class: 'chip', id: `nav-map-${m.id}`, title: m.note,
-        'aria-pressed': m.id === mapId ? 'true' : 'false', 'data-map': m.id,
-      }, m.title);
-      b.addEventListener('click', () => chooseMap(m.id));
-      switchRow.append(b);
-    }
-    nav.append(el('div', { class: 'map-switch-block nav-map', id: 'nav-map' }, [
-      el('p', { class: 'map-switch-label', id: 'nav-map-label' }, 'Which test'),
-      switchRow,
-    ]));
-    const groups = groupStations(stationsForMap(mapId), mapId);
-    if (groups.length === 0) {
-      nav.append(el('p', { class: 'muted' }, 'No places are registered.'));
-      return;
-    }
-    for (const g of groups) {
-      const titleId = `nav-part-${g.part}`;
-      const list = el('ul', { class: 'nav-list', 'aria-labelledby': titleId });
-      for (const st of g.stations) {
-        const dots = el('span', { class: 'nav-threads', 'aria-hidden': 'true' });
-        // F1 runs through the whole Test 2 story, so a dot on every stop would not separate them.
-        for (const t of threadsOn(st, mapId)) if (t !== 'F1') dots.append(el('i', { class: 'thread-dot', 'data-thread': t }));
-        const linkKids = [
-          el('span', { class: 'nav-num', 'aria-hidden': 'true' }, st.order === 0 ? '·' : String(st.order)),
-          el('span', { class: 'nav-title' }, titleNodes(st.title)),
-        ];
-        if (dots.childElementCount) linkKids.push(dots);
-        const link = el('a', { class: 'nav-link', id: `nav-${st.id}`, href: `#${st.id}`, 'data-station': st.id }, linkKids);
-        list.append(el('li', {}, link));
+  function whereText(route, st) {
+    if (route.book) {
+      if (route.book.kind === 'prep') return 'Test prep';
+      if (route.book.kind === 'chapter') {
+        const ch = bookChapter(route.book.chapter);
+        return ch ? `Chapter ${ch.n} · ${ch.title}` : `Chapter ${route.book.chapter}`;
       }
-      nav.append(
-        el('section', { class: 'nav-part', 'data-part': g.part }, [
-          el('p', { class: 'nav-part-title', id: titleId }, [
-            el('span', { class: 'nav-part-roman' }, g.part),
-            el('span', { class: 'nav-part-name' }, g.title),
-            el('span', { class: 'nav-part-note' }, g.note),
-          ]),
-          list,
-        ]),
-      );
+      return 'The book · Chapters 1–7';
     }
+    if (!st || st.id === 'home') return 'The book · Chapters 1–7';
+    if (st.id === 'problems') return 'Test prep · Test 1';
+    if (st.id === 'index') return 'Test prep · Test 2';
+    if (st.chapter) {
+      const ch = bookChapter(st.chapter);
+      const name = ch ? ch.title : st.title;
+      return `Chapter ${st.chapter} · ${name}`;
+    }
+    return st.title;
+  }
+
+  function placeWhere(root, text) {
+    if (!root || !text || root.querySelector('.where-line')) return;
+    const h1 = root.querySelector('h1');
+    if (!h1) return;
+    const line = el('p', { class: 'where-line', id: 'where-line' }, text);
+    h1.insertAdjacentElement('afterend', line);
   }
 
   function revealActive() {
@@ -301,16 +281,14 @@ export function start() {
     if (ar.top < nr.top || ar.bottom > nr.bottom) nav.scrollTop += ar.top - nr.top - (nr.height - ar.height) / 2;
   }
 
-  function markCurrent(id, bookRoute) {
+  function markCurrent(id, bookRoute, station) {
+    let chapter = '';
+    let prep = false;
+    if (bookRoute && bookRoute.kind === 'chapter') chapter = String(bookRoute.chapter);
+    else if ((bookRoute && bookRoute.kind === 'prep') || id === 'problems' || id === 'index') prep = true;
+    else if (station && station.chapter && station.chapter <= 7) chapter = String(station.chapter);
     for (const a of nav.querySelectorAll('a.nav-link')) {
-      let on = false;
-      if (bookRoute) {
-        on = bookRoute.kind === 'chapter'
-          ? a.dataset.chapter === String(bookRoute.chapter)
-          : a.id === 'nav-book';
-      } else {
-        on = a.dataset.station === id;
-      }
+      const on = prep ? a.id === 'nav-test-prep' : (chapter !== '' && a.dataset.chapter === chapter);
       if (on) a.setAttribute('aria-current', 'page');
       else a.removeAttribute('aria-current');
     }
@@ -435,7 +413,7 @@ export function start() {
 
   async function renderBook(seq, route, first) {
     const spec = route.book;
-    const label = spec.kind === 'chapter' ? `Chapter ${spec.chapter}` : 'The Book';
+    const label = spec.kind === 'chapter' ? `Chapter ${spec.chapter}` : spec.kind === 'prep' ? 'Test prep' : 'The Book';
     view.dataset.state = 'loading';
     document.title = documentTitle(label);
     const section = el('section', {
@@ -444,7 +422,7 @@ export function start() {
     view.append(section);
     state.stopIds = watchIds(section, 'book');
     try {
-      const mod = await import('./stations/book.js');
+      const mod = await import(bookModuleFor(spec));
       if (seq !== state.seq) return;
       if (typeof mod.mount !== 'function') throw new Error('book page has no mount() export');
       section.replaceChildren();
@@ -459,7 +437,9 @@ export function start() {
         return;
       }
       state.current = { id: 'book', unmount: typeof unmount === 'function' ? unmount : null };
+      placeWhere(section, whereText(route, null));
       view.dataset.state = 'ready';
+      if (pendingScroll != null) window.scrollTo(0, pendingScroll);
       finish(first, label);
     } catch (err) {
       if (seq !== state.seq) return;
@@ -478,6 +458,11 @@ export function start() {
     state.first = false;
 
     const route = parseRoute(location.hash);
+    const nowHash = location.hash || '#home';
+    if (lastHash && lastHash !== nowHash) scrollMem.set(lastHash, window.scrollY);
+    pendingScroll = restoreScroll ? (scrollMem.get(nowHash) ?? null) : null;
+    restoreScroll = false;
+    lastHash = nowHash;
     const st = route.station ? stationById(route.station) : null;
     const forced = mapForcedByRoute(st, route);
     const mapId = forced || readMap();
@@ -490,17 +475,16 @@ export function start() {
     document.body.dataset.map = mapId;
     document.body.dataset.book = route.book ? 'true' : 'false';
     document.body.dataset.station = st ? st.id : '';
-    syncFooter(mapId, route.book);
-    if (route.book) buildBookNav();
-    else buildNav(mapId);
+    syncFooter();
+    buildShellNav();
 
     setNavOpen(false);
     view.replaceChildren();
     view.dataset.route = route.raw || 'home';
     view.dataset.station = st ? st.id : '';
     view.dataset.map = mapId;
-    window.scrollTo(0, 0);
-    markCurrent(st ? st.id : null, route.book);
+    if (pendingScroll == null) window.scrollTo(0, 0);
+    markCurrent(st ? st.id : null, route.book, st);
 
     if (route.book) {
       await renderBook(seq, route, first);
@@ -560,7 +544,9 @@ export function start() {
         ? () => { if (unFilms) runUnmount(`${st.id} films`, unFilms); if (typeof unmount === 'function') unmount(); }
         : null;
       state.current = { id: st.id, unmount: both };
+      placeWhere(section, whereText(route, st));
       view.dataset.state = 'ready';
+      if (pendingScroll != null) window.scrollTo(0, pendingScroll);
       finish(first, st.title);
     } catch (err) {
       // A superseded navigation must not touch the timer: it now belongs to the newer one.
@@ -625,7 +611,16 @@ export function start() {
     });
   }
 
+  listen(window, 'popstate', () => { restoreScroll = true; });
   listen(window, 'hashchange', render);
+
+  function syncHeaderHeight() {
+    const header = document.getElementById('site-header');
+    if (!header) return;
+    document.documentElement.style.setProperty('--header-h', `${header.offsetHeight}px`);
+  }
+  syncHeaderHeight();
+  listen(window, 'resize', syncHeaderHeight);
 
   const mv = (window.__mv = window.__mv || { planes: new Map() });
   if (!mv.planes) mv.planes = new Map();

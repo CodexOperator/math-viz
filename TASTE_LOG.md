@@ -1468,3 +1468,127 @@ The type, the paper, the white card, and the four colours are the site's. This p
 ### What to keep
 
 The phone's Chapter 5: lede under the title, square at the width of the page, claim, Play, and the status, all inside 844px, light and dark. Opening on the bottom, so Exercise 2 is empty. The question, then the blank, then Tick. The green ring at 44px, the drag that owns the radius, the clock that owns the angle, Pause holding the angle, and a drag that leaves the square unframed. The four colours. Chapter 4's 44px chips and the tick that waits until the picture has been opened, and is then remembered. The 4.2 door opening Julia. The Later rows as titles and pages. The kicker, the paper, the serif title, the white card. No new chrome.
+
+# Practice engine — batch 1
+
+Branch `cursor/practice-engine`. The practice page uses the book cards, the same buttons, and the same type. No new palette. Checked in headless Chrome at 390px and at a wide window: test prep, a worked proof then a wrong step and its reason, the hint ladder, a right choice on §5.1 exercise 2(c), Generate another on a radius, the memory sheet, one Leitner promotion, Chapter 4, Chapter 5, the roadmap, Test 1 `#problems`, and Test 2 `#index`. No console errors. No horizontal scroll at 390px.
+
+## What is on the page
+
+Test prep is a book route, so it does not switch the remembered test. The roadmap, Chapter 4, and Chapter 5 each link to it. A section link walks that section: the proof is filled in, then the same proof is blank, then the choices, then the exercises. The chapter-level Test prep mixes sections. Check is immediate. The reason shows after the attempt. A generator item can draw another seed, and Endless keeps drawing when the fixed list ends. The memory sheet is the `memory` lines plus the formulas, and it prints. Flashcards use five Leitner boxes in `mv:practice.leitner`. `mergeLeitner` keeps the card with more reviews so a later sign-in can merge two devices. Test 1 and Test 2 stay their own maps, linked from the bottom of the prep page.
+
+## What is still thin
+
+The mix does not change from visit to visit. The seed is the chapter number. A student can learn the order. Choices stay in the order they were written. A hint clears whatever was already typed, because the card is drawn again. Practice attempts other than flashcards are not stored. Chapters other than 4 and §5.1 have no items yet. The print sheet was not held up on paper, only opened in the page.
+
+## Next
+
+Vary the interleave by day. Keep the typed answer when a hint opens. Shuffle choices. Store a short record of which steps were missed, in the same mergeable shape as the boxes. Leave chapter files to the chapter loops.
+
+# Practice engine — batch 2, the shell
+
+The drawer is one list on every page: Chapters 1–7, then Test prep. The menu button says Chapters. `#home` opens the status card and one Continue button, and the count is the exercises in Chapters 4 and 5 together (10), not Chapter 4 alone. Chapter and section rows are links. Chapters 8–11 stay in the data and off the list. The line under a title is the part-label type. The way up is the 44px station link. A chapter hash is a history entry, and Back puts the book back where it was scrolled. The site name wraps instead of truncating at 360px. Test prep is the one door: the practice set, then Test 1, then Test 2. `#problems` and `#index` still open, and their ticks stay in `progress` and `progress.test2`. Chapter loops add one line to `js/book/registry.js`.
+
+Checked in headless Chrome at 360×780: the full site name, the seven chapters, Continue, the labelled drawer, the Chapter 5 up control, scroll restored after Back, both indexes inside Test prep, and the 2 of 10 count after a Chapter 4 tick and a Chapter 5 tick. No console errors.
+
+## Next
+
+The home map and the Test 2 map still exist behind a thread hash. Pictures for Chapters 1–3 and 6–7 are not inside those chapter pages yet; those loops register the pages. The interleave seed, choice order, and unsaved practice attempts are unchanged from batch 1.
+
+## skeptical-student (practice batch 2)
+
+Branch `cursor/practice-engine`, tip `e02fc859`. Preview https://practice-preview.complexanalysis.pages.dev. Fresh storage. Headless Chrome, touch, 390×844 light, then the same pages with the theme pinned dark, then 1280×800 light and dark, and the home at 360×780 in the OS dark theme. No product code was changed. No console errors. No failed requests. `scrollWidth` matched the window (390, 360, 1280).
+
+I have never seen this course. I opened the link the way I would on a phone, looking for where I am, where to go next, and how to get to test prep.
+
+### Verdict
+
+ANOTHER BATCH. The home answers the first question. The Chapters drawer answers the third, once I think to open a button that says Chapters. The page Continue opens, and Test prep itself on a phone, answer none of the three. I was asked to prove a theorem I had not been shown, and the old problem indexes start before I have finished the card.
+
+### Cold open, 390×844, light
+
+The first screen is the site name on two lines (the words "One Point, Two Addresses", 37px tall, 141px wide, the full name), a 44×44 theme button, and a 44×118 button that says Chapters. Under that: "THE BOOK · CHAPTERS 1–7", the title The Book, "Chapters 1 to 7, in the order Howell and Mathews print them.", and the source line naming Howell & Mathews, Complex Analysis, the 202 Updated Edition. Then a card: "Next is §4.1, Exercise 3. 0 of 10 exercises." and Continue, 44×111. Then three cards flagged LATER: 1 Complex Numbers (page 1), 2 Complex Functions (page 43), 3 Analytic and Harmonic Functions (page 79, the title wraps). Chapter 4 starts under the 844px edge. The footer that says MAT 412 is below that.
+
+I can tell this is a book of seven chapters of that textbook. I can tell the button wants exercise 3 of §4.1. I cannot tell why the first three chapters, the ones on the screen, say LATER, or what a complex number is. The count "0 of 10" sits next to a §4.1 exercise and the 10 is chapters 4 and 5 together.
+
+Continue goes to `#chapter-4-4-1-3`. The first screen there is the tail of a sentence about disks, two links (Definition 4.1, page 103; Theorem 4.1, page 103), a text link "Practice 4.1" at 91×23, then the card "§4.1, Exercise 3": "Suppose that lim z_n = z_0. Show that the limit of the conjugates is the conjugate of the limit." Then a chip "The disk in Definition 4.1", Show the hint, and Tick, both 44px and the width of the card. The chapter title and the where-line are above the window. Tick is live before I do anything. I still don't know what the bar over z means, and nothing on the screen says what I would have learned if I pressed Tick. Browser Back returned to the book at the top, Continue at y = 325, the same first screen.
+
+Tapping the Chapter 1 card, or "1 Complex Numbers" in the drawer, sets `#chapter-1` and scrolls to 353. "The Book" sits at y = −247. The screen is the same LATER card, "1 Complex Numbers, Page 1", and that card has no section links. I asked for a chapter and got a scrolled table of contents.
+
+Opening Chapter 4 from the drawer is the page that does say where I am: a 44×134 "The Book", the title, "CHAPTER 4 · SEQUENCES, SERIES, AND FRACTALS" (the same words again), and "Four sections. Tick an exercise when you have worked it. The hint stays closed until you ask." Practice 4.1 is on that first screen and it is still 91×23. The same link for 4.2, 4.3, and 4.4 is 91×23 further down (y = 1744, 3547, 4574).
+
+Chapter 5 from the drawer: "The Book", "Chapter 5. The exponential", the same line in small caps, a circle with a purple dot on the left and a green dot on the right, the sentence "The point sits on the left of the unit circle, on the real axis.", and Play (y = 640, 44px tall, on the screen). The lede under Play says a blank fills when the picture makes it true. The blank, and "Practice 5.1" (91×23), start at y = 1202 on a page 2818px tall. The only sentence that says "drag the green dot" is the picture's aria-label. The green dot is the one on the right. The sentence calls the left-hand dot "the point".
+
+### How I got to test prep
+
+The words "test prep" are absent from the home first screen. The Chapters drawer is one list, every row 44×358: chapters 1–7, then "· Test prep" at y = 382, on that same drawer screen. The dot is sitting where the chapter number sits on the other rows. One tap from there opens `#test-prep`. On the 1280 window the same row is in the sidebar at y = 388, so I don't have to open anything.
+
+That is the door. The section links are a second door, with a different first card, and they don't use the words Test prep.
+
+### What test prep did on the phone
+
+Opening it focuses the answer box and moves the page. Measured on arrival, light: "The Book" button at y = −279, the Practice / Memory sheet / Flashcards chips at y = −194, Endless at y = −142. The proof's heading starts at y = 9, under a header that ends at 58, so the screen shows the tail "then ∑ z^n = 1/(1−z)". Check and Hint are on the screen (both 44×324). Under the card, at y = 648, a second page has already started: "Test 1. Every problem and proof from the handout is a card. Read the question, say the place, the address and the aha out loud…" The whole document is 41567px. The Test 1 block starts at y = 1239, is 25558px tall, and holds 41 cards. Test 2 starts at y = 26845, is 14587px tall, and holds 30 cards. The same clip, and the same Test 1 lede, is what the dark phone shows on arrival.
+
+Scrolling back to 0 shows the page I was supposed to land on, in both themes. "THE BOOK" (a 69×17 link), the title Test prep, "TEST PREP", "Items from more than one section, mixed. Check, then read the reason.", "Chapters 4 and 5. 1 of 14.", a 44px The Book button, then the chips. The proof heading is then fully on screen: "Prove the sum half of Theorem 4.12, page 118." Step 1 of 3 is the current line, in rgb(26, 34, 48). Steps 2 and 3 are also blanks, in rgb(81, 91, 108). The box is labelled "Your answer". On the 1280 light window this heading is on screen at scroll 0, and Check starts at y = 819 in an 800px window, so the button is past the bottom edge. `scrollWidth` there is 1280.
+
+I typed `idk` and pressed Check. The card said "Not that one.", filled the first blank with 1 − z^n, and gave the reason: "The middle terms cancel. This is the first identity in the proof on page 118." There is no second try. Next step stays on "1 of 14" and asks for the next blank with the same box label. Hint, opened on a fresh load, says "Multiply the partial sum by z and subtract." and the button becomes Next hint. Test 1 is still directly under that hint.
+
+The chip Memory sheet is the page I would actually use. Status: "The sheet for this set. It prints without the menu." Five blocks: 4.1, 4.2, 4.3, 4.4, 5.1. The first formula is the ε-disk. The first takeaway is a sentence: the terms eventually sit in every disk around ζ, Definition 4.1, page 103. Print is 44×358. On arrival this chip is above the window, so I never saw the sheet until I scrolled up and hunted for it.
+
+Flashcards: the status says "36 due." The card says NEW and "New card", then "Corollary 4.1, absolute convergence implies convergence", which is already the fact. Show the back (44px) reveals "If ∑ |z_n| converges, then ∑ z_n converges." and "Corollary 4.1, page 107." Again and Got it are on the screen. Test 1 starts under this card too. I did not have to remember anything, and the count says I am already behind on 36 cards.
+
+`#test-prep-4-4-1`, which is what Practice 4.1 opens, is a different first screen, and it stays at the top because that card has no box to focus. Title Test prep, lede "A worked proof, then the same proof with the steps missing, then the exercises.", status "Section 4.1. 1 of 6.", back button "Chapter 4" at 44px. The card is flagged WORKED EXAMPLE, Theorem 4.1, pages 103–104, and the button says Try these steps. That is the only door that told me what I was about to do before it asked me to fill a blank. The mixed set, the one in the drawer, skips it and opens on the geometric-series proof.
+
+Dark, pinned, is the same layout. The page is rgb(13, 18, 28) and the text is rgb(233, 237, 245). Light paper is rgb(246, 243, 236) and the title is rgb(26, 34, 48). At 360 the name still wraps onto two lines, in the dark, and the same Continue card is the first screen.
+
+### What to keep
+
+The home is one book, one status line, and one Continue. I could read that I was in chapters 1–7 of Howell and Mathews. The drawer is that same list on every page, rows at 44px, and Test prep is on the first drawer screen. On a wide window it is in the sidebar. Back from the exercise returned to the book at the top. The name wraps. Open chapter pages put a 44px "The Book" over the title. Chapter 4's lede says to tick an exercise after working it. When Test prep is scrolled to the top, the lede says to check and then read the reason, and the reason on the geometric step was one sentence with a page. The memory sheet is five sections of a formula plus a one-line takeaway with a page, and Print is a real button. The section door (Practice 4.1) starts with a worked proof and says so in the lede.
+
+### Ranked fixes
+
+1. **Land Test prep at the top of the page.** On open, the title, the "1 of 14", and the three chips are above the window (The Book button at y = −279, chips at y = −194), the proof starts at y = 9 under a 58px header, and Test 1 is already at y = 648. The answer box took focus and moved the page. Same clip in the dark. Change: opening the page leaves the scroll at 0, which is the screen I got only after scrolling back — title, count, chips, then the question. The box sits under the question and does not pull itself up.
+
+2. **The practice card is the page.** The document is 41567px. Test 1 is 41 cards from y = 1239, and its lede ("say the place, the address and the aha") is on the arrival screen. Test 2 is 30 cards from y = 26845. I thought the handout cards were the next question. Change: under the card, two links, "Test 1" and "Test 2", to the indexes that already open on their own. The indexes stay off this scroll.
+
+3. **Show the worked proof before the blank, and point the box at one blank.** The drawer opens on "Prove the sum half of Theorem 4.12", three blanks, one box labelled "Your answer". Steps 2 and 3 are a quieter grey, rgb(81, 91, 108) against rgb(26, 34, 48), and they still look like blanks. Typing `idk` printed 1 − z^n on the first miss. Practice 4.1 already does the other thing: "A worked proof, then the same proof with the steps missing", card flagged WORKED EXAMPLE, button "Try these steps", status "Section 4.1. 1 of 6." Change: the mixed set leads with that worked card, then the blank. The box's label is the current line, and the other lines wait. The first miss shows the hint ("Multiply the partial sum by z and subtract."). The filled answer shows on the next miss.
+
+4. **Continue opens the chapter at the top, and a closed chapter says it is closed.** Continue is `#chapter-4-4-1-3`. The first screen has the exercise and a live Tick, and the title "Chapter 4" is above the window. The home screen I can see is three LATER chapters and a status line that names §4.1. Tapping chapter 1 sets `#chapter-1`, scrolls to 353, hides The Book (title at y = −247), and the card is still "LATER 1 Complex Numbers Page 1" with no sections. Change: Continue opens `#chapter-4` at the top, where the idea sentence already is. The status line says the first three chapters are closed and names §4.1 as the start. A closed row leaves the title on screen, and the line on the card says the chapter is closed.
+
+5. **Make the section door a button, and drop the dot.** Practice 4.1 and Practice 5.1 are 91×23. Practice 5.1 is at y = 1202, past an 844px screen, so from Chapter 5 the way to test prep is a short text link under a picture. The drawer row reads "· Test prep" because the number slot is a middot; the row itself is 44px and on the first screen at y = 382. Change: the section door is a 44px button, "Test prep · 4.1", beside the section title. The drawer row reads "Test prep", still last, still 44px.
+
+6. **A new flashcard is one new card.** The status says "36 due" on a first visit. The card says NEW and "New card", and the front is already the corollary ("absolute convergence implies convergence"). The back is that sentence in symbols. Test 1 starts under the card. Change: the count is "1 of 36" until a card has been graded. The front is the name, "Corollary 4.1". The back is the sentence. One card fills the screen.
+
+## ux-veteran (practice batch 2)
+
+Preview https://practice-preview.complexanalysis.pages.dev at `e02fc859`. Headless Chrome, touch, fresh storage. Phone first: 390×844 and 360×780, light and dark. Then 1280×800, light and dark. Re-checked fixes 1, 2, 3, and 8 from `## ux-veteran (mobile audit)` on `cursor/ux-veteran-audit`. No product code was changed. No console errors. No sideways scroll (`scrollWidth` matched the window at 360, 390, and 1280, both themes).
+
+The walk, the way a student would do it. Land on the preview. Read the first screen. Open Chapters. Tap a chapter row, a section row, Continue, Test prep, and Back. Then the same shell in the dark and at 1280, where the list is a sidebar and the Chapters button is gone.
+
+### Verdict
+
+ANOTHER BATCH. The drawer, the count, the chapter up control, the wrapped name, and Back are in. Two of the original phone failures are still the first thing a thumb hits: Test prep opens with the question under the header, and the landing still names §4.1 while the screen shows three Later chapters.
+
+### Ranked
+
+1. **Test prep opens on the answer box.** Fresh `#test-prep` at 390×844, scroll is already 559 and the focused control is the answer field. "Test prep", the up link, and the words "Prove the sum half of Theorem" sit above the window. The first line a student can read is "4.12, page 118", then the three blanks, then Your answer, Check, and Hint. The same page at 1280×800 shows the title and the whole prompt, because the card fits. Change: when the card is drawn, leave focus where it is. The first screen is the title, one up control, and the whole question. The field takes focus when the thumb taps it.
+
+2. **The landing names a chapter the phone does not show.** At 390×844 the status says "Next is §4.1, Exercise 3. 0 of 10 exercises." and the only button is Continue, 111×44, to `#chapter-4-4-1-3`. Chapter 4's card starts at y = 841, so the word Next is the sliver at the bottom edge. The cards on the screen are Later: Complex Numbers, Complex Functions, and Analytic and Harmonic Functions. At 360×780 Chapter 4 starts at y = 867, below a 780px window, and Chapter 3 is cut off mid-title. At 1280×800 the Next card just clears the fold. Change: a Later chapter is one line, the number and the title. Book order stays. Chapter 4, with the word Next, then sits under the status card at 390 and at 360.
+
+3. **5.2, 5.3, 5.4, and 5.5 open the exponential.** Each row is a link at least 44px tall. All four point at `#chapter-5`. Tapping "5.2 The Complex Logarithm" lands on "Chapter 5. The exponential", square and Play. The logarithm is a Later heading at y = 1971, and that heading has no link. Change: a section with no page is text, with the Later flag it already has. The row stops being a link. 5.1 keeps its link to `#chapter-5-5-1`.
+
+4. **Test 2 is a heading thirty-two screens down.** On the prep page, Test 1 starts at y = 1239 and Test 2 at y = 26845. The page is 41,567px. The practice set is the first block. The whole Test 1 index is the next block. Test 2 is past every one of those cards. Change: under the practice set, two rows, Test 1 and Test 2, each a 44px link to the index that already opens at `#problems` and `#index`. The indexes stay their own pages.
+
+5. **The Book on Test prep is 69×17.** That is the box the audit measured on Chapter 5. Chapter 4 and Chapter 5 now use the station link: 134×44, label "The Book", on the first screen, under the header. Test prep still has the 17px kicker, and a second control in the status card that also says The Book, this one 113×44. Change: one up control, the station link, 44px, "The Book". The kicker goes.
+
+6. **The Map opens the book.** On Julia, Story Map and The Map both go to `#home`. That page is The Book. The heading is The Book, and Which test is absent. The where-line on Julia already says Chapter 4, and the drawer marks Chapter 4, so the way back is the one the picture does not offer. Change: those two links read The Book and Chapter 4. Chapter 4 goes to `#chapter-4`.
+
+### What to keep
+
+The drawer is the same eight rows on the book, on Chapter 4, on Chapter 5, on Test prep, on both indexes, on Julia, and on the address plane. Chapters 1 through 7, then Test prep. Each row is 44px tall and the width of the phone. Chapters 8–11 are off the list and off the roadmap. The words Residue, Laplace, and "eleven chapters" are absent. `#chapter-8` opens the book. At 1280 the same eight rows are the sidebar, Chapter 5 is marked while you are on it, and Test prep is marked on its own page.
+
+The Chapters button is labeled and is 118×44. The site name wraps to two lines, "One Point, Two" and "Addresses", at 360 and at 390, light and dark. It is the whole name. The where-line is the part-label type, 12.5px, uppercase. On the book it reads "The book · Chapters 1–7". On the chapter it sits under the title and reads "Chapter 5 · The exponential" and "Chapter 4 · Sequences, Series, and Fractals". Contrast is 6.2 on the light paper and 8.6 in the dark. The type, the paper, and the blue Continue button are the ones the station pages already use.
+
+Chapter rows and the section rows that have a page are real doors. 4.1 opens with "Sequences and Series" under the header. Continue, after a Chapter 4 tick and a Chapter 5 tick, says "Next is §4.1, Exercise 13. 2 of 10 exercises" and opens that card with the title at 163px, below the 58px header. A lone 5.1.2 tick is "1 of 10", and Chapter 5 reads Open. Back puts the book back at the 900px it left, and puts a chapter back at the 1600px it left. On `#home-t1`, Test 2 pushes `#home-f2`, and Back returns with Test 1 pressed.
+
+Chapter 5's first screen is the 44px up link, the title, the where-line, the square, and Play, at 390 and at 1280. That screen can stay.

@@ -1,0 +1,118 @@
+[
+  {
+    "id": "ch5-5.1-definition-5-1",
+    "chapter": 5,
+    "section": "5.1",
+    "cite": {
+      "ref": "Definition 5.1",
+      "page": 130,
+      "href": "https://complexanalysis.org/web/sec_exponential-function.html#exp_z__Def"
+    },
+    "kind": "flash",
+    "prompt": "Definition 5.1, the complex exponential",
+    "steps": [
+      {
+        "text": "Definition 5.1, the complex exponential",
+        "answer": "$e^z=\\exp(z)=\\sum_{n=0}^{\\infty} z^n/n!$.",
+        "why": "Definition 5.1, page 130."
+      }
+    ],
+    "generator": null,
+    "memory": "The exponential is the series $\\sum z^n/n!$. It agrees with the real exponential on the real axis.",
+    "formula": "$e^z=\\sum_{n=0}^{\\infty}\\dfrac{z^n}{n!}$."
+  },
+  {
+    "id": "ch5-5.1-theorem-5-1",
+    "chapter": 5,
+    "section": "5.1",
+    "cite": {
+      "ref": "Theorem 5.1",
+      "page": 130,
+      "href": "https://complexanalysis.org/web/sec_exponential-function.html#exp_z__Def"
+    },
+    "kind": "flash",
+    "prompt": "Theorem 5.1, three properties of the exponential",
+    "steps": [
+      {
+        "text": "Theorem 5.1, three properties of the exponential",
+        "answer": "The exponential is entire, its derivative is itself, $\\exp(z_1+z_2)=\\exp(z_1)\\exp(z_2)$, and $e^{i\\theta}=\\cos\\theta+i\\sin\\theta$ for real $\\theta$.",
+        "why": "Theorem 5.1, page 130."
+      }
+    ],
+    "generator": null,
+    "memory": "Entire, derivative equals itself, addition becomes multiplication, and $e^{i\\theta}$ is the point at angle $\\theta$.",
+    "formula": "$e^{i\\theta}=\\cos\\theta+i\\sin\\theta$."
+  },
+  {
+    "id": "ch5-5.1-identity-5-1",
+    "chapter": 5,
+    "section": "5.1",
+    "cite": {
+      "ref": "Identity (5.1)",
+      "page": 132,
+      "href": "https://complexanalysis.org/web/sec_exponential-function.html"
+    },
+    "kind": "flash",
+    "prompt": "Identity (5.1), exponential in coordinates",
+    "steps": [
+      {
+        "text": "Identity (5.1), exponential in coordinates",
+        "answer": "$e^{x+iy}=e^x(\\cos y+i\\sin y)$.",
+        "why": "Identity (5.1), page 132."
+      }
+    ],
+    "generator": null,
+    "memory": "The modulus is $e^x$ and the angle is $y$.",
+    "formula": "$e^{x+iy}=e^x(\\cos y+i\\sin y)$."
+  },
+  {
+    "id": "ch5-5.1-ex-2c",
+    "chapter": 5,
+    "section": "5.1",
+    "cite": {
+      "ref": "§5.1, Exercise 2(c)",
+      "page": 135,
+      "href": "https://complexanalysis.org/web/sec_exponential-function.html#x5_1_2"
+    },
+    "kind": "next-step-mc",
+    "prompt": "Precisely where do the images of the points $\\pm i\\pi$ land under $w=e^z$? Exercise 2(c), page 135. Figure 5.2 is on page 133.",
+    "steps": [
+      {
+        "text": "Both points land at ___.",
+        "answer": "$-1$",
+        "why": "$e^{i\\pi}=-1$ and $e^{-i\\pi}=-1$ by Theorem 5.1(iii), page 131. They meet at the left-hand point of the unit circle.",
+        "hints": [
+          "Use $e^{i\\theta}=\\cos\\theta+i\\sin\\theta$.",
+          "Both angles $\\pi$ and $-\\pi$ have cosine $-1$ and sine $0$."
+        ],
+        "choices": [
+          "$-1$",
+          "$1$",
+          "$i$",
+          "$0$"
+        ]
+      }
+    ],
+    "generator": null,
+    "memory": "The images of $\\pm i\\pi$ land together at $-1$. Exercise 2(c), page 135."
+  },
+  {
+    "id": "ch5-5.1-gen-exp",
+    "chapter": 5,
+    "section": "5.1",
+    "cite": {
+      "ref": "Identity (5.1)",
+      "page": 132,
+      "href": "https://complexanalysis.org/web/sec_exponential-function.html#exp_z__Def"
+    },
+    "kind": "blank",
+    "prompt": "Modulus and principal argument of a seeded exponential.",
+    "steps": [],
+    "generator": {
+      "template": "exp-mod-arg",
+      "params": {}
+    },
+    "memory": "For $z=x+iy$, $|e^z|=e^x$ and $\\operatorname{Arg}(e^z)$ is $y$ reduced into $(-\\pi,\\pi]$. Identity (5.1), page 132, and Equations (5.6)–(5.7), page 133.",
+    "formula": "$|e^{x+iy}|=e^x$, $\\operatorname{Arg}(e^{x+iy})\\equiv y \\pmod{2\\pi}$."
+  }
+]
