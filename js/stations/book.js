@@ -380,10 +380,10 @@ function mountChapter5(el, ctx, focus) {
   el.append(
     h('header', { class: 'station-header' },
       h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back' }, 'The Book')),
-      h('h1', { id: 'chapter-title' }, 'Chapter 5. The exponential'),
-      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Section 5.1. A blank fills when the picture makes it true. The hint stays closed until you ask.')),
-    h('div', { class: 'book-next', id: 'chapter-next-row' }, status),
+      h('h1', { id: 'chapter-title' }, 'Chapter 5. The exponential')),
     picture,
+    h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Section 5.1. A blank fills when the picture makes it true. The hint stays closed until you ask.'),
+    h('div', { class: 'book-next', id: 'chapter-next-row' }, status),
     walk,
     later,
     sourceTag({ pin: 'Chapter 5, Elementary Functions, page 130', href: sectionHref('sec_exponential-function.html') }),
