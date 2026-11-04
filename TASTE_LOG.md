@@ -822,3 +822,66 @@ Nothing. No logarithm, no powers, no exercise cards, no second plane, no colour 
 ### Another batch
 
 Yes. One batch, then stop. It is the one cut above. The handle, the quarter-turn steps, the title, and the book card have landed. Something real is left, and it is the sentence: for the whole turn it names a frame the point has left. A §5.1 list of exercises, hung on this picture, would point the cards at a line that is false for three of the four steps.
+
+## appllama (batch 5)
+
+Branch `cursor/book-chapter-path-df29`, commit `5375bcaf`. Used like a MAT 412 student on https://book-preview.complexanalysis.pages.dev/#chapter-5. The live picture is that commit. Headless Chrome, light and dark, at 390×844 and at 1280×800. On the phone the finger was a touch. On the laptop it was the mouse. A press on the green dot with no move, a 2px nudge, a press off the dot, a press on the rim of the target, a drag along the axis, a drag off the axis, a drag that starts on the purple point, and a drag during Play. Reduced motion through the four steps and once around again, in both themes at both widths. One full turn, a pause, and a continue, and the same turn with the CPU slowed to 4×. No console errors. No sideways scroll at either width (`scrollWidth` matched the window).
+
+## Verdict
+
+The finger picks up the radius the picture already has. Next step lands on the bottom, the right, the top, and the left, and it does not play. The turn holds a steady 60 frames a second, on the phone and on the laptop, and again at 4×. Those three are done.
+
+The sentence is not. It says the point sits on the left, on the real axis, while Next step is showing the bottom. It says that for the whole turn. Another batch is worth doing. It is that sentence. Then stop.
+
+## The finger
+
+At rest the real part is 0 and the angle is π. The purple point is on the left of the dashed circle. The green dot is on the right. A press on the green dot, held, leaves both numbers where they are. A 2px nudge leaves them too. Letting go leaves them. A press 40px off the dot, and a drag that starts on the purple point, change nothing.
+
+The target is a 44px circle around a smaller mark. On the phone the green dot is 9px across and the purple point is 12px. On the laptop they are 12px and 16px. A press 18px from the center picks the dot up. A press 26px from the center does not. The first slip inside that circle keeps the radius. The move after it puts the center of the dot on the finger. From there, along the axis, the miss is 0. One sample sat 2px off, at the moment the real part landed on 0. That is the same stick as last batch. Leave it.
+
+A drag straight up leaves the dot on the axis, at the finger’s x. The page does not scroll, and the angle stays at π. The radius is the real part. The finger’s height is not a second handle.
+
+During Play the button says Pause and the angle keeps moving while the dot follows the finger along the axis. On the phone the real part stops at 1.2 and the dot stops 3px short of a finger that has left the square. The angle is still moving. Pause puts the label back to Play and the angle stays. Four hundred milliseconds later it is the same angle.
+
+## The quarter turn
+
+Reduced motion opens on Next step, on the left, angle π. Idle, the page scheduled 0 frames in 400ms.
+
+The four presses land on:
+
+- the bottom, angle −π/2, the purple point 50px below the center on the phone and 67px below it on the laptop
+- the right, angle 0, the purple point on the green dot, 0px apart
+- the top, angle π/2
+- the left, angle π, and the button says Start again
+
+Each press scheduled 0 frames. Start again returns to the bottom. The same four places, in light and in dark, at both widths. The right-hand still is one dot because radius 1 at angle 0 is the green dot. That is the place. Leave it.
+
+The sentence on all four stills, and on Start again, is “The point sits on the left of the unit circle, on the real axis.” On the bottom and the top the point is on the imaginary axis. On the right it is on the real axis, on the other side.
+
+## The clock
+
+Play moves the point about 1px and the angle goes from π to −π, the same place on the circle. The button says Pause. From there the angle climbs by about 0.013 a frame, the real part stays 0, and the sentence stays the left-axis sentence. A full turn is 481 frames, median 16.7ms, 95th percentile 16.8ms, none over 20ms, no long task, and the longest paint was 0.2ms. The button says Play again and the point is back on the left.
+
+The same 1.5 seconds on the laptop, and on the phone with the CPU slowed to 4×, are 90 and 91 frames, median 16.7ms, none over 20ms. At 4× the longest paint was 1.2ms. A paused picture scheduled nothing in 500ms. Pause holds the angle. The next press says Pause and continues from that angle.
+
+A drag off the circle writes the radius as \(e^{x}\), larger than 1, and a drag the other way writes smaller than 1. In the dark those words are the light text on the dark page. The caret is gone.
+
+## The page around it
+
+On the phone the square is 358px in the 390px window. The dashed circle is 99px across. Play ends at 637px, and Back to the book ends at 762px, inside the 844px screen. The title is “Chapter 5. The exponential,” on one line.
+
+On the laptop the square is 480px, up from the old 304px, starting at x = 304 in a column about 1000px wide. The circle is 133px across. Play ends at 745px in the 800px window. The cite ends at 795px. Back to the book ends at 851px, one line under the window. The square is as tall as this screen can hold and still keep Play on it. The paper to the right of the square is the rest of the column.
+
+The book’s Chapter 5 row says Open, Elementary Functions, page 130. The blank-walk line is gone. The status on a fresh visit is still the Chapter 4 walk.
+
+## Cut
+
+- “On the left” and “on the real axis” in the sentence that stays up for the whole turn. That line is true on the resting frame and at the end. It is false at the bottom, the right, and the top, and it is false while Play is moving the point. On the unit circle, say the point is on the unit circle. Name the left only on the frame where the point is on the left. The two radius sentences stay.
+
+## Add
+
+Nothing. No slider, no scrubber, no spring, no second clock, no section list, no chips.
+
+## Another batch
+
+Yes. One cut, then stop. The handle, the four stills, and the frame clock are the lesson, and they already hold. A batch that adds the §5.1 exercises, or that starts the logarithm, will hang new cards on a sentence that calls the bottom of the circle the left.
