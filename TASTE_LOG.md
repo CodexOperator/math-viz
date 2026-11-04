@@ -1206,3 +1206,64 @@ Nothing. No logarithm, no powers, no second plane, no scrubber, no colour key. T
 Yes. One batch, then stop. It is the one cut above.
 
 The circle, the sentence, and Play are on the first screen. The strip line is gone, and Exercise 2 asks the question the left-hand point answers. Something real is left, and it is the order of that card: the answer is the first line. After the question leads, nothing real is left.
+
+## unslop (batch 7)
+
+Branch `cursor/book-chapter-path-df29`, commit `ee723a8e`. Used like a MAT 412 student on https://book-preview.complexanalysis.pages.dev/#chapter-5. The live walk is that commit. Headless Chrome, light and dark, at 390×844 and at 1280×800. From the still: a press on the green dot with no move, a drag out, and a drag in to the clamp. Play for a fifth of a second and for seven tenths, then a pause, and the angle held. Reduced motion through the four steps, on the phone, in the dark. Both hints. A tick on Exercise 2 with `4.1.3` and `4.2.5` already stored. `#chapter-5-5-1-1`. No console errors. No sideways scroll at either width (`scrollWidth` matched the window).
+
+The shell stays. The kicker, the four teaching colours, the uppercase flags, and the card's full-width hint button are the book path. The picture is the one bright thing on the page.
+
+## Verdict
+
+The four cuts from the last note are on the page. On the laptop the claim and Play sit in the 800px window. The segment line is gone. Exercise 2 asks where the images of \(\pm i\pi\) are, and the hint names the strip and the left-hand point. Exercise 1's hint names the right-hand point of the unit circle as \(z = 0\).
+
+The card reads the answer first. The blank and Tick sit under the title, then the cite, then the question. On the frame the page opens on, Exercise 2 already says the images land together at −1, and the question is the line under the cite. A drag of the green dot draws a hard frame around the square. That frame is the browser's auto outline, and `:focus-visible` is false while it shows. One more batch is worth doing. It is the two cuts below. After that, stop.
+
+## What the hand does
+
+At rest the real part is 0 and the angle is π. The claim is "The point sits on the left of the unit circle, on the real axis." A press on the green dot, with no move, leaves both numbers. The modulus blank stays an underline.
+
+A drag to the right, on the phone, sets the real part to about 0.96 and leaves the angle at π. The claim says the radius is \(e^{x}\), larger than 1. The modulus blank says the same, with the word modulus. Play stays at y = 593. The claim box stays 53px tall, so the one-line radius sentence does not pull Play up. A drag the other way clamps the real part at −1.2, the claim says smaller than 1, and Play is still at 593. The same radius sentence, on the laptop in the dark, is one line, and Play ends at 745.
+
+Play says Pause while the point moves. At a fifth of a second the angle is −2.98, about 0.16 from the left, the claim is "The point sits on the unit circle," and Exercise 2 still reads that the images land together at −1, with Tick ready. At seven tenths the angle is −2.59, about 0.55 from the left, that blank is empty, and Tick is grey. Pause says Play. Four hundred milliseconds later the angle is the same number.
+
+Reduced motion opens on Next step, on the left. The four presses land on the bottom, the right, the top, and the left. The button says Next step through the four presses, and Start again on the left. It never says Pause. On the bottom the sentence is the bottom of the unit circle, and both blanks are empty. On the right the sentence is the right of the unit circle, on the real axis, and Exercise 1's blank reads 1, with Tick ready. On the top the sentence is the top, and that 1 clears. On the left the resting sentence is back, and Exercise 2 reads that the images land together at −1, with Tick ready. The modulus blank stays empty on all four.
+
+Ticking Exercise 2 writes `5.1.2` into `mv:progress.test2` beside `4.1.3` and `4.2.5`. The status becomes "Next is §5.1, Exercise 1, page 135. 1 of 2 exercises." Exercise 1's Tick stays disabled on the left-hand frame.
+
+`#chapter-5-5-1-1` opens at the right-hand point, real part 0, angle 0. The claim names the right of the unit circle. Exercise 1's blank is 1. On the phone the page is scrolled 1036px, the card sits at y = 144, and the square is above the window.
+
+## What reads as the page
+
+The title is "Chapter 5. The exponential." The lede, under Play, is "Section 5.1. A blank fills when the picture makes it true. The hint stays closed until you ask." Hints open on ask and the button goes away. Exercise 1's hint is "Definition 5.1, page 130, is the series for \(e^{z}\). The right-hand point of the unit circle is \(z = 0\)." Exercise 2's hint is "Figure 5.2, page 133, is the strip \(-\pi < y \le \pi\). The two ends are the left-hand point." The cite on each card is Howell & Mathews, Complex Analysis, the exercise, page 135, CC BY 4.0. The idea line is Identity (5.1), page 132, and the two read links are Definition 5.1, page 130, and Figure 5.2, page 133. Sections 5.2 through 5.5 are Later, with their pages. The chrome is quiet in both themes. Light paper is #f6f3ec. Dark paper is #0d121c, and the sentence is rgb(233, 237, 245). In the light, blue is rgb(11, 99, 173), orange is rgb(168, 67, 0), green is rgb(0, 110, 83), and purple is rgb(157, 58, 138). In the dark those four are rgb(98, 173, 242), rgb(255, 157, 92), rgb(63, 208, 160), and rgb(228, 143, 210).
+
+On the phone the square is 358×358, from y = 166 to 524. The claim is two lines at rest, from 532 to 585. Play is 44px tall and ends at 637 in the 844px window. The lede starts at 661. The status card, "Next is §5.1, Exercise 1, page 135. 0 of 2 exercises.", starts at 779, so the fold cuts the bottom of that card. The same boxes in the dark.
+
+On the laptop the square is 480×480, from x = 304, y = 179, so its bottom is at 659. The claim is one line, from 667 to 693. Play runs from 701 to 745. The window is 800. The lede starts at 769, and its second line is past the fold. The status card starts at 861. The same clip in the dark.
+
+Each exercise card is the title, the blank, Tick, the cite, the question, and Show the hint. The hint button is the width of the card. On the laptop that is 884px.
+
+## What is still false
+
+**The question sits under the answer.** Exercise 2 opens on "The images of \(\pm i\pi\) land together at −1," with Tick ready, and the cite, and then "Precisely where should the images of the points \(\pm i\pi\) be located?" Exercise 1 is the same order. On the right-hand point the card reads "\(\exp(0)\) is 1" and then asks why that is 1. The blank is the line the picture fills. The question is the sentence it belongs to, and it is the line under the cite.
+
+**A drag frames the square.** After the drag the stage is the focused element, `:focus-visible` is false, and the outline is `auto`, 5px, rgb(16, 16, 16). On the phone that is a black edge on the square, with a white pixel outside it. On the dark laptop the edge is rgb(238, 238, 238). The page's own ring is 3px in the focus colour, and it is the one that shows for the keyboard. The auto outline is the one the drag leaves. A click on Play moves the focus and the frame goes.
+
+## Cut
+
+- On each exercise card, the question, then the blank, then Tick, then the cite, then the hint. Exercise 2 still opens filled with "land together at −1", on the left-hand point. Exercise 1's blank still fills with 1 on the right-hand point, and it holds while the point is within 0.35 radians of that end. The hint button stays the width of the card.
+- The auto outline on the square. A pointer drag leaves the plane unframed. The keyboard ring stays the 3px focus colour, on `:focus-visible`.
+
+## Add
+
+Nothing. No logarithm, no powers, no third exercise, no second plane, no scrubber. The Later rows stay titles. The kicker, the flags, and the four colours stay. The modulus blank stays. It fills when the radius leaves 1.
+
+`#chapter-5-5-1-1` still scrolls the card up and leaves the picture above the window. Leave the hash. The tick stays on the card. It does not have to share the first screen. That screen is the square, the claim, and Play.
+
+## Another batch
+
+Yes. One batch, then stop. It is the two cuts above.
+
+The gesture is the one a student came for, and the sentence follows the point. Play is on the first screen at both widths, in both themes. The segment line is gone. The two hints name the point the picture is on. When the question is the first line of the card, and a drag leaves the square unframed, the loop should rest. Sections 5.2 through 5.5 stay titles.
+
+Something real is left, and it is those two. The rest of the last note is on the page.
