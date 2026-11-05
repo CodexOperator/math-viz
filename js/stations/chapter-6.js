@@ -1,0 +1,583 @@
+// Chapter 6 as a mountain. Stages 6.1–6.3 are walked. Stages 6.4–6.6 are the next camps.
+// A stage is finished when its picture holds and the stage is marked. The tick
+// lives in the same memory as the other chapters.
+
+import { sectionHref } from '../data/book.js';
+import { chapterHash } from '../book/route.js';
+import { CHAPTER_6, chapter4ExerciseIds, chapter5ExerciseIds, chapter6StageIds } from '../data/book-path.js';
+import { loadSharedTicks, saveSharedTicks, toggleTick, sectionFinished, chapterTally } from '../book/progress.js';
+import { h, appendRich, sourceTag } from './test2-ui.js';
+import { mountRealIntegral, mountContourSum, mountDeform, mountBend, mountCauchy, mountLiouville, mountGoursat } from './ch6-pictures.js';
+import { mountPractice, matches } from './ch6-cards.js';
+
+const PICTURES = {
+  real: mountRealIntegral,
+  sum: mountContourSum,
+  deform: mountDeform,
+  goursat: mountGoursat,
+  bend: mountBend,
+  cauchy: mountCauchy,
+  liouville: mountLiouville,
+};
+
+const STAGES = [
+  {
+    id: '6.1',
+    why: '',
+    go: '6.2',
+    goLabel: 'Go to 6.2',
+    gesture: 'Drag the green point around the orange circle. Purple is the integral.',
+    picture: 'real',
+    read: [
+      { pin: 'Definition 6.1, page 163', href: sectionHref('sec_complex-integrals.html', 'Integral_Def_1') },
+      { pin: 'Example 6.1, page 163', href: sectionHref('sec_complex-integrals.html', 'sec_complex-integrals-5') },
+    ],
+    workedPin: 'Definition 6.1, page 163',
+    workedHref: sectionHref('sec_complex-integrals.html', 'Integral_Def_1'),
+    worked: 'From $0$ to $\\pi$, integrate $e^{it}$. From $0$ to $2\\pi$, that is one full period of the same integrand.',
+    sheet: [
+      'Definition 6.1, page 163: $\\int(u+iv)=\\int u+i\\int v$.',
+      'An antiderivative $U+iV$ is evaluated at the ends.',
+    ],
+    summit: 'On a real interval, a complex integral is the real integral plus $i$ times the imaginary integral.',
+  },
+  {
+    id: '6.2',
+    why: '',
+    gesture: 'Drag the green point along the segment. Orange points are the eight samples.',
+    picture: 'sum',
+    read: [
+      { pin: 'Definition 6.2, page 170', href: sectionHref('sec_contour-integrals.html', 'Contoe_fnt_Def') },
+      { pin: 'Example 6.6, page 170', href: sectionHref('sec_contour-integrals.html', 'Riemann_Sum_Ex') },
+      { pin: 'Theorem 6.1, page 172', href: sectionHref('sec_contour-integrals.html', 'thm_contour-integral') },
+    ],
+    workedPin: 'Example 6.7, page 172',
+    workedHref: sectionHref('sec_contour-integrals.html', 'Cont_Int_Ex_1'),
+    go: '6.3',
+    goLabel: 'Go to 6.3',
+    worked: 'The segment from $0$ to $2+i\\pi/4$. Multiply by $z\'(t)$ and integrate in $t$.',
+    sheet: [
+      'Theorem 6.1, page 172: $\\int_C f(z)\\,dz=\\int_a^b f(z(t))z\'(t)\\,dt$.',
+      'A segment from $A$ to $B$ is $z(t)=A+(B-A)t$.',
+      'The opposite contour changes the sign.',
+      'Theorem 6.3, page 177: if $|f|\\le M$ on $C$ and $L$ is the length, then $|\\int_C f\\,dz|\\le ML$.',
+    ],
+    summit: 'Parametrize the contour, multiply by $z\'(t)$, and the contour integral is an ordinary integral on a real interval.',
+  },
+  {
+    id: '6.3',
+    why: '6.2 computes one path. This camp is a closed curve.',
+    go: '6.4',
+    goLabel: 'Go to 6.4',
+    gesture: 'Play subdivides the triangle.',
+    picture: 'goursat',
+    read: [
+      { pin: 'Theorem 6.5, page 183', href: sectionHref('sec_cauchy-goursat.html', 'CG_Thm') },
+      { pin: "Goursat's proof, page 184", href: sectionHref('sec_cauchy-goursat.html', 'sec_cauchy-goursat-17') },
+      { pin: 'Example 6.12, page 186', href: sectionHref('sec_cauchy-goursat.html', 'sec_cauchy-goursat-18') },
+      { pin: 'Theorem 6.6, page 187', href: sectionHref('sec_cauchy-goursat.html', 'Deformation_of_Contour') },
+      { pin: 'Corollary 6.1, page 188', href: sectionHref('sec_cauchy-goursat.html', 'x2Pi_or_zero') },
+    ],
+    workedPin: 'Corollary 6.1, page 188',
+    workedHref: sectionHref('sec_cauchy-goursat.html', 'x2Pi_or_zero'),
+    worked: 'Both circles are positively oriented and the integrand is $1/z$.',
+    sheet: [
+      'Theorem 6.5, page 183: if $f$ is analytic in a simply connected domain and $C$ is a simple closed contour in that domain, the integral is $0$.',
+      'Same singularity inside two closed curves, analytic between them: Theorem 6.6, page 187, the integrals match.',
+      'Only a parametrization: Theorem 6.1, page 172, multiply by $z\'$.',
+      '$1/(z-z_0)$ with $z_0$ inside: Corollary 6.1, page 188, $2\\pi i$. Every other integer power is $0$.',
+    ],
+    summit: 'Theorem 6.5, page 183, needs $f$ analytic in a simply connected domain and a simple closed contour in that domain.',
+    deformSummit: 'Deforming a closed contour through analytic points leaves the integral unchanged.',
+  },
+  {
+    id: '6.4',
+    why: 'In a simply connected domain, two ends use an antiderivative.',
+    go: '6.5',
+    goLabel: 'Go to 6.5',
+    gesture: 'Drag the green bend. The ends stay put, and the integrand is $z$.',
+    picture: 'bend',
+    read: [
+      { pin: 'Theorem 6.8, page 193', href: sectionHref('sec_integration-theorems.html', 'Antideriv_Thm') },
+      { pin: 'Theorem 6.9, page 194', href: sectionHref('sec_integration-theorems.html', 'DInt_Thm') },
+    ],
+    workedPin: 'Theorem 6.9, page 194',
+    workedHref: sectionHref('sec_integration-theorems.html', 'DInt_Thm'),
+    worked: 'The ends stay at $-1-i$ and $3+i$. An antiderivative of $z$ is $z^{2}/2$.',
+    sheet: [
+      'Theorem 6.9, page 194: in a simply connected domain, $\\int_{z_0}^{z_1} f = F(z_1)-F(z_0)$.',
+      'In a simply connected domain, an analytic integrand does not care which path you draw between the same ends.',
+    ],
+    summit: 'In a simply connected domain, the integral of an analytic integrand is the antiderivative at the end minus the antiderivative at the start.',
+  },
+  {
+    id: '6.5',
+    why: '6.4 needs an antiderivative.',
+    go: '6.6',
+    goLabel: 'Go to 6.6',
+    gesture: 'Drag the green point. The integrand is $z/(z-z_0)$ on the unit circle.',
+    picture: 'cauchy',
+    read: [
+      { pin: 'Theorem 6.10, page 197', href: sectionHref('sec_cauchy-integral-formulas.html', 'Cauchy_Int_Formula') },
+      { pin: 'Theorem 6.12, page 199', href: sectionHref('sec_cauchy-integral-formulas.html', 'Cauchy_Int_Formulas') },
+      { pin: 'Example 6.21, page 198', href: sectionHref('sec_cauchy-integral-formulas.html', 'sec_cauchy-integral-formulas-5') },
+    ],
+    workedPin: 'Theorem 6.10, page 197',
+    workedHref: sectionHref('sec_cauchy-integral-formulas.html', 'Cauchy_Int_Formula'),
+    worked: 'For $f(z)=z$ on the unit circle, the formula is $\\dfrac{1}{2\\pi i}\\int \\dfrac{z}{z-z_0}\\,dz$.',
+    sheet: [
+      'Theorem 6.10, page 197: $f(z_0)=\\dfrac{1}{2\\pi i}\\int_C \\dfrac{f(z)}{z-z_0}\\,dz$ when $z_0$ is inside $C$.',
+      'Theorem 6.12, page 199, equation (6.48): $f^{(n)}(z_0)=\\dfrac{n!}{2\\pi i}\\int_C \\dfrac{f(z)}{(z-z_0)^{n+1}}\\,dz$. The power in the denominator is $n+1$.',
+    ],
+    summit: 'The value inside a contour is an integral on the boundary.',
+  },
+  {
+    id: '6.6',
+    why: '',
+    next: 'Next camp is Chapter 7, Taylor and Laurent series.',
+    go: 'book',
+    goLabel: 'Back to the book',
+    gesture: 'Drag the green radius across the circles. Purple is the bound $1/R$.',
+    picture: 'liouville',
+    read: [
+      { pin: 'Theorem 6.13, page 203', href: sectionHref('sec_morera-liouville.html', 'Morera_s_Thm') },
+      { pin: 'Theorem 6.17, page 205', href: sectionHref('sec_morera-liouville.html', 'Cauchy_Ineqs') },
+      { pin: 'Theorem 6.18, page 206', href: sectionHref('sec_morera-liouville.html', 'Liouville_s_Thm') },
+    ],
+    workedPin: 'Theorem 6.18, page 206',
+    workedHref: sectionHref('sec_morera-liouville.html', 'Liouville_s_Thm'),
+    worked: 'If $|f|\\le M$ on every circle, Theorem 6.17, page 205, says $|f\'(z_0)|\\le M/R$.',
+    sheet: [
+      'Theorem 6.13, page 203: if $f$ is continuous in a simply connected domain and every closed contour integrates to $0$, then $f$ is analytic.',
+      '',
+    ],
+    summit: 'One circle is not every circle.',
+    summitOpen: 'An entire function that stays bounded is constant.',
+  },
+];
+
+function slug(id) {
+  return String(id).replace(/\./g, '-');
+}
+
+function liveSections() {
+  return CHAPTER_6.sections.filter((s) => s.exercises.length > 0);
+}
+
+function studentBlank(id, prompt, readStep, onGrade) {
+  const input = h('input', {
+    type: 'text', class: 'ch6-blank', id: `${id}-input`, 'aria-label': 'Your answer', autocomplete: 'off',
+  });
+  const check = h('button', { type: 'button', class: 'btn', id: `${id}-check` }, 'Check');
+  const note = h('p', { class: 'hint-note', id: `${id}-note`, hidden: '' });
+  const line = h('p', { class: 'exp-blank', id, 'data-right': 'false' });
+  appendRich(line, prompt);
+  line.append(input);
+  const wrap = h('div', { class: 'ch6-student', id: `${id}-row`, 'data-right': 'false' },
+    line, h('div', { class: 'problem-actions' }, check), note);
+  let locked = false;
+  function grade() {
+    if (locked) return;
+    const step = readStep();
+    const right = matches(step, input.value);
+    line.dataset.right = right ? 'true' : 'false';
+    wrap.dataset.right = right ? 'true' : 'false';
+    wrap.dataset.graded = step.where || '';
+    note.hidden = false;
+    note.replaceChildren();
+    appendRich(note, right ? (step.why || '') : (step.miss || 'The value stays covered.'));
+    if (right && step.lock !== false) {
+      locked = true;
+      input.disabled = true;
+      check.disabled = true;
+    }
+    if (onGrade) onGrade();
+  }
+  check.addEventListener('click', grade);
+  input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') grade(); });
+  return wrap;
+}
+
+function setTick(tick, why, on, ready, reason) {
+  if (!tick) return;
+  tick.disabled = !on && !ready;
+  tick.setAttribute('aria-pressed', String(on));
+  tick.textContent = on ? 'Completed' : 'Stage complete';
+  tick.dataset.done = on ? 'true' : 'false';
+  if (!why) return;
+  const show = tick.disabled && !!reason;
+  why.hidden = !show;
+  why.textContent = show ? reason : '';
+}
+
+export function mount(section, ctx) {
+  const store = ctx.store;
+  const owned = new Set([...chapter4ExerciseIds(), ...chapter5ExerciseIds(), ...chapter6StageIds()]);
+  let ticks = loadSharedTicks(store, (id) => owned.has(id), chapter4ExerciseIds());
+  const stops = [];
+  let dead = false;
+
+  const path = h('ol', { class: 'chapter-path ch6-path', id: 'chapter-path' });
+  const blanks = {};
+  const ticksBtn = {};
+  const tickWhys = {};
+
+  function paintStatus() {
+    const t = chapterTally(liveSections(), ticks);
+    const count = `${t.exercisesTicked} of ${t.exerciseTotal}`;
+    for (const stage of STAGES) {
+      const flag = section.querySelector(`#chapter-section-${slug(stage.id)}-flag`);
+      if (flag) flag.textContent = `${stage.id} · ${count}`;
+    }
+    for (const node of path.querySelectorAll('.section-node')) {
+      const id = node.getAttribute('data-section');
+      const spec = CHAPTER_6.sections.find((s) => s.id === id);
+      if (!spec || !spec.exercises.length) continue;
+      const finished = sectionFinished(spec, ticks);
+      node.setAttribute('data-state', finished ? 'done' : (t.nextId === id ? 'next' : 'ahead'));
+    }
+  }
+
+  function campLine(stage) {
+    const go = h('button', {
+      type: 'button', class: 'btn btn-primary', id: `chapter-go-${slug(stage.id)}`,
+    }, stage.goLabel);
+    go.addEventListener('click', () => {
+      if (stage.go === 'book') {
+        ctx.navigate('book');
+        return;
+      }
+      ctx.navigate(chapterHash(6, stage.go));
+    });
+    const kids = [];
+    if (stage.next) {
+      const line = h('p', { class: 'ch6-next-camp', id: `chapter-section-${slug(stage.id)}-next` });
+      appendRich(line, stage.next);
+      kids.push(line);
+    }
+    kids.push(go);
+    return h('div', { class: 'book-next', id: `chapter-go-row-${slug(stage.id)}` }, ...kids);
+  }
+
+  const fixed = (answer, accept, miss, why) => () => ({ answer, accept, miss, why });
+
+  for (const stage of STAGES) {
+    const scope = `chapter-section-${slug(stage.id)}`;
+    const gesture = h('p', { class: 'ch6-gesture', id: `${scope}-gesture` });
+    appendRich(gesture, stage.gesture);
+    const picture = h('div', { class: 'ch6-picture', id: `ch6-picture-${slug(stage.id)}` });
+    stops.push(PICTURES[stage.picture](picture));
+    const worked = stage.id === '6.1' ? null : h('p', { class: 'section-idea', id: `${scope}-worked` });
+    if (worked) appendRich(worked, stage.worked);
+    const sheet = h('ul', { class: 'ch6-sheet', id: `${scope}-sheet` });
+    stage.sheet.forEach((line) => {
+      if (!line) return;
+      const li = h('li');
+      appendRich(li, line);
+      sheet.append(li);
+    });
+    if (stage.id === '6.6') {
+      sheet.append(h('li', { id: 'ch6-sheet-constant', hidden: '' }));
+    }
+    const blankHost = h('div', { class: 'exp-blanks', id: `${scope}-blanks` });
+    if (stage.id === '6.1') {
+      blanks.half = studentBlank('ch6-blank-half', 'From $0$ to $\\pi$ the integral is ', fixed(
+        '2i', ['2 i', '$2i$'],
+        'Integrate $e^{it}$ from $0$ to $\\pi$. The value stays covered.',
+        'From $0$ to $\\pi$, the integral is $2i$.',
+      ), () => paintAll());
+      blanks.full = studentBlank('ch6-blank-full', 'From $0$ to $2\\pi$ the integral is ', fixed(
+        '0', ['0+0i'],
+        'A full period of $e^{it}$ returns to the start. The value stays covered.',
+        'From $0$ to $2\\pi$, the integral is $0$.',
+      ), () => paintAll());
+      blankHost.append(blanks.half, blanks.full);
+    } else if (stage.id === '6.2') {
+      blanks.exact = studentBlank('ch6-blank-exact', 'The exact value is ', fixed(
+        '\\exp(2+i\\pi/4)-1', ['e^{2+i\\pi/4}-1', 'exp(2+i*pi/4)-1'],
+        'Multiply by $z\'(t)$ and integrate in $t$. The value stays covered.',
+        'The integral equals $\\exp(2+i\\pi/4)-1$.',
+      ), () => paintAll());
+      blankHost.append(blanks.exact);
+    } else if (stage.id === '6.3') {
+      blanks.zero = studentBlank('ch6-blank-zero', 'The integral over the triangle is ', fixed(
+        '0', ['0+0i'],
+        'The integrand is analytic in a simply connected domain, and the triangle is a simple closed contour in that domain. Theorem 6.5, page 183, is the result. The value stays covered.',
+        'Theorem 6.5, page 183, says the integral is $0$.',
+      ), () => paintAll());
+      blankHost.append(blanks.zero);
+    } else if (stage.id === '6.4') {
+      blanks.bend = studentBlank('ch6-blank-bend', 'The integral of $z$ is ', fixed(
+        '4+2i', ['4+2 i', '4+2\\,i'],
+        'Evaluate $z^2/2$ at the two ends and subtract. The value stays covered.',
+        '$((3+i)^2-(-1-i)^2)/2=4+2i$.',
+      ), () => paintAll());
+      blankHost.append(blanks.bend);
+    } else if (stage.id === '6.5') {
+      blanks.cauchy = studentBlank('ch6-blank-cauchy', 'The formula returns ', () => {
+        const where = section.querySelector('#ch6-cauchy-stage') && section.querySelector('#ch6-cauchy-stage').dataset.where;
+        if (where === 'outside') {
+          return {
+            where: 'outside',
+            answer: '0', accept: ['0+0i', '$0$'], lock: false,
+            miss: 'Outside, the integral is $0$. The value stays covered.',
+            why: 'Outside, the integral is $0$.',
+          };
+        }
+        if (where === 'inside') {
+          return {
+            where: 'inside',
+            answer: 'the green point', accept: ['green point', 'z_0', 'f(z_0)', '$z_0$'],
+            miss: 'Theorem 6.10 returns $f(z_0)$ while the point is inside. Name that point. The words stay covered.',
+            why: 'Inside the circle, the formula returns the green point.',
+          };
+        }
+        return {
+          where: 'edge',
+          answer: '', accept: [], lock: false,
+          miss: 'The green point is on the circle. Move it inside or outside before you write a value.',
+          why: '',
+        };
+      }, () => paintAll());
+      blankHost.append(blanks.cauchy);
+    } else {
+      blanks.liouville = studentBlank('ch6-blank-liouville', 'If the bound holds on every circle, $f$ is ', fixed(
+        'constant', ['a constant', 'Constant', 'A constant'],
+        'A derivative of $0$ means $f$ does not change. The word stays covered.',
+        'Theorem 6.18, page 206: a bound on every circle forces $f$ to be constant.',
+      ), () => paintAll());
+      blankHost.append(blanks.liouville);
+    }
+    const practice = h('div', { class: 'chapter-exercises', id: `ch6-practice-${slug(stage.id)}` });
+    const summit = h('p', { class: 'ch6-summit', id: `${scope}-summit` });
+    appendRich(summit, stage.summit);
+    const tick = h('button', {
+      type: 'button', class: 'btn', id: `chapter-tick-${slug(stage.id)}`, 'aria-pressed': 'false', disabled: '',
+    }, 'Stage complete');
+    tick.addEventListener('click', () => {
+      if (tick.disabled) return;
+      ticks = toggleTick(ticks, stage.id);
+      saveSharedTicks(store, ticks);
+      paintAll();
+    });
+    const tickWhy = h('p', { class: 'ch6-tick-why', id: `chapter-tick-${slug(stage.id)}-why`, hidden: '' });
+    ticksBtn[stage.id] = tick;
+    tickWhys[stage.id] = tickWhy;
+    const head = [
+      h('p', { class: 'book-flag', id: `${scope}-flag` }, stage.id),
+      h('h2', { id: `${scope}-title` }, CHAPTER_6.sections.find((s) => s.id === stage.id).title),
+      h('p', { class: 'book-page' }, `Page ${CHAPTER_6.sections.find((s) => s.id === stage.id).page}`),
+    ];
+    if (stage.why) {
+      const why = h('p', { class: 'section-idea ch6-why', id: `${scope}-why` });
+      appendRich(why, stage.why);
+      head.push(why);
+    }
+    head.push(gesture, picture);
+    const sheetBlock = [
+      h('p', { class: 'book-label', id: `${scope}-sheet-label` }, 'For the exam'),
+      sheet,
+      practice,
+    ];
+    const summitBlock = [
+      summit,
+      campLine(stage),
+      h('div', { class: 'problem-actions' }, tick),
+      tickWhy,
+    ];
+    let body;
+    if (stage.id === '6.3') {
+      const beatGesture = h('p', { class: 'ch6-gesture', id: `${scope}-deform-gesture` });
+      appendRich(beatGesture, 'Drag the green handle. The integrand is $1/z$.');
+      const deform = h('div', { class: 'ch6-picture', id: 'ch6-picture-deform' });
+      stops.push(mountDeform(deform));
+      blanks.pole = studentBlank('ch6-blank-pole', 'The integral of $1/z$ over the green circle is ', () => {
+        const where = section.querySelector('#ch6-deform-stage') && section.querySelector('#ch6-deform-stage').dataset.where;
+        if (where === 'inside') {
+          return {
+            answer: '2\\pi i', accept: ['2πi', '2pi i'], lock: false,
+            miss: 'The pole is inside the green circle. Corollary 6.1 is the power $-1$. The value stays covered.',
+            why: 'The pole is inside, and the power is $-1$, so the integral is $2\\pi i$.',
+          };
+        }
+        if (where === 'outside') {
+          return {
+            answer: '0', accept: ['0+0i'], lock: false,
+            miss: 'The pole has left the green circle. Theorem 6.5 applies. The value stays covered.',
+            why: 'The pole is outside, so the integral over the green circle is $0$.',
+          };
+        }
+        return {
+          answer: '', accept: [], lock: false,
+          miss: 'The pole is on the circle. Move it inside or outside before you write a value.',
+          why: '',
+        };
+      }, () => paintAll());
+      const poleHost = h('div', { class: 'exp-blanks', id: `${scope}-pole-blanks` }, blanks.pole);
+      const deformSummit = h('p', { class: 'ch6-summit', id: `${scope}-deform-summit` });
+      appendRich(deformSummit, stage.deformSummit);
+      body = [
+        ...head,
+        blankHost,
+        ...summitBlock,
+        beatGesture,
+        deform,
+        worked,
+        poleHost,
+        deformSummit,
+        ...sheetBlock,
+      ];
+    } else {
+      body = [
+        ...head,
+        ...(worked ? [worked] : []),
+        blankHost,
+        ...summitBlock,
+        ...sheetBlock,
+      ];
+    }
+    path.append(h('li', {
+      class: 'section-node', id: scope, 'data-section': stage.id, 'data-state': 'ahead',
+    }, ...body));
+  }
+
+  function ready(node) {
+    return !!(node && node.dataset.right === 'true');
+  }
+
+  // A check is about the point where it was made. Moving the point clears an
+  // unlocked mark so an outside 0 does not count once the point is inside.
+  function dropStale(node, where) {
+    if (!node || node.dataset.right !== 'true') return;
+    if (!node.dataset.graded || node.dataset.graded === where) return;
+    const input = node.querySelector('input');
+    if (input && input.disabled) return;
+    node.dataset.right = 'false';
+    const line = node.querySelector('.exp-blank');
+    if (line) line.dataset.right = 'false';
+    const note = node.querySelector('.hint-note');
+    if (note) note.hidden = true;
+  }
+
+  function paintAll() {
+    const real = section.querySelector('#ch6-real-stage');
+    const sum = section.querySelector('#ch6-sum-stage');
+    const goursat = section.querySelector('#ch6-goursat-stage');
+    const bend = section.querySelector('#ch6-bend-stage');
+    const cauchy = section.querySelector('#ch6-cauchy-stage');
+    const liouville = section.querySelector('#ch6-liouville-stage');
+    const phase = real && real.dataset.phase;
+    const steps = sum ? Number(sum.dataset.steps) : 0;
+    const spot = cauchy && cauchy.dataset.where;
+    const fullTurn = phase === 'full';
+    const bothLines = ready(blanks.half) && ready(blanks.full);
+    setTick(ticksBtn['6.1'], tickWhys['6.1'], ticks['6.1'] === true, fullTurn && bothLines,
+      fullTurn ? 'Fill both lines' : 'Bring the point all the way around');
+    setTick(ticksBtn['6.2'], tickWhys['6.2'], ticks['6.2'] === true, steps === 8 && ready(blanks.exact),
+      steps === 8 ? 'Fill the line' : 'Take all eight steps');
+    const cut = !!(goursat && goursat.dataset.subdivided === 'true');
+    setTick(ticksBtn['6.3'], tickWhys['6.3'], ticks['6.3'] === true, cut && ready(blanks.zero),
+      cut ? 'Fill the line' : 'Subdivide the triangle');
+    const bent = !!(bend && bend.dataset.bent === 'true');
+    setTick(ticksBtn['6.4'], tickWhys['6.4'], ticks['6.4'] === true, bent && ready(blanks.bend),
+      bent ? 'Fill the line' : 'Bend the path');
+    const inside = spot === 'inside';
+    dropStale(blanks.cauchy, spot || '');
+    setTick(ticksBtn['6.5'], tickWhys['6.5'], ticks['6.5'] === true, inside && ready(blanks.cauchy),
+      inside ? 'Fill the line' : 'Bring the point inside');
+    const every = !!(liouville && liouville.dataset.every === 'true');
+    const named = ready(blanks.liouville);
+    setTick(ticksBtn['6.6'], tickWhys['6.6'], ticks['6.6'] === true, every && named,
+      every ? 'Fill the line' : 'Cross every circle');
+    const constantLi = section.querySelector('#ch6-sheet-constant');
+    if (constantLi) {
+      constantLi.hidden = !named;
+      if (named && !constantLi.dataset.filled) {
+        appendRich(constantLi, 'Theorem 6.18, page 206: a bounded entire function is constant.');
+        constantLi.dataset.filled = 'true';
+      }
+    }
+    const summit66 = section.querySelector('#chapter-section-6-6-summit');
+    if (summit66) {
+      const next = named
+        ? 'An entire function that stays bounded is constant.'
+        : (every ? 'A bound on the circles in this picture does not send the derivative to $0$.' : 'One circle is not every circle.');
+      if (summit66.dataset.line !== next) {
+        summit66.dataset.line = next;
+        summit66.replaceChildren();
+        appendRich(summit66, next);
+      }
+    }
+    paintStatus();
+  }
+
+  function watch(selector) {
+    const node = section.querySelector(selector);
+    if (!node) return;
+    const observer = new MutationObserver(paintAll);
+    observer.observe(node, { attributes: true, attributeFilter: ['data-phase', 'data-steps', 'data-where', 'data-holds', 'data-bent', 'data-subdivided', 'data-every'] });
+    stops.push(() => observer.disconnect());
+  }
+
+  section.append(
+    h('header', { class: 'station-header' },
+      h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back' }, 'The Book')),
+      h('h1', { id: 'chapter-title' }, 'Chapter 6. Complex Integration'),
+      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Six stages, from a real interval to a contour you can move.')),
+    path,
+    sourceTag({ pin: CHAPTER_6.pin, href: CHAPTER_6.href }),
+    h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
+
+  watch('#ch6-real-stage');
+  watch('#ch6-sum-stage');
+  watch('#ch6-goursat-stage');
+  watch('#ch6-bend-stage');
+  watch('#ch6-cauchy-stage');
+  watch('#ch6-liouville-stage');
+  paintAll();
+
+  const restoreScroll = ctx.restoreScroll;
+  function applyRestore() {
+    if (restoreScroll == null) return;
+    window.scrollTo(0, restoreScroll);
+  }
+  const focus = ctx.book && ctx.book.focus;
+  if (restoreScroll == null && focus) {
+    const target = section.querySelector(`#chapter-section-${slug(focus)}`)
+      || section.querySelector(`#chapter-section-${slug(String(focus).split('.').slice(0, 2).join('.'))}`);
+    if (target) {
+      target.classList.add('is-target');
+      target.scrollIntoView({ block: 'start' });
+    }
+  }
+
+  const practiceUrl = new URL('data/practice/ch6.json', window.location.href);
+  fetch(practiceUrl.href).then((res) => {
+    if (!res.ok) throw new Error(String(res.status));
+    return res.json();
+  }).then((items) => {
+    if (dead || !Array.isArray(items)) return;
+    for (const stage of STAGES) {
+      const host = section.querySelector(`#ch6-practice-${slug(stage.id)}`);
+      if (!host) continue;
+      const mine = items.filter((item) => item && item.section === stage.id);
+      stops.push(mountPractice(host, mine));
+    }
+    applyRestore();
+    requestAnimationFrame(applyRestore);
+  }).catch(() => {
+    applyRestore();
+    if (dead) return;
+    const host = section.querySelector('#ch6-practice-6-1');
+    if (host && !host.childElementCount) {
+      host.append(h('p', { class: 'section-idea', id: 'ch6-practice-missing' }, 'The practice file did not load.'));
+    }
+  });
+
+  return function unmount() {
+    dead = true;
+    for (const stop of stops) {
+      try { stop(); } catch { /* a picture already released its listeners */ }
+    }
+  };
+}

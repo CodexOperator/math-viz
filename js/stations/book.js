@@ -3,8 +3,10 @@
 // memory as the Test 2 index. Hints stay closed. No answer key on these cards.
 
 import { stationById } from '../registry.js';
+import { chapterHash } from '../book/route.js';
 import { BOOK, sectionHref } from '../data/book.js';
-import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, bookChapter, chapter4ExerciseIds, chapter5ExerciseIds, CHAPTER_PICTURE, pictureHref } from '../data/book-path.js';
+import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, CHAPTER_6, bookChapter, chapter4ExerciseIds, chapter5ExerciseIds, chapter6StageIds, CHAPTER_PICTURE, pictureHref } from '../data/book-path.js';
+import { mount as mountChapter6 } from './chapter-6.js';
 import { test2ProblemById } from '../data/test2-problems.js';
 import { loadSharedTicks, saveSharedTicks, toggleTick, sectionFinished, chapterTally } from '../book/progress.js';
 import { h, appendRich, sourceTag } from './test2-ui.js';
@@ -15,7 +17,21 @@ function slug(id) {
 }
 
 function ticksOf(store) {
-  return loadSharedTicks(store, (id) => !!test2ProblemById(id), chapter4ExerciseIds());
+  const stages = new Set(chapter6StageIds());
+  const ch5 = new Set(chapter5ExerciseIds());
+  return loadSharedTicks(store, (id) => !!test2ProblemById(id) || stages.has(id) || ch5.has(id), chapter4ExerciseIds());
+}
+
+function inProgressChapter(ticks) {
+  const specs = [
+    { n: 4, sections: CHAPTER_4.sections, walk: 'Walk Chapter 4' },
+    { n: 5, sections: CHAPTER_5.sections, walk: 'Open Chapter 5' },
+    { n: 6, sections: CHAPTER_6.sections.filter((s) => s.exercises.length), walk: 'Walk Chapter 6' },
+  ];
+  const rows = specs.map((spec) => ({ ...spec, t: chapterTally(spec.sections, ticks) }));
+  const started = [...rows].reverse().find((row) => row.t.exercisesTicked > 0 && !row.t.complete);
+  if (started) return started;
+  return rows.find((row) => !row.t.complete) || null;
 }
 
 function exerciseHint(section, problem) {
@@ -36,6 +52,7 @@ export function mount(section, ctx) {
   if (!spec || spec.kind === 'roadmap') return mountRoadmap(section, ctx, spec);
   if (spec.chapter === 4) return mountChapter4(section, ctx, spec.focus);
   if (spec.chapter === 5) return mountChapter5(section, ctx, spec.focus);
+  if (spec.chapter === 6) return mountChapter6(section, ctx);
   return mountRoadmap(section, ctx, { kind: 'roadmap', chapter: null, focus: null });
 }
 
@@ -50,25 +67,34 @@ function mountRoadmap(el, ctx, spec) {
 
   function paint() {
     const t = tally();
-    if (t.complete) {
-      status.textContent = `${nextSentence(t)} Chapter 5 is next.`;
-      walk.textContent = 'Open Chapter 5';
-      walk.setAttribute('href', '#chapter-5');
-    } else {
-      status.textContent = nextSentence(t);
-      walk.textContent = 'Walk Chapter 4';
+    const current = inProgressChapter(ticks);
+    if (!current) {
+      status.textContent = 'Chapters 4, 5, and 6 are done.';
+      walk.textContent = 'Walk Chapter 6';
+      walk.setAttribute('href', '#chapter-6');
+    } else if (current.n === 4) {
+      status.textContent = t.complete ? `${nextSentence(t)} Chapter 5 is next.` : nextSentence(t);
+      walk.textContent = current.walk;
       walk.setAttribute('href', '#chapter-4');
+    } else if (current.t.exercisesTicked > 0) {
+      status.textContent = `Next is ${current.t.nextId}. ${current.t.exercisesTicked} of ${current.t.exerciseTotal}.`;
+      walk.textContent = current.walk;
+      walk.setAttribute('href', `#chapter-${current.n}`);
+    } else {
+      status.textContent = `Chapter ${current.n} is next.`;
+      walk.textContent = current.walk;
+      walk.setAttribute('href', `#chapter-${current.n}`);
     }
     for (const node of list.querySelectorAll('.book-node')) {
       const n = Number(node.getAttribute('data-chapter'));
       let state = 'later';
       if (n === 4) state = t.complete ? 'done' : 'next';
-      else if (n === 5) state = 'open';
+      else if (n === 5 || n === 6) state = 'open';
       node.setAttribute('data-state', state);
       const flag = node.querySelector('.book-flag');
       if (!flag) continue;
       if (n === 4) flag.textContent = t.complete ? 'Done' : 'Next';
-      else if (n === 5) flag.textContent = 'Open';
+      else if (n === 5 || n === 6) flag.textContent = 'Open';
       else flag.textContent = 'Later';
     }
     for (const row of list.querySelectorAll('[data-section]')) {
@@ -80,6 +106,21 @@ function mountRoadmap(el, ctx, spec) {
       const mark = row.querySelector('.book-section-mark');
       if (mark) mark.textContent = finished ? 'Done' : (t.nextId === id ? 'Next' : '');
     }
+    const live6 = CHAPTER_6.sections.filter((s) => s.exercises.length > 0);
+    const t6 = chapterTally(live6, ticks);
+    for (const row of list.querySelectorAll('#book-sections-6 [data-section]')) {
+      const id = row.getAttribute('data-section');
+      const section = CHAPTER_6.sections.find((s) => s.id === id);
+      const mark = row.querySelector('.book-section-mark');
+      if (!section || !section.exercises.length) {
+        row.setAttribute('data-state', 'ahead');
+        if (mark) mark.textContent = 'Later';
+        continue;
+      }
+      const finished = sectionFinished(section, ticks);
+      row.setAttribute('data-state', finished ? 'done' : (t6.nextId === id ? 'next' : 'ahead'));
+      if (mark) mark.textContent = finished ? 'Done' : (t6.nextId === id ? 'Next' : '');
+    }
   }
 
   for (const ch of BOOK_CHAPTERS) {
@@ -90,15 +131,22 @@ function mountRoadmap(el, ctx, spec) {
         document.createTextNode(` ${ch.title}`)),
       h('p', { class: 'book-page', id: `book-page-${ch.n}` }, `Page ${ch.page}`));
     const kids = [head];
-    if (ch.n === 4) {
-      const sections = h('ol', { class: 'book-sections', id: 'book-sections-4' });
+    if (ch.n === 4 || ch.n === 6) {
+      const sections = h('ol', { class: 'book-sections', id: `book-sections-${ch.n}` });
       for (const s of ch.sections) {
+        const label = `${s.id} ${s.title}`;
+        const link = h('a', { href: `#${chapterHash(ch.n, s.id)}`, id: `book-section-link-${slug(s.id)}` },
+          h('span', { class: 'book-section-name' }, label));
         sections.append(h('li', { 'data-section': s.id, id: `book-section-${slug(s.id)}` },
-          h('span', null, `${s.id} ${s.title}`),
+          link,
           h('span', { class: 'book-section-page' }, `p. ${s.page}`),
           h('span', { class: 'book-section-mark' }, '')));
       }
       kids.push(sections);
+      if (ch.n === 6) {
+        kids.push(h('p', { class: 'book-door', id: 'book-door-6' },
+          h('a', { class: 'btn btn-primary', href: '#chapter-6', id: 'book-open-6' }, 'Walk Chapter 6')));
+      }
     }
     if (!ch.open && ch.door) {
       const st = stationById(ch.door);
@@ -267,7 +315,8 @@ function mountChapter4(el, ctx, focus) {
     path,
     h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
 
-  if (focus) {
+  if (ctx.restoreScroll != null) window.scrollTo(0, ctx.restoreScroll);
+  else if (focus) {
     const card = cards.find((c) => c.getAttribute('data-problem') === focus);
     const sectionNode = el.querySelector(`#chapter-section-${slug(focus)}`);
     const target = card || sectionNode;
@@ -388,11 +437,14 @@ function mountChapter5(el, ctx, focus) {
 
   paint();
 
-  const targetId = focus === '5.1' ? scope : (CHAPTER_5.cards[focus] ? `chapter-card-${slug(focus)}` : '');
-  const target = targetId ? el.querySelector(`#${targetId}`) : null;
-  if (target) {
-    target.classList.add('is-target');
-    target.scrollIntoView({ block: 'start' });
+  if (ctx.restoreScroll != null) window.scrollTo(0, ctx.restoreScroll);
+  else {
+    const targetId = focus === '5.1' ? scope : (CHAPTER_5.cards[focus] ? `chapter-card-${slug(focus)}` : '');
+    const target = targetId ? el.querySelector(`#${targetId}`) : null;
+    if (target) {
+      target.classList.add('is-target');
+      target.scrollIntoView({ block: 'start' });
+    }
   }
 
   return function unmount() {

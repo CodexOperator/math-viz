@@ -272,6 +272,15 @@ body[data-nav-open="true"] {
 
 .nav-title { flex: 1 1 auto; min-width: 0; }
 
+.nav-later {
+  flex: none;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .nav-threads { flex: none; display: inline-flex; gap: 3px; }
 
 /* A thread dot: solid for T1 and T3, a dashed ring for T2 (so colour is never the only cue). */
@@ -1098,6 +1107,12 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   .exp-claim { min-height: calc(1.0625rem * 1.55 * 2); }
 }
 
+/* 6.1's resting claim is one line. The half-turn slot keeps one line from the first paint. */
+#ch6-real-claim,
+#ch6-real-half {
+  min-height: calc(1.0625rem * 1.55);
+}
+
 .exp-blanks {
   margin: 0;
   padding: 0;
@@ -1179,6 +1194,25 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   text-transform: uppercase;
 }
 
+/* The words stay the size they are. The hit is a nav row. */
+.book-kicker a,
+.book-footer-link a {
+  position: relative;
+  display: inline-block;
+  text-decoration: none;
+}
+
+.book-kicker a::before,
+.book-footer-link a::before {
+  content: "";
+  position: absolute;
+  left: -0.4rem;
+  right: -0.4rem;
+  top: 50%;
+  height: var(--tap);
+  transform: translateY(-50%);
+}
+
 .book-node[data-state="next"] > .book-node-head .book-flag,
 .section-node[data-state="next"] > .book-flag { color: var(--text); }
 
@@ -1195,14 +1229,44 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 
 .book-sections li {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
+  flex-wrap: nowrap;
+  align-items: flex-start;
   gap: 0.35rem 0.75rem;
   min-width: 0;
+  min-height: var(--tap);
 }
 
-.book-section-page { margin-left: auto; font-variant-numeric: tabular-nums; }
-.book-section-mark { font-size: 0.82rem; font-weight: 700; }
+/* The page shares the first line. The title wraps under the name. */
+.book-sections a {
+  display: flex;
+  align-items: flex-start;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: auto;
+  min-height: var(--tap);
+  padding-top: calc((var(--tap) - 1.0625rem * 1.55) / 2);
+}
+
+.book-section-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: normal;
+}
+
+.book-section-page {
+  margin-left: auto;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  padding-top: calc((var(--tap) - 1.0625rem * 1.55) / 2);
+  line-height: calc(1.0625rem * 1.55);
+}
+.book-section-mark {
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding-top: calc((var(--tap) - 1.0625rem * 1.55) / 2);
+  line-height: calc(1.0625rem * 1.55);
+}
 .book-section-mark:empty { display: none; }
 .book-sections [data-state="next"] .book-section-mark { color: var(--text); }
 .book-sections [data-state="done"] .book-section-mark { color: var(--ok); }
@@ -1220,8 +1284,103 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 }
 
 .section-idea { max-width: 62ch; margin: 0; }
+
+.ch6-picture {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.ch6-observe,
+.ch6-summit,
+.ch6-sheet {
+  max-width: 62ch;
+  margin: 0;
+}
+
+.ch6-sheet { padding-left: 1.2rem; }
+.ch6-sheet li { margin: 0.15rem 0; }
+
+.chapter-path.ch6-path { padding-bottom: var(--header-h); }
+
+.ch6-gesture { max-width: 62ch; margin: 0; }
+
+.ch6-stage {
+  /* Wider than 16rem, and short enough that Play stays on the first screen. */
+  width: min(100%, calc(100dvh - 33rem));
+  max-width: 100%;
+  aspect-ratio: 1;
+  touch-action: none;
+}
+@media (max-width: 40rem) {
+  .ch6-stage { width: min(100%, calc(100dvh - 35rem)); }
+}
+
+.ch6-stage svg { display: block; width: 100%; height: 100%; }
+
+.ch6-stage svg:focus:not(:focus-visible) { outline: none; }
+
+.section-node[data-state="later"] {
+  background: transparent;
+  box-shadow: none;
+}
+
+.ch6-steps { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.ch6-step { margin: 0; max-width: 62ch; }
+.ch6-step[data-right="true"] { color: var(--ok); }
+
+.ch6-choices { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.ch6-choice {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  overflow-x: hidden;
+  white-space: normal;
+  text-align: left;
+  min-height: var(--tap);
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
+}
+.ch6-choice .katex { white-space: nowrap; }
+.ch6-why,
+.ch6-next-camp,
+.ch6-tick-why { margin: 0; max-width: 62ch; }
+.ch6-tick-why { color: var(--text-muted); }
+.ch6-tick-why[hidden] { display: none; }
+.ch6-student { min-width: 0; }
+.ch6-student .problem-actions .btn {
+  flex: 0 0 auto;
+  width: auto;
+  height: var(--tap);
+  min-height: var(--tap);
+}
+.ch6-keep { white-space: nowrap; }
+.ch6-flash-stay { margin: 0; max-width: 62ch; color: var(--text-muted); }
+.ch6-flash-stay[hidden] { display: none; }
+
+.ch6-blank {
+  min-height: var(--tap);
+  min-width: 8rem;
+  max-width: 100%;
+  margin: 0 0.35rem;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.section-node .btn[data-done="true"] { border-color: var(--ok); }
 .chapter-exercises { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
 .chapter-card { min-width: 0; }
-.chapter-card p { min-width: 0; }
+.chapter-card h3,
+.chapter-card p { min-width: 0; max-width: 62ch; }
 .section-mark { margin-top: var(--space-2); }
 .book-footer-link { margin-top: var(--space-2); }

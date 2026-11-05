@@ -2,8 +2,8 @@
 // Howell & Mathews, Complex Analysis, 202 Updated Edition (PDF pages 6–7).
 // Chapter 4 is the walk that can be marked done. Chapter 5 opens on the
 // exponential, and §5.1 is the walk under that picture. Sections 5.2–5.5 stay
-// titles. The other chapters are later: a door, when this site already draws
-// one, and no new page.
+// titles. Chapter 6 opens on the integral. The other chapters are later: a
+// door, when this site already draws one, and no new page.
 
 import { sectionHref } from './book.js';
 
@@ -12,6 +12,7 @@ const S42 = 'sec_julia-mandelbrot.html';
 const S43 = 'sec_convergence-theorems.html';
 const S44 = 'sec_power-series.html';
 const S51 = 'sec_exponential-function.html';
+const S61 = 'sec_complex-integrals.html';
 
 function deepFreeze(o) {
   if (o && typeof o === 'object' && !Object.isFrozen(o)) {
@@ -21,8 +22,8 @@ function deepFreeze(o) {
   return o;
 }
 
-// Chapters the router will open as their own page. 1–3 and 6–11 stay on the book.
-export const OPEN_CHAPTERS = Object.freeze([4, 5]);
+// Chapters the router will open as their own page. 1–3 and 7–11 stay on the book.
+export const OPEN_CHAPTERS = Object.freeze([4, 5, 6]);
 
 export const BOOK_CHAPTERS = deepFreeze([
   {
@@ -74,7 +75,7 @@ export const BOOK_CHAPTERS = deepFreeze([
     ],
   },
   {
-    n: 6, title: 'Complex Integration', page: 163, open: false, door: null,
+    n: 6, title: 'Complex Integration', page: 163, open: true, door: null,
     sections: [
       { id: '6.1', title: 'Complex Integrals', page: 163 },
       { id: '6.2', title: 'Contours and Contour Integrals', page: 167 },
@@ -258,6 +259,25 @@ export const CHAPTER_5 = deepFreeze({
 
 export function chapter5ExerciseIds() {
   return CHAPTER_5.sections.flatMap((s) => s.exercises);
+}
+
+// Chapter 6. Stages 6.1–6.3 can be marked. Stages 6.4–6.6 are titles.
+export const CHAPTER_6 = deepFreeze({
+  n: 6,
+  href: sectionHref(S61),
+  pin: 'Chapter 6, Complex Integration, page 163',
+  sections: [
+    { id: '6.1', title: 'Complex Integrals', page: 163, exercises: ['6.1'] },
+    { id: '6.2', title: 'Contours and Contour Integrals', page: 167, exercises: ['6.2'] },
+    { id: '6.3', title: 'The Cauchy-Goursat Theorem', page: 181, exercises: ['6.3'] },
+    { id: '6.4', title: 'The Fundamental Theorems of Integration', page: 193, exercises: ['6.4'] },
+    { id: '6.5', title: 'Cauchy Integral Formulas', page: 197, exercises: ['6.5'] },
+    { id: '6.6', title: 'The Theorems of Morera and Liouville', page: 203, exercises: ['6.6'] },
+  ],
+});
+
+export function chapter6StageIds() {
+  return CHAPTER_6.sections.flatMap((s) => s.exercises);
 }
 
 // The chip the exercise is. The hash is #station-chapter-4-2-5, and the station

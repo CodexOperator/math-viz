@@ -176,7 +176,9 @@ export function start() {
   if (!view || !nav) throw new Error('index.html must contain #view and #site-nav');
 
   const store = createStore('mv:');
-  const state = { seq: 0, current: null, first: true, loadingTimer: 0, stopIds: null };
+  const state = { seq: 0, current: null, first: true, loadingTimer: 0, stopIds: null, bookChapter: null, lastHash: '' };
+  const campScroll = new Map();
+  let navKind = 'load';
   const cleanups = [];
   const listen = (target, type, fn, opts) => {
     target.addEventListener(type, fn, opts);
@@ -213,7 +215,7 @@ export function start() {
     const note = document.getElementById('site-footer-note');
     if (!note) return;
     if (bookRoute) {
-      note.textContent = 'The book path for MAT 412. Chapters 4 and 5 are open. The other chapters are later. It runs in your browser and works offline.';
+      note.textContent = 'The book path for MAT 412. Chapters 4, 5, and 6 are open. The other chapters are later. It runs in your browser and works offline.';
       return;
     }
     note.textContent = mapId === 'test2'
@@ -230,12 +232,16 @@ export function start() {
       ])));
     const list = el('ul', { class: 'nav-list', id: 'nav-chapters', 'aria-label': 'Chapters' });
     for (const ch of BOOK_CHAPTERS) {
-      list.append(el('li', {}, el('a', {
-        class: 'nav-link', id: `nav-chapter-${ch.n}`, href: `#chapter-${ch.n}`, 'data-chapter': String(ch.n),
-      }, [
+      if (ch.n > 7) continue;
+      const kids = [
         el('span', { class: 'nav-num', 'aria-hidden': 'true' }, String(ch.n)),
         el('span', { class: 'nav-title' }, ch.title),
-      ])));
+      ];
+      if (!ch.open) kids.push(el('span', { class: 'nav-later', id: `nav-chapter-${ch.n}-later` }, 'Later'));
+      list.append(el('li', {}, el('a', {
+        class: 'nav-link', id: `nav-chapter-${ch.n}`, href: `#chapter-${ch.n}`, 'data-chapter': String(ch.n),
+        'data-later': ch.open ? null : 'true',
+      }, kids)));
     }
     nav.append(list);
   }
@@ -433,7 +439,19 @@ export function start() {
     if (!first) view.focus({ preventScroll: true });
   }
 
-  async function renderBook(seq, route, first) {
+  function scrollBookFocus(focus) {
+    if (!focus) return;
+    const slug = String(focus).replace(/\./g, '-');
+    const parts = slug.split('-');
+    const target = document.getElementById(`chapter-card-${slug}`)
+      || document.getElementById(`chapter-section-${slug}`)
+      || document.getElementById(`chapter-section-${parts.slice(0, 2).join('-')}`);
+    if (!target) return;
+    target.classList.add('is-target');
+    target.scrollIntoView({ block: 'start' });
+  }
+
+  async function renderBook(seq, route, first, saved) {
     const spec = route.book;
     const label = spec.kind === 'chapter' ? `Chapter ${spec.chapter}` : 'The Book';
     view.dataset.state = 'loading';
@@ -453,6 +471,7 @@ export function start() {
         store,
         book: spec,
         map: activeMap,
+        restoreScroll: saved,
       }));
       if (seq !== state.seq) {
         runUnmount('book', unmount);
@@ -471,13 +490,39 @@ export function start() {
   }
 
   async function render() {
+    const route = parseRoute(location.hash);
+    const kind = navKind;
+    navKind = 'go';
+    const nextHash = location.hash || '#';
+    if (state.lastHash && state.lastHash !== nextHash) campScroll.set(state.lastHash, window.scrollY);
+    const sameChapter = !!(
+      route.book
+      && route.book.kind === 'chapter'
+      && state.bookChapter === route.book.chapter
+      && state.current
+      && state.current.id === 'book'
+      && view.dataset.state === 'ready'
+    );
+    if (sameChapter) {
+      state.lastHash = nextHash;
+      view.dataset.route = route.raw || 'home';
+      document.title = documentTitle(`Chapter ${route.book.chapter}`);
+      markCurrent(null, route.book);
+      setNavOpen(false);
+      if (routeStatus) routeStatus.textContent = `Chapter ${route.book.chapter}`;
+      const remembered = campScroll.get(nextHash);
+      if (kind === 'pop' && remembered != null) window.scrollTo(0, remembered);
+      else scrollBookFocus(route.book.focus);
+      return;
+    }
+
+    const saved = kind === 'pop' && route.book ? campScroll.get(nextHash) : null;
     const seq = ++state.seq;
     clearTimeout(state.loadingTimer);
     teardown();
     const first = state.first;
     state.first = false;
 
-    const route = parseRoute(location.hash);
     const st = route.station ? stationById(route.station) : null;
     const forced = mapForcedByRoute(st, route);
     const mapId = forced || readMap();
@@ -499,13 +544,19 @@ export function start() {
     view.dataset.route = route.raw || 'home';
     view.dataset.station = st ? st.id : '';
     view.dataset.map = mapId;
-    window.scrollTo(0, 0);
+    if (saved == null) window.scrollTo(0, 0);
     markCurrent(st ? st.id : null, route.book);
 
     if (route.book) {
-      await renderBook(seq, route, first);
+      await renderBook(seq, route, first, saved);
+      if (seq !== state.seq) return;
+      if (saved != null) window.scrollTo(0, saved);
+      state.bookChapter = route.book.kind === 'chapter' ? route.book.chapter : null;
+      state.lastHash = nextHash;
       return;
     }
+    state.bookChapter = null;
+    state.lastHash = nextHash;
 
     if (!st) {
       view.dataset.state = 'nosuchplace';
@@ -625,6 +676,11 @@ export function start() {
     });
   }
 
+  listen(window, 'popstate', () => {
+    navKind = 'pop';
+    // A late popstate must not stick, or the next camp button is treated as Back.
+    setTimeout(() => { navKind = 'go'; }, 0);
+  });
   listen(window, 'hashchange', render);
 
   const mv = (window.__mv = window.__mv || { planes: new Map() });

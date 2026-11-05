@@ -1330,3 +1330,821 @@ Nothing. No slider, no scrubber, no spring, no second clock.
 Yes. One batch, then stop. It is the one cut above.
 
 The hold, the button, and the frame clock are the lesson, and they hold. Something real is left, and it is the frame a mouse drag draws around the square. A touch does not draw it. After that frame is gone, nothing real is left of this walk's touch.
+
+## Chapter 6, batch 1
+
+Branch `cursor/chapter-6`. Headless Chrome, light and dark, 390×844 and 1280×800. `#chapter-6` fresh, then Play on the real integral, the stage tick, Go to 6.2, Another on a segment card, the Cauchy proof blank, Play on the deformation, `#book`, and `#chapter-1`. No console errors. No failed assets. No sideways scroll at either width.
+
+The page is six stages. 6.1 opens on a half turn of \(e^{it}\): the green point is at \(-1\), the purple integral is at \(2i\), and the sentence is false of a full turn. Play walks the angle. At the full turn the integral is back at \(0\), the blank fills, and Stage complete comes live. A second Play, on the segment, pauses the first. Eight steps fill \(\exp(2+i\pi/4)-1\). The green circle starts with the pole outside, integral \(0\), and Play carries the pole inside both circles, both integrals \(2\pi i\). Arrow keys move the same handle. A press that is not on the handle does nothing.
+
+6.4, 6.5, and 6.6 are titles, pages, one sentence, and the theorem links. They are marked Later. The roadmap lists all six and says Open. Chapter 4's walk is unchanged. `#chapter-1` stays on the book.
+
+Practice is `data/practice/ch6.json`, drawn by a local card. The proof blank accepts \(v\,dx+u\,dy\). Another deals a new segment with a computed answer. The shared engine is not in the tree yet.
+
+## Cut
+
+Nothing from this page. The three pictures are the batch.
+
+## Another batch
+
+Yes. Draw 6.4 (the integral is \(F\) at the end minus \(F\) at the start), 6.5 (the value inside, read from the boundary), and 6.6 (Morera, and a bounded entire function sitting still). Then the ML inequality, Examples 6.14–6.16, and the rest of the contour exercises. Hand the cards to `js/practice/` when that loop lands.
+
+## unslop (ch6 batch 1)
+
+Branch `cursor/chapter-6`, tip `e8841fad`. Preview https://ch6-preview.complexanalysis.pages.dev/#chapter-6. Headless Chrome, light and dark, at 390×844 and at 1280×800. Fresh storage. The square was scrolled to the middle of the phone before the drag, because the handle starts below the fold. Play for about seven tenths of a second, then a pause. No console errors. No sideways scroll (`scrollWidth` matched the window at both widths, both themes). Reduced motion was not walked.
+
+Light slop. The chrome is already this product: cream paper `#f6f3ec`, dark paper `#0d121c`, Iowan titles, one accent, the four teaching colours only inside the planes. No emoji, no glow, no hue gradient, no exclamation mark. The miss is where the richness sits. The first screen is four sentences, and the plane is a 16rem stamp under them.
+
+Direction, taken from the page that is already here. Product: a MAT 412 student drags one point and watches a complex integral change. Character: ink, exact, warm paper. World: a notebook page and a pencil on the plane. Moments: the three planes (the orange circle and the purple integral, the segment and its eight samples, the two circles and the pole). Signature: the green point, the same green on every stage.
+
+## Verdict
+
+ANOTHER BATCH. One batch, and it is the five cuts below. When those are on the page, this lens rests. Sections 6.4, 6.5, and 6.6 stay titles.
+
+## Ranked cuts
+
+1. **The first screen is the square, the claim, and Play.** At 390×844, light and dark, the square starts at y = 732 and is 256×256, so the window shows 112px of the purple circle. The green handle is the vertical middle of that square, about y = 860, below the fold, so the drag cannot start on the first screen. Play is at y = 1057 and ends at 1101. At 1280×800 the square is still 256×256, at y = 595, so it ends at 851. The claim is at y = 859 and Play is at y = 893, ending at 937, in an 800px window. Above the square sit the colour paragraph (79px on the phone, 53px on the laptop), the why (105px on the phone, 53px on the laptop), and the observe line. Change: delete `#chapter-colours`. On 6.1, 6.2, and 6.3, delete the why paragraph and the observe line above the square. The chapter lede is the 6.1 gesture, "Drag the green point around the orange circle." Each later stage has one sentence above its square, and that sentence is the gesture. The status card moves to under Play. `.ch6-stage` leaves the 16rem cap and uses the column, capped so the square, the claim, and Play end inside the first screen at both widths, both themes. The square is wider than 16rem.
+
+2. **Arrive with the blank empty.** 6.1 opens at `clock.set(0.5)`, phase `half`. The claim is "Half a turn leaves the integral at \(2i\)." and the blank already reads "From \(0\) to \(\pi\) the integral is \(2i\)." A drag off that point clears the blank and the claim becomes "The integral has left \(0\)." 6.3 opens at `clock.set(0)`, `where` is `outside`, and the blank already reads "The integral over the green circle is \(0\)." The claim already says the purple circle is still \(2\pi i\). Change: open 6.1 at a quarter turn, phase `move`, both blanks empty. The half blank fills only at `half`, the full blank only at `full`. Open 6.3 on the edge, where the blank stays empty, and a drag inside fills \(2\pi i\) while a drag outside fills \(0\). Open 6.2 at 0 steps. Its exact blank already waits for 8, and the arrival sentence should wait with it.
+
+3. **The worked paragraph is the integral the picture draws.** Under 6.1, Worked example is Example 6.1, page 163, and the paragraph computes \((t-i)^{3}\) as \(-5/4\). The picture and the blanks are \(\int e^{it}\). Under 6.3 the paragraph says \(e^{z}\), \(\cos z\), and \(z^{n}\) integrate to \(0\), which is Example 6.12. The picture is the pole and the two circles. Change: the 6.1 paragraph states the circle the hand is on, \(2i\) from \(0\) to \(\pi\) and \(0\) from \(0\) to \(2\pi\). Example 6.1 stays a read link. The 6.3 paragraph states the drag: the pole inside both circles, both integrals \(2\pi i\); the green circle drops the pole, its integral is \(0\), and the purple circle stays \(2\pi i\). Example 6.12 stays a read link.
+
+4. **The sheet and the flash stop reprinting the blank.** The 6.1 sheet's third line is "A full period of \(e^{it}\) integrates to \(0\). Half a period integrates to \(2i\)." That is the blank, printed again under the blank. The 6.2 sheet's fourth line says the eight steps land beside \(\exp(2+i\pi/4)-1\), which is the exact blank and the next-step card. The 6.3 flash `ch6-6.3-which-flash` turns over onto the four sheet lines (Theorem 6.5, Theorem 6.6, Theorem 6.1, Corollary 6.1). Change: delete that 6.1 line, that 6.2 line, and that flash. The 6.1 sheet keeps the definition and the antiderivative. The 6.2 sheet keeps the parametrization, the segment formula, and the opposite contour. The 6.3 sheet keeps its four theorem lines, and the multiple choice that asks for Theorem 6.6 stays.
+
+5. **The page ends on the last row.** At 390 the page is 11980px. Section 6.6 ends at y = 10977. "Back to the book" is at y = 11798. The bottom of the scroll is a blank cream screen, the footer, and that one link. `.chapter-path` pads by `calc(100dvh - var(--header-h))`, about a viewport of void. Change: that padding becomes one header of space, so the last Later row can clear the bar and the footer follows it. The bottom screen is the 6.6 row.
+
+## What to keep
+
+The three planes, the four colours, and the one clock. A drag off the half turn clears \(2i\) and the claim follows the point. Play says Pause while it runs, and a second press leaves the angle where it stopped. A pointer drag focuses the square and leaves it unframed (`:focus-visible` is false, outline `none`). The keyboard ring stays the 3px focus colour. Two controls on a picture, the drag and Play. The cards, the source line, Show the back, Check, and Another. The segment cards, the segment generator, the Cauchy proof, and the deformation question. The semicircle cards stay; they are the exam question, and this batch does not draw a second picture for them. The kicker, the flags, and the uppercase labels are the book path. Later stays a title, a page, one sentence, and the theorem links. No new type, no new colour, no new chrome.
+
+## taste-skill (ch6 batch 1)
+
+Branch `cursor/chapter-6`, commit `e8841fad`. Preview https://ch6-preview.complexanalysis.pages.dev/#chapter-6. Used like a MAT 412 student in headless Chrome, light and dark, at 390×844 and at 1280×800. Fresh storage. The first screen, then the square scrolled up, Play through a full turn, a drag of the green mark, a second Play on the segment while the first was running, reduced motion through the steps on the phone in the dark, the parametrization choices on 6.2, Another on a segment card, the three Later rows, and the Chapter 6 node on `#book`. No console errors. No failed assets. No sideways scroll (`scrollWidth` was 390 and 1280).
+
+The gallery inspector was left unrun. Its bans are one accent, no small-caps label, no 1px card, and a floor of four photographs. Those are the site: four teaching colours, the kicker, the section card, and a diagram drawn for the integral. The measurements below are the Chrome walk.
+
+### Verdict
+
+ANOTHER BATCH.
+
+The thing to be able to do is watch the purple point be the integral of the green point. That gesture is on the page. The page you land on hides it. At both sizes, in both themes, the first screen is a colour legend and a status card, and Play sits below the fold. One batch is the cuts below. After that, stop. Sections 6.4, 6.5, and 6.6 stay titles until this screen shows the integral.
+
+```
+ROUND 1
+Seen in one second: a chapter title and a legend, with the top of a small circle cut off at the bottom.
+Idea (one sentence): the purple point is the integral, and the green point walks the orange path.
+Live thing: Play, or a drag of the green mark. A second Play pauses the first.
+Layout words by section: hero=text stack / 6.1=card / 6.2=card / 6.3=card / later=outlined title
+Scores: design 5 · usability 6 · creativity 8 · content 7 → overall 6.1
+Caps applied: Play is off the first screen at both widths, so usability stays at 6. The 256px square sits in the left of a 952px card, so design stays at 5. The kicker, the four colours, the serif title, and the section card are the site, and they are not in the cuts.
+Top three problems:
+1. Phone fold and laptop fold. The square, the claim, and Play are below a legend. Cut that legend, and put Play on the first screen.
+2. Laptop fold. The square is 256px in a 952px card, and the circle is 98px across. Let the square use the column, and keep Play on the screen.
+3. The 6.1 picture, scrolled up. The claim says 2i and the worked paragraph says −5/4. One integral on that screen.
+```
+
+### What I could actually do
+
+`#chapter-6` opens on THE BOOK and Chapter 6. Complex Integration. The title is one line, 25.85px, at both widths.
+
+On the phone the column is x = 16, width 358. The lede is three lines, y = 142 to 220, in the muted ink. The colour paragraph is three lines, y = 236 to 315: "Blue is the axes. Orange marks the path or the pole. Green is the point you drag. Purple is the integral." The status card, "Next is 6.1. 0 of 3 stages.", sits at y = 401. Section 6.1 starts at y = 469. The why is three lines at y = 566. The observe is two lines at y = 672: "Drag the green point around the orange circle. Purple is the integral." The square is 256×256 at y = 732, so an 844px window shows the top 112px of it, a purple dot and the top of the orange circle. The claim is at y = 996. Play is 70×44 at y = 1057.
+
+On the laptop the column starts at x = 304 and is 952px wide. The same stack ends with the square at y = 595, 256×256, so its bottom is at 851 in an 800px window. The claim is one line at y = 859. Play is at y = 893. The card to the right of the square is empty paper. The same frames in the dark: paper rgb(13, 18, 28), sentence rgb(233, 237, 245), lede rgb(166, 176, 195).
+
+The square draws two circles, each 98px across. The green mark and the purple mark are 9×9. At rest the green mark is on the left of the orange circle and the purple mark is on the top of the dashed circle. The claim is "Half a turn leaves the integral at 2i." The blank under the worked paragraph already reads "From 0 to π the integral is 2i." The full-turn blank is empty. Stage complete is 44px tall and disabled. The worked paragraph is Example 6.1, and it says the value is −5/4.
+
+Play says Pause. The claim becomes "The integral has left 0." At the end of the turn the claim is "A full turn brings the integral back to 0.", the full-turn blank reads 0, the half-turn blank clears, and the button says Play. Starting Play on the segment while that turn is running sets the first button back to Play and leaves the phase on "move". Four hundred milliseconds later the phase is still "move", and the segment button says Pause.
+
+A drag of the green mark leaves the half turn and sets the same "left 0" sentence. On the laptop the drag focuses the svg, `:focus-visible` stays false, and the outline stays none.
+
+Reduced motion, on the phone, in the dark, opens on Next step at the half turn. The presses land on the moving frame, the full turn (the button says Start again), the quarter, and the half turn. The button says Pause on none of them.
+
+The 6.2 square is the same 256px. It opens at 2 of 8 steps, the claim says so, and the exact-value blank is empty. The worked paragraph is the segment from 0 to \(2+i\pi/4\), which is the segment on the canvas. The four parametrization choices are 290px wide and 44px tall, one of them 53px where the formula wraps. The right choice shows its why and disables the row. Another on the segment card deals a new pair of endpoints.
+
+The 6.3 square opens with the orange pole outside the green circle. The claim says the green integral is 0 and the purple circle is still \(2\pi i\). The blank reads 0.
+
+The page is 11877px on the phone. Section 6.1 is 1585px, 6.2 is 3911px, and 6.3 is 4096px. Sections 6.4, 6.5, and 6.6 are transparent boxes with a 1px border, 254px, 198px, and 280px tall. Each one is a LATER label, a title, a page, one sentence, and the theorem links.
+
+On `#book` the Chapter 6 node says Open. Section 6.1 is marked Next. Sections 6.4, 6.5, and 6.6 are marked Later. Walk Chapter 6 is a text link, 23px tall.
+
+### What clicks
+
+One picture, one drag, one Play, and a second Play pauses the first. The claim follows the frame: half a turn, left 0, a full turn back at 0. The full-turn blank fills at the full turn, and it is empty before that. Stage complete stays 44px and starts disabled.
+
+The colours are the course colours, and they sit on the marks. Blue is the axes, orange is the path or the pole, green is the handle, purple is the integral. Light and dark use the same positions. The button says Pause while the point moves, and Next step under reduced motion.
+
+Section 6.2's worked paragraph is the segment the picture draws. The choices are real mistakes, the why appears after the tap, and Another deals a new segment. The cites name Howell and Mathews and the page. The kicker, the serif title, and the section card stay.
+
+### What gets in the way
+
+**The first screen is the legend.** The colour paragraph and the observe say the same thing, "purple is the integral," and both of them sit above the square. Play is 213px past the phone fold and 93px past the laptop fold. A student who does not scroll can read the title and cannot press Play.
+
+**The integral is a stamp.** 256px in a 358px phone column, and 256px in a 952px laptop card. The circle is 98px. The two marks are 9px. The laptop card's right half is the paper.
+
+**Two answers share the 6.1 picture.** The claim and the blank say \(2i\). The paragraph under Play, labeled Worked example, says the value is \(−5/4\). That paragraph is \((t-i)^{3}\) from 0 to 1. The picture is \(e^{it}\).
+
+**The last three camps are empty frames.** The fill is already gone. The 1px border is still there, so 6.4, 6.5, and 6.6 read as cards with one sentence in them.
+
+### Cut
+
+1. **The first screen is the square, the claim, and Play.** At 390, Play is at y = 1057 in an 844px window, and the square starts at y = 732. At 1280, Play is at y = 893 in an 800px window. Cut the colour paragraph. Move "Next is 6.1" to under Play. The why stays one or two lines under the stage title, and the square follows it. The observe is one line under the square, then the claim, then Play. Play's bottom stays inside 844 and inside 800, in both themes.
+
+2. **The square uses the column.** It is 256×256, the circle is 98px, and the green mark is 9×9, in a card 358px wide on the phone and 952px wide on the laptop. Size the stage the way the exponential square is sized, and stop at the width that still keeps Play on that first screen. Draw the green mark large enough to see on the phone. The hit stays the 44px it already is.
+
+3. **One integral under the 6.1 picture.** The claim says the half turn leaves the integral at \(2i\), and Example 6.1 under it says the value is \(−5/4\). The worked sentence becomes the half turn on the canvas, and the full turn at \(0\). The evaluation of \((t-i)^{3}\) moves onto a practice card. Section 6.2 already works this way: the worked line is the segment the picture draws.
+
+4. **Later rows are titles.** Sections 6.4, 6.5, and 6.6 keep a 1px border on a transparent ground, 198px to 280px tall. Drop the border. Keep the LATER label, the title, the page, the one sentence, and the theorem links.
+
+5. **Walk Chapter 6 is a 44px control.** On the book the door is a text link 23px tall. Make it the button the other walks already use.
+
+### Add
+
+Nothing. No scrubber, no second clock, no colour-key paragraph, no new hue. Sections 6.4, 6.5, and 6.6 get no picture in this batch.
+
+### Another batch
+
+Yes. One batch, then stop. It is the five cuts above, in that order.
+
+The gesture is already the one a student came for. Play walks the integral, a drag moves the same mark, Pause holds, and the next picture's Play pauses the first. When the square, the claim, and Play are the first screen, and the sentence under that square is the integral the square is drawing, the loop should rest.
+
+### What to keep
+
+The three pictures, the one drag, and the one clock. The claim that flips, the full-turn blank that fills at the full turn, and Stage complete at 44px. The four colours on the marks, in light and in dark. The 6.2 choices, the why after the tap, and Another. The cites, the exam lines, and the summit sentences. The kicker and the section card. The outline that a pointer drag leaves off the square.
+
+## reviewer (ch6 batch 1)
+
+Branch `cursor/chapter-6`, draft PR #45, reviewed at `e8841fa` against Howell & Mathews, Complex Analysis, 202 Updated Edition (the PDF at complexanalysis.org, 471 pages). Preview `https://ch6-preview.complexanalysis.pages.dev/#chapter-6` at 390×844, then the fixed page locally at 390×844 and 1280×800, light and dark. No console errors. No sideways scroll. Arrow Left on the green circle carries the pole inside and fills \(2\pi i\). Arrow Right drops it and fills \(0\).
+
+Verdict: **ACCEPT WITH FIXES**. The fixes are on this branch.
+
+Checked against the printed pages: Definition 6.1 and Example 6.1 are page 163, and \((t-i)^3\) from 0 to 1 is \(-5/4\). Definition 6.2 and Example 6.6 are page 170. Theorem 6.1 and Example 6.7 are page 172, and the segment integral is \(\exp(2+i\pi/4)-1\). The eight-step midpoint sum rounds to \(4.23+5.20i\), the total the book prints on page 171. Exercise 6.2.3 starts on page 178, and \(\int z^2\,dz\) on the upper unit semicircle is \(-2/3\). Theorem 6.5 is stated on page 183. Cauchy's proof, Equation (6.28), and the continuous-\(f'\) hypothesis are on page 184, so the proof cards' page 184 is the proof, not a mis-cite of the statement. Example 6.12 is page 186. Theorem 6.6 is page 187. Corollary 6.1 is page 188: \(2\pi i\) for \(1/(z-z_0)\), and \(0\) for every other integer power \(1/(z-z_0)^n\). Theorems 6.8, 6.9, 6.10, 6.13, and 6.18 are pages 193, 194, 197, 203, and 206. Section openers 163, 167, 181, 193, 197, 203 match the contents. Circle and segment generator values match an independent quadrature on 60 seeds. Live code does not import `kit/`. `js/core/map-route.js` still matches the kit copy.
+
+What was wrong, and the change:
+
+1. The 6.3 sentence said both integrals are \(2\pi i\), then \(0\) and \(2\pi i\), and never named a function. That value is \(\int dz/z\) on a positively oriented circle (Corollary 6.1), not the integral of a general pole and not the entire functions in Example 6.12. The claim, the blank, and the instruction now say \(1/z\). Dropping the pole still makes the green integral \(0\) and leaves the purple integral \(2\pi i\).
+2. The exam line "a half period integrates to \(2i\)" is false. \(\int_\alpha^{\alpha+\pi} e^{it}\,dt = 2ie^{i\alpha}\), which is \(2i\) only when \(\alpha\) is a multiple of \(2\pi\). Any full period is \(0\). The sheet and the flash memory now say so. The picture's own half turn, from \(0\) to \(\pi\), is still \(2i\).
+3. Segment cards cited Theorem 6.1, page 172, as the reason an antiderivative is evaluated at the ends. Theorem 6.1 is the parametrization. The note now says that.
+4. Circle cards cited Corollary 6.1 when the pole was outside. The corollary needs \(z_0\) inside. Outside, including a polynomial, the cite is Theorem 6.5, page 183. Inside and not the power \(-1\), the cite stays Corollary 6.1.
+5. The checker rejected equivalents it listed: \(e^{2+i\pi/4}-1\), \(2+\frac{i\pi}{4}\), \(ux-vy\), \(0+0i\), and a parenthesized Green's integrand. Those forms now match.
+
+Left as is: within \(0.06\) of the green circle the sentence says the pole is on it and the integral is not defined. Exactly on the circle that is true. A hair inside, the integral of \(1/z\) is still \(2\pi i\). The band is the width of the orange dot.
+
+Keep: the three pictures, the page cites above, Example 6.1's \(-5/4\), the eight-step sum beside \(\exp(2+i\pi/4)-1\), Cauchy's proof blanks (the split, Green's theorem, Cauchy-Riemann, and \(0\)), and the computed generators.
+
+## Chapter 6, batch 2
+
+Branch `cursor/chapter-6`. Headless Chrome, light and dark, 390×844 and 1280×800. Fresh storage. The first screen, then Play through the full turn, the bend, the Cauchy point, and the Liouville circle. No console errors. No sideways scroll.
+
+The colour paragraph is gone. One gesture line sits above each square. The status card is under Play. Play ends at y = 821 in the 844 window and at y = 777 in the 800 window, in both themes. The square is 324px on the phone and 320px on the laptop, both wider than 16rem. The green mark is 16 viewBox units. The pole-on-the-circle band is one pixel of that plane: exactly on is undefined, and 0.98 is still inside.
+
+6.1 opens at a quarter turn, both blanks empty. 6.2 opens at 0 steps. 6.3 and 6.5 open on the edge. 6.4 opens on the straight segment. 6.6 opens before the estimate collapses. The 6.1 worked line is \(2i\) and \(0\). Example 6.1's \(-5/4\) is a practice card. The 6.3 worked line is the \(1/z\) drag. The sheet no longer reprints the picture blanks, and the four-theorem flash is gone.
+
+6.4, 6.5, and 6.6 are stages. Bend the path and the integral of \(z\) stays \(4+2i\). Drag inside the unit circle and \(z/(z-z_0)\) returns the green point. Drag the radius and \(1/R\) collapses, which is Liouville. The page tail is one header, not a viewport.
+
+`ch6-circle` and `ch6-segment` export `generate(seed, params)`. The math functions use that order too, so nothing swaps the arguments.
+
+## Next
+
+Goursat's triangle subdivision, the remaining contour exercises (6.2.5, 6.2.9, 6.3.1–6.3.4), and Examples 6.17–6.19 on the antiderivative. Hand the cards to the practice engine when that branch lands. Do not edit its registry.
+
+## pedagogy (ch6 batch 2)
+
+Branch `cursor/chapter-6`, tip `216bf1a`, draft PR #45. Preview https://ch6-preview.complexanalysis.pages.dev/#chapter-6. Headless Chrome, fresh storage. 390×844 light, then the theme control into the dark. Then 1280×800 light, and the theme control into the dark. No console errors. No failed assets. `scrollWidth` was 390 and 1280. The page is 17681px on the phone.
+
+The first screen, in both themes and at both widths, is the lede, stage 6.1, the drag line, the quarter-turn picture, the claim, and Play. Play ends at y = 821 in the 844 window and at y = 777 in the 800 window. The claim reads "The integral has left 0. The real part and the imaginary part are still separate." Both blanks are empty. Stage complete is disabled. Dark ink on that claim is `rgb(233, 237, 245)` on paper `rgb(13, 18, 28)`. Light ink is `rgb(26, 34, 48)` on `rgb(246, 243, 236)`.
+
+What a student can leave with. The four sentences are on the page, and the tick does not make the student say them.
+
+Cauchy-Goursat. The sheet's first line states it: analytic inside and on a simple closed curve, the integral is 0 (Theorem 6.5, page 183). The stage that carries the name opens on the pole of \(1/z\) sitting on the green circle, and the claim says that integral is not defined. One Play from that edge puts the pole inside, fills the blank with \(2\pi i\), and enables Stage complete. The summit under that tick is deformation. The flash the stage opens on is Corollary 6.1. A student who plays and ticks can say "both circles give \(2\pi i\)." The zero theorem is a line they can scroll past, eight cards down. On the phone the 6.3 block is 5578px and the practice inside it is 4080px. The summit is a 79px paragraph at y = 11509, 17px, weight 400, the same ink as the claim.
+
+Cauchy integral formula. Theorem 6.10 is the flash and the first sheet line, and the picture is the right idea: on the edge the formula stops, inside it returns the green point, and the blank fills with the words "the green point." The student never writes \(f(z_0)\). The derivative formula is absent, so the purple \(1/R\) in 6.6 has no parent on the page. Example 6.21 is already computed on the sheet, the line above the card: \(\int_{|z|=2} e^{z}/(z-1)\,dz = 2\pi i\, e\).
+
+Liouville. The summit states it, and the radius picture shows the estimate collapse. Play runs the radius to 4, the claim says the derivative is forced to 0, and the blank fills 0. The worked paragraph under the picture has already said the only survivor is 0, so \(f\) is constant. The word the theorem asks for is constant. The blank asks for 0. Morera is the flash the deck shows first (the cite on arrival is Theorem 6.13). The tick does not read that card.
+
+ML. Theorem 6.3 is the fourth line of the 6.2 sheet, and it is the second flash. The deck opens on Theorem 6.1, with Next card underneath. No card asks for an \(M\) or an \(L\).
+
+### The climb, stage by stage
+
+6.1 is the one opening that teaches before it tells. A drag off the quarter turn keeps the same claim and leaves both blanks empty. One Play to the end sets the claim to "A full turn brings the integral back to 0", fills the \(2\pi\) line with 0, and enables Stage complete. The half-turn line is empty again. The two facts cannot sit in the blanks together: the \(2i\) line fills only while the point is at the half turn, and the full turn clears it. The worked paragraph above those lines already says both, "From 0 to \(\pi\), \(\int e^{it}\,dt=2i\). From 0 to \(2\pi\) it is 0." Example 6.1 is the production, and it is one blank for the final value. The prompt says to split the real and imaginary parts. There is no blank for either part. I typed \(2i\), the number the picture had been about, and pressed Check. The note opened with \((t-i)^3=(t^3-3t)+i(1-3t^2)\) and ended at \(-5/4\). Stage complete was already enabled. I pressed it. The button said Completed. The card still held \(2i\).
+
+6.2 opens at "0 of 8 steps," which is the right fade for a sum. The worked paragraph then prints the derivative the next card asks for: \(z'(t)=2+i\pi/4\). The stage is 3962px, and the practice block is 2592px, six cards, before a summit that restates Theorem 6.1. The semicircle pair is the faded example the picture does not spoil: choose the parametrization, then the product, then the value. On the segment card I pressed \(z(t)=e^{it}\), \(0\le t\le 2\pi\). The line stayed wrong, all four buttons stayed on, and the note said "The segment from 0 to \(B\) is \(z(t)=Bt\)." That is a next move. The correct button is the one a student cannot read: \(z(t)=(2+i\pi/4)t\) and \(0\le t\le 1\) wrap into two broken columns, and the three wrong choices are one line each. Typing 0 on the segment generator opened a note that states the antiderivative and does not state the value. Typing 1 on the circle generator (seed 1, \(|z-(-i)|=2\), power \(-2\), pole outside) opened "Theorem 6.5, page 183, says the integral is 0."
+
+6.4 opens on the straight segment and the claim is "Bend the green point." That is the right first sentence. The worked paragraph under the links already has the result, \(4+2i\) on every path. Play bends the path, the claim says the integral is still \(4+2i\), the blank fills \(4+2i\), and the tick enables. I typed 0 on the card. Check printed \(((3+i)^2-(-1-i)^2)/2=(8+6i-2i)/2=4+2i\).
+
+6.5 opens on the circle, tick disabled, blank empty. On the laptop the worked paragraph is on that same screen, and it says the integral equals the green point inside and 0 outside. Play fills "the green point." I typed \(e\) on Example 6.21. Check said Theorem 6.10 "gives \(2\pi i\, e\)."
+
+6.6 opens with the estimate uncollapsed and the tick off. In the dark, on the phone, the last screen of the chapter is the \(e^{z}\) question, four choices, the summit "An entire function that stays bounded is constant.", and a disabled Stage complete. The summit sits under the question it answers. The choices themselves are the right trap: unbounded, every entire function, modulus 1, needs a pole. I pressed "Yes. Every entire function is constant." All four stayed on, and the note said \(|e^{z}|=e^{x}\) grows with \(x\). That note names the test and does not name the button. It is the miss the other cards should copy.
+
+No stage opens with why this camp is the next one. The chapter lede is "Six stages, from a real interval to a contour you can move." Each stage's first sentence is the drag. After the 6.1 tick, 6.2's title is the next thing in the scroll, which is the right place, and its first sentence is another drag. "Go to 6.2" is the button under the first Play, at y = 870. The summit is at y = 1937 and the tick is at y = 2016. After all six ticks the status says "Done. 6 of 6 stages." and that same button, still at y = 870, says "Back to the book." The last tick is at y = 18202. Nothing under the Liouville summit names Taylor series.
+
+The card cites for Examples 6.14, 6.15, and 6.16, Theorems 6.9, 6.10, 6.13, and 6.18, and Example 6.21 all open `sec_complex-integrals.html`. The pin text names pages 189 through 206. The read links on the stages already point at the section those theorems live in.
+
+### Verdict
+
+ANOTHER BATCH. The six pictures open on an empty blank, and Play on the first screen is the right start. A student who ticks every stage can gesture deformation, path independence, and a shrinking \(1/R\). They can recite the sheet. They have not had to state Cauchy-Goursat as the zero theorem, write the integral formula, produce "constant," or bound an integral by \(ML\). More exercises on top of notes that already contain the value will not fix that.
+
+### Ranked fixes
+
+1. **A miss names the next move and keeps the value.** Typing \(2i\) on Example 6.1 revealed the expansion and \(-5/4\). Typing 0 on the 6.4 card revealed the arithmetic ending at \(4+2i\). Typing \(e\) on Example 6.21 revealed \(2\pi i\, e\). Typing 1 on the circle card revealed that the integral is 0. Change: the note on a wrong check is a next move with the answer string left out. The proof miss already does this ("Equation (6.28) splits the integral into those two real line integrals"). The \(e^{z}\) miss already does this (\(|e^{z}|=e^{x}\) grows). Show the value line only after the check is right.
+
+2. **The blank under the picture is the student's, and Stage complete reads it.** One Play fills 0, \(2\pi i\), \(4+2i\), "the green point," or 0, and enables the tick. The 6.1 half-turn line is empty again at the end of that Play, so a full turn erases \(2i\). I ticked 6.1 with \(2i\) still wrong on Example 6.1. Change: those lines are inputs. On 6.1 both stay filled once each has been checked, and a later full turn does not clear \(2i\). Stage complete stays disabled until the picture holds and that input checks. The worked paragraph stops one step before the number.
+
+3. **The Cauchy-Goursat tick is the zero theorem.** The flag says Cauchy-Goursat. Play from the edge enables the tick when both integrals are \(2\pi i\), and the summit says deformation. Change: earn this tick on a closed integral of an analytic function, with the claim becoming 0 and the summit one sentence of Theorem 6.5. Keep the \(1/z\) drag as the next beat, after that sentence, with deformation as its own summit. The proof card stays. Its sentence says Cauchy's argument assumes \(f'\) continuous.
+
+4. **One why at the top of the stage, one next camp under the summit.** The first sentence of every stage is the drag. "Go to 6.2" and, later, "Back to the book" sit at y = 870, under the first Play. The Liouville tick is at y = 18202. Change: one sentence under the stage title, before the gesture, saying what this camp is for and which fact from the previous camp it uses. Under the summit, one line naming the next camp. 6.6 names Chapter 7. Move "Go to …" onto that line.
+
+5. **ML, the derivative formula, and Morera are things the student does.** ML is a sheet line and the second flash. 6.5's sheet prints \(2\pi i\, e\) above the card that asks for it, and it has no derivative formula for the \(1/R\) in 6.6. The 6.6 deck opens on Morera, and the picture's blank fills 0. Change: one ML card whose answer is a bound the student computes. The miss says "length times a bound on \(|f|\)" and does not print the product. Add the derivative form on 6.5, and take the computed Example 6.21 off the sheet until that card is right. On 6.6 the Morera card is answered in its own right, and the radius blank is the word constant.
+
+6. **The later cites open the section they name, and the right 6.2 choice is one line.** Examples 6.14–6.16 and Theorems 6.9, 6.10, 6.13, and 6.18 open the complex-integrals section. The stage read links already have the anchors. On Example 6.7 the correct parametrization wraps into two columns and the wrong ones do not. Change: the card cite uses the stage's read href. Each choice stays on one line.
+
+### Keep
+
+The arrival on every picture: quarter turn with the claim withholding \(2i\), 0 of 8 steps, the pole on the circle, the straight segment saying "Bend the green point," the formula stopped on the circle, the estimate not yet collapsed. Play on the first screen, both themes, both widths. The semicircle pair, the inside-or-outside cards (Examples 6.14–6.16 and the circle generator), and the card that asks which theorem a pole inside actually is. Cauchy's three proof blanks. The four \(e^{z}\) choices, and the miss that says the modulus grows. One gesture, one Play, the four colours, and Stage complete disabled until the picture holds.
+
+## test-prep-coach (Ch6 batch 2)
+
+Branch `cursor/chapter-6`, draft PR #45. Preview https://ch6-preview.complexanalysis.pages.dev/#chapter-6. Used as a student with the exam in a few days. Chrome, fresh storage. 390×844 light, then the theme control into the dark. Then 1280×800 light, and the theme control into the dark. No console errors. No failed assets. `scrollWidth` was 390 and 1280. The phone page is 17681px before any note opens. Play ends at y = 821 in the 844 window and at y = 777 in the 800 window, in both themes. Dark ink on the sheet and on the cards is `rgb(233, 237, 245)` on paper `rgb(13, 18, 28)`. The six For the exam lists are on the page. All six Stage complete buttons arrived disabled.
+
+What I could recite, and what I could not compute. The sheets state Definition 6.1, Theorem 6.1, the opposite contour, Theorem 6.3 as \(|\int|\le ML\), Theorem 6.5 as 0, Theorem 6.6, Corollary 6.1, Theorem 6.9, Theorem 6.10, Morera, and Liouville. Flipping a card is Show the back, then Next card. That is enough to memorize a sentence. It is not enough to sit §6.5 or §6.6. Theorem 6.12 (page 199, equation (6.48)) is the derivative formula the section title is plural for, and it is absent. Theorem 6.19 (page 206), the fundamental theorem of algebra, is absent. Example 6.11 (page 177), the ML estimate a student is asked to produce, is absent.
+
+### What I tried
+
+6.1. The sheet is the split and the antiderivative at the ends. The flash asks for that split, and the second flash is the right trap: a half period of \(e^{it}\) that starts at \(\alpha\) is \(2ie^{i\alpha}\), and \(2i\) only when \(\alpha\) is a multiple of \(2\pi\). Example 6.1 asks for one number. I typed \(2i\), the value the picture had been about. Check opened \((t-i)^3=(t^3-3t)+i(1-3t^2)\) and ended at \(-5/4\).
+
+6.2. The worked paragraph already prints the derivative the next card asks for, \(z'(t)=2+i\pi/4\). On the phone the correct parametrization is a 290×53 button and the three wrong ones are 44px and one line each. The correct button breaks into two columns, \(z(t)=(2+\) beside \(0\le t\le\), and \(i\pi/4)t\) beside the rest of the interval. The wrong ones read straight through: the unit circle, \(z(t)=t\), and \(z(t)=2+i\pi t/4\). At 1280 that correct choice is one 44px line, 884px wide. I typed \(2+(\pi/4)i\) for the derivative. Check marked it wrong and printed \(2+i\pi/4\). \(2+i\pi/4\) was accepted. I typed \(e^{(8+i\pi)/4}-1\) for the value. Check marked it wrong. \(\exp(2+i\pi/4)-1\) was accepted. The semicircle choices stay one line at 390: \(e^{it}\) from 0 to \(\pi\), the clockwise \(e^{-it}\), the diameter, and the full circle. The ML flash turns over onto \(|\int_C f\,dz|\le ML\). Nothing asks for an \(M\) or an \(L\).
+
+The segment generator, seed 3, is the segment from \(-2\) to \(-2+i\) and the integrand \((z-a)^2\). I typed \(2+11i/3\). Check marked it wrong, and the note named the antiderivative without printing the value. \(2+(11/3)i\) was accepted. The circle generator, 40 seeds, returns 0 on 38 of them and \(2\pi i\) on 2. Seed 1 on the page is \(|z-(-i)|=2\), power \(-2\), pole outside. I typed \(2\pi i\). The note said the integral is 0.
+
+6.3. The worked tag reads Example 6.12, page 186. The paragraph under it is the \(1/z\) drag: both circles \(2\pi i\), then the green circle drops the pole and its integral is 0. Example 6.12 is \(e^{z}\), \(\cos z\), and \(z^{n}\) integrating to 0. The which-theorem card is the question an exam asks. I pressed "Theorem 6.5, so the integral is 0." All four buttons stayed on, and the note said the pole means Theorem 6.5 does not apply and deformation keeps the value. Cauchy's first proof blank still withholds the integrand. The Green's blank does not: I typed \(u_y-v_x\) and the note produced \(u_x-v_y\). Example 6.14's prompt already gives the partial fractions and says both poles are inside, then offers \(4\pi i\), \(2\pi i\), \(0\), and \(-2\pi i\). Example 6.16's prompt already writes \(2/z-1/(z-1)\). I typed \(2\pi i\). The note said the \(2/z\) term contributes \(-4\pi i\) and the \(1/(z-1)\) term contributes \(-2\pi i\).
+
+6.4. The worked paragraph says the integral is \(4+2i\) on every path, and the card below asks for that number after telling you the antiderivative is \(z^2/2\). I typed 0. Check printed \(((3+i)^2-(-1-i)^2)/2=(8+6i-2i)/2=4+2i\).
+
+6.5. The sheet's second line is Example 6.21 already evaluated: \(\int_{|z|=2} e^{z}/(z-1)\,dz=2\pi i\, e\). The card under it asks for that integral. I typed \(e\). Check said Theorem 6.10 gives \(2\pi i\, e\). The flash is Theorem 6.10 only. Example 6.25, page 200, \(\int_{|z|=2} e^{z^2}/(z-i)^4\,dz=-4\pi/(3e)\), is the \(n=3\) case of Theorem 6.12. Exercises 3 and 5 of §6.5, page 201, are the same kind: a power 2 and a power 4 in the denominator. None of those are on the page.
+
+6.6. The deck opens on Morera. Next card is Liouville, "a constant." The \(e^{z}\) choices are the real mistakes: unbounded, every entire function, modulus 1, needs a pole. I pressed "Yes. Every entire function is constant." All four stayed on, and the note said \(|e^{z}|=e^{x}\) grows. Theorem 6.19, the proof the section exists to produce, is not a card.
+
+### Verdict
+
+ANOTHER BATCH. The sentences you would memorize the night before are on the page, and the questions the book grades are not. One batch is the six fixes below. After those are drills a student can miss without being handed the number, this lens rests.
+
+### Ranked fixes
+
+1. **Theorem 6.12 is the card, and Example 6.21's value comes off the sheet.** Theorem 6.12, page 199, equation (6.48): \(f^{(n)}(z_0)=n!/(2\pi i)\int_C f(z)/(z-z_0)^{n+1}\,dz\). Example 6.25, page 200, and §6.5 Exercises 3 and 5, page 201, are that formula. The sheet at y = 14483 states Theorem 6.10 and then prints \(2\pi i\, e\), which is the card at y = 16183. Typing \(e\) revealed \(2\pi i\, e\). Change: the second sheet line is Theorem 6.12, the power in the denominator is \(n+1\), divide by \(n!\), multiply by \(2\pi i\). One next-step card for Example 6.25 whose answer is \(-4\pi/(3e)\). A wrong check says "the power is 4, so \(n=3\), and you divide by \(3!\)" and does not print the value. Example 6.21 stays the first card. \(2\pi i\, e\) leaves the sheet.
+
+2. **A miss names the next move and keeps the number.** Typing \(2i\) on Example 6.1 revealed \(-5/4\). Typing 0 on the 6.4 card revealed the arithmetic ending at \(4+2i\), and that same \(4+2i\) is the worked paragraph above the card. Typing \(2\pi i\) on Example 6.16 revealed \(-4\pi i\) and \(-2\pi i\). Typing \(u_y-v_x\) revealed \(u_x-v_y\). Typing \(2\pi i\) on circle seed 1 revealed that the integral is 0. The \(e^{z}\) miss already withholds the button. The segment miss already withholds the value. Change: every wrong check follows those two. The value line shows only after the check is right. The 6.4 worked paragraph stops at "an antiderivative is \(z^2/2\)." The 6.2 worked paragraph stops at the parametrization and does not print \(z'(t)\).
+
+3. **Deal the integral the exam does not answer with 0, and make ML a number.** Forty seeds of the circle generator: 38 are 0, and 2 are \(2\pi i\). Example 6.14's prompt has already split \(2z/(z^2+2)\) and said both poles are inside. Example 6.16's prompt has already written \(2/z-1/(z-1)\). Example 6.11, page 177, asks for \(|\int_C dz/(z^2+1)|\le 1/(2\sqrt{5})\) on the segment from 2 to \(2+i\), and the page only has the sentence \(|\int|\le ML\). Change: half the circle seeds are power \(-1\) with the pole inside, and a quarter use a denominator power past 1 so the answer is the Theorem 6.12 value. Example 6.14's first blank is the partial-fraction split, and \(4\pi i\) is the second. Example 6.16's first blank is the orientation of each loop. One ML card for Example 6.11, answer \(1/(2\sqrt{5})\). The miss says "length times a bound on \(|f|\)" and does not print the product.
+
+4. **The right parametrization is one line, and the handwriting on the paper counts.** At 390 the correct Example 6.7 choice is 290×53 and broken into two columns. The three wrong choices are 44px and readable, and they are the real mistakes: the unit circle, \(z(t)=t\) on a real interval, and \(z(t)=2+i\pi t/4\). At 1280 the correct choice is one line. \(2+(\pi/4)i\) was marked wrong. \(e^{(8+i\pi)/4}-1\) was marked wrong. \(2+11i/3\) on segment seed 3 was marked wrong, and \(2+(11/3)i\) was marked right. Change: each choice stays on one line at 390. Accept \(2+(\pi/4)i\), \(e^{(8+i\pi)/4}-1\), and \(2+11i/3\).
+
+5. **Liouville's deck starts with the theorem the exam proves, and a miss comes back.** Theorem 6.19, page 206: a polynomial with no zero makes \(1/P\) entire and bounded, so Liouville says \(1/P\) is constant. The page never names that theorem. The 6.6 deck opens on Morera, and the only controls are Show the back and Next card. The \(e^{z}\) card is the right trap. Change: the deck opens on Liouville, then the \(e^{z}\) card, then Morera. Add one proof card for Theorem 6.19 whose steps are "\(1/P\) is entire," "\(1/P\) is bounded," and "Liouville says constant." A wrong step names the missing hypothesis and does not state the conclusion. A flash you miss stays at the front until the back is recalled.
+
+6. **The 6.3 worked line wears the example it states.** The tag on the preview is Example 6.12, page 186. The sentence under it is both circles \(2\pi i\) for \(1/z\), then 0 when the green circle drops the pole. Example 6.12 is the entire functions integrating to 0. Change: that tag is Corollary 6.1, page 188, and Theorem 6.6, page 187. Example 6.12 stays a read link on a sentence that is Example 6.12.
+
+### Keep
+
+The half-period flash, \(2ie^{i\alpha}\), and the Definition 6.1 flash, both page 163. The semicircle choices for Exercise 6.2.3, page 178, all 44px at 390, and the value \(-2/3\). The which-theorem card, and the miss that names deformation and leaves the buttons on. Cauchy's three proof blanks on page 184, and the first miss, which says Equation (6.28) splits the integral and does not write \(v\,dx+u\,dy\). The four \(e^{z}\) choices and the miss that says the modulus grows. The segment miss that names the antiderivative and withholds the value. The sheet lines that are the statements, once the computed examples are off them. The arrival on every picture, Play on the first screen in both themes and both widths, and Stage complete disabled until the picture holds.
+
+## reviewer (Ch6 batch 2)
+
+Branch `cursor/chapter-6`, draft PR #45, reviewed at `d49927c` against Howell & Mathews, Complex Analysis, 202 Updated Edition (the 471-page PDF). The HTML edition uses different example numbers; each link below was opened and matched to the PDF statement, not to the HTML's number.
+
+Verdict: **ACCEPT WITH FIXES**. The fixes are on this branch.
+
+Checked against the printed pages. Section openers 163, 167, 181, 193, 197, 203 match the contents. Definition 6.1 and Example 6.1 are page 163, and \(\int_0^1(t-i)^3\,dt=-5/4\). Definition 6.2 and Example 6.6 are page 170; the eight-step midpoint total rounds to \(4.23+5.20i\), and the exact value on page 171 is \(\exp(2+i\pi/4)-1\). Theorem 6.1 and Example 6.7 are page 172. Theorem 6.3, the ML inequality, is page 177. Exercise 6.2.3 starts on page 178, and the answer key on page 443 gives \(-2/3\) for the upper unit semicircle. Theorem 6.5 is stated on page 183. Cauchy's proof, Equation (6.28), and the continuous-\(f'\) hypothesis are on page 184. Example 6.12 is page 186. Theorem 6.6 is page 187. Corollary 6.1 is page 188: \(2\pi i\) for \(1/(z-z_0)\), and \(0\) for every other integer power. Examples 6.14, 6.15, and 6.16 are pages 189, 190, and 190, and the book states the values \(4\pi i\), \(2\pi i\), and \(-6\pi i\). The figure-eight arithmetic on page 191 is \(-4\pi i\) from \(2/z\) and \(-2\pi i\) from \(-1/(z-1)\). Theorems 6.8 and 6.9 are pages 193 and 194. Example 6.9 is the same ends, \(-1-i\) to \(3+i\), and the same \(4+2i\). Theorem 6.10 is page 197. Example 6.21 is page 198, and \(i2\pi e\) is \(2\pi i\, e\). Theorem 6.12, the derivative formulas, is page 199. Theorem 6.13 is page 203 and requires every closed contour, not every triangle. Theorem 6.17, Cauchy's inequalities, is page 205: \(|f'(z_0)|\le M/R\). Theorem 6.18 is page 206.
+
+Circle and segment generators match an independent quadrature on 200 seeds, including the straight-segment logarithm. A polynomial no longer refuses an endpoint that is not a singularity, so the segment fallback \(\int_0^{1+i} z^2\,dz=(-2+2i)/3\) computes instead of throwing. `node tools/check_vectors.mjs`, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. Live code does not import `kit/`. `js/core/map-route.js` still matches the kit copy.
+
+What was wrong, and the change:
+
+1. The read link labeled Example 6.1 opened `Int_ex`, which is \(\int_0^{\pi/2}\exp(t+it)\,dt\), the book's Example 6.2. It now opens the \((t-i)^3\) example. The link labeled Example 6.21 opened the power-integral display that is not that example. It now opens \(\int_{|z|=2} e^{z}/(z-1)\,dz\). Theorem 6.10's link opened the section top; it now opens the formula.
+2. Practice cards for Examples 6.1, 6.14, 6.15, 6.16, and 6.21, and for Theorems 6.3, 6.9, 6.10, 6.13, and 6.18, fell through to the complex-integrals section. Each cite now opens the statement it names.
+3. Morera's flash and the 6.6 sheet said every triangle integrates to 0. Theorem 6.13 says every closed contour in a simply connected domain. The card and the sheet now say that.
+4. A non-negative power with the sample point inside the circle was explained by Corollary 6.1. That corollary is the integral of \(1/(z-z_0)^n\). An entire power is Theorem 6.5, page 183, whether or not the sample point is inside.
+5. The radius picture draws \(1/R\) without saying that is the case \(M=1\) of Theorem 6.17, page 205. The gesture, the picture label, the worked line, and a read link now name that bound.
+6. The 6.3 worked tag said Example 6.12, page 186, over the paragraph about \(1/z\). Example 6.12 is \(e^{z}\), \(\cos z\), and \(z^{n}\) integrating to 0. The tag is now Corollary 6.1, page 188, and Example 6.12 is a read link to that example.
+7. A correct value in another handwriting was marked wrong: \(2+(\pi/4)i\), \(e^{(8+i\pi)/4}-1\), and \(2+11i/3\). The checker now accepts a typed value that parses to the same complex number, and it still rejects a nearby wrong one, including the book's rounded sum \(4.23+5.20i\) for the exact exponential.
+
+Left as is:
+
+1. At radius 3 the purple mark is still \(1/3\), and the blank says the derivative is 0. Theorem 6.18 needs the bound on every circle. One circle only gives \(|f'|\le 1/3\). The tick still turns on at that radius.
+2. Theorem 6.12, page 199, equation (6.48), is not stated on stage 6.5. Example 6.25, page 200, is \(\int_{|z|=2} e^{z^{2}}/(z-i)^{4}\,dz=-4\pi/(3e)\), recomputed from \(n=3\) and \(f'''(i)=4i/e\). That card is not on the page. The sheet still prints the finished value of Example 6.21 above the card that asks for it.
+3. The half-turn and full-turn sentences snap inside 0.12 radians. At the edge of the half-turn window the integral is about \(-0.12+1.99i\), and the blank already reads \(2i\).
+
+Keep: the six pictures, the page cites above, Example 6.1's \(-5/4\), the eight-step total beside \(\exp(2+i\pi/4)-1\), the semicircle \(-2/3\), Cauchy's proof blanks (the split, Green's theorem, Cauchy-Riemann, and 0), Examples 6.14–6.16, and the computed generators.
+
+## Chapter 6, batch 3
+
+Branch `cursor/chapter-6`, on top of `3894a6d`. Headless Chrome, light and dark, 390×844 and 1280×800. Fresh storage. No console errors. No sideways scroll. Play ends inside the 844 window at 390 and inside the 800 window at 1280, in both themes.
+
+A wrong check names the next move and leaves the value covered. The value line shows after the check is right. The 6.2 worked paragraph stops at the parametrization. The 6.4 worked paragraph stops at \(z^2/2\). The blanks under the pictures are inputs. Play does not fill them and does not enable Stage complete.
+
+Stage 6.5 states Theorem 6.12, page 199, equation (6.48). Example 6.21 stays the first exercise card. Example 6.25 asks for \(-4\pi/(3e)\), and a miss says the power is 4, so \(n=3\), divide by \(3!\).
+
+Half of the circle seeds are power \(-1\) with the pole inside. A quarter are \(e^z/z^{n+1}\), and the answer is the Theorem 6.12 value. Example 6.14 asks for the split, then \(4\pi i\). Example 6.16 asks for the loop orientation, then \(-6\pi i\). Example 6.11 asks for \(1/(2\sqrt{5})\), and the miss says length times a bound on \(|f|\). The Example 6.7 choices are one 44px line at 390.
+
+The 6.6 practice opens on Liouville, then \(e^z\), then Morera, then Theorem 6.19. A wrong step on that proof names the missing hypothesis. A missed flash stays at the front until Recalled.
+
+The Liouville tick waits until the bound \(1/R\) has been read on every circle in the picture, and the blank is the word constant. At radius 3 the claim is \(|f'|\le 1/3\), one circle. The half-turn and full-turn labels use the value, so 0.12 rad off \(\pi\) is not yet \(2i\).
+
+Stage 6.3 opens on Goursat's subdivision. The tick is Theorem 6.5, the integral is 0. The \(1/z\) drag is the next beat, and deformation has its own summit. Each stage has a why line under the title and Go to the next camp under the summit. 6.6 names Chapter 7. On `#book` the first button opens the chapter that is in progress. The phone drawer lists chapters 1 through 7.
+
+`node tools/check_vectors.mjs` 234/234. `node tools/fractal-smoke.mjs` passed. `node kit/smoke.mjs` passed.
+
+## Next
+
+The picture claims still say the value once the gesture has landed: the half turn says \(2i\), eight steps name \(\exp(2+i\pi/4)-1\), the deform claim names \(2\pi i\) and \(0\), and the Cauchy claim names the green point. The 6.6 sheet and summit still state that a bounded entire function is constant. Exercise 6.3.1 (b) and (d) are not cards. A missed flash stays at the front; there is no longer schedule than that. The shared practice engine is still not in the tree. Chapter 7 is named and is not a page. Chapters 8–11 stay on the book page as Later.
+
+## skeptical-student (chapter-6 batch 3)
+
+Branch `cursor/chapter-6`, tip `c18dde6`. Preview https://ch6-preview.complexanalysis.pages.dev/#chapter-6. Chrome, fresh storage. 390×844 light, then the theme control into the dark. Then 1280×800 light, and the theme control into the dark. No console errors. No failed assets. `scrollWidth` was 390 and 1280. The phone page is 26044px. The laptop page is 20505px.
+
+I have never seen this subject. I am on a phone. I wanted three things: what you are asking, what I do, and what I just learned.
+
+### What I could actually do
+
+The first screen, in both themes and at both widths, is the title, stage 6.1, one sentence, the circle, a claim, and Play. On the phone the square is 284×284 at y = 437, the claim is at y = 729, and Play is 70×44 at y = 790, so it ends at 834 in the 844 window. On the laptop the square is 272×272 at y = 371 and Play is at y = 712, so it ends at 756 in the 800 window. Dark ink on the claim is `rgb(233, 237, 245)` on paper `rgb(13, 18, 28)`. Light ink is `rgb(26, 34, 48)` on `rgb(246, 243, 236)`.
+
+Play on 6.1 walks the green point around the orange circle and ends on "A full turn brings the integral back to 0." Play on 6.2 lights eight orange dots and says they sit on \(4.23+5.20i\), beside \(\exp(2+i\pi/4)-1\). Play on 6.3 cuts the triangle into smaller triangles and says the integral is 0. Play on 6.4 bends the segment into two green sides over a dashed line and says the ends are still \(-1-i\) and \(3+i\). Play on 6.5 moves the green point inside the unit circle, puts a purple ring on it, and says the integral is the green point. Play on 6.6 grows the orange circle and parks a purple dot near the origin. The claim says the bound \(1/R\) has been read on every circle.
+
+The menu button is 44×44. The Book and chapters 1 through 7 are 44px rows, and Chapter 6 is the marked one. Chapter 7 opens the book on a Later card, page 210.
+
+Typing \(2i\) on Example 6.1 opened "Expand \((t-i)^3\) into a real part and an imaginary part, then integrate each from 0 to 1. The value stays covered." Typing 1 on Example 6.11 opened "length times a bound on \(|f|\)." Pressing "Theorem 6.5, so the integral is 0" left all four buttons on, and the note said the pole means Theorem 6.5 does not apply and deformation keeps the value. The four Example 6.7 choices are one 44px line at 390 (`scrollWidth` 289, `clientWidth` 288). \(2+(pi/4)i\) was accepted as \(z'(t)\). Show the back, then Missed and Recalled, both 44×141.
+
+### Where I got lost
+
+The claim on arrival is "The integral has left 0. The real part and the imaginary part are still separate." I see one purple dot. I cannot tell what is separate, or what number I am supposed to find.
+
+The blank says "From 0 to \(\pi\) the integral is" and the box is empty. I sampled the claim 152 times through one Play, about every 16ms. "Half a turn leaves the integral at \(2i\)" appeared once, at 709ms. The other 151 samples were "left 0" or "back to 0." I typed \(2i\) and \(0\) while the point was still at the top of the circle. Both checks passed. Stage complete stayed disabled, and the only words on it are "Stage complete." The half-turn window is a tolerance of 0.01 on the value. On the 284px square that is about half a pixel along the orange circle. A drag aimed at the exact left point did show \(2i\). A thumb does not land on half a pixel, and Play does not leave the sentence up.
+
+The line under the 6.1 title is "Later integrals come back to this real integral." Under 6.2 it is "A contour is the real integral from 6.1, after a parametrization." Under 6.6 it is "Liouville needs every circle." I do not have those words. I still do not know what the stage is for.
+
+On 6.2 the finished claim prints the exact value, and the blank underneath is "The exact value is". I would copy it and learn nothing about the orange dots. On 6.3 the line under the title, before Play, already says a closed analytic path integrates to 0. Play repeats 0. The blank asks for that 0. On 6.6, after Play, the claim says the bound "has been read." I did not read anything. The blank says "\(f\) is" and waits. The sheet further down says a bounded entire function is constant. That is where the word is.
+
+On the phone the Theorem 6.6 buttons are cut off in the 288px row: "Theorem 6.6, deformation of cor" (`scrollWidth` 346), "Theorem 6.1, so parametrize bot" (378), "Corollary 6.1, so the value is alw" (368). The line above them reads "Reach for ."
+
+The bend has no number on it. After Play I know the ends stayed. I cannot see whether the integral stayed.
+
+### Where I got bored
+
+6.1 is 2482px. 6.2 is 5626px and nine cards. 6.3 is 8272px and twelve cards. The 6.1 summit, "a complex integral is the real integral plus \(i\) times the imaginary integral," sits at y = 2108, under the flashcard and Example 6.1. I had stopped reading before Example 6.11. The pictures that do something (the ring on the inside point, the triangle cutting itself, the purple dot sliding to the origin) are separated by cards that ask me to copy a theorem number.
+
+### Verdict
+
+ANOTHER BATCH. I could press Play, and on 6.5 I could say the words "the green point." I could not finish 6.1 from the picture, I could not read three of the theorem buttons, and I was done with the page about six screens in. One batch is the six cuts below. When the half-turn line stays on the page, the disabled tick says what is missing, and the summit sits under the picture, this lens rests.
+
+### Ranked cuts
+
+1. **The half-turn line stays up, and a dead tick says what is missing.** Through one Play the \(2i\) sentence was on screen for one 16ms sample, at 709ms. Both blanks accepted \(2i\) and \(0\) while the phase was still `move`, and Stage complete stayed disabled with no other label. The window is a value tolerance of 0.01, about half a pixel on the 284px square. Change: once the green point comes within a thumb of the left side of the orange circle, a line under the picture reads "Half a turn: \(2i\)" and stays after Play finishes. The full-turn line can still be the live claim. While Stage complete is disabled, the button's line names the missing piece: "Bring the point all the way around" or "Fill both lines."
+
+2. **The sentence above the box stops before the answer.** After Play on 6.2 the claim is "Eight steps sit on \(4.23+5.20i\), beside \(\exp(2+i\pi/4)-1\)," and the blank is "The exact value is". The 6.3 line under the title, before Play, says a closed analytic path integrates to 0. The 6.6 sheet, between the blank and the tick, says a bounded entire function is constant. Change: the eight-step claim reports \(4.23+5.20i\) and leaves the exact value in the blank. The 6.3 line under the title says this camp is a closed path with nothing inside it; 0 shows up in the claim after the triangle subdivides. "Constant" leaves the 6.6 sheet until that check is right. The summit can keep the word after the tick.
+
+3. **A choice on the phone shows the whole answer, in a sentence.** At 390 the Theorem 6.6 row clips to "deformation of cor", "parametrize bot", and "the value is alw", and the stem is "Reach for ." The same stem is the step text `Reach for ___ .` with the blank removed and the period left behind. Change: the choice wraps onto a second line, and that stem goes away. The question is already the prompt. The Example 6.7 choices already fit on one 44px line; those stay as they are.
+
+4. **The first sentence of the stage is about the picture.** "Later integrals come back to this real integral." "A contour is the real integral from 6.1, after a parametrization." "Liouville needs every circle." The arrival claim says the real part and the imaginary part are still separate, over one purple dot. Change: 6.1 says "Purple is the total so far, while green walks the circle." 6.2 says "Orange dots are pieces of the path. Add them up." 6.6 says "Purple is a bound on the derivative. Watch it as the circle grows." The arrival claim on 6.1 says the total has left 0, and it waits to talk about two parts until the picture draws two parts.
+
+5. **The summit and Stage complete sit under the blanks.** The 6.1 summit is at y = 2108, under two cards. 6.2 is 5626px and nine cards before its summit. 6.3 is 8272px and twelve cards, and its tick is in the middle, at y = 9313, with the rest of the cards after it. Change: on every stage the summit and Stage complete move to just under that picture's blanks. The cards stay on the page, after the tick. Go to the next camp stays with the summit.
+
+6. **The bend and the radius say what just happened.** After Play the bend claim is "The path has bent. The ends are still \(-1-i\) and \(3+i\)." There is no mark for the value, and the blank asks for the integral of \(z\). After Play the radius claim is "The bound \(1/R\) has been read on every circle," and the blank asks what \(f\) is. Change: the bent claim says the integral is the same as on the straight segment, and \(4+2i\) stays in the blank. The finished radius claim says the purple bound shrank to the origin, so the derivative is 0. The miss on that blank says a derivative of 0 means \(f\) does not change, and the word stays covered.
+
+### What to keep
+
+Play on the first screen, both themes, both widths, with the square, the claim, and the button in that window. The four colours on the marks. The triangle that cuts itself when you press Play, and the claim that then says the integral is 0. The inside point with the purple ring, and the claim that ends "the green point." The radius picture once the purple dot has moved off the handle. The four Example 6.7 choices, one 44px line at 390. The misses that leave the number covered: Example 6.1, Example 6.11, and the deformation note that leaves the buttons on. \(2+(pi/4)i\) counting as the derivative. Show the back, Missed, and Recalled. The drawer, chapters 1 through 7, each row 44px. Stage complete staying off until the picture and the blanks agree, once the button says which one is missing.
+
+## reviewer (Ch6 batch 3)
+
+Branch `cursor/chapter-6`, draft PR #45, reviewed at `c18dde6` against Howell & Mathews, Complex Analysis, 202 Updated Edition (the 471-page PDF). The HTML edition numbers the same statements differently. Each anchor was opened and matched to the PDF statement.
+
+Verdict: **ACCEPT WITH FIXES**. The fixes are on this branch.
+
+Checked against the printed pages. Section openers 163, 167, 181, 193, 197, and 203 match the contents. Definition 6.1 and Example 6.1 are page 163, and \(\int_0^1(t-i)^3\,dt=-5/4\). Definition 6.2 and Example 6.6 are page 170. The eight-step midpoint sum rounds to \(4.23+5.20i\), and the exact value is \(\exp(2+i\pi/4)-1\). Theorem 6.1 and Example 6.7 are page 172. Theorem 6.3 and Example 6.11 start on page 177. The book's bound is \(|z-i|\ge 2\) and \(|z+i|\ge\sqrt{5}\), so \(|\int_C dz/(z^2+1)|\le 1/(2\sqrt{5})\) on the segment from 2 to \(2+i\). Exercise 3 of §6.2 starts on page 178, and the answer key on page 443 gives \(-2/3\). Exercise 5 is on page 179, and the key gives \(-32i\) and \(-8\pi i\). Exercise 9 is on page 180, and the key gives \(2\pi i\) and \(0\). Theorem 6.5 is stated on page 183. Cauchy's proof, Equation (6.28), and Goursat's triangular subdivision all begin on page 184. Example 6.12 is page 186. Theorem 6.6 is page 187. Corollary 6.1 is page 188. Examples 6.14, 6.15, and 6.16 are pages 189, 190, and 190, with values \(4\pi i\), \(2\pi i\), and \(-6\pi i\). The figure-eight arithmetic is \(-4\pi i\) from \(2/z\) and \(-2\pi i\) from \(-\int 1/(z-1)\), with the loop about 0 clockwise and the loop about 1 counterclockwise. §6.3 Exercises 1(a) and 1(c) are page 191: \(\pi i\) and \(0\), matching the key. Exercise 2 is \(2\pi i\). Exercise 3 is \(0\), poles at \(\tfrac12\pm i\). Exercise 4(a) on \(|z-1|=2\) is \(0\), and 4(b) on \(|z-1|=\tfrac12\) is \(2\pi i\). Theorem 6.9, equation (6.43), is page 194. Examples 6.17, 6.18, and 6.19 are page 195: \(1+i\), \(-\sin 1+i\sinh 1\), and \(\operatorname{Log}(z_2)-\operatorname{Log}(z_1)\). The HTML line for Example 6.18 is \(i\sinh 1\). Theorem 6.10 is page 197, equation (6.44). Example 6.21 is page 198, and \(i2\pi e\) is \(2\pi i\, e\). Theorem 6.12 and equation (6.48) are page 199. Example 6.25 is page 200, and \(2\pi i\, f'''(i)/3!=-4\pi/(3e)\) with \(f'''(i)=4i/e\). Theorem 6.13 is page 203. Theorem 6.17 is page 205: \(|f'(z_0)|\le M/R\). Theorems 6.18 and 6.19 are page 206. The algebra proof uses \(|1/P|\le 1\) outside a large disk, equation (6.60).
+
+Circle seeds 0 through 79: 40 are power \(-1\) with the pole inside, 20 are \(e^z/z^{n+1}\) with the Theorem 6.12 value, and 20 are \(0\). Each matches a 2000-step quadrature. Segment seeds 0 through 59 match a 4000-step quadrature, including the straight-segment logarithm. `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` passed. `node kit/smoke.mjs` passed. Live code does not import `kit/`. `js/core/map-route.js` matches the kit copy. On the local page at 390×844, Exercise 5 reads page 179, Exercise 9 reads page 180, Example 6.17 reads page 195, Another on the circle card retitles it Theorem 6.12 and then Theorem 6.5 with the matching pin, two Arrow Right presses on the radius make the claim \(|f'|\le 2/3\) at radius 1.5, a bare \(1/z-i\sqrt{2}\) is rejected and the split is accepted, and there were no console errors. `scrollWidth` was 390.
+
+What was wrong, and the change:
+
+1. Example 6.17 was cited as page 194. The example, \(\int 1/(2z^{1/2})\,dz=1+i\) from 4 to \(8+6i\), is on page 195. The cite is now page 195.
+2. §6.2 Exercise 5 was cited as page 178. The statement, the polygon through \(-4\), \(-4+4i\), \(4+4i\), and 4, and the clockwise upper half of \(|z|=4\), are on page 179. The prompt and the cite now say 179.
+3. §6.2 Exercise 9 was cited as page 179. The circle integrals from Exercise 8 are on page 180. The prompt and the cite now say 180.
+4. A dealt circle card kept the heading Corollary 6.1 when the seed was Theorem 6.12 or Theorem 6.5. The heading now follows the cite on that card.
+5. At radius 1.5 the claim said \(|f'|\le 0.67\), and at radius 1.006 it said \(|f'|\le 0.99\). Cauchy's estimate there is \(2/3\) and about \(0.994\). A nearest hundredth can fall under \(M/R\). Radii on the half-step now print the exact fraction, and any other radius prints a hundredth that stays at least \(1/R\).
+6. The 6.3 why said a closed analytic path integrates to 0. The integrand has to be analytic, on a simple closed curve. The sentence now says that.
+7. Typing \(1/z-i\sqrt{2}+1/z+i\sqrt{2}\) was marked right for the partial-fraction split of Example 6.14. Parentheses around a sum are no longer discarded. \(1/(2\sqrt{5})\), \((v\,dx+u\,dy)\), and \(u_x-v_y\) still match.
+
+Left as is:
+
+1. Once the gesture has landed, the picture claim names the value: \(2i\) at the half turn, \(\exp(2+i\pi/4)-1\) at eight steps, \(2\pi i\) and \(0\) on the two circles, and the green point inside the unit circle. Those values match the book. The blank under the picture is still the student's.
+2. Within one pixel of the green circle the sentence says the integral of \(1/z\) is not defined. Exactly on the circle that is true. A hair inside, it is still \(2\pi i\).
+3. A radius that is not a multiple of \(1/2\) prints a decimal rounded up, so the inequality stays true and is no longer the sharp \(1/R\). The play stops 1, 1.5, 2, 2.5, 3, 3.5, and 4 are exact.
+4. Exercise 6.3.1 (b) and (d) are not cards. (a) and (c) match the answer key.
+
+Keep: the six pictures, the page cites above, Example 6.1's \(-5/4\), the eight-step total beside \(\exp(2+i\pi/4)-1\), the semicircle \(-2/3\), Example 6.11's \(1/(2\sqrt{5})\), Cauchy's proof blanks, Examples 6.14–6.19 and 6.21 and 6.25, Theorem 6.12 on the dealt circle cards, and the computed generators.
+
+## ux-veteran (chapter-6 batch 3)
+
+Branch `cursor/chapter-6`, tip `c18dde6`. Preview https://ch6-preview.complexanalysis.pages.dev. The served `js/stations/chapter-6.js`, `js/app.js`, `js/stations/book.js`, `css/components.css`, and `index.html` match that commit. Headless Chrome, touch, fresh storage. 390×844 light, then the theme control into the dark. Then 1280×800, both themes. No console errors. No failed assets. `scrollWidth` was 390 and 1280.
+
+The first screen of the chapter is the climb. At 390, light and dark, the square is 284×284 at y = 437, the claim is the quarter-turn sentence, and Play is 70×44 at y = 790, so it ends at 834 in the 844 window. At 1280 the square is 272×272 and Play ends at 756 in the 800 window. The same frames in the dark: paper `rgb(13, 18, 28)`, title `rgb(233, 237, 245)`. A drag on the green point moved it (viewBox cx 240 to 319) and left the claim on the move sentence. Play says Pause, and a second press says Play.
+
+### Verdict
+
+ANOTHER BATCH. The picture, the claim, and Play are on the first screen in both themes and at both widths, and the book drawer is a real list. A student still cannot see the next camp without crossing the cards, Back throws away the camp, and six answers on the phone are cut off mid-sentence. One batch is the five cuts below. After that, this lens rests.
+
+### Ranked cuts
+
+1. **The next camp and Stage complete sit with the picture, and the count sits on the flag.** On the phone the page is 26044px. Play on 6.1 ends at y = 834. "Go to 6.2" is at y = 2239 and Stage complete is at y = 2300, under the sheet and the cards. The summit is at y = 2108, in that same pile. On 6.2, Play is at y = 2959 and Go to 6.3 is at y = 7699. On 6.3 the tick is near the triangle, at y = 8776, and Go to 6.4 is at y = 16031, after the deformation cards. On 6.6, Play is at y = 22777 and "Back to the book" is at y = 25582, under the summit. "Next is 6.1. 0 of 6 stages." lives only under the first Play, at y = 851, so the 844 window does not show it. At 1280 that line ends at y = 799 in the 800 window, and a camp you jump to still has no count. Change: the flag line of the camp on screen carries the count ("6.2 · 0 of 6"). Under that camp's blanks, the summit, then the next-camp line and Go, then Stage complete. The sheet and the cards follow. 6.3 keeps the tick beside the triangle and moves Go up with it, before the deformation cards.
+
+2. **Back returns to the camp you left.** Go to 6.2 scrolls to y = 2321 and leaves the hash on `#chapter-6`. History length stayed 5. Back from there opened `#book` at scroll 0. From 6.4, scrolled to y = 16069, The Book and then Back opened `#chapter-6` at scroll 0. The stage hash already exists, and scroll-padding is already 72px: after Go, the 6.2 flag is at y = 73, under the 56px header, and the title is on the screen. Change: Go sets `#chapter-6-6-2` (and the same for the other camps) so Back returns to the camp before it. A popstate back to this chapter restores the scroll it had. `window.scrollTo(0, 0)` on that return is the line that drops a student at 6.1.
+
+3. **A choice on the phone shows the whole sentence.** Forty choices, all 44px tall. At 1280 every one fits. At 390, six clip inside the button. On `ch6-6.3-which-mc` the button is 288px wide and "Theorem 6.1, so parametrize both curves" is 378px, so the end is off the button. "Corollary 6.1, so the value is always \(2\pi i\)" overflows by 80px. "Theorem 6.6, deformation of contour" overflows by 58px. On `ch6-6.3-cg-mc` the phone shows "the integral equals the length of" and cuts the rest. On `ch6-6.6-which`, "Yes. Every entire function is constant" overflows by 58px. The Example 6.7 parametrization overflows by 1px, so that line already fits. Change: a choice wraps, and the minimum height stays 44. The formula line that already fits stays one line.
+
+4. **The door into a camp is a 44px control, and a Later chapter says Later in the drawer.** On `#book` the first button is Walk Chapter 4, 163×44, and the status is "Next is §4.1, Exercise 3. 0 of 8 exercises." Walk Chapter 6 is a text link, 121×23, at y = 1845 on the phone and y = 1459 at 1280. The 6.1–6.6 rows on that node are text. The book drawer is the path that works: The Book, then chapters 1–7, each at least 44px tall. Chapter 6 is marked current on the laptop sidebar. Chapter 7 in that drawer opens `#chapter-7` on the roadmap, flag LATER, title at y = 97, clear of the header. The row in the drawer reads the same as chapter 6. Change: `#book-open-6` is the same `.btn` as Walk Chapter 4. Each section row links to its stage hash, `#chapter-6-6-1` and the rest. A drawer row that opens a Later card carries the Later flag the roadmap already prints.
+
+5. **The way up on the chapter is 44px tall.** On the first screen, The Book is 69×17, at y = 81. The same link is 17px on chapter 4 and on chapter 5. "Back to the book" at the bottom of chapter 6 is 134×23. The 44px control with those words is the camp button on 6.6, and the drawer row The Book is 358×44. Change: `.book-kicker a` takes the 44px height a `.nav-link` already has, on chapters 4, 5, and 6 together. Chapter 6 keeps the kicker. It gets a hit a thumb can land on.
+
+### What to keep
+
+The first screen. At both widths, both themes, a student sees the lede, 6.1, the why, the gesture, the square, the claim "The integral has left 0. The real part and the imaginary part are still separate.", and Play. The blanks under that picture arrive empty, and each input is 44×266. Play says Pause while it runs, and the next press says Play.
+
+The arrival on the next camp. Go to 6.2 puts the flag under the header, the why on the screen, the segment on the screen, and that camp's Play on the screen. Scroll-padding of 72px is why the title clears the bar. Chapter 1 and chapter 7 from the drawer do the same: the Later title sits at y = 97.
+
+The book drawer and the laptop sidebar: chapters 1 through 7, every row at least 44px, chapter 6 current. The landing Places list still opens on The Book, 44px, as its first row. Buttons, Stage complete, Check, and the icon buttons in the header are 44px. The green point's hit is a 44px circle. The mark itself is 19px across on the 284px square, which is enough to see which point moves.
+
+The type and the paper. The title is Iowan Old Style, 25.85px at 390 and 36px at 1280, weight 600. The lede is 16.8px. Light paper is `rgb(246, 243, 236)`, ink `rgb(26, 34, 48)`, muted `rgb(81, 91, 108)`. Dark paper is `rgb(13, 18, 28)`, ink `rgb(233, 237, 245)`, muted `rgb(166, 176, 195)`. The button radius is 6px and the card radius is 10px, the same on chapter 4 and chapter 5. The square stays the size that keeps Play on the first screen. Four colours, one gesture, one Play.
+
+## Chapter 6, batch 4
+
+Branch `cursor/chapter-6`, on top of `31fc16b` (reviewer product `a79c996`). Headless Chrome, fresh storage. 390×844 light and dark, 1280×800 light and dark. No console errors. No sideways scroll. Play ends at y = 834 in the 844 window and at y = 729 in the 800 window, in both themes.
+
+The flag carries the count (`6.1 · 0 of 6`). Under each camp's blanks: the summit, Go, then Stage complete. The sheet and the cards follow. On 6.3, Go and the tick sit with the triangle, before the deformation beat and the cards. Go to 6.2 sets `#chapter-6-6-2` and leaves the 6.1 blanks mounted. Back from that hash returns to the scroll it left. From 6.4, The Book and then Back returns to the same scroll, with the 6.4 flag at y = 73.
+
+A long choice wraps. "Theorem 6.1, so parametrize both curves" is the whole sentence. Example 6.7 stays one 44px line. The "Reach for" stem is gone on Theorem 6.6. The half-turn line latches at `2i` inside a thumb of the left side and stays after the point moves on. While Stage complete is disabled it says "Bring the point all the way around" or "Fill both lines". The eight-step claim does not print the sum or the exact value. The 6.3 line under the title does not say 0. "Constant" stays off the 6.6 sheet until that check is right. After the bend, the claim says the integral matches the straight segment. After every circle, the claim says the purple bound shrank to the origin, so the derivative is 0.
+
+Walk Chapter 6 is a 163×44 button. Section rows link to `#chapter-6-6-1` and the rest. Drawer rows that open a Later card say Later, including Chapter 7. The Book and Back to the book keep their type size and take a 44px hit. A hair inside the green circle is inside, so the integral of \(1/z\) is not called undefined. A radius that is not a half-step prints the sharp \(1/R\), including \(4/7\) at 1.75 and \(500/503\) at 1.006. Exercise 6.3.1 (b) and (d) are on the card.
+
+## Still open
+
+A missed flash stays at the front. There is no longer schedule than that. The shared practice engine is not in the tree. Chapter 7 is named, marked Later, and is not a page. Chapters 8–11 stay Later on the book. The 6.5 claim still ends on the green point. The full-turn claim still says the integral is back at 0.
+
+## unslop (chapter-6 batch 4)
+
+Branch `cursor/chapter-6`, tip `02da336`. Preview https://ch6-preview.complexanalysis.pages.dev. The served `version.json` is that commit. Headless Chrome, fresh storage. 390×844 light, then the theme control into the dark. Then 1280×800 light, and the theme control into the dark. No console errors. No failed assets. `scrollWidth` was 390 and 1280. No product code was changed.
+
+Light slop. The chrome is already this product: cream paper `rgb(246, 243, 236)`, dark paper `rgb(13, 18, 28)`, Iowan titles, one accent, the four teaching colours only on the marks. No emoji, no glow, no hue gradient, no exclamation mark. The same positions in both themes. The miss is words said twice, and a button stretched into a bar.
+
+Direction, taken from the page that is already here. Product: a MAT 412 student drags one point and watches a complex integral change. Character: ink, exact, warm paper. World: a notebook page and a pencil on the plane. Moments: the six planes. Signature: the green point, the same green on every stage.
+
+At 390, both themes, the square is 284×284 at y = 437. The claim is at y = 729. Play is 70×44 at y = 790 and ends at 834 in the 844 window. Above the square, two lines meet with no gap: the why at y = 332, 53px, "Purple is the total so far, while green walks the circle.", and the gesture at y = 385, 53px, "Drag the green point around the orange circle. Purple is the integral." At 1280 those two lines are 26px each, the square is 272×272 at x = 321 inside a card at x = 304 that is 952px wide, and Play ends at 729 in the 800 window. The phone page is 26423px. The laptop page is 20729px. A stage is 2092, 5471, 8677, 3154, 2908, and 3465px, with 2, 9, 12, 5, 4, and 4 cards.
+
+A drag of the green point to the left side sets the phase to half. The claim stays "The total has left 0." The latched line "Half a turn: 2i." is a second paragraph at y = 842, 53px, under Play. On the unscrolled phone it starts 2px above the fold. The two read links move down to y = 897, under that line. Play says Pause while it runs, and the next press says Play.
+
+A drag of the 6.5 point to the centre sets `data-where` to inside. The claim becomes "Inside, \(\dfrac{1}{2\pi i}\int \dfrac{z}{z-z_0}\,dz\) is the green point." The blank under the picture is "The formula returns". The worked paragraph already prints that formula.
+
+Forty choices. None clip. Six wrap past 44px, and the shortest of those is 54. At 1280 each Check under a picture blank is 918×44, and the input beside it is 266×44.
+
+## Verdict
+
+ANOTHER BATCH. One batch, and it is the six cuts below. When the sentence above the square is one line, the half-turn line sits with the claim, and the citation list is off the picture, this lens rests.
+
+## Ranked cuts
+
+1. **The half-turn line sits with the claim, above Play.** After the drag, phase is `half`, the claim still reads "The total has left 0.", and "Half a turn: \(2i\)." is at y = 842, under the button that ends at 834. The read links follow it. Change: `#ch6-real-half` is inserted after the claim and before Play. The words stay, and the line still latches and still stays after the point moves on. The 53px comes off the top of the stack by cut 2, so Play's bottom stays inside 844 and inside 800.
+
+2. **One sentence above the square, and it is the hand.** At 390 the why and the gesture are 53px each and both name purple. At 1280 they are one line each and they still name purple twice. On 6.2 the why says "Orange dots are pieces of the path" and the gesture says "Orange points are the eight samples." On 6.3 the why, the gesture, and the claim each say the integrand is analytic. On 6.6 the why and the gesture both say purple is the bound. On 6.4 the why opens with "6.3 gives \(0\)." The label "A pole is the next beat" sits over a gesture that already starts that picture. Change: 6.1 keeps "Drag the green point around the orange circle." 6.2 keeps "Drag the green point along the segment." 6.3 keeps the bridge from 6.2, and the gesture is "Play subdivides the triangle." 6.4's bridge is "Two ends use an antiderivative." 6.5 keeps both lines; they say different things. 6.6 is "Drag the green radius. Purple is the bound \(1/R\)." The pole label goes. The gesture under it stays.
+
+3. **Between Play and the blank, one worked sentence.** At 390 the read list starts at y = 836, so the first screen ends on "Definition 6.1, page 163". Under it: the label Worked example, a source tag that repeats Definition 6.1, page 163, then "From \(0\) to \(\pi\), integrate \(e^{it}\).", which is the blank. On 6.3 five links, 141px, sit between Play and "The integral over the triangle is". At 1280, both themes, the first screen ends on those two 6.1 links, beside the empty right of the card. Change: the read list under the picture goes. Each For the exam line is already that citation, and the pin on the line is the link. The 6.1 worked paragraph goes; the two blanks are that example. On 6.2 through 6.6 the worked sentence stays when it is not the blank's prompt. One source tag remains, on the sheet.
+
+4. **Check is the button Play already is.** At 1280 the half-turn Check, the full-turn Check, and the 6.2 Check are each 918×44, under an input that is 266×44. The same flex fills the phone column, so two blanks are four bars. Change: `.ch6-student .problem-actions .btn` keeps the 44px height and takes its content width. It does not grow to the row.
+
+5. **The button says the next camp, and the 6.3 summit is not the sheet.** The go row is "Next camp is 6.2, contours." and "Go to 6.2", 112px on the phone and one card on the laptop. The same pair sits on 6.3, 6.4, and 6.5. The 6.3 summit is "Analytic inside and on a simple closed curve: Theorem 6.5, page 183, says the integral is \(0\)." The first sheet line is that sentence. Change: the next-camp paragraph goes on 6.1 through 6.5. The button stays. On 6.6 the paragraph stays, because it names Chapter 7 and the button says "Back to the book". The 6.3 summit drops "says the integral is \(0\)". The sheet keeps the statement.
+
+6. **The inside claim stops before the blank.** With the point at the centre the claim is "Inside, \(\dfrac{1}{2\pi i}\int \dfrac{z}{z-z_0}\,dz\) is the green point." The worked paragraph prints that formula. The blank asks what the formula returns. Change: the inside claim is "Inside, the formula applies." The formula stays in the worked sentence. "The green point" stays the words the student writes. The edge claim and the outside claim stay as they are.
+
+## What to keep
+
+The six planes, the four colours on the marks, and the one clock. Play on the first screen in both themes and at both widths. Play says Pause while it runs, and the next press says Play and leaves the point where it stopped. The square stays 284px on the phone and 272px on the laptop, the size that keeps Play inside 844 and inside 800. The blank paper to the right of that square is the chapter card.
+
+The claim that flips: "The total has left \(0\)." and, at the full turn, "A full turn brings the integral back to \(0\)." The blanks arrive empty. Stage complete stays disabled, and the line under it names the missing piece. The half-turn sentence stays on the page after the point moves on. The eight-step claim leaves the exact value in the blank. The bent claim says the integral matches the straight segment. The finished radius claim says the purple bound shrank to the origin.
+
+The kicker, the flag, and For the exam. They are the book path: uppercase, tracked, the same on chapter 4 and chapter 5. The drawer, chapters 1 through 7, Later on the rows that open a Later card, including Chapter 7. Walk Chapter 6 at 163×44. Choices that wrap, with none cut off. The cards. This lens does not cut a drill. The source tag on a card stays. No new type, no new colour, no new chrome.
+
+## ux-veteran (chapter-6 batch 4)
+
+Branch `cursor/chapter-6`, tip `02da336`. Preview https://ch6-preview.complexanalysis.pages.dev. The served `js/stations/chapter-6.js`, `js/stations/ch6-pictures.js`, `js/stations/ch6-cards.js`, `js/stations/book.js`, `js/app.js`, `js/book/ch6-math.js`, `css/components.css`, `css/theme.css`, and `index.html` match that commit. Headless Chrome, touch, fresh storage. 390×844 light, then the theme control into the dark. Then 1280×800, light and dark. No console errors. No failed assets. `scrollWidth` was 390 and 1280. The phone page is 26423px. The laptop page is 20729px.
+
+### Verdict
+
+ANOTHER BATCH. The five cuts from batch 3 are on the page. A student on a phone sees the camp, the picture, and Play, opens a 44px list of chapters 1–7, and comes back to the camp they left. The half-turn line that batch asked to keep is under Play, and 2px of it is inside the 844 window. One batch is the three cuts below. When that line sits with the claim and Play is still on the first screen, this lens rests.
+
+### What the walk showed
+
+First screen, 390, light and dark. The header is 56px. The kicker is The Book. The title is Iowan Old Style, 25.85px, weight 600. The lede is the six stages. The flag reads `6.1 · 0 OF 6`. The why and the gesture are both on the screen. The square is 284×284 at y = 437. The claim is "The total has left 0." Play is 70×44 at y = 790 and ends at 834 in the 844 window. Dark paper is `rgb(13, 18, 28)`. The title and the claim are `rgb(233, 237, 245)`. Play sits at the same place. At 1280 the square is 272×272 and Play ends at 729 in the 800 window, in both themes. The sidebar is that same chapter list, the menu button is hidden, and Chapter 6 is the current row, on screen.
+
+Play says Pause. A second press says Play. The run finishes on "A full turn brings the integral back to 0." The claim for that sentence ends at y = 782. Play ends at 834. The half-turn line latches during the run and is still up at the end, at y = 842, 53px tall, so the 844 window shows 2px of "Half a turn: \(2i\)."
+
+The drawer, light and dark. Places is 44×44. The list is The Book and chapters 1–7, each row 44px, and the whole list fits. Chapters 1, 2, 3, and 7 say Later. Chapters 8–11 stay off this list. Chapter 6 is the marked row. The page behind the drawer stays put (`overflow: hidden`, and `#view` is inert). Chapter 7 opens the book on the Later card. The flag is at y = 73 and the title is at y = 97, under the 56px header.
+
+Back. From `#chapter-6` at scroll 1200, Go to 6.2 sets `#chapter-6-6-2`, leaves the 6.1 blank mounted, and puts the 6.2 flag at y = 73. Back returns to `#chapter-6` at scroll 1200. From 6.4, flag at y = 73 and scroll 16466, The Book in the drawer opens `#book` at scroll 0. Back returns to `#chapter-6-6-4` at scroll 16466, with the flag at y = 73.
+
+The Book kicker draws at 69×19. The hit around those words runs from y = 68 to y = 108, and the title takes the point at y = 112. The same kicker on chapter 4, sampled in the dark, is 69×19 and takes 10 of 12 probes across a 44px band. Back to the book at the bottom draws at 134×26 and takes a 44px band. Walk Chapter 6 is 163×44. The six section rows go to `#chapter-6-6-1` through `#chapter-6-6-6`, and each link is at least 44px tall.
+
+Choices. "Theorem 6.1, so parametrize both curves" is the whole sentence, 54px tall. "Corollary 6.1, so the value is always \(2\pi i\)" wraps the formula onto a second line, 88px, and the formula is on the button. The four Example 6.7 lines stay one 44px row. The longest is 289px in a 288px box.
+
+Stage complete on 6.1 is 44px and disabled. The line under it says "Bring the point all the way around" before the full turn, and "Fill both lines" after it. On each camp the flag carries the count, and the summit, Go, and Stage complete sit under that camp's blanks. The sheet and the cards follow. On 6.3, Go to 6.4 and "Subdivide the triangle" share the screen with "A pole is the next beat" and the start of the green circle.
+
+Style. Light paper `rgb(246, 243, 236)`, ink `rgb(26, 34, 48)`, muted `rgb(81, 91, 108)`. Dark paper `rgb(13, 18, 28)`, ink `rgb(233, 237, 245)`, muted `rgb(166, 176, 195)`. The button radius is 6px and the card radius is 10px. Chapter 4 and chapter 5, sampled in the dark after the same theme control, use that Iowan title at 25.85px, that lede at 16.8px, that kicker, and that 10px card.
+
+### Ranked cuts
+
+1. **The half-turn line sits with the claim, and one sentence stays above the square.** After Play the claim ends at y = 782, Play ends at 834, and "Half a turn: \(2i\)." starts at y = 842. The why and the gesture are 53px each above the square, and both name purple. Moving the half-turn line above Play without freeing a line would push Play past 844. Change: 6.1 keeps "Drag the green point around the orange circle. Purple is the integral." The why line goes. `#ch6-real-half` is inserted after the claim and before Play. It still latches, and it still stays after the point moves on. Play's bottom stays inside 844 and inside 800.
+
+2. **The page number stays on the section's row.** At 390 the Chapter 6 doors are the right hashes and at least 44px, and four of them drop the page onto a line by itself. The 6.2 link is 283px wide, so "p. 167" wraps to y = 1636 under a link that ended at 1630, and the row grows from 44 to 76. 6.3 does the same with "p. 181". 6.4 and 6.6 wrap the title, then put "p. 193" and "p. 203" on their own right-aligned line. "p. 203" sits in the gap above Walk Chapter 6. 6.1 and 6.5 keep the page beside the title. Change: the row does not wrap. The title flexes and may wrap inside the link. The page stays on the right of that row.
+
+3. **A flashcard says which card it is.** Section 6.1 opens one deck of two flashes. Show the back opened the definition. Missed, 44×141, closed the back and left the same front. The full-turn card stayed behind it, and the card gave no sign that the press landed. Change: the heading reads "Flashcard · 1 of 2", and Missed adds one line, "Still this card." Recalled can keep moving to the next card.
+
+### What to keep
+
+The first screen, both themes, both widths. The lede, `6.1 · 0 of 6`, the square, "The total has left 0.", and Play. The four colours on the marks. Play, Pause, Play. The half-turn sentence stays after the point moves on.
+
+The drawer. Chapters 1–7, Later on the chapters that are still cards, Chapter 6 marked, every row 44px, the page behind it held still. Chapter 7 landing with LATER at y = 73.
+
+Back. Go writes the camp hash and returns to the scroll you left. The Book from the drawer, then Back, returns to that camp with the flag under the header.
+
+The Book kicker and Back to the book, the words at the size they were, the hit at 44px. Walk Chapter 6 at 163×44. The section names as the doors.
+
+The summit, Go, and Stage complete under the blanks, with the reason on the disabled tick: "Bring the point all the way around", "Fill both lines", "Take all eight steps", "Subdivide the triangle", "Bend the path", "Bring the point inside", "Cross every circle". On 6.3 the pole label and the green circle share the screen with Go.
+
+Wrapped choices, the whole sentence, and Example 6.7 on one 44px line. The type, the paper, the 6px button, the 10px card.
+
+## reviewer (Ch6 batch 4)
+
+Branch `cursor/chapter-6`, draft PR #45, reviewed at `02da336` against Howell & Mathews, Complex Analysis, 202 Updated Edition (the 471-page PDF at complexanalysis.org). The HTML edition numbers the same statements differently. Each anchor used on the chapter was opened and is present. Preview `https://ch6-preview.complexanalysis.pages.dev` still serves `02da336`. The fixes below are on this branch, checked on a local page.
+
+Verdict: **ACCEPT WITH FIXES**.
+
+Checked against the printed pages, again, including the batch 4 cards. Section openers 163, 167, 181, 193, 197, and 203 match the contents. Definition 6.1 and Example 6.1 are page 163, and \(\int_0^1(t-i)^3\,dt=-5/4\). Definition 6.2 and Example 6.6 are page 170. The eight-step midpoint sum rounds to \(4.23+5.20i\), and the exact value is \(\exp(2+i\pi/4)-1\). Theorem 6.1 and Example 6.7 are page 172. Theorem 6.3 and Example 6.11 are page 177, and the book's bound is \(1/(2\sqrt{5})\). Exercise 3 of §6.2 is page 178, and the key on page 443 gives \(-2/3\). Exercise 5 is page 179, key \(-32i\) and \(-8\pi i\). Exercise 9 is page 180, key \(2\pi i\) and \(0\). Theorem 6.5 is page 183. Cauchy's proof and Equation (6.28) are page 184: the imaginary integrand is \(v\,dx+u\,dy\), and Green produces \(u_x-v_y\). Example 6.12 is page 186. Theorem 6.6 is page 187. Corollary 6.1 is page 188. Examples 6.14, 6.15, and 6.16 are pages 189, 190, and 190, values \(4\pi i\), \(2\pi i\), and \(-6\pi i\), with the figure-eight signs from page 191. §6.3 Exercise 1 is page 191. The key gives (a) \(\pi i\) and (c) \(0\). (b) has poles at \(-1\pm i\), both outside the unit circle, so the integral is \(0\). (d) \(\operatorname{Log}(z+5)\) is analytic inside and on that circle, so the integral is \(0\). Exercise 2 is \(2\pi i\). Exercise 3 is \(0\). Exercise 4(a) on \(|z-1|=2\) is \(0\), and 4(b) on \(|z-1|=1/2\) is \(2\pi i\). Theorem 6.8 is page 193. Theorem 6.9 is page 194, and the ends \(-1-i\) and \(3+i\) give \(4+2i\). Examples 6.17, 6.18, and 6.19 are page 195: \(1+i\), \(-\sin 1+i\sinh 1\), and \(\operatorname{Log}(z_2)-\operatorname{Log}(z_1)\). The statement of Example 6.18 is \(\sinh 1\). Theorem 6.10 is page 197. Example 6.21 is page 198, \(2\pi i\, e\). Theorem 6.12, equation (6.48), is page 199. Example 6.25 is page 200, \(-4\pi/(3e)\). Theorem 6.13 is page 203. Theorem 6.17 is page 205, \(|f^{(n)}(z_0)|\le n!M/R^n\). Theorems 6.18 and 6.19 are page 206. Liouville's proof sends \(R\) to infinity before \(f'(z_0)=0\).
+
+Seeds 1 through 80 of the circle, segment, and Cauchy-formula generators accept their own answers. Segment values match an 8000-step quadrature. Three thousand radii from 1 to 4 print a bound at least \(1/R\), including \(4/7\) at 1.75 and \(500/503\) at 1.006. `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` passed. `node kit/smoke.mjs` passed. Live code does not import `kit/`. `js/core/map-route.js` matches the kit copy.
+
+Local page, fresh storage, headless Chrome. 390×844 light, then dark. Then 1280×800 light, then dark. No console errors. No failed assets. `scrollWidth` was 390 and 1265. Play is 44px and ends at y = 834 in the 844 window and at y = 729 in the 800 window, both themes. The flag reads `6.1 · 0 of 6`. Forty choices are at least 44px and do not clip. A wrong half-turn blank stays covered, and `2i` locks. One step inside the green circle says the pole is inside. Go to 6.2 sets `#chapter-6-6-2` and leaves the filled blank mounted. Walk Chapter 6 is 163×44. The 6.1 section row is `#chapter-6-6-1`. From 6.4, The Book and then Back returns to the same scroll. The drawer marks Chapter 7 Later. Eighteen arrow steps reach a full turn, and the claim says the integral is back at 0.
+
+What was wrong, and the change:
+
+1. After the six pictured circles, at radius 3.5, the claim said the purple bound had shrunk to the origin and the derivative was 0. Theorem 6.17 on that circle is \(|f'|\le 1/3.5\). The book's proof needs every radius in the plane. The claim now says the mark is still \(1/R\), and these circles do not send the derivative to 0. The summit says the same until the blank is filled.
+2. The 6.4 sheet said an analytic integrand does not care which path joins the ends. Theorem 6.9 needs a simply connected domain. \(1/z\) from \(-i\) to \(i\) is the counterexample. The line now names that hypothesis.
+3. The 6.5 sheet quoted equation (6.48) and then said "Divide by \(n!\)". The formula multiplies by \(n!\). The extra sentence is gone. The integral recipe stays on the Example 6.25 card: divide by \(n!\), then multiply by \(2\pi i\).
+4. The half-turn line said "Half a turn: \(2i\)" as soon as the point was within 0.8 rad of the left side. There the integral is about \(-0.72+1.70i\). The line now says a half turn, the left side, integrates to \(2i\).
+
+Left as is:
+
+1. A full turn of \(e^{it}\) is 0, and the claim says so. That is the blank.
+2. Inside the unit circle, \(\frac{1}{2\pi i}\int z/(z-z_0)\,dz\) is the green point. Outside, that integral is 0. Both match Theorem 6.10 for \(f(z)=z\). The claim still ends on the green point.
+3. After the triangle is subdivided, the claim quotes Theorem 6.5 and says the integral is 0. That is the blank, and it is the theorem.
+4. The fundamental-theorem card stops when \(1/P\) is constant. The contradiction with degree at least 1 is the next sentence of the proof on page 206.
+
+Keep: the six pictures, the page cites above, the answer-key values, Example 6.1's \(-5/4\), the eight-step total beside \(\exp(2+i\pi/4)-1\), the semicircle \(-2/3\), Example 6.11's \(1/(2\sqrt{5})\), Cauchy's three proof blanks, Examples 6.14–6.19 and 6.21 and 6.25, Exercise 6.3.1 (a)–(d), the sharp \(1/R\) bounds, and the computed generators.
+
+## Chapter 6, batch 5
+
+Branch `cursor/chapter-6`, on top of `6c49527`. Headless Chrome, fresh storage. 390×844 light and dark, 1280×800 light and dark. No console errors. No failed assets. `scrollWidth` was 390 and 1265.
+
+The 6.1 why line is gone. One gesture sits above the square: "Drag the green point around the orange circle. Purple is the integral." The square is 284px on the phone and 272px on the laptop. Resting Play ends at y = 781 in the 844 window and at y = 703 in the 800 window, both themes. After the point reaches the left side, "A half turn, the left side, integrates to \(2i\)." sits between the claim and Play. On the phone that sentence wraps onto "\(2i\)." and Play ends at y = 842. On the laptop it is one line and Play ends at y = 737. Play says Pause while it runs, and the next press says Play.
+
+A full turn says the point is home. Inside the unit circle the claim is "Inside, the formula applies." Outside, the integral is still 0. After one subdivision the triangle claim is "The midpoints are in." The 6.3 summit names Theorem 6.5, page 183, and does not print 0. The sheet still states the integral.
+
+The 6.1 deck heading is "Flashcard · 1 of 2". Missed closes the back, stays on that card, and adds "Still this card." Check under a picture blank is 85×44. Section rows on the book keep the page on the right of the link; 6.4 and 6.6 wrap the title and stay one row. "Next camp is …" remains only on 6.6, naming Chapter 7. The read lists under the pictures are gone. 6.1 has no worked paragraph. 6.2 through 6.6 keep one worked sentence. Theorem 6.19, page 206, adds the step after \(1/P\) is constant: degree 0 contradicts degree at least 1, so \(P\) has a zero.
+
+Deferred: the shared practice engine is another loop, and this chapter still renders `data/practice/ch6.json` with the local card. Chapter 7 is a Later card, not a page. Chapters 8–11 stay off this loop.
+
+## taste-skill (chapter-6 batch 5)
+
+Branch `cursor/chapter-6`, tip `f02aafe`. Preview https://ch6-preview.complexanalysis.pages.dev. `version.json` still says `fa0f69f`. `index.html`, `js/app.js`, `js/stations/chapter-6.js`, `js/stations/ch6-pictures.js`, `js/stations/ch6-cards.js`, `js/stations/book.js`, `js/book/ch6-math.js`, and `css/components.css` match `f02aafe` byte for byte. Headless Chrome, fresh storage. 390×844 light, then dark. Then 1280×800 light, then dark. The theme was `mv:theme`, set before load. No console errors. No failed assets. `scrollWidth` was 390 and 1280. No product code was changed.
+
+The page is already this product. Cream paper `rgb(246, 243, 236)`, dark paper `rgb(13, 18, 28)`, Iowan titles, one accent on Walk and Go, the four teaching colours on the marks. The kicker, the flag, and For the exam stay. This pass is the sentences that share a size, and the one answer that has climbed into the claim.
+
+At rest, both themes, Play is on the first screen. At 390 the square is 284×284 at y = 385, the claim "The total has left 0." is one line of text in a 53px box (the phone rule `min-height: 52.7px` on `.exp-claim`), and Play is 70×44 ending at y = 781. At 1280 the square is 272×272, the claim is 26px, and Play ends at y = 703. The phone page is 25308px. The laptop page is 19976px.
+
+### Verdict
+
+ANOTHER BATCH. One batch, the six cuts below. When the claim stops before the blank, one sentence sits above the square, and the worked line is that one sentence, this lens rests.
+
+### Ranked cuts
+
+1. **The half-turn line stops before \(2i\), and it is one line.** Six steps to the left side, both themes. The claim stays "The total has left 0." Under it, "A half turn, the left side, integrates to" and then "\(2i\)." alone. That second line is the blank, "From 0 to \(\pi\) the integral is". At 390 the half line is 324×53 and Play ends at y = 842 in the 844 window. At 1280 the same sentence is one 27px line, still printing \(2i\), and Play ends at y = 737. A full turn says "A full turn brings the point home." and leaves the half line up. Outside the unit circle the claim is "Outside, that integral is 0." Change: the latched line is "The point is on the left side." \(2i\) stays in the blank. The line is one line at 390, and it does not take the two-line min-height, so Play's bottom stays at the resting 781 and 703. The outside claim is "Outside, the formula does not apply."
+
+2. **One sentence above the square.** At 390, both themes, 6.2 stacks two 17px lines: "Orange dots are pieces of the path. Add them up." and "Drag the green point along the segment. Orange points are the eight samples." 6.3's bridge and its gesture both say the integrand is analytic. 6.4 opens "6.3 gives 0 on a closed curve." 6.5 opens "This formula returns the inside value." above the blank "The formula returns". 6.6 stacks "Purple is a bound on the derivative" and "purple is the bound \(1/R\)". Change: 6.2 keeps the drag sentence. 6.3 keeps "6.2 computes one path. This camp is a closed curve." and the gesture is "Play subdivides the triangle." 6.4 is "Two ends use an antiderivative." 6.5 is "6.4 needs an antiderivative." 6.6 is "Drag the green radius across the circles. Purple is the bound \(1/R\)."
+
+3. **The worked line is one sentence, and it is the step.** On 6.2 the paragraph under Play prints \(z(t)=(2+i\pi/4)t\) for \(0\le t\le 1\), and that string is the first choice, 44px, in the cards below. The blank under the paragraph is "The exact value is". On 6.5 the claim is "Inside, the formula applies." and the worked paragraph prints the formula and then "It applies while the green point stays inside." On 6.6 the worked paragraph ends "One circle is not every circle." The summit under the blank is that sentence. The blank is "\(f\) is". On the pole picture the worked line says Corollary 6.1 "is the power \(-1\)" and the blank is "The integral of \(1/z\) over the green circle is". Change: 6.2 stops at the segment from 0 to \(2+i\pi/4\), then "multiply by \(z'(t)\) and integrate in \(t\)." 6.5 keeps the formula and drops the second sentence. 6.6 keeps Theorem 6.17 and drops the summit's sentence. 6.3 keeps the two circles and \(1/z\), and the power \(-1\) stays on the sheet.
+
+4. **The flash heading is the count. The question is the line.** The 6.1 deck's `h3` is "Flashcard · 1 of 2", 18.4px, weight 600. Under it the source tag names Definition 6.1, page 163, and the prompt starts "Definition 6.1. What is". Missed closes the back, stays on that card, and adds "Still this card." The same heading on a deck of one card reads "Flashcard · 1 of 1" (Theorem 6.5, Theorem 6.9, Theorem 6.18, Theorem 6.19). Change: two or more cards say "1 of 2" in the flag's size. The `h3` is the question, and the question leaves the cite's name on the source tag. A single card has no count. "Still this card." stays. The source tag stays.
+
+5. **The page number shares the first line of the row.** At 390, light and dark, 6.2, 6.3, 6.4, and 6.6 wrap the title to 53px and center the page on that box, so "p. 167" sits beside "Integrals", "p. 181" beside "Theorem", "p. 193" beside "of Integration", and "p. 203" beside "Liouville". At 1280 every Chapter 6 row is one 44px line and the page is on the right. On the same book, at 390, section 4.3 is 85px and "p. 118" is on its own line under the title. Change: the Chapter 6 row aligns the page to the first line. The title wraps under the name. The page stays nowrap on the right. Chapter 4 uses that same row.
+
+6. **The pole label goes.** Above the green circle, "A POLE IS THE NEXT BEAT" is 12.48px, weight 700, letter-spacing 0.75px, uppercase. The next line is "Drag the green handle. The integrand is \(1/z\)." Change: the label goes. The gesture stays. For the exam keeps its label.
+
+### What to keep
+
+The six planes, the four colours on the marks, and the one clock. At rest, Play on the first screen in both themes and at both widths, 70×44, ending at 781 and at 703. The square stays 284px on the phone and 272px on the laptop. The blank paper to the right of that square is the chapter card.
+
+The claims that already stop: "The total has left 0.", "A full turn brings the point home.", "The sum has used 0 of 8 steps.", "The midpoints are in.", "Inside, the formula applies." The blanks arrive empty. Stage complete stays disabled, and the line under it says "Fill both lines". Check under a picture blank is 85×44. "Next camp is Chapter 7, Taylor and Laurent series." is the only next-camp line, and the button says "Back to the book". 6.1 has no worked paragraph.
+
+The kicker, the flag `6.1 · 0 of 6`, and For the exam. They are the book path. The drawer, chapters 1 through 7, Later on the rows that are still cards. Walk Chapter 6. The section names as the doors, with the page on the row. "Still this card." after Missed. No new type, no new colour, no new chrome.
+
+## reviewer (Ch6 batch 5)
+
+Branch `cursor/chapter-6`, draft PR #45, reviewed at `f02aafe` against Howell & Mathews, Complex Analysis, 202 Updated Edition (the 471-page PDF at complexanalysis.org; title page is the 202 Updated Edition). Preview `https://ch6-preview.complexanalysis.pages.dev` serves the chapter files from that tip. Headless Chrome, fresh storage. 390×844 light then dark, then 1280×800 light then dark. No console errors. No failed assets. `scrollWidth` was 390 and 1280.
+
+Verdict: **ACCEPT WITH FIXES**. The fixes are on this branch.
+
+Checked against the printed pages. Section openers 163, 167, 181, 193, 197, and 203 match the contents. Definition 6.1 and Example 6.1 are page 163, and \(\int_0^1(t-i)^3\,dt=-5/4\). Definition 6.2 and Example 6.6 are page 170. The eight-step midpoint sum on page 171 rounds to \(4.23+5.20i\), and the exact value is \(\exp(2+i\pi/4)-1\). Theorem 6.1 and Example 6.7 are page 172. Theorem 6.3 and Example 6.11 are page 177, bound \(1/(2\sqrt{5})\). Exercise 3 of §6.2 starts on page 178, and the key on page 443 gives \(-2/3\) for the semicircle. Exercise 5 is page 179, key \(-32i\) and \(-8\pi i\). Exercise 9 is page 180, key \(2\pi i\) and \(0\). Theorem 6.5 is page 183: analytic in a simply connected domain, simple closed contour, integral \(0\). Cauchy's proof and Equation (6.28) are page 184. Example 6.12 is page 186. Theorem 6.6 is page 187. Corollary 6.1 is page 188. Examples 6.14, 6.15, and 6.16 are pages 189, 190, and 190, values \(4\pi i\), \(2\pi i\), and \(-6\pi i\). §6.3 Exercises 1–4 start on page 191. The key gives 1(a) \(\pi i\) and 1(c) \(0\); 1(b) and 1(d) are \(0\); Exercise 2 is \(2\pi i\); Exercise 3 is \(0\); Exercise 4(a) is \(0\) and 4(b) is \(2\pi i\). Example 6.9, page 194, is \(4+2i\). Theorem 6.9, equation (6.43), is page 194 and requires a simply connected domain. Examples 6.17, 6.18, and 6.19 are page 195: \(1+i\), \(-\sin 1+i\sinh 1\), and \(\operatorname{Log}(z_2)-\operatorname{Log}(z_1)\). Theorem 6.10, equation (6.44), is page 197. Example 6.21 is page 198, \(i2\pi e\). Theorem 6.12, equation (6.48), is page 199 and multiplies by \(n!\). Example 6.25 is page 200, \(-4\pi/(3e)\). Theorem 6.13 is page 203. Theorem 6.17 is page 205, \(|f^{(n)}(z_0)|\le n!M/R^n\) for \(n\ge 1\). Theorems 6.18 and 6.19 start on page 206. The algebra proof reaches degree 0 on page 207.
+
+The named regressions hold on the preview. After every pictured circle the claim is still \(1/R\), and it does not send the derivative to 0. The 6.4 sheet names a simply connected domain. Equation (6.48) on the 6.5 sheet multiplies by \(n!\). The half-turn line says the left side integrates to \(2i\), and it sits between the claim and Play. Theorem 6.19 has the step after \(1/P\) is constant. A full turn says the point is home. Inside, the claim is "Inside, the formula applies." After one subdivision the triangle claim is "The midpoints are in." The 6.1 deck reads "Flashcard · 1 of 2", and Missed adds "Still this card." Every practice anchor is present in the HTML edition. `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` and `node kit/smoke.mjs` passed. Live code does not import `kit/`. `js/core/map-route.js` matches the kit copy.
+
+What was wrong, and the change:
+
+1. The 6.4 summit said an analytic integrand is the antiderivative at the ends, with no domain. Theorem 6.9, page 194, needs a simply connected domain. \(1/z\) from \(-i\) to \(i\) is the counterexample. The summit now names that hypothesis.
+2. The 6.4 why said 6.3 gives 0 on a closed curve. A closed integral is 0 when the integrand is analytic in a simply connected domain, not on every closed curve. The line now says two ends, in a simply connected domain, use an antiderivative. A taste note that landed during this review asks that line to drop back to "Two ends use an antiderivative." That cut removes the hypothesis. Keep "simply connected" on the why and on the summit.
+
+Left as is:
+
+1. A segment card's note names Theorem 6.1, page 172, for the parametrization and then says the antiderivative is evaluated at the ends. The evaluation is Theorem 6.9. The value the card grades is still the antiderivative at the ends.
+2. The full-turn phase is the integral within 0.01 of 0, so the positive real axis reads "A full turn brings the point home." That point is also the start of the parametrization.
+3. The 6.5 blank accepts "the green point" from any position. The outside claim correctly says the integral is 0, and Stage complete still waits until the point is inside.
+
+Keep: the six pictures, the page cites above, the answer-key values, Example 6.1's \(-5/4\), the eight-step total beside \(\exp(2+i\pi/4)-1\), the semicircle \(-2/3\), Example 6.11's \(1/(2\sqrt{5})\), Cauchy's three proof blanks, Examples 6.14–6.19 and 6.21 and 6.25, Exercise 6.3.1 (a)–(d), Theorem 6.12 on the dealt circle cards, the sharp \(1/R\) bounds, and the computed generators.
+
+## ux-veteran (chapter-6 batch 5)
+
+Branch `cursor/chapter-6`, tip `f02aafe`. Preview https://ch6-preview.complexanalysis.pages.dev. The served `js/stations/chapter-6.js`, `js/stations/ch6-pictures.js`, `js/stations/ch6-cards.js`, `js/stations/book.js`, `js/app.js`, `css/components.css`, and `css/theme.css` match that commit. The preview's `version.json` still names `fa0f69f`. Headless Chrome, touch, fresh storage. 390×844 light, then the theme control into the dark. Then 1280×800, light and dark. No console errors. No failed assets. `scrollWidth` was 390 and 1280. No product code was changed. The phone page is 25308px and grows to 25369px once the half-turn line is open. The laptop page is 19976px and grows to 20010px.
+
+### Verdict
+
+ANOTHER BATCH. The drawer, the book doors, the camp arrival, and the type are the page from batch 4. On a phone the half-turn sentence appears above Play during the run, Pause lands on the fold, and Back from the book then tucks the camp flag under the header. One change, below. After Play keeps a line of air and that Back meets the flag, this lens rests.
+
+### What the walk showed
+
+First screen, 390, light and dark, before the latch. The header is 56px. The Book kicker draws at 69×19, and the hit runs from y = 68 to y = 108. The title is Iowan Old Style, 25.85px, weight 600. The lede is the six stages. The flag reads `6.1 · 0 OF 6`. One gesture sits above the square: "Drag the green point around the orange circle. Purple is the integral." The square is 284×284 at y = 385. The claim "The total has left 0." is one line of text inside a 53px box. Play is 70×44 at y = 737 and ends at 781, 63px inside the 844 window. The blank prompt "From 0 to π the integral is" is on that screen. Dark paper is `rgb(13, 18, 28)`. The title and the claim are `rgb(233, 237, 245)`.
+
+The latch. A drag of the green point to the left side sets the phase to half. "A half turn, the left side, integrates to \(2i\)." sits between the claim and Play, wraps, and puts \(2i\). on its own line. That box is 53px. Play moves from a bottom of 781 to a bottom of 842. Two pixels of the card remain under the border, in both themes. Pressing Play says Pause. While Pause is up, the line opens and the button is the one at y = 798. A full turn changes the claim to "A full turn brings the point home." The half-turn line stays. Play stays at 842. A second press says Play.
+
+At 1280, both themes, the square is 272×272. The half-turn sentence is one line. Resting Play ends at 703. After the latch, and after a full turn, Play ends at 737, 63px inside the 800 window. The blank prompt stays on that screen.
+
+Back inside the chapter. From `#chapter-6` at scroll 1200, Go to 6.2 sets `#chapter-6-6-2`, puts the 6.2 flag at y = 73, and leaves the 6.1 blank mounted. Back returns to `#chapter-6` at scroll 1200.
+
+Back from the book, with the line closed. From 6.4, flag at y = 73 and scroll 15649, The Book in the drawer opens `#book` at scroll 0. Back returns to `#chapter-6-6-4` at that scroll, with the flag at y = 73 and the title at y = 96.
+
+Back from the book, after the latch. The line is open. Go to 6.4 leaves the flag at y = 73 and the scroll at 15710. The Book, then Back, returns to that hash and that scroll. The picture has remounted: the phase is move, and the line is hidden. The flag is at y = 12 and the title is at y = 35, both under the 56px header.
+
+Camps. `#chapter-6-6-1` through `#chapter-6-6-6` each put the flag at y = 73 and the title at y = 96. Play is on that screen. On the phone the bottoms are 664, 682, 682, 682, 656, and 709. At 1280, 6.2, 6.3, and 6.6 end at 591 or 592. The flag carries the count. The summit, Go, and Stage complete sit under the blanks. The sheet and the cards follow. On 6.3, Go to 6.4 starts at y = 866, below the 844 window, and "A pole is the next beat" is the next block. "Next camp is Chapter 7, Taylor and Laurent series." is the only next-camp paragraph, on 6.6. After this walk, `453e317` rewrote the 6.4 why and the 6.4 summit so both name a simply connected domain. On the walked page the 6.4 Play ended at 682, with 162px under it, so that longer line stays below the first screen of the camp.
+
+Drawer, light and dark. Places is 44×44. The list is The Book and chapters 1–7, each row 44px, and the list fits. Chapters 1, 2, 3, and 7 say Later. Chapter 6 is the current row. The page behind the drawer stays put (`overflow: hidden`, and `#view` is inert). Chapter 7 opens the book on the Later card. The flag is at y = 73 and the title is at y = 96.
+
+The book. Walk Chapter 6 is 163×44. The six section rows go to `#chapter-6-6-1` through `#chapter-6-6-6`. The title wraps inside 6.2, 6.3, 6.4, and 6.6, and the page stays on the right of that row. 6.1 is 44px and reads Next beside p. 163, and the two do not overlap. Back to the book draws at 134×26. The hit on those words runs from y = 652 to y = 692.
+
+Choices. Forty-four of them, every one at least 44px, none clipped. Six wrap. "Theorem 6.1, so parametrize both curves" is 54px. "the integral equals the length of \(C\)" is 88px. Check is 85×44. The picture inputs are 266×44. The deck heading is "Flashcard · 1 of 2". Show the back opens the definition. Missed is 141×44, closes the back, stays on that card, and adds "Still this card."
+
+Stage complete is 44px and disabled. The line under it says "Bring the point all the way around". The other camps say "Take all eight steps", "Subdivide the triangle", "Bend the path", "Bring the point inside", and "Cross every circle".
+
+Style. Light paper `rgb(246, 243, 236)`, ink `rgb(26, 34, 48)`, muted `rgb(81, 91, 108)`. Dark paper `rgb(13, 18, 28)`, ink `rgb(233, 237, 245)`, muted `rgb(166, 176, 195)`. The button radius is 6px and the card radius is 10px. Chapter 4 at 1280 and chapter 5 at 390, sampled in the dark, use that Iowan title, that lede at 16.8px, that kicker, and that 10px card. The laptop sidebar is the same chapter list, the menu button is hidden, and Chapter 6 is the current row, on screen.
+
+### Ranked cuts
+
+1. **Keep the half-turn line's place, and let the 6.1 claim be one line.** On the phone, light and dark, resting Play ends at 781. During Play the line latches, Pause jumps to a bottom of 842, and it stays there through "A full turn brings the point home." The claim is one line of text in the 53px box `.exp-claim` reserves on a phone. That empty line, plus the wrapped \(2i\)., is the difference between 63px of air and 2px. The blank prompt that was on the resting screen starts at y = 842. After that latch, Go to 6.4 and then The Book and Back restore scroll 15710 on a page that has remounted with the line hidden. The 6.4 flag lands at y = 12, under the header. The same Back with the line closed lands the flag at y = 73. At 1280 the sentence is one line and Play ends at 737 either way. Change: `#ch6-real-half` stays in the stack from the first paint, empty until the latch fills it, and it keeps that height after the point moves on. The 6.1 claim does not take the two-line phone min-height, because this sentence is one line. The half-turn sentence keeps its two lines on the phone. Play's bottom then stays about a line inside 844 and inside 800, Pause does not move when the sentence fills in, and Back from the book meets the flag under the header.
+
+### What to keep
+
+The first screen before the latch, both themes, both widths. The lede, `6.1 · 0 of 6`, the one gesture, the square, "The total has left 0.", and Play. On the laptop, Play after the latch as well, with the sentence on one line and the blank prompt still in view. The four colours on the marks. Play, Pause, Play. The half-turn sentence stays after the point moves on, and a full turn says the point is home.
+
+The mountain. Each camp opens with its flag under the header, the title clear of the bar, the gesture, the picture, and Play. The count is on the flag. The summit, Go, and Stage complete sit under that camp's blanks, and the reason is on the disabled tick. The sheet and the cards follow. The next-camp sentence is only on 6.6, and it names Chapter 7.
+
+The drawer. Chapters 1–7, Later on the chapters that are still cards, Chapter 6 marked, every row 44px, the page behind it held still. Chapter 7 landing with Later at y = 73.
+
+Back inside the chapter. Go writes the camp hash and returns to the scroll you left. The Book, then Back, returns to that camp with the flag under the header when the half-turn line was closed.
+
+The Book kicker and Back to the book, the words at the size they were, the hit at 44px. Walk Chapter 6 at 163×44. Section rows that wrap the title and keep the page on the right. 6.1's Next beside p. 163.
+
+Wrapped choices, the whole sentence on the button, Check at 85×44, inputs at 44px. The flashcard's "1 of 2" and "Still this card." The type, the paper, the 6px button, the 10px card, the same on chapter 4 and chapter 5.
+
+## Chapter 6, batch 6
+
+Branch `cursor/chapter-6`, on top of `453e317` (the branch tip also had the batch 5 UX note). Headless Chrome, fresh storage. 390×844 and 1280×800, light and dark. No console errors. No failed assets. `scrollWidth` was 390 and 1265.
+
+`#ch6-real-half` is in the stack from the first paint, empty, 26px, and that height does not change when the left side latches or when Play is pressed. The sentence is "The point is on the left side." It does not print \(2i\). On the phone the 6.1 claim is one line (26px, not the two-line box). Play ends at y = 789 in the 844 window and at y = 737 in the 800 window, at rest, while pausing, and after a full turn, both themes. The square stays 284px and 272px. From 6.4, The Book and Back return the flag to y = 73.
+
+The 6.4 why and summit still name a simply connected domain (Theorem 6.9, page 194). One gesture sits above 6.2. 6.3 keeps the bridge and "Play subdivides the triangle." 6.5's why is "6.4 needs an antiderivative." 6.6's line above the square is the drag and the bound \(1/R\). The 6.2 worked line stops at the segment, then multiply by \(z'(t)\) and integrate in \(t\). The power \(-1\) stays on the 6.3 sheet. The pole label is gone. The deform gesture stays. For the exam stays.
+
+Two or more flashes say "1 of 2" at the flag's size. The `h3` is the question, and the cite stays on the source tag. A single card has no count. Book section rows, Chapter 4 and Chapter 6, put the page on the first line of a wrapped title.
+
+The positive real start is not home. A full turn after the parameter has passed \(\pi\) says the point is home. Outside the unit circle the claim is "Outside, the formula does not apply." Typing 0 there checks right, and moving inside clears that mark. Theorem 6.5 on the 6.3 sheet is the book's hypothesis: analytic in a simply connected domain, simple closed contour in that domain (page 183). A segment card splits Theorem 6.1, page 172 (parametrize) from Theorem 6.9, page 194 (evaluate at the ends).
+
+Deferred: the shared practice engine is another loop, so this chapter still renders `data/practice/ch6.json` with the local card. Chapter 7 is that loop's page and stays a Later card here. Chapters 8–11 are outside this loop.
+
+## ux-veteran (chapter-6 batch 6)
+
+Branch `cursor/chapter-6`, tip `a501fb1`. Preview https://ch6-preview.complexanalysis.pages.dev. The served `js/stations/chapter-6.js`, `js/stations/ch6-pictures.js`, `js/stations/ch6-cards.js`, `js/stations/book.js`, `js/app.js`, and `css/components.css` match that commit. `version.json` still names `fa0f69f`. Headless Chrome, touch on the phone, fresh storage. 390×844 light, then dark. Then 1280×800, light, then dark. The theme was `mv:theme`, set before load. No console errors. No failed assets. `scrollWidth` was 390 and 1280. No product code was changed. The phone page is 24609px and stays 24609px when the half-turn line fills. The laptop page is 19575px and stays 19575px.
+
+### Verdict
+
+ANOTHER BATCH. The reserved slot, the camp arrival, the book doors, and the drawer are the page this batch asked for. On the first screen the next control is cut in half, and The Book's hit covers the title. One batch is the two cuts below. When the field and Check are whole and the title clears that hit, this lens rests.
+
+### What the walk showed
+
+First screen, 390, light and dark, before the latch. The header is 56px. The Book draws at 69×19, at y = 80. The title is Iowan Old Style, 25.85px, weight 600, at y = 103. The lede is the six stages, 16.8px. The flag reads `6.1 · 0 OF 6`. One gesture sits above the square. The square is 284×284 at y = 385. The claim "The total has left 0." is one line, 26px. `#ch6-real-half` is in the stack, empty, 26px. Play is 70×44 at y = 745 and ends at 789. The prompt "From 0 to π the integral is" is on that screen. The field under it is 266×44 at y = 816 and ends at 860, so the 844 window shows 28px of the box. Dark paper is `rgb(13, 18, 28)`. The title and the claim are `rgb(233, 237, 245)`. The lede is `rgb(166, 176, 195)`.
+
+The latch. Pressing Play says Pause. At 180ms the slot is still empty and Play still ends at 789. At 880ms the slot reads "The point is on the left side." and is still 26px. Play still ends at 789. A full turn changes the claim to "A full turn brings the point home." The slot stays. Play stays at 789. A second press says Play. The page height does not change. A drag of the green point to the left side sets the phase to half, fills the same sentence, and leaves Play at the same height. The sentence does not print \(2i\).
+
+At 1280, both themes, the square is 272×272. The gesture is one line. The slot is 26px from the first paint. Resting Play ends at 737, and it ends at 737 while pausing and after the full turn. The field is whole, y = 737 to 781. Check is 85×44 at y = 781 and ends at 825, so the 800 window shows 19px of the button.
+
+Back. From `#chapter-6` at scroll 1200, Go to 6.2 sets `#chapter-6-6-2`, puts the 6.2 flag at y = 73, and leaves the 6.1 blank mounted. Back returns to `#chapter-6` at scroll 1200. From 6.4, after the slot has filled, the flag is at y = 73 and the scroll is 15342. The Book in the drawer opens `#book` at scroll 0. Back returns to `#chapter-6-6-4` at that scroll. The picture has remounted, the phase is move, and the slot is empty again at 26px. The flag is at y = 73 and the title is at y = 96. The same Back on the laptop returns the flag to y = 73.
+
+Camps. `#chapter-6-6-1` through `#chapter-6-6-6` each put the flag at y = 73 and the title at y = 96. Play is on that screen. On the phone the bottoms are 611, 630, 629, 683, 630, and 630. At 1280, 6.2 and 6.3 end at 564 and 6.6 ends at 539. The flag carries the count. Under the blanks: the summit, Go, then Stage complete. The sheet and the cards follow. On 6.3, Go to 6.4 and the tick sit above "Drag the green handle. The integrand is \(1/z\)." "Next camp is Chapter 7, Taylor and Laurent series." is the only next-camp paragraph, on 6.6. The 6.4 why is "In a simply connected domain, two ends use an antiderivative." and that camp's Play still ends at 683.
+
+Drawer, light and dark. Places is 44×44. The list is The Book and chapters 1–7, each row 44px, and the list fits. Chapters 1, 2, 3, and 7 say Later. Chapter 6 is the current row. The page behind the drawer stays put (`overflow: hidden`, and `#view` is inert). At 1280 the menu button is hidden, the sidebar is the same list, and Chapter 6 is the current row. Chapter 3 and Chapter 4 wrap inside the sidebar and stay at 47px, with the whole title on the row.
+
+The book. Walk Chapter 6 is 163×44. The six section rows go to `#chapter-6-6-1` through `#chapter-6-6-6`. On the phone, 6.2, 6.3, 6.4, and 6.6 wrap the title to a second line, and the page shares the first line (the page's text top matches the title's first line, delta 0). Chapter 4.3 does the same with "p. 118". On 6.1, Next sits to the right of "p. 163" and the two do not meet. At 1280 every Chapter 6 row is one 44px line and the page is on the right.
+
+Choices. Forty-four of them, every one at least 44px, none clipped. On the phone six wrap. "Theorem 6.1, so parametrize both curves" is 54px. "the integral equals the length of \(C\)" is 88px. At 1280 none wrap. Check under a picture blank is 85×44. The picture inputs are 266×44.
+
+Flash. The 6.1 count is "1 of 2", class `book-flag`, 12.48px, weight 700, letter-spacing 0.75px, uppercase, the same size as `6.1 · 0 OF 6`. The heading is the question. Show the back opens the definition. Missed is 141×44, closes the back, stays on that card, and adds "Still this card." A deck of one card hides the count. 6.2 says "1 of 2". 6.3, 6.4, 6.5, and each 6.6 deck do not.
+
+Stage complete is 44px and disabled. The line under it says "Bring the point all the way around". The other camps say "Take all eight steps", "Subdivide the triangle", "Bend the path", "Bring the point inside", and "Cross every circle".
+
+Style. Light paper `rgb(246, 243, 236)`, ink `rgb(26, 34, 48)`, muted `rgb(81, 91, 108)`. Dark paper `rgb(13, 18, 28)`, ink `rgb(233, 237, 245)`, muted `rgb(166, 176, 195)`. The button radius is 6px and the card radius is 10px. Chapter 4 at 390 and chapter 5 at 1280 in the dark use that Iowan title, that lede at 16.8px, that kicker, and that 10px card.
+
+### Ranked cuts
+
+1. **The first screen ends on a whole field, and on a whole Check.** At 390, both themes, Play ends at 789 and the prompt is on the screen. The field is 266×44 at y = 816 and ends at 860, so 28px of the box is in the window and the rest is cut. Check starts at 860, below the window. At 1280 the field is whole and Check is 85×44 at y = 781, ending at 825, so 19px of the button is in the 800 window. "Page 163" is its own 26px line under the section title. An 8px gap sits between the claim and the empty slot. Change: the page joins the flag, `6.1 · 0 of 6` and the page on that one line, and the same on 6.2 through 6.6. The paragraph goes. On 6.1 the 8px gap between the claim and `#ch6-real-half` goes. The slot stays 26px from the first paint, empty until the latch, and that height does not change when the sentence fills in. Play's bottom stays inside 844 and inside 800. The field and Check then sit wholly inside the window. The square stays 284px and 272px.
+
+2. **The Book's hit stops at the title.** The words are 69×19 at y = 80. The hit runs from y = 68 to y = 110. The title starts at y = 103. At x = 20, 40, and 70, both y = 104 and y = 108 land on `#chapter-back`. At y = 112 the title takes the point. Chapter 4 has the same band. A press on the top of "Chapter" opens the book. Change: the 44px band uses the gap under the 56px header and ends at the title, about y = 58 to y = 102. The words stay inside the band. Chapters 4, 5, and 6 share that hit. The type stays 12.48px.
+
+### What to keep
+
+The reserved slot. It is empty on the first paint, 26px, and it is still 26px when it reads "The point is on the left side." Play does not move. Pause does not jump. The sentence stays after the point moves on, and it does not print \(2i\). A full turn says the point is home. The claim on 6.1 is one line. The square stays 284px on the phone and 272px on the laptop.
+
+The first screen before the fold. The lede, `6.1 · 0 of 6`, the one gesture, the square, "The total has left 0.", and Play, in both themes and at both widths. The four colours on the marks. Play, Pause, Play.
+
+The mountain. Each camp opens with its flag under the header, the title clear of the bar, the gesture, the picture, and Play. The count is on the flag. The summit, Go, and Stage complete sit under that camp's blanks, and the reason is on the disabled tick. The sheet and the cards follow. On 6.3 the deform gesture follows the tick. The next-camp sentence is only on 6.6, and it names Chapter 7.
+
+The drawer. Chapters 1–7, Later on the chapters that are still cards, Chapter 6 marked, every row at least 44px, the page behind it held still. The laptop sidebar is that list, with the menu button hidden.
+
+Back. Go writes the camp hash and returns to the scroll you left. The Book, then Back, returns to 6.4 with the flag at y = 73, including after the slot has filled and the picture has remounted.
+
+The Book kicker and Back to the book, the words at the size they were. Walk Chapter 6 at 163×44. Section rows that wrap the title and keep the page on the first line, on Chapter 4 and Chapter 6. Next beside p. 163, with space between them.
+
+Wrapped choices, the whole sentence on the button, Check at 85×44, inputs at 266×44. The flash count at the flag's size, the question as the heading, and "Still this card." The type, the paper, the 6px button, the 10px card, the same on chapter 4 and chapter 5.
+
+## appllama (chapter-6 batch 6)
+
+Branch `cursor/chapter-6`, tip `a501fb1`. Preview https://ch6-preview.complexanalysis.pages.dev. The served `js/stations/chapter-6.js`, `js/stations/ch6-pictures.js`, `js/stations/ch6-cards.js`, `js/app.js`, `js/book/ch6-math.js`, `css/components.css`, and `css/theme.css` match that commit byte for byte. `version.json` still names `fa0f69f`. Headless Chrome, fresh storage. 390×844 with a touch, then 1280×800 with the mouse. Light, then dark, at each size. No console errors. No failed assets. `scrollWidth` was 390 and 1280. The phone page is 24609px. The laptop page is 19575px. No product code was changed.
+
+This pass is the phone and the clock. The paper, the Iowan title, the four teaching colours, and the 6px button stay.
+
+### Verdict
+
+ANOTHER BATCH. The clock holds a steady frame, the finger picks up the mark, and Play stays on the first screen while the half-turn line fills. Three things are still in the way of the hand. The 6.1 answer field is cut by the fold. On 6.3, Pause sits on a triangle that is not moving. On 6.6, the sentence under the circle is a new fraction every frame. One batch, the four cuts below. When the field is whole, the triangle's press lands on the next still, and the bound can be read while the radius moves, this lens rests.
+
+### What the walk showed
+
+First screen, `#chapter-6`, both themes. The two themes share the same boxes. The header leaves the kicker at y = 80. The title is the display stack, 25.85px, weight 600. The lede is the six stages, two lines on the phone and one line on the laptop. The flag reads `6.1 · 0 OF 6`. One gesture sits above the square. The square is 284×284 at y = 385 on the phone and 272×272 at y = 345 on the laptop. The claim "The total has left 0." is one line, 26px. `#ch6-real-half` is in the stack from the first paint, empty, 26px, width 0. Play is 70×44. It ends at y = 789 in the 844 window and at y = 737 in the 800 window.
+
+The phone blank starts at y = 789. The prompt "From 0 to π the integral is" is on the screen. The input is 266×44 at y = 816 and ends at y = 860, so 16px of the field is past the fold, in both themes. Check, 85×44, starts at y = 860. On the laptop the input is on the prompt's row and ends at y = 781. Check starts at y = 781 and ends at y = 825, so 19px of the 44px button is in the 800 window and the rest is past it. The same clip in the dark.
+
+The half slot does its job. A full turn, both themes, both widths, keeps the claim at 26px and Play at 789 and at 737, including the moment the line fills and the moment the claim becomes "A full turn brings the point home." Pause at a third of a second holds the handle: on the phone the centre is still (197.38, 158.12) after 400ms, the button says Play, and Play's bottom is still 789. The laptop hold is the same, at (198.98, 157.31), Play at 737. The next press says Pause and continues. The turn is 16.7ms a frame, 95th percentile 16.8ms, none over 20ms. With the CPU slowed to 4×, 1.2 seconds of Play is 72 frames, the same median, none over 20ms, and Play stays at 789.
+
+The finger. A 2px nudge leaves the point. A press 30px off the dot leaves it. A press 18px from the centre, then a move, picks the point up, on the phone and on the laptop. A press 26px from the centre does not. Along the orange circle the handle stays on the finger's angle, 0.2° off on the phone and 0° on the laptop. A press in the middle of the square while Play is running leaves the button on Pause and the point moving. A press on the green dot says Play and the angle stays. After the drag the stage is focused, `:focus-visible` is false, and the outline is none. The same in the dark.
+
+Reduced motion, phone, dark, from a fresh load. The button says Next step. The presses land on the left, the bottom, the right, and then Start again returns to the top. It never says Pause. The left side fills "The point is on the left side." and Play stays at 789. The line is still there on the right-hand still, where the claim says the point is home.
+
+6.3, both widths. The page opens on the whole triangle. Play says Pause for 550ms on that same triangle, then the midpoints are in for 517ms, then the inner triangle is in for the rest of the clock and the claim stays "The midpoints are in." The button is Pause through all three stills. Frames are 16.7ms, and Play's bottom stays 629 on the phone and 564 on the laptop. Nothing in the picture moves during those waits. The camp's own first screen, phone, has the flag at y = 73, the bridge, "Play subdivides the triangle.", the triangle, the claim, Play, the blank, and Check. The summit names Theorem 6.5, page 183, analytic in a simply connected domain, and a simple closed contour in that domain.
+
+6.4, both themes, both widths. The why on the camp's first screen is "In a simply connected domain, two ends use an antiderivative." On the phone it is two lines, 53px, and Play ends at 683. On the laptop it is one line and Play ends at 564. The summit, below that screen on the phone, is the same hypothesis: the integral is the antiderivative at the end minus the antiderivative at the start. A drag of the green bend stays under the finger, 0.1px off, and the claim becomes "The path has bent. The integral is the same as on the straight segment." Play stays at 683.
+
+6.5. A drag to the centre leaves the handle 0.1px from the finger, `data-where` is inside, and the claim is "Inside, the formula applies." Play stays at 630. The outside claim, from the batch already on the page, is "Outside, the formula does not apply."
+
+6.6. At rest the claim is "On this circle \(|f'|\le 1\). That is one circle." Play ends at 630 on the phone and 539 on the laptop. During Play the purple mark moves in and the claim is a different quotient on every frame: \(385/401\), \(8000/8833\), \(16/17\), \(4/5\), \(2/3\), \(1/2\), and the ones between them, across the 900ms sample. The claim box stays 53px on the phone and Play moves by 0.3px. A drag keeps the handle on the axis and clamps at the outer radius. Past that clamp the finger leaves the handle. The claim at the clamp was \(403/1041\).
+
+The drawer, phone, light. Places opens on The Book and chapters 1–7. Each row is 44×358. Chapters 1, 2, 3, and 7 say Later. Chapter 6 is the current row. The page behind the drawer is `overflow: hidden`, and `scrollWidth` stays 390.
+
+Light paper `rgb(246, 243, 236)`, ink `rgb(26, 34, 48)`. Dark paper `rgb(13, 18, 28)`, ink `rgb(233, 237, 245)`. Blue, orange, green, and purple on the marks are the same four in both themes. Play's radius is 6px.
+
+### Ranked cuts
+
+1. **The 6.1 field is a whole control on the first screen.** At 390, both themes, the input is 266×44 and ends at y = 860 in the 844 window. The prompt is on the screen and the field is not. After the full turn the same 16px is still past the fold, and the half line has filled the slot that was already reserved, so the clip is not the latch. At 1280, both themes, Check is 85×44, starts at y = 781, and ends at y = 825, so the window shows 19px of the button. Change: the phone input ends at or above 844, and Check starts at or below 844. The laptop Check ends inside 800. The square is the height that does that. `#ch6-real-half` stays 26px from the first paint. Play's bottom stays inside 844 and inside 800.
+
+2. **6.3 lands on the next still.** Play says Pause for 550ms on the triangle already on the screen, then 517ms on the midpoints, then the inner triangle, and the claim does not change for that last still. The picture is three stills. Change: the first press draws the midpoints, the next press draws the inner triangle, and the button says Play between them. Pause is for a mark that is moving. Reduced motion keeps Next step and Start again on those same stills.
+
+3. **The 6.6 sentence holds while the radius moves.** Across 900ms of Play the claim is a new fraction every frame, on the phone and on the laptop, while the purple mark is the thing that is moving. A drag writes \(403/1041\) at the clamp. Change: while Play is running, and while the finger is down, the claim is "Purple is \(1/R\) on this circle." When the radius rests, on pointer-up, on Pause, and on Next step, the claim prints the sharp fraction for that radius. After every circle on this picture the claim stays "The purple mark is still \(1/R\) on this circle. These circles do not send the derivative to \(0\)."
+
+4. **The latched line names the latch.** After the full turn the green point is on the right, the claim is "A full turn brings the point home.", and the line under it is "The point is on the left side." Reduced motion's right-hand still is the same pair. The line is one line, and Play does not move when it fills. Change: the line reads "The point passed the left side." It still fills on the left, it still stays after the point moves on, it still does not print \(2i\), and it stays one line at 390 and at 1280. The slot stays in the stack from the first paint.
+
+### What to keep
+
+The six planes, the four colours on the marks, and the one clock. Play, Pause, Play, on every picture whose mark moves. Pause holds the angle, and the next press continues. A full turn says the point is home. Frames at 16.7ms, including at 4×. Reduced motion steps the quarter turns and never says Pause.
+
+The half slot, empty and 26px from the first paint, so Play stays at 789 and at 737 when the line fills. The 6.1 claim stays one line. The phone claim box on 6.2 through 6.6 stays the two-line height, and Play does not move when "The midpoints are in." replaces the longer sentence.
+
+The finger. A press 18px from the centre picks the point up. A press 26px away leaves it. A 2px nudge leaves it. The circle follows the angle. The bend and the 6.5 point follow the finger. A press off the dot during Play leaves the clock running. A press on the dot stops it. A drag leaves the square unframed.
+
+6.4. The why and the summit keep a simply connected domain, Theorem 6.9, page 194. On the camp's first screen the why is already that sentence, two lines on the phone and one line on the laptop, and Play is on that screen. The 6.3 summit keeps Theorem 6.5's simply connected domain and the simple closed contour.
+
+The first screen before the fold: the lede, `6.1 · 0 of 6`, the one gesture, the square, "The total has left 0.", and Play, both themes, both widths. The drawer. Chapters 1–7, Later on the chapters that are still cards, every row 44px, the page behind it held still. Check at 85×44. The type, the paper, the 6px button. No new type, no new colour, no new chrome.
