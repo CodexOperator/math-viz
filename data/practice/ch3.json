@@ -101,7 +101,7 @@
         "text": "At \\(0\\), the Cauchy-Riemann equations",
         "answer": "hold",
         "choices": ["hold", "fail", "hold only for real h", "are undefined"],
-        "why": "\\(u_x = v_y = 1\\) and \\(u_y = v_x = 0\\) at the origin. The equations hold at that one point."
+        "why": "\\(u_x = v_y = 1\\) and \\(u_y = -v_x = 0\\) at the origin. Both partials in the second equation are 0, and the minus stays. Equation (3.16)."
       },
       {
         "text": "Along the real axis the difference quotient tends to",
@@ -130,7 +130,7 @@
       {
         "text": "At \\(z = i\\), the numerator and the denominator are",
         "answer": "both 0",
-        "accept": ["0 and 0", "0/0", "both zero"],
+        "accept": ["0 and 0", "0/0", "both zero", "0, 0", "0,0"],
         "why": "\\(i^4 - 1 = 0\\) and \\(i - i = 0\\). Theorem 3.2, page 83, applies."
       },
       {
@@ -513,13 +513,13 @@
       {
         "text": "Integrating u_x = -6xy with respect to y gives v =",
         "answer": "-3xy^2 + C(x)",
-        "accept": ["-3xy^2+C(x)", "-3x y^2 + C(x)"],
+        "accept": ["-3xy^2+C(x)", "-3x y^2 + C(x)", "v = -3xy^2 + C(x)", "v(x,y) = -3xy^2 + C(x)"],
         "why": "Equation (3.27), page 97: v = ∫ u_x dy + C(x)."
       },
       {
         "text": "Matching v_x to -u_y fixes C, and v =",
         "answer": "x^3 - 3xy^2 + C",
-        "accept": ["x^3 - 3xy^2 + K", "x^3-3xy^2+C", "x^3 - 3xy^2 + c"],
+        "accept": ["x^3 - 3xy^2 + K", "x^3-3xy^2+C", "x^3 - 3xy^2 + c", "v = x^3 - 3xy^2 + C", "v(x,y) = x^3 - 3xy^2 + c"],
         "why": "v_x = -3y^2 + C'(x) equals -u_y = 3x^2 - 3y^2, so C'(x) = 3x^2. This is Re(z^3), the imaginary part of i z^3, up to the constant."
       }
     ],
