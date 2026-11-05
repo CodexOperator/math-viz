@@ -1330,3 +1330,760 @@ Nothing. No slider, no scrubber, no spring, no second clock.
 Yes. One batch, then stop. It is the one cut above.
 
 The hold, the button, and the frame clock are the lesson, and they hold. Something real is left, and it is the frame a mouse drag draws around the square. A touch does not draw it. After that frame is gone, nothing real is left of this walk's touch.
+
+## Chapter 1, batch 1
+
+Branch `cursor/chapter-1`. Headless Chrome on `#chapter-1`, `#book`, and `#chapter-5`, at 1280 and at 390. No console errors. No sideways scroll. The three planes draw, then sit.
+
+### What the first screen holds
+
+The status says where you are. After stage 1.1 is marked, it reads “Next is stage 1.2. 1 of 3 stages,” and the flag on that stage is Done. The picture is on the phone’s first screen, under the reason you’d care. Times i, twice, puts a purple point on −1 and leaves a green point on i. The orange arc is the quarter between them. The sentence is “Two turns. i² landed on −1,” and it is false on the other three rests. Dragging the 1.2 point onto i makes the product sentence true. The 1.3 chip 4+3i presses only while the point is that point, and the length sentence becomes 5.
+
+### What this batch left closed
+
+Sections 1.4, 1.5, and 1.6 are titles, pages, and the book links. The polar and argument cards are in `data/practice/ch1.json` and are not on those stubs. The local card is one step at a time. The shared practice engine is not on this branch. A flashcard is one card, and the back stays closed until Show.
+
+### Another batch
+
+The 1.4 picture is the angle, on the plane this page already uses. Then the polar cards that are already written. Then 1.5 roots and 1.6 the disk. The memory sheet for 1.4–1.6 is still empty.
+
+## Chapter 1, batch 2
+
+Started from `7c82c7f`. Headless Chrome, 390×844 and 1280×800, light and dark. No console errors. No sideways scroll.
+
+Times i ends at y = 724 on the phone and y = 794 on the laptop. The Book is a 44px control. The 1.1 plane is the first thing in the stage. Two presses still land purple on −1. The 1 + i chip names Example 1.13. Next root walks the fifth roots back to 1. The disk opens outside the unit circle.
+
+The last blank of |(1+i)(2+i)| accepts √10 and rejects √2. 41+11i, with a space or a star, is the product. Exercise 2(a) asks for the difference after the sum. Got it hides a flash until the next day. Missed leaves it in the pile. Practice sits in the stage card, not in a second card.
+
+## test-prep-coach (ch1 batch 1)
+
+Preview https://ch1-preview.complexanalysis.pages.dev/#chapter-1, tip 6fec695. Walked as a student at 390×844, then 1280×800, light and dark. No console errors. No sideways scroll. Choice buttons, the blank, Check, Show the back, Next card, Another, and Mark stage complete are 44px in all four. Memory lines are 17px in the body color: rgb(26, 34, 48) in the light, rgb(233, 237, 245) in the dark.
+
+### Verdict
+
+ANOTHER BATCH. With the exam in a few days, stages 1.1–1.3 let you rehearse a product, a power of i, and one circle test. Polar form, a high power, the nth roots, a line, and an annulus are the three stages flagged Later, and those stages have no memory sheet and no card.
+
+### Ranked
+
+1. **Give 1.4, 1.5, and 1.6 a sheet and one exam item each.** After Mark stage complete on 1.3, the next card at 390, light, is flagged Later, titled The Geometry of Complex Numbers, Part II, page 22. The only lines are book links, and two of them print as source: `$\arg z$` and `$\operatorname{Arg} z$`. The 1.5 list prints `$n$ roots`. Same stubs in the dark and at 1280. No Memory, Practice, or Cards label on any of the three. The Test 1 cards already on this site that belong here are: write −1 + i√3 in polar form and name Arg; compute (√3 + i)^10 by polar and return to x + iy; the 5th roots of unity; the 4th roots of −16; the quadratic z^2 − 4z + 13 = 0; the line from 2 + i to −3 − 3i; and the annulus 1 < |z + i| ≤ 3 (open, closed, bounded, boundary, domain). The 202 edition asks the same family. §1.4 Exercise 1 is Arg, Exercise 3 is polar form, Exercise 7 is the case Arg(z1 z2) ≠ Arg z1 + Arg z2. §1.5 Exercise 2 is De Moivre against FOIL, Exercise 5 is nth roots in both forms. §1.6 Exercise 1 is a parameterization, Exercise 9 is the open/closed/domain list, and the section tells the student to memorize every bold term. The arg and polar generators are already in `data/practice/ch1.json` under section 1.4, and the 1.4 node on the page has no practice card, so they never appear. Change: five memory lines on each stage, and render the pins. 1.4: modulus and Arg in (−π, π], polar and re^{iθ}, arguments add, wrap the sum back into (−π, π], and the counterexample where the sum of the two Args leaves that interval. 1.5: De Moivre (1.40), radius r^{1/n} and angles (θ + 2πk)/n, the nth roots of unity, both square roots in the quadratic formula. 1.6: z(t) = z1 + t(z2 − z1) for 0 ≤ t ≤ 1, open disk |z − z0| < ε, closed disk includes the circle, boundary, bounded, domain means open and connected. One next-step item on each sheet, taken from those exercises.
+
+2. **Take Cardano off the exam deck.** Stage 1.1’s Memory, below the picture, is three lines: depress the cubic by z = x − a2/3, keep a negative square root, substitute the real number back. The deck says Card 1 of 3, “The general cubic Cardano set out to solve.” Card 2 of 3 is Ferro and Tartaglia’s formula, the two cube roots, on the phone in full. Card 3 is Bombelli’s identity. Next card returns to card 1. None of these is a Test 1 question. The algebra the handout asks is the product and the quotient of 3 − 2i and −1 + 4i, and Im of the conjugate of their difference. Change: one memory line, “This stage is the story. The written work starts at 1.2.” Keep a single Bombelli card whose back is (2 + √−1) + (2 − √−1) = 4, and 4^3 − 15·4 − 4 = 0. The practice item and the flash currently share the id `ch1-1.1-eq16`; the card that stays needs its own id.
+
+3. **Accept the answer the exercise asks for.** On §1.2 Exercise 1(f), page 15, the book says express the result as a + bi. At 390, light, typing `41+11i` into the first blank returned “Not that one.” Typing `-6i^2` was accepted, then `6`, then `41+11i`. On §1.3 Exercise 1(a), page 20, the book’s solution is √10. Typing `sqrt(10)` into the first blank returned “Not that one.” `sqrt(2)` was accepted. Exercise 2(a) says plot z1, z2, the sum, and the difference for 2 + 3i and 4 + i. The card asks for the sum. The buttons under it are 6 + 4i, 6 + 2i, 8 + 4i, and −2 + 2i, and −2 + 2i is the difference the exercise also wants. Change: the last blank is the a + bi answer, and that answer is accepted there. Add the difference as its own step, with −2 + 2i as the key. For the modulus, the last blank accepts √10. The factor path can stay above it.
+
+4. **Drill the proof the exercises assign.** The first two practice cards on 1.2 are both “Proof of (P1)”, a blank and a multiple choice, three lines of Definition 1.1. The product-rule choice (x1 x2, y1 y2) is a real slip, and tapping it says only “Not that one.” §1.2 Exercise 6 is prove or disprove Re(z1 + z2) = Re z1 + Re z2 and Re(z1 z2) = Re z1 Re z2. The second statement is false, and that is the one people miss. §1.3 Exercise 4 asks for a proof of (1.21), of the triangle inequality (1.23), and of the quotient modulus (1.26). The book’s triangle proof is the sequence worth memorizing: |z|^2 = z conj(z), expand, Re ≤ modulus, take square roots. Change: one proof multiple choice of that sequence, and one prove-or-disprove card whose false line is Re(z1 z2) = Re z1 Re z2. A wrong choice names the mistake. One copy of the commutativity proof is enough, and it can wait.
+
+5. **Let the deck drop a card you already know.** Stage 1.2 says Card 1 of 17. Next card walks addition, subtraction, multiplication, division, what i is, real part, imaginary part, conjugate, conjugate twice, conjugate of a sum, of a product, of a quotient, real part from the conjugate, imaginary part from the conjugate, Re(iz), Im(iz), and then Card 1 again. There is no Got it and no Missed. A wrong practice answer stays on that card. “Conjugate, twice” is Identity (1.12), which is one line of a longer list, and it has its own card. Change: the 1.2 deck is the lines you write on the paper. Product rule, division by the conjugate, the four powers of i, Re(z) = (z + conj(z))/2, Im(z) = (z − conj(z))/(2i), |z|^2 = z conj(z). Two buttons, Got it and Missed. Missed stays in the pile. Got it hides until the next day. The same two buttons on the eight 1.3 cards.
+
+6. **Aim the generators at the arithmetic the exam grades.** The division card on the page was “Write (−4i)/(−5 + 3i) in the form a + bi,” one blank, “The quotient is.” Typing `-6/17+10/17i` was accepted, and the note cited Definition 1.4, page 11. Another replaced it with (−3i)/(3 + 3i). That is the right operation: Test 1 asks for a quotient in a + bi. The modulus card directly under the circle item was “Find |8|.” A zero imaginary part is in the triple list, so a session can be the modulus of a real number. The handout’s distance is √29. §1.3 Exercise 1(c) is |(1 + i)^50|, whose value is 2^25, and the move is |z^n| = |z|^n. Change: skip a zero coordinate in the modulus generator, and add one item of that power. Put one step in front of the quotient blank: the conjugate you multiply by. Keep the addition and multiplication generators.
+
+### Keep
+
+The five lines on the 1.2 sheet match the night before: add by coordinates, the four-term product then i^2 = −1, divide by the conjugate, read Re, Im, and the conjugate off the pair, and the powers of i in order i, −1, −i, 1. The 1.3 sheet matches the print edition: Definition 1.8, the distance |z1 − z2|, Identity (1.22), Theorem 1.2 with the reverse form (1.24), and Identities (1.25) and (1.26).
+
+The i^275 card is the right question. The other three buttons are i, −1, and 1. Tapping i said “Not that one.” Tapping −i showed the cycle and that remainder 3 is −i, and the memory line came up: divide by 4, and remainder 0, 1, 2, 3 means 1, i, −1, −i.
+
+The circle card is the distinction Exercise 3 is for. The four buttons are “on the circle, not inside,” “less than 2, so inside,” “greater than 2, so outside,” and “the centre.” Tapping the inside button said “Not that one.” The right note says the length is 2 and inside means strictly less.
+
+The division generator computes a new pair, checks a + bi, and cites Definition 1.4. Cards stay one at a time, and the back stays closed until Show the back.
+
+## ux-veteran (ch1 batch 1)
+
+Preview https://ch1-preview.complexanalysis.pages.dev at `6fec695`. Headless Chrome, 390×844 with a coarse pointer, then 1280×800, light and dark. Fresh storage, then the same phone again after stage 1.1 was marked. No product code was changed. No console errors. No failed requests. No sideways scroll (`scrollWidth` 390 at 390, 1265 at 1280).
+
+### How the walk went
+
+**First screen, 390×844, light.** The site name fits. The header icons are 44×44. Under them: THE BOOK at 69×17, the title, the lede “Six stages. The first three are walked. Mark a stage when you have worked it.”, the source line, and “Next is stage 1.1. 0 of 3 stages.” The Go button is hidden, which is right, because 1.1 is the stage on the page. The stage card then spends the rest of the screen on Why you’d care. THE PICTURE label sits at y = 640. The plane is 321×321 and starts at y = 716, so the fold at 844 cuts it after about 128px. Times i runs from y = 1079 to 1123. The claim sits with the button. A finger on the first screen can see a purple dot and cannot press the thing that moves it. At 1280×800 the same stack ends in the top of the grid. The plane there is 512×512 in a 985px column, so Times i is under a picture taller than the screen that is left.
+
+Chapter 5, on this same preview, still puts Play on the phone: the button ends at y = 637. Its lede is under the picture. Chapter 1 puts a second lede, a why paragraph, and a full-width plane in front of the control.
+
+Pressing Times i four times does the four sentences, and the second one is “Two turns. i² landed on −1.” The 4+3i chip is 68×44. Pressed, the claim is “The length is 5. This is the book’s 4+3i.” Dragging the green point on 1.2, hit target 44×44 once the pointer is coarse (the drawn dot is 14px), changes the sentence to “Times i is a quarter turn. The product is not real.” The handle takes `is-pointer-focus` and the outline stays none. No box around the plane. The line under that picture, “Green is the point you drag,” is on screen when the section title is brought to the top. It is not on the chapter’s first screen.
+
+**After the tick.** Mark stage complete sits at y = 2767, 44px tall, under the summit sentence. Pressing it there changes the flag to DONE and the button to Stage complete. The summit is on that screen: “Bombelli’s real 4 is what is left when a conjugate pair of square roots of −1 adds.” Go to 1.2 is not. It lives in the status card, which was 1693px above the viewport. The hash stays `#chapter-1`.
+
+**Back.** From scroll 900, THE BOOK opens `#book` at scroll 0. Browser Back returns to `#chapter-1` at scroll 0, not to the stage. From 1.3 at scroll 7830, Back does the same. `#chapter-1-1-3` already works: the 1.3 title lands at y = 96, 40px under the 56px header. Go to 1.2 never writes that hash. It only scrolls (y = 2888, hash unchanged).
+
+`#book` after the 1.1 tick still says “Next is §4.1, Exercise 3. 0 of 8 exercises.” The button is still Walk Chapter 4. Chapter 1 is on the first screen, flagged OPEN, and its 1.1 row reads Done and its 1.2 row reads Next. Tapping the 1.2 row leaves the hash on `#book`. The chapter title is the only link. The phone menu is The Book and eleven chapters, each row 44px, Chapter 1 marked current. Tapping 2 Complex Functions opens the book, scrolled to that Later card (scroll 994), and the current row becomes The Book.
+
+**What a student has to read.** The 1.2 pin is the characters `$i=(0,1)$ and $i^2=-1$, page 13`, 23px tall. The worked heading is `Multiply $(0,1)$ by itself`. The body under it is set in type. Stage 1.4 shows `Definition 1.10, $\arg z$, page 23` and `Definition 1.11, $\operatorname{Arg} z$, page 23`. The why paragraphs and the claims render. The pins and that heading do not.
+
+The practice block is a white card inside the white stage card. Both are 1px `rgb(216, 210, 196)`, radius 10. The inner card is 324px wide in the 358px stage. Check, the choices, Show the back, and Next card are 44px. One card shows at a time, and the back stays closed until Show. A right choice opens the next step and the one-line why.
+
+Dark matches the light stack. Paper `rgb(13, 18, 28)`, title `rgb(233, 237, 245)`. Light paper is `rgb(246, 243, 236)`. The title is Iowan Old Style, 25.85px and weight 600 at 390, 36px at 1280, `rgb(26, 34, 48)` in the light. The lede is 16.8px `rgb(81, 91, 108)`. The primary button is 44px, radius 6, fill `rgb(47, 62, 92)`. Same tokens as the station pages.
+
+### Verdict
+
+ANOTHER BATCH. The three pictures work, and the type is already the site’s. The first screen does not hold the gesture, the way back sends you to Chapter 4, and the pins are source code.
+
+### Ranked cut or fix
+
+1. **Put Times i on the first screen.** At 390 the plane starts at y = 716 and the button ends at y = 1123. At 1280×800 the first screen is the top of the grid. Chapter 5 already keeps Play on the phone by capping the square. Change: one lede, the gesture, in the lede’s type (“Press Times i. The purple point turns.”). Then the source line, then the plane capped with the same `min(100%, calc(100dvh - 20rem))` the exponential square uses, then the claim and Times i. Move Why you’d care under the button. Cut the “THE PICTURE” label. The test is the one Chapter 5 already locked: at 390×844 and at 1280×800 the button is on the screen, light and dark.
+
+2. **The book should send you back to the stage you just did.** After 1.1 is marked, `#book` still offers Walk Chapter 4, and the row that says Next is not a link. Change: the status card follows the chapter 1 tally (“Next is stage 1.2. 1 of 3 stages.”) and the button is Go to 1.2, href `#chapter-1-1-2`. Each 1.1–1.6 row is that same kind of link. A later chapter in the drawer should not pretend to open and then highlight The Book.
+
+3. **The way forward has to survive Back.** Go to 1.2 scrolls and leaves the hash on `#chapter-1`. Back from the book returns to scroll 0. The tick that earns the next stage is at y = 2767, and Go to 1.2 is off that screen. Change: the primary button in the stage’s action row, beside Mark stage complete, is the jump, and it sets `#chapter-1-1-2` (or `#book` when the three stages are done). `#chapter-1-1-3` already lands the title 40px under the header. Use that, and stop scrolling without a hash.
+
+4. **Render the pins and the worked heading.** The 1.2 link’s HTML is the literal `$i=(0,1)$ and $i^2=-1$, page 13`. Stage 1.4 prints `$\arg z$` and `$\operatorname{Arg} z$`. The worked title prints `Multiply $(0,1)$ by itself` while the paragraph under it is set. Change: those strings go through the same rich text the why paragraph already uses. Leave the link the size of body text. Do not invent a new chip.
+
+5. **Make the up control a control you can hit.** THE BOOK is 69×17. Back to the book, at the bottom of a 13816px page, is 134×23. The nav rows and the header icons are already 44. Change: both links are the existing `.station-link` (min-height 44). Same words.
+
+6. **One box around the practice.** The stage is a white card. Each practice item and each flashcard is a second white card, same border, same radius, 324px inside 358px. Change: keep the stage card, and let the prompt, the blank, and Check sit in it the way a station exercise sits in one card. No new chrome.
+
+### What to keep
+
+The four colours, the Iowan title, the muted lede, the paper, and the accent button, in light and in dark. Times i, the 44px coarse hit on the green point, the 14px dot, and a drag that does not draw a focus box. The 4+3i chip at 44px, pressed only while the point is that point. Check, the choices, Show the back, Next card, and Mark stage complete, all 44px, one card at a time, the back closed until Show. The summit sentence at the tick. The status count. The chapter menu with Chapter 1 marked on the first screen. The deep link that brings a stage title clear of the header.
+
+## pedagogy (chapter-1 batch 2)
+
+Preview https://ch1-preview.complexanalysis.pages.dev/#chapter-1, tip e9c541c. Walked as a student at 390×844, then 1280×800, light and dark. No console errors. No sideways scroll (`scrollWidth` 390 and 1280). No product code was changed.
+
+### Verdict
+
+ANOTHER BATCH. The six stages are a marked trail, and the pictures do climb: a turn, then a drag of that turn, then a length, then an angle, then the circle cut into five, then the disk inside that circle. The practice does not make you take the steps. A stage can be marked done with its blank still empty, a miss often says “Not that one.”, and two camps ask you to copy the paragraph you just read.
+
+### How the climb went
+
+**The first screen teaches the turn.** At 390, light, Times i runs from y = 680 to 724, under “This point is 1. It has not been turned.” Two presses change the sentence to “Two turns. i² landed on −1,” purple on −1, green on i, orange arc between them. At 1280×800 the button runs from y = 750 to 794, so it is on that screen too. The dark stack is the same: paper `rgb(13, 18, 28)`, title `rgb(233, 237, 245)`. The why, the cubic with a negative square root, starts at y = 968 on the phone and y = 1012 on the laptop, so the reason arrives under the picture. That is the right order here. The status “Next is stage 1.1. 0 of 6 stages.” starts at y = 829, so the phone clips it, and at 1280 it is below the fold.
+
+**Each picture uses the last one.** Dragging the green point on 1.2 (hit 44×44) moves the purple product off “1·i is i.” The 4+3i chip presses and the claim becomes “The length is 5. This is the book’s 4+3i.” The 1+i chip presses and the claim is “Length √2, Arg π/4. Example 1.13, page 27.” Next root walks four sentences of the form “this root is e^{i 2π·k/5}, not 1,” and the fifth press is the only true one: “The root for k=0 is 1.” Dragging the 1.6 point from outside the circle to inside flips “Outside. This is not the open disk D₁(0)” to “Inside the open unit disk. Example 1.25, page 38.” The whys for 1.3, 1.4, and 1.5 name the idea you just had. The 1.6 why talks about the rest of the book, and it never says this circle is the one the fifth roots just sat on.
+
+**The worked example is above the blank, and so is the answer.** Every stage is picture, why, pins, worked, memory, practice, cards, summit, tick. The memory lines are the right length and they render: one on 1.1, five on 1.2, 1.3, 1.4, and 1.6, four on 1.5, at 17px in the body color in both themes (`rgb(26, 34, 48)` light, `rgb(233, 237, 245)` dark). They sit above the blanks.
+
+On 1.5, at 390, the worked paragraph ends “−8 + 8√3 i.” The sheet then gives De Moivre, the root angles (θ+2πk)/n, the roots of unity, and the quadratic formula. The only practice item is Exercise 2, the same (√3+i)⁴. Typing 4, the sum of squares before the square root, returned “Not that one.” Nothing asks for a fifth root. Nothing uses the quadratic line.
+
+On 1.6, in the dark, the sheet’s last line is on screen above the choices: “D₁(0) is one, and the closed disk is not.” The first choice is that sentence. Tapping “neither is a domain” returned “The boundary of the closed disk is in the set, so the set is not open,” which is the reason for a different button. Card 1 of 4 is “The segment from z₀ to z₁.” No blank asks for z(t).
+
+On 1.2 the worked example is (0,1)·(0,1)=(−1,0). The first two practice items are both “Proof of (P1),” a blank and then “the same proof” as choices. Exercise 1(f), the product, is third. The deck says Card 1 of 17. Show the back stayed closed. Got it made it Card 1 of 16 and stored the card until the next day. Missed left it in the pile and advanced to card 2 of 16.
+
+On 1.3 the worked length is 5, and the first blank is |(1+i)(2+i)|. Nothing asks for 5. On 1.4 the worked point is 1+i, and the first blank is Arg(3−3i). This visit’s polar card was “Write 2 in polar form,” an angle of 0.
+
+**The tick does not wait.** Mark stage complete is live on arrival. On 1.1 the first blank took 4, the cubic check stayed empty, the card stayed on Show the back, and the button still became Stage complete. The flag became DONE. The status, off that screen, became “Next is stage 1.2. 1 of 6 stages.” Go to 1.2 was 1364px above the summit. The summit was on the screen, and so was the top of stage 1.2.
+
+### Ranked
+
+1. **A miss names the mistake just made.** At 390, light, these taps all returned “Not that one.”: 5 for Bombelli’s sum; the product-of-coordinates choice and the swapped-coordinates choice on the commutativity proof; `41+11i` in the first blank of (7−2i)(5+3i), which is the collected answer; “less than 2, so inside” on the circle; 4 for the modulus of √3+i; 0 for Arg(3−3i); 1 for the quotient (−5)/(5i). Choosing 0 as the sum of the two Args on Exercise 7 returned “−π/2 is the argument of the product, not the sum of the arguments,” which is the diagnosis for the other button. Choosing 3π/2 as Arg(−4i), the second step, returned “Not that one.” On 1.2 Exercise 6, “the sum identity is false” and “both identities are true” returned the same line, “Real parts add. They do not multiply.” The sum identity holds, and that tap is never told so. The success line on Exercise 2(a) says the last choice is the difference; the last button is 6+3i, and the difference is the next step. Change: each choice carries its own one-line miss, in the note that already appears. A blank’s miss names the slip. `41+11i` on the first factor blank says that is the collected answer and this blank is the −6i² term. Arg(3−3i) written as 0 or as 7π/4 says the point is in the fourth quadrant and Arg stays in (−π, π]. A wrong quotient says to multiply by the conjugate first. The same note in the dark, where “neither is a domain” already shows a red border and the wrong sentence under it.
+
+2. **The first blank is the worked example with the result covered, and the next blank is a new number.** The worked paragraph on 1.1 says the sum is 4 and the cubic check is 0, then the blanks ask for 4 and 0. On 1.5 the worked paragraph and the blank are Exercise 2. On 1.3 and 1.4 the worked number is never the blank. Change: the worked paragraph stops at the step before the number. 1.1’s two blanks stay, and they are the retrieval. 1.3’s first blank is |4+3i|, accepting 5, then the product of moduli. 1.4’s first card is 1+i in three blanks, modulus, Arg, polar form, and the generator skips a zero imaginary part so a session does not open on the real number 2. 1.5’s power blank is a different exponent than the one printed above it. The memory list moves under the summit, still the same lines, still open, so the recipe is on the stage and is no longer the paragraph directly over the blank.
+
+3. **The stage is complete when those two are right.** The button is live before any blank, and the 1.1 tick landed with the second blank empty and the card unflipped. Change: Mark stage complete stays disabled until the faded blank and the one new item are both right. Cards stay outside the gate. The button, the flag, and the tick store stay as they are. The sentence “Next is stage 1.2. 1 of 6 stages.” is repeated in that action row, in the status type already on the page, because the copy at the top is 1364px above the summit the student is looking at.
+
+4. **Stage 1.5 practices the five roots.** Next root’s only true sentence is “the root for k=0 is 1.” The other four say they are not 1. The summit is that those n points are the n turns of a full circle, and no blank asks for an angle. The quadratic line on the sheet has no item either. Change: each press states that root’s angle, (2πk)/5, and the true sentence is the spacing, five equal turns. One blank asks for the k=1 angle, 2π/5. One next-step uses Theorem 1.5, both square roots, or that line leaves the sheet. The De Moivre blank stays, on a power the worked paragraph did not finish.
+
+5. **Stage 1.6 starts from that circle, and the question is one the sheet has not answered.** The why never mentions the roots. The domain choices repeat the sheet and the worked paragraph, which already say the open disk is a domain and the closed disk is not. The segment formula is a card and a memory line, and it is not a blank. Change: the why says the unit circle from 1.5 is the boundary of D₁(0). The worked example keeps ε = 1−|z₀| and stops before classifying the closed disk. The practice item is a set that example did not classify, the annulus with one open edge and one closed edge, plus one inside/outside check on the point in the picture. One blank is z(t) = z₀ + t(z₁−z₀). Same buttons, same sheet length.
+
+6. **Stage 1.2 is the product, then one proof, then a short deck.** Eight items and Card 1 of 17 stand between the drag and the summit. The first thing asked is a three-step proof the picture did not show, and it is asked twice. Change: the first blank is (0,1)·(0,1), the worked product, then Exercise 1(f) and the i²⁷⁵ card. One copy of the commutativity proof follows them. The deck is the five memory lines, product, division by the conjugate, the four powers of i, Re and Im from the conjugate, and |z|² = z conj(z). Got it and Missed stay. The eight pin links move under the summit with the sheet, so the worked example is the next thing after the picture.
+
+### What to keep
+
+The six-stage walk, the “n of 6” count, the Done flag, and the summit sentence at the foot of the stage. Times i on the first screen, and a sentence that is false until the second press. The drag, the two chips pressed only on the book’s point, Next root, and the disk that opens outside the circle. The memory lines as written: they are the recipes, at body size, in both themes. One card at a time, the back closed until Show, Got it hidden until the next day, Missed kept in the pile. Exercise 7’s two steps, the four powers on i²⁷⁵, and the triangle item, whose miss does name equality and the cross term. The Iowan title, the paper, the 44px controls, light and dark. No new chrome.
+
+## reviewer (ch1 batch 2)
+
+Preview https://ch1-preview.complexanalysis.pages.dev, tip `e9c541c`, checked against Howell & Mathews, Complex Analysis, 202 Updated Edition (PDF, 471 pages). Fixes pushed on `cursor/chapter-1`.
+
+### Verdict
+
+ACCEPT WITH FIXES. The named pages match the print edition, and the 1.4–1.6 arithmetic that the page states is the book’s. A handful of sentences were false of the state on screen, or pointed at the wrong page. Those are corrected. The four items the track left open are still open, and they are not math errors.
+
+### What the book says
+
+Example 1.13, page 27: \(1+i\) has length \(\sqrt{2}\) and Arg \(\pi/4\). Exercise 7, page 28: \(z_1=-1+i\sqrt{3}\), \(z_2=-\sqrt{3}+i\), and \(\operatorname{Arg}(z_1 z_2)\neq \operatorname{Arg} z_1+\operatorname{Arg} z_2\). The sum of the Args is \(3\pi/2\); the product is \(-4i\), whose Arg is \(-\pi/2\). §1.5 Exercise 2, page 34: \((\sqrt{3}+i)^4=-8+8\sqrt{3}\,i\). Equation (1.43), page 31, is the \(n\)th roots of unity, \(e^{i 2\pi k/n}\). The general roots are Equation (1.45), page 32. Example 1.25, page 38: \(D_1(0)\), \(\varepsilon=1-|z_0|\), exterior \(|z|>1\), boundary \(|z|=1\). Exercise 6, page 41: the open disk is a domain and the closed disk is not. §1.3 Exercise 2(a), page 20: \(2+3i\) and \(4+i\), sum \(6+4i\), difference \(-2+2i\).
+
+Also opened and matching: Definitions 1.9–1.11, pages 22–23, with Arg in \((-\pi,\pi]\); Euler (1.32), page 25; Theorem 1.3, page 26, which is the set \(\arg\), not Arg; De Moivre (1.40) and Theorem 1.4, page 30; Theorem 1.5, page 33; (1.47) and (1.48), page 35; disks (1.50)–(1.52), page 37.
+
+### Fixes
+
+The polar sentence said “length \(\sqrt{2}\)” for any point within 0.08 of \(1+i\). It now holds only at \(1+i\), and the chip is pressed only then. The disk called every radius up to 1.08 the boundary, including 1.1. A keyboard step from the opening point now reads Outside at 1.1, On the boundary at 1, and Inside at 0.9. Equation (1.48) is page 35, not 36. The Example 1.13 link opened §1.4 Exercise 1; it now opens the example. The Example 1.25 link opened the disk formula; it now opens the example. The roots-of-unity card stated the general formula and cited (1.43); the card is now (1.43), and the memory line cites (1.45). The 1.4 summit no longer says a length times an angle. The sum card no longer calls \(6+3i\) the difference.
+
+The grader accepts a parsed value. \(\sqrt{10}\), `sqrt(10)`, and 1.414 for \(\sqrt{2}\) pass; \(\sqrt{2}\) on the product blank, `41+10i`, and 33530000 for \(2^{25}\) fail. `41 + 11*i` and \(-8+8\sqrt{3}i\) pass. `generate(seed, params)` is seed-first and deterministic across 60 seeds of each mode. Arg still rejects a \(2\pi\) shift, so \(-\pi\) is not \(\operatorname{Arg}(-1)\).
+
+`node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. `js/core/map-route.js` is byte-identical to the kit copy. No live file imports `kit/`. Headless Chrome, 390×844 and 1280×800, light and dark: Times i ends at y = 724 and y = 794, The Book is 44px, no console errors, no sideways scroll.
+
+### Still open
+
+1. Stage complete still toggles itself. The 1.4 button went from unpressed to pressed with no practice answered.
+2. The 1.2 deck is still Card 1 of 17. The 1.3 deck is still Card 1 of 8.
+3. Proof of (P1) is still both a blank and a multiple choice.
+4. Arg and polar still draw axis points, where one coordinate is zero, on about half of 200 seeds. The modulus generator does not.
+
+## Chapter 1, batch 3
+
+Started from `9b9c273`. Headless Chrome, 390×844 and 1280×800, light and dark. No console errors. No sideways scroll. Times i still ends at y = 724 and y = 794.
+
+Mark stage complete stays disabled until the faded item and the next item on that stage are both right. Flashcards stay outside the gate. The action row repeats “Next is stage 1.1. 0 of 6 stages.” On 1.1 the button stayed disabled after the sum and enabled after the cubic check.
+
+1.2 opens on (0,1)·(0,1), then Exercise 1(f), then i^275, then one copy of the (P1) proof. The deck is Card 1 of 5. The 1.3 deck is Card 1 of 5. Got it and Missed stay. The sheet and the pin links sit under the summit.
+
+A miss names the slip. 5 on Bombelli’s sum, the product-of-coordinates choice, 41+11i in the first factor blank, 0 as the sum of the Args, and “neither is a domain” each got their own line, and the next step stayed closed. Arg and polar skip a zero coordinate and still include a fourth-quadrant point (seed 4 is Arg(3−3i)).
+
+The worked paragraphs stop before the number. 1.3 opens on |4+3i|. 1.4 opens on 1+i. 1.5 practices (√3+i)^10, the k=1 angle 2π/5, and both square roots in Example 1.21. Next root states 2πk/5. 1.6 says the unit circle is the boundary of D1(0), keeps ε=1−|z0|, and asks for the half-closed annulus, the green point, and z(t). (1+i)(1−i)=0 is a distractor, and the miss says conjugate products are |z|^2 > 0.
+
+`node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed.
+
+## skeptical-student (chapter-1 batch 3)
+
+Preview https://ch1-preview.complexanalysis.pages.dev at `d1c99af`. Phone first, 390×844, coarse pointer, then 1280×800, light and dark. No product code was changed. No console errors. No failed requests. No sideways scroll (`scrollWidth` 390 and 1280).
+
+### Verdict
+
+ANOTHER BATCH. I can press Times i and watch a point land on −1. I cannot tell what stage 1.1 wanted me to learn, stage 1.2 runs six phone screens and the summit sits five screens below its picture, and two questions in 1.6 are already answered by the sentence above the buttons.
+
+### How the walk went
+
+The link opens The Map: “Drag the dot,” and the dot is not on that screen. The menu’s first row is The Book. That page says “Next is stage 1.1. 0 of 6 stages.” and the button is Walk Chapter 1. The chapter walk below is `#chapter-1`.
+
+**The first screen is the turn.** At 390, light, Times i runs from y = 680 to 724. The claim is “This point is 1. It has not been turned.” Two presses put the purple point on −1, leave the green point on i, draw the orange quarter between them, and say “Two turns. i² landed on −1.” At 1280×800 the button runs from y = 750 to 794, so it is on that screen too. In the dark the title is `rgb(233, 237, 245)` and Times i still ends on the phone (y = 721). A fourth press brings the sentence back to “This point is 1. It has not been turned,” while the last orange quarter is still drawn, from −i back to 1.
+
+**What I had to do to leave 1.1 was a cubic.** The why is a cubic with a negative square root. The blank says the square roots cancel and asks for the sum. I typed 2 and got “Both real parts are in the sum, and the square roots cancel each other.” I typed 5 and got “Treating √−1 as 1 and adding it gives 5.” I typed 4. The button stayed disabled. The next blank is 4³ − 15·4 − 4. I typed 4 and got “That is the sum from the previous blank.” I typed 0, and Mark stage complete woke up. I never had to press Times i. On that same phone screen, under the card, the summit already says “Bombelli’s 4 is (2 + √−1) + (2 − √−1).” After the tick the memory line says “This stage is the story. The written work starts at 1.2.” The next stage’s title and its plane are on that screen. The sentence there is “Next is stage 1.2. 1 of 6 stages.”
+
+**Stage 1.2 is where I got tired.** The picture is clear: green at 1, purple at i, “1 · i is i. One more turn lands on −1.” Dragging the green point (the hit is 44×44) changes it to “Times i is a quarter turn. The product is not real.” Then the page keeps going. The section is 5083px. The practice block is 2715px, nine cards, and the summit is at y = 7016. Nothing says the first two cards are the ones that unlock the stage. The fourth card says “The same proof. Pick the line the definition allows.” There is no other proof on the page. The first card’s heading, and the link under it, are the characters `Identity $i^2=-1$`. The prompt under that heading is readable: multiply (0, 1) by (0, 1). I typed −1. It was accepted, and the note showed the pair (−1, 0).
+
+**A card can be dismissed unread.** Stage 1.1’s deck says Card 1 of 1. Show the back, Got it, and Missed are all on screen, and the back is closed. I tapped Got it. The deck became “You know these until tomorrow.” I never saw the identity.
+
+**1.5 argues with its own picture.** Five dots are already equally spaced on the orange circle. The claim says “Angle 2π · 1/5. One of the five turns, not the finished spacing.” The why on that same screen says the nth roots are n points, equally spaced. Next root cycles that complaint, says “Five equal turns, and this one is 1” once, and then the complaint comes back. The spacing never changes. Under that, the practice asks for (√3 + i)¹⁰ as a + bi. The worked example describes (√3 + i)⁴ and stops before a number. The blanks want the modulus, then 1024, then 512 − 512√3 i.
+
+**1.6’s picture I understood. The questions I did not have to.** Green sits outside the orange circle. The sentence is “Outside. This is not the open disk D₁(0).” The why, on that screen, says this circle is the boundary from 1.5. The practice says “The green point opens outside the orange circle. Drag it, then say where it is.” I tapped Outside the circle without dragging. It was marked right. The annulus prompt says “Close the outer edge,” and the long button repeats “closed on the outer circle, so a region and not a domain.” I tapped “a domain, because the set is connected” and got “Connected is not enough. The outer circle is in the set, so the set is not open.” I still don’t know what a region is. The prompt had already said the outer edge was closed.
+
+### Ranked
+
+1. **Let the turn be the thing stage 1.1 teaches.** Two presses are the lesson, and the summit prints 4 while the sum blank is still on screen. The tick waits for the cubic, then the memory says the written work has not started. A fourth press says the point has not been turned while the last orange quarter is still there. Change: the gate is the sentence “Two turns. i² landed on −1.” The summit is that sentence, and it does not print 4 until the cubic card is right. The cubic stays one card. When the point comes back to 1, the sentence is “Back at 1.”
+
+2. **Stop stage 1.2 after the two cards that unlock it.** Nine cards and 2715px of practice stand between the drag and the summit at y = 7016. The tick is at y = 7769. The fourth prompt is “The same proof,” and no proof came before it. Exercise 6’s buttons are whole sentences; the second one wraps so “is false” sits away from the identity. Stage 1.3 is the next longest section, 4760px. Change: one status line under Practice, “The first two unlock the stage.” The summit and Mark stage complete sit under those two. The other cards move under the summit. The proof prompt states the claim: “Addition of pairs commutes. Which line is Definition 1.1?”
+
+3. **Render the first algebra card’s title.** At 390 the heading and the source link are `Identity $i^2=-1$` and `Identity $i^2=-1$, page 13. Those two strings are the only raw dollar signs on the chapter. The prompt under them is set. Change: that title and that source line go through the same rich text as the prompt. The heading reads “i² = −1”.
+
+4. **Keep Got it until I have seen the back.** Card 1 of 1 had Show the back, Got it, and Missed together, and the back was closed. Got it replaced the card with “You know these until tomorrow.” Change: Got it and Missed appear after Show the back. The back stays closed until then.
+
+5. **Let Next root agree with the five dots.** They are equally spaced on every press, and the claim says the spacing is not finished. The why on the same screen says they are equally spaced. The practice under the picture is (√3 + i)¹⁰, three blanks, ending at 512 − 512√3 i, and the worked example never finishes a number. Change: every press names that root’s angle, and the sentence stays “Five equal turns on this circle.” The clause “and this one is 1” appears at the root that is 1. The power card asks for the length. Leave the angle blank 2π/5. Leave the tenth-power expansion off the phone.
+
+6. **Make the 1.6 questions need the picture.** “The green point opens outside” and the button Outside the circle are the same fact, and Outside was accepted with the point still at its start. The annulus prompt says “Close the outer edge,” and the key is the paragraph that repeats the outer circle and then says “a region and not a domain.” Change: the three place buttons stay disabled until the green point moves. The annulus buttons are the four words open, closed, domain, and bounded. The prompt shows {z : 1 < |z| ≤ 2} and does not say which edge was closed.
+
+### What to keep
+
+Times i on the first screen, in both themes and at both widths, and the sentence that becomes true on the second press. The 1.2 drag, the 44px hit, and a sentence that changes when the product leaves the axis. The 1.4 screen: the angle sentence, the 1 + i chip, and the why that says Arg is the angle in (−π, π]. The 1.6 picture opening outside the circle, and the why that names that circle as the boundary from 1.5. The misses that name the slip: 2 and 5 on Bombelli’s sum, 4 in the cubic blank, and “a domain, because the set is connected.” Accepting −1 for (0, 1)(0, 1), with the note that shows the pair (−1, 0). The 1.1 tick staying disabled after the sum and waking after the cubic. One card at a time, the back closed until Show. i²⁷⁵ with −i, i, −1, and 1 on the buttons. The generator that says “Write (4 − i) + (−4) in the form a + bi.” The memory line “This stage is the story. The written work starts at 1.2.” The Book at 44px, the blanks at 44px, the Iowan title, the paper, the count “1 of 6,” and the next stage’s plane sitting under the tick. No new chrome.
+
+## ux-veteran (chapter-1 batch 3)
+
+Preview https://ch1-preview.complexanalysis.pages.dev at `d1c99af`. The live `js/stations/chapter1.js` matches that commit. Headless Chrome, coarse pointer, 390×844, then 1280×800, light and dark. Fresh storage, then the same phone again after stage 1.1 was marked. No product code was changed. No console errors. No failed requests. No sideways scroll (`scrollWidth` 390 at 390, 1280 at 1280). The page is 23428px tall on the phone and 18843px on the laptop.
+
+### How the walk went
+
+**First screen, 390×844, light and dark.** The site name fits. The header icons are 44×44. The Book is 109×44. The title is Iowan Old Style, 25.85px, weight 600, `rgb(26, 34, 48)` in the light and `rgb(233, 237, 245)` in the dark. The lede is 16.8px, “Press Times i. The purple point turns.”, `rgb(81, 91, 108)` in the light and `rgb(166, 176, 195)` in the dark. Paper is `rgb(246, 243, 236)` and `rgb(13, 18, 28)`. The plane is 324×324 and starts at y = 314. The claim and Times i are on the screen. Times i runs from y = 680 to 724, 94×44. Two presses make the sentence “Two turns. i² landed on −1,” purple on −1, green on i, orange arc between them. The colour key ends at y = 812. The status card then starts at y = 829 and its line runs to 855, so the 844 edge cuts “Next is stage 1.1. 0 of 6 stages.” The card is a second white box, 1px `rgb(216, 210, 196)`, radius 10, inside the stage card. The stage title, “The Origin of Complex Numbers,” is at y = 872, under that cut. The dark stack is the same heights.
+
+**1280×800, light and dark.** The sidebar is The Book and eleven chapters, Chapter 1 marked. The title is 36px. Times i runs from y = 750 to 794, so the button is on the screen and the status card is below the fold. The green handle is 32×32 with a fine pointer. On the phone it is 44×44, and the drawn dot is 14px. Tab to the theme button draws the 3px solid ring, offset 2px.
+
+**The tick, then the way on.** Mark stage complete is 324×44, opacity 0.55, under the sentence “Next is stage 1.1. 0 of 6 stages.” The summit is on that screen. The button stayed disabled after the sum 4, and enabled after the cubic check 0. Pressing it sets the flag to DONE and the sentence to “Next is stage 1.2. 1 of 6 stages.” Go to 1.2 appears at y = 860. The tick is on screen at scroll 2366, so that button is 1506px above the window. The hash stays `#chapter-1`. Stage 1.2 is already drawn under the tick, so the finger can enter it without a hash. Clicking the offscreen button does write `#chapter-1-1-2`, and the 1.2 title lands at y = 97, 41px under the 56px header.
+
+**Back.** From scroll 900, The Book opens `#book` at scroll 0. Browser Back returns to `#chapter-1` at scroll 0. From `#chapter-1-1-2`, Back does the same, and the 1.2 title sits at y = 2639. `#chapter-1-1-3`, `#chapter-1-1-5`, and `#chapter-1-1-6` each land the stage title at y = 96 or 97. On 1.5, Next root is on the screen (y = 573 to 617) and the second press names 2π·2/5. On 1.6 the claim opens “Outside. This is not the open disk D₁(0),” and the green handle is 44×44. The 1+i chip on 1.4 is 44px tall.
+
+**The book, after the tick.** The status is “Next is stage 1.2. 1 of 6 stages.” The 1.1 row reads Done and the 1.2 row reads Next. The primary button reads Walk Chapter 1. Its href is `#chapter-1-1-2`. Before any tick the same button reads Walk Chapter 1 and opens `#chapter-1-1-1`, with the flag at y = 73 and Times i on the screen (y = 462 to 506). The 1.1 link is 26×286 inside a 58px row. The word Next is a 31×20 span. A tap on it hits the span. The 1.6 link is 26px. The 4.1, 4.2, and 4.4 rows are 26px. A wrapped title, 1.2, happens to be 53px.
+
+**What the heading shows.** The 1.2 worked title renders, “Multiply (0, 1) by itself.” The first practice title is the characters `Identity $i^2=-1$`, 18.4px, weight 600. The source line under it prints the same dollars. The prompt under that is set. The flash card that cites the same identity uses the same raw heading. A miss on the 1.1 sum, the answer 5, names the slip in the muted body colour, 17px, and leaves the next blank closed.
+
+**The drawer.** 2 Complex Functions leaves the hash on `#chapter-2`, scrolls the book to 994, puts the Later card on the header, and marks The Book current. The h1 is The Book. Chapter 8 does the same kind of open. The drawer lists chapters 8 through 11. After stage 1.6, the next 820px is empty paper. The Book at the foot is 109×44, sitting at the bottom of that gap.
+
+### Verdict
+
+ANOTHER BATCH. The six pictures, the type, and the 44px controls are the site’s. The way on from a finished stage is off the screen, Back returns to the top of a 23000px page, and the first practice heading is source.
+
+### Ranked cut or fix
+
+1. **Put Go to 1.2 on the tick’s screen.** After the cubic check the tick enables. After the press, the row on screen reads “Next is stage 1.2. 1 of 6 stages.” and Go to 1.2 is at y = 860, 1506px above scroll 2366. The hash is still `#chapter-1`. While the tick is disabled, that row reads “Next is stage 1.1. 0 of 6 stages.” beside a grey button. Change: the button in that action row is Go to 1.2 once the stage is marked, href `#chapter-1-1-2`. While the tick is disabled, the same row names the two blanks that open it.
+
+2. **Bring Back to the stage.** From scroll 900, The Book, Back lands on `#chapter-1` at scroll 0. From `#chapter-1-1-2`, Back lands on `#chapter-1` at scroll 0, with the 1.2 title at y = 2639. Change: the entry you leave is the stage hash. `#chapter-1-1-2` already puts the title 41px under the header. Coming back uses that, and the router keeps the scroll of the page you left.
+
+3. **Make the book row the control, and name the stage on the button.** After 1.1 is marked, the status says stage 1.2 and the button says Walk Chapter 1, with href `#chapter-1-1-2`. The 1.1 link is 26px tall. Next is a 31×20 span, and a tap on the word hits the span. Single-line rows, 1.6 and 4.1 and 4.2 and 4.4, are 26px. Change: the label is Go to 1.2 when that is the href. The whole row is the link, min-height 44, and Next is inside the link.
+
+4. **Render the practice heading.** The first 1.2 title is `Identity $i^2=-1$`. The source line repeats it. The prompt below is set, and the worked title above is set. The powers-of-i card uses the same cite as its heading. Change: the heading and the source line go through the rich text the prompt already uses.
+
+5. **End the first screen on the colour key.** At 390, light and dark, the key ends at y = 812 and the status line runs from 829 to 855. The window cuts it. The status is a card inside the stage card. At 1280×800 Times i ends at 794, so the slice is the phone. Change: remove that inner card. The sentence is already whole in the action row. The first screen ends on the key.
+
+6. **A later chapter opens the book and then highlights The Book.** `#chapter-2` scrolls to 994, the Later card sits on the header, the h1 is The Book, and the current row is The Book. `#chapter-8` is the same kind of open. The drawer still lists 8 through 11. Change: a later row leaves the hash on `#book` and scrolls to that card. Chapters 8–11 come off this list. The same pass moves the foot link: after 1.6 there are 820px of paper before The Book. Put that 44px link at the end of the stage, and leave the scroll room under it.
+
+### What to keep
+
+The four colours, the Iowan title, the muted lede, the paper, and the accent button, in light and in dark. Times i on the first screen, at y = 724 on the phone and y = 794 on the laptop, and a sentence that is false until the second press. The 44px coarse hit, the 14px dot, and a drag that leaves the keyboard ring for the key. The 4+3i and 1+i chips at 44px. Check, the choices, Show the back, Got it, Missed, and Mark stage complete, all on the 44px button. The tick stays disabled until both 1.1 blanks are right, and a miss on 5 names the slip and keeps the next blank closed. One card at a time, the back closed until Show. Practice in the stage, with no second border. The memory line at 17px in the body colour. The summit at the tick. The book tally after the tick, “Next is stage 1.2. 1 of 6 stages.”, with 1.1 marked Done. Walk Chapter 1, before any tick, opening `#chapter-1-1-1` with Times i on the screen. The deep link that clears the header. Chapter 1’s Book link at 109×44. Chapter 5 still uses the 17px kicker; that is the older page, and it is the reason to leave Chapter 1’s link at 44.
+
+## reviewer (ch1 batch 3)
+
+Preview https://ch1-preview.complexanalysis.pages.dev, tip `d1c99af`, checked against Howell & Mathews, Complex Analysis, 202 Updated Edition (PDF, 471 pages). Fixes pushed on `cursor/chapter-1`. Did not merge. Did not touch `gh-pages`.
+
+### Verdict
+
+ACCEPT WITH FIXES. The stage arithmetic, the named pages, and the generator values match the print edition. Three sentences did not. Those are corrected. What is left is wording that is thinner than the theorem, not a wrong value.
+
+### What the book says
+
+Equation (1.6), page 3, is \((2+\sqrt{-1})+(2-\sqrt{-1})=4\), and \(4^3-15\cdot 4-4=0\). Definitions 1.1–1.3 are page 10, Definition 1.4 is page 11, and page 13 is \(i=(0,1)\) and \(i^2=-1\). Exercise 1(a) is \(i^{275}=-i\). Exercise 1(f) is \((7-2i)(5+3i)=41+11i\). Exercise 6, page 15, is the real-part sum and product. Identity (1.22), page 18, gives \((1+i)(1-i)=2\). Example 1.6, page 20, is \(|1+2i|=\sqrt{5}\) and \(|\sqrt{3}+2i|=\sqrt{13}\), not the length 5. Exercise 1(a) is \(\sqrt{10}\), Exercise 1(c) is \(2^{25}\), Exercise 2(a) is \(6+4i\) and \(-2+2i\), and Exercise 3(b) sits on \(|z-i|=2\).
+
+Example 1.13, page 27, states that \(1+i\) has length \(\sqrt{2}\) and Arg \(\pi/4\). Exercise 7, page 28, is \(z_1=-1+i\sqrt{3}\) and \(z_2=-\sqrt{3}+i\): the Args sum to \(3\pi/2\), and the product is \(-4i\), whose Arg is \(-\pi/2\). Equation (1.40), page 30, is De Moivre. Equation (1.43), page 31, is \(e^{i 2\pi k/n}\). Equation (1.45), page 32, is the general root. Theorem 1.5 and Example 1.21, page 33, solve \(z^2+(1+i)z+5i=0\) with square roots \(3-3i\) and \(-3+3i\), and the roots are \(1-2i\) and \(-2+i\). \((\sqrt{3}+i)^{10}=512-512\sqrt{3}\,i\).
+
+Equation (1.48), page 35, is \(z(t)=z_0+t(z_1-z_0)\). Equation (1.50), page 37, is the open disk. Example 1.25, page 38, is \(D_1(0)\) with \(\varepsilon=1-|z_0|\). The open annulus \(1<|z|<2\) is named on page 38 and drawn as Figure 1.30 on page 39. A region is defined on page 40. Exercise 6, page 41, is the open disk as a domain and the closed disk not. Exercise 9, pages 41–42, classifies sets (i)–(vii). None of them is \(\{z:1<|z|\le 2\}\). The answer key’s item 7 for §1.4 does not match the Exercise 7 printed on page 28. The page solves the printed exercise.
+
+Every Chapter 1 link’s HTML anchor is present. `js/core/map-route.js` is byte-identical to the kit copy. No live file imports `kit/`.
+
+### Fixes
+
+Example 1.6 no longer says it is the same length as \(4+3i\). It names \(1+2i\) and \(\sqrt{3}+2i\). The half-closed annulus is cited as Figure 1.30, page 39, and the region sentence cites page 40. It no longer says Exercise 9 asks for that set. A negative polar answer accepts \(e^{-i\theta}\), the form Figure 1.16 prints, as well as \(e^{i(-\theta)}\). Next root no longer says the spacing is unfinished while all five points are on the circle.
+
+`node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. A local render of `#chapter-1` shows the Example 1.6 sentence, Figure 1.30, and “This root is not 1.”
+
+### Still open
+
+1. The Theorem 1.4 pin says a degree-n polynomial has n roots. Page 30 says precisely n solutions, not necessarily distinct.
+2. The powers-of-i card cites page 13 for the cycle \(i,-1,-i,1\). Page 13 prints \(i^2=-1\). The cycle is the consequence. \(i^{275}\) is Exercise 1(a), page 15, and that value is \(-i\).
+3. Writing \(1+i\) in polar form is Example 1.7, page 22. Example 1.13 states the same length and Arg, then computes the inverse. The card’s numbers are the ones the example states.
+4. The 1.4 summit says the polar angle is the one value in \((-\pi,\pi]\). Definition 1.9 allows any argument. That one value is Arg, Definition 1.11. The memory sheet already separates them.
+5. Arg and polar still use only the four diagonal directions. Seed 4 is \(\operatorname{Arg}(3-3i)=-\pi/4\). They do not draw an axis point, and they do not draw the book’s \(\pi/3\) or \(\pi/6\).
+
+## Chapter 1, batch 4
+
+Started from `d1b0c09`. Headless Chrome, 390×844 and 1280×800, light and dark. No console errors. No sideways scroll. Times i still ends at y = 724 on the phone and y = 794 on the laptop. The phone’s colour key ends at y = 812, and the stage title starts at y = 860. Not merged. `gh-pages` was not touched.
+
+The practice heading and the source line for \(i^2=-1\) render. Got it and Missed stay hidden until Show the back. Stage 1.1 stays closed until two presses land on \(-1\) and the cubic card is right; the summit names 4 only then. A fourth press says “Back at 1.” The tick row, once the stage is marked, is Go to 1.2 with href `#chapter-1-1-2`. While the tick is disabled, the row names the sum and the cubic check. On the book, that same label is the walk button, the section row is the link, and Next sits inside it.
+
+Stage 1.2 puts “The first two unlock the stage,” those two cards, the summit, and Mark stage complete together. The proof prompt states the claim: addition of pairs commutes. Next root names the angle on every press and keeps “Five equal turns on this circle.” The \((\sqrt{3}+i)^{10}\) card asks for the length, not the rectangular expansion. The 1.6 place buttons stay disabled until the green point moves. The annulus buttons are open, closed, domain, and bounded.
+
+Back from The Book returns to the stage hash and the scroll that was left. A later chapter in the drawer leaves the hash on `#book` and scrolls to that card. Chapters 8–11 are off the drawer. The Book sits at the end of 1.6; the scroll room is under that link. The inner status card is gone.
+
+Theorem 1.4 says precisely \(n\) solutions, not necessarily distinct. The powers-of-\(i\) card cites Exercise 1(a), page 15, and \(i^{275}=-i\). The 1.4 summit names Arg, Definition 1.11. Arg and polar draw an axis point and \(\pi/6\) or \(\pi/3\).
+
+`node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. No live file imports `kit/`.
+
+### Still open after batch 4
+
+1. The shared practice engine is not on this branch. Chapter 1 still renders the schema with the local card.
+2. Progress is still localStorage.
+3. The \(1+i\) card cites Example 1.13, page 27. Example 1.7, page 22, is where the book first writes that polar form. The numbers are the ones Example 1.13 states.
+4. Stages 1.3 through 1.6 still keep the summit at the foot. Only 1.2 folds the first two cards above it.
+5. On a 1280×800 window the colour key sits just under the fold. Times i is on that screen. The phone is the screen the key ends.
+6. Chapters 8–11 stay on the book page. They are not in the drawer.
+
+## reviewer (ch1 batch 4)
+
+Preview https://ch1-preview.complexanalysis.pages.dev, tip `7eb34f9` on `cursor/chapter-1` (PR #44), checked against Howell & Mathews, Complex Analysis, 202 Updated Edition (PDF, 471 pages; printed pages 1–42). Fixes pushed on `cursor/chapter-1`. Did not merge. Did not touch `gh-pages`.
+
+### Verdict
+
+ACCEPT WITH FIXES. The stage arithmetic, the named pages, and the generator values match the print edition. Two sentences did not, and one exercise link opened Chapter 1’s first page. Those are corrected.
+
+### What the book says
+
+Equation (1.6), page 3, is \((2+\sqrt{-1})+(2-\sqrt{-1})=4\), and \(4^3-15\cdot 4-4=0\). Formula (1.3) is page 2. Definitions 1.1 and 1.2 are page 10, Definition 1.3 is page 10, Definition 1.4 is page 11, and page 13 is the proof of (P1) together with \(i=(0,1)\) and \(i^2=-1\). Exercise 1(a), page 15, is \(i^{275}=-i\). Exercise 1(f) is \((7-2i)(3i+5)=41+11i\). Exercise 6, page 15, asks to prove or disprove the real-part sum and the real-part product.
+
+Example 1.6, page 20, is \(z_1=1+2i\) and \(z_2=3+2i\): the moduli are \(\sqrt{5}\) and \(\sqrt{13}\), and the product is \(-1+8i\). Identity (1.21) is page 17. The distance formula and Theorem 1.2 are page 18. Identity (1.24) is \(|z_1+z_2|\ge |z_1|-|z_2|\), page 19. Identities (1.25) and (1.26) are page 19. Exercise 1(a) is \(\sqrt{10}\), Exercise 1(c) is \(|(1+i)^{50}|=2^{25}\), Exercise 2(a) is \(6+4i\) and \(-2+2i\), and Exercise 3(b) sits on \(|z-i|=2\).
+
+Example 1.7, page 22, is the first polar form of \(1+i\): length \(\sqrt{2}\), angle \(\pi/4\). Definition 1.11, page 23, is the one value in \((-\pi,\pi]\). Euler’s formula is Equation (1.32), page 25, and the exponential form is (1.35) on that page. Theorem 1.3, page 26, equates the sets \(\arg\). Example 1.13, page 27, restates the same length and Arg, then computes the inverse. Exercise 7, page 28, is \(z_1=-1+i\sqrt{3}\) and \(z_2=-\sqrt{3}+i\): the Args sum to \(3\pi/2\), and the product is \(-4i\), whose Arg is \(-\pi/2\).
+
+Equation (1.40) and Theorem 1.4, page 30, are De Moivre and precisely \(n\) solutions, not necessarily distinct. Equation (1.43), page 31, is \(e^{i 2\pi k/n}\). Equation (1.45), page 32, is the general root. Theorem 1.5 and Example 1.21, page 33, solve \(z^2+(1+i)z+5i=0\) with square roots \(3-3i\) and \(-3+3i\), and the roots are \(1-2i\) and \(-2+i\). Exercise 2, page 34, is \((\sqrt{3}+i)^4=-8+8\sqrt{3}\,i\). The length of \((\sqrt{3}+i)^{10}\) is \(1024\).
+
+Equation (1.48), page 35, is \(z(t)=z_0+t(z_1-z_0)\). Equation (1.50), page 37, is the open disk. Example 1.25, page 38, is \(D_1(0)\) with \(\varepsilon=1-|z_0|\), exterior \(|z|>1\), boundary \(|z|=1\). Figure 1.30, page 39, is the open annulus \(1<|z|<2\). A region is a domain plus some, none, or all of its boundary, page 40. Exercise 6, page 41, is the open disk as a domain and the closed disk not. The half-closed annulus \(\{z:1<|z|\le 2\}\) is bounded, and it is not open, not closed, and not a domain.
+
+`generate(seed, params)` recomputed cleanly across 400 seeds of add, subtract, multiply, divide, modulus, Arg, and polar form. The twelve angles include the axes and \(\pi/6\), \(\pi/3\), and their fourth-quadrant pairs. Arg stays in \((-\pi,\pi]\). A \(2\pi\) shift is rejected, and \(-\pi\) is not \(\operatorname{Arg}(-1)\).
+
+### Fixes
+
+Example 1.6 named \(\sqrt{3}+2i\). The book’s second number is \(3+2i\). The worked sentence now says that. The §1.2 Exercise 6 source link opened `sec_origin.html`. It now opens `sec_algebra-1.html#x1_2_6`. The Theorem 1.3 card still says an argument of a product is a sum of arguments. Its why and memory now keep the wrap into \((-\pi,\pi]\) for the name Arg, which is Definition 1.11 and Exercise 7, and they leave Theorem 1.3 as the set equality.
+
+`node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. `js/core/map-route.js` is byte-identical to the kit copy. No live file imports `kit/`. Headless Chrome on the preview, 390×844 and 1280×800, light and dark: no console errors, no failed requests, no sideways scroll. Times i ends at y = 724 on the phone and y = 794 on the laptop. Two presses say \(i^2\) landed on \(-1\). A fourth press says “Back at 1.” The identity heading renders. Got it stays hidden until Show the back. Next root names \(2\pi k/5\) and holds at \(k=0\). The 1.6 buttons stay disabled until the green point moves, and Inside is right at radius 0.9.
+
+### Still open
+
+1. The \(1+i\) card cites Example 1.13, page 27. Example 1.7, page 22, is where the book first writes that polar form. Example 1.13 states the same length and Arg, then computes the inverse.
+2. The modulus flash cites Identity (1.25) and also states the quotient, which is Identity (1.26). Both are page 19. The addition flash cites Definition 1.1 and also states subtraction, which is Definition 1.2. Both are page 10.
+3. The closed-disk flash cites Example 1.25, page 38. The closed and punctured disks are Equations (1.51) and (1.52), page 37. The example is the open disk, its exterior, and its boundary.
+4. The shared practice engine is not on this branch. Chapter 1 still renders the schema with the local card. Progress is still localStorage.
+5. Stages 1.3 through 1.6 still keep the summit at the foot. On a 1280×800 window the colour key ends at y = 855, under the fold. Times i is on that screen.
+6. Chapters 8–11 stay on the book page. They are not in the drawer.
+
+## taste-skill (chapter-1 batch 4)
+
+Preview https://ch1-preview.complexanalysis.pages.dev at `7eb34f9`. Headless Chrome, 390×844 then 1280×800, light and dark. Fresh profile. No product code was changed. No console errors. No failed requests. No sideways scroll (`scrollWidth` 390 at 390; in the 1280 window the document’s scroll width matched its client width, 1265). The footer colour key is `display: none` on this route. The page is 23186px on the phone and 18526px on the laptop. Judged with taste-skill @ `12af471f`. Kit rules win where they meet that skill: the four colours, the one gesture, the source tag, and the square that keeps Times i on the screen all stay.
+
+### Verdict
+
+ANOTHER BATCH. The turn is the page. Two presses land the purple point on −1, and the fourth press says “Back at 1.” The type, the paper, and the four colours are already the site’s. What is left is noise: a caption that names a dot the opening frame never draws, forty-two tracked labels, a cite printed three times, a period on its own line, a blank screen after The Book, and four empty chapters.
+
+### What the first screen holds
+
+**390×844, light and dark.** The header icons are 44×44. The Book is a 44px link. The title is Iowan Old Style, one line, 25.85px, weight 600, `rgb(26, 34, 48)` in the light and `rgb(233, 237, 245)` in the dark. The lede is 16.8px, “Press Times i. The purple point turns.”, `rgb(81, 91, 108)` in the light and `rgb(166, 176, 195)` in the dark. Paper is `rgb(246, 243, 236)` and `rgb(13, 18, 28)`. The plane is 324×324 and starts at y = 314. The claim is one line: “This point is 1. It has not been turned.” Times i runs from y = 680 to 724, 94×44. Under it, a 17px muted paragraph, 324×79, from y = 732 to 811: “Purple is the point. Green is where it was. Orange is the quarter turn. Blue is the axes.” The only mark on that frame is the purple point at 1. The stage title “The Origin of Complex Numbers” starts at y = 860. The gap from the caption to that title is 48px, the phone rule `margin-bottom: 3rem` on the 1.1 picture. Two presses change the claim to “Two turns. i² landed on −1,” and the green point appears on i with the orange quarter between them. A fourth press says “Back at 1.” The caption keeps the same sentence, green included, on every frame. Dark uses the same heights.
+
+**1280×800, light and dark.** The sidebar is The Book and chapters 1–7, Chapter 1 marked. The title is 36px, one line. The stage card is 937px wide. The square is 398×398, set at the left of that card, and the rest of the card is empty paper. Times i runs from y = 750 to 794, so the button is on the screen. The same caption starts at y = 802, 53px tall, in the muted colour, and the 800px edge cuts it. The stage title starts at y = 855, one line, 22.4px. Dark uses the same heights. The square stays this size so the button can stay on the screen. A second column would be a restyle.
+
+### What the stages repeat
+
+Each of the six stages carries the same seven labels, 42 in all. A label is 12.48px, weight 700, letter-spacing 0.06em, uppercase, muted (`rgb(81, 91, 108)` light, `rgb(166, 176, 195)` dark): Why you’d care, Worked example, Practice, Cards, Summit, Memory, Pinned. On 1.2 the claim “1 · i is i. One more turn lands on −1.” shares the screen with a second caption, “Blue is the address.”, and with Why you’d care. On 1.3 the claim is 53px tall and its second line’s only glyph is a period: “The length is the distance to 0. It is not 5” and then “.”. On 1.6 the claim is 53px and the second line is the period after \(D_1(0)\). The 1.3 memory line breaks the same way, before “. Page 18.”
+
+The first practice card prints the cite three times. The heading is “Equation (1.6)”. The source line is “Howell & Mathews, Complex Analysis, Equation (1.6), page 3. CC BY 4.0.” The prompt opens “Equation (1.6), page 3. Simplify…”. The 1.3 deck repeats a definition number over a one-word face: heading “Definition 1.8”, the source line “Definition 1.8, page 17”, and the card says “Modulus.”
+
+From the picture to the summit is 1213px on 1.1, 1067px on 1.2, 3300px on 1.3, 1855px on 1.4, 1597px on 1.5, and 2065px on 1.6. Stage 1.2 already places the summit and Mark stage complete under the first two cards. The summit sentence there is body text, weight 600: “i is the point (0, 1), and the product rule sends i · i to −1.”
+
+The Book at the end of 1.6 is 109×44 at y = 22196. The footer starts 828px later. That screen is empty paper down to “The book path for MAT 412. Chapters 1, 4, and 5 are open. The other chapters are later.”
+
+The book lede is “Eleven chapters, in the order Howell and Mathews print them.” Chapters 8–11 are four Later cards: Residue Theory, page 244; Conformal Mapping, page 280; Applications of Harmonic Functions, page 305; Fourier Series and the Laplace Transform, page 376. Each card is the word Later, the title, and the page. The drawer stops at chapter 7.
+
+### Ranked cut or fix
+
+1. **Cut the six colour captions and the 48px spacer under the first one.** At 390, light and dark, the opening caption names green and orange while the frame shows a purple point on the blue axes. It occupies y = 732 to 811, and the stage title starts at y = 860. At 1280×800 the same caption starts at y = 802 and the window cuts it. Times i has already ended at y = 794. Stages 1.2 through 1.6 each insert another muted paragraph between the claim and the why. Change: delete the six `.ch1-key` lines and the phone `margin-bottom: 3rem` on `#chapter-section-1-1-picture`. The claim stays the sentence that changes. The lede stays “Press Times i. The purple point turns.” Those two cuts move the 1.1 title up by 127px, onto the phone under the button. The square stays the size that keeps Times i on the 800px screen.
+
+2. **Keep the period with the quantity.** At 390 the 1.3 claim is 53px tall and the second line is only “.”. The 1.6 claim is 53px and the second line is the period after \(D_1(0)\). The memory line “The distance from \(z_1\) to \(z_2\) is \(|z_1-z_2|\). Page 18.” breaks before that period. The period sits outside the math, so it wraps on its own. Change: the period goes inside the math, `$5.$`, `$D_1(0).$`, and `$|z_1-z_2|.$`, and the same pass covers the boundary sentence that ends `$|z|=1$.`. “Page 18.” stays a phrase of its own when the line wraps.
+
+3. **Delete the forty-two tracked labels.** They are 12.48px, weight 700, tracking 0.06em, uppercase. The heading under Worked example already says “Check the root the imaginaries produced” and “Multiply (0, 1) by itself”. The summit sentence is already the summit. Change: remove the `.book-label` elements. The section number, the page line, the h2, the h3, and the summit sentence stay. The Book link stays a 44px control.
+
+4. **Print the cite once.** The first card’s visible text is the heading “Equation (1.6)”, the source line with “Equation (1.6), page 3”, and a prompt that starts “Equation (1.6), page 3.” The Definition 1.8 card repeats the definition number in the heading and the source line, and the face is the word “Modulus.” Change: the source tag is the cite, once, at the size it already is. The heading is the task (“Simplify the sum”, “Modulus”). The prompt starts at “Simplify”.
+
+5. **End the chapter on The Book.** The link is 109×44 at y = 22196. The next 828px are empty, from `.ch1-path + .book-footer-link { margin-bottom: calc(100dvh - var(--header-h)); }`. The footer line about chapters 1, 4, and 5 sits at the bottom of that blank. Change: that margin goes. The Book is the last control, and the footer line sits under it at the normal footer padding. Stage 1.6 is long enough that its title still scrolls clear of the header.
+
+6. **Stop the book at chapter 7.** The lede says “Eleven chapters, in the order Howell and Mathews print them.” Chapters 8, 9, 10, and 11 are Later cards with a title and a page. The drawer already ends at 7. Change: those four cards go. The lede counts seven chapters, in the order the book prints them. Chapters 2, 3, 6, and 7 stay on the page as Later.
+
+### What to keep
+
+The four colours, the Iowan title, the muted lede, the paper, and the button, in light and in dark. Times i on the first screen, ending at y = 724 on the phone and y = 794 on the laptop. The claim that waits for the second press, and “Back at 1.” on the fourth. The plane at the size that keeps that button on the screen, including the open field to the right of the 398px square at 1280. One gesture. The 1.2 fold, with the summit and Mark stage complete under the two cards that open the stage. The summit sentence in the body, weight 600. One source tag on a card. The section number and the page line. The Book at 109×44. The drawer that ends at chapter 7. Practice in the stage, with a single border. The same stack in the dark.
+
+
+## ux-veteran (chapter-1 batch 4)
+
+Preview https://ch1-preview.complexanalysis.pages.dev at `7eb34f9`. The live `js/stations/chapter1.js`, `js/stations/book.js`, `js/app.js`, and `css/components.css` match that commit. Headless Chrome, coarse pointer, 390×844, then 1280×800, light and dark. Fresh storage. The walk entered through the menu and The Book, then again from `#chapter-1` and from `#chapter-1-1-1`. No product code was changed. No console errors. No failed requests. No sideways scroll (`scrollWidth` 390 at 390, 1280 at 1280).
+
+### How the walk went
+
+**First screen, phone, light and dark.** The bare URL is still The Map. Places, then The Book, is two 44px taps. The book’s first screen is the lede “Eleven chapters, in the order Howell and Mathews print them.”, the line “Next is stage 1.1. 0 of 6 stages.”, and Walk Chapter 1, 163×44, href `#chapter-1-1-1`. That link lands the stage with the flag at y = 73 and Times i from y = 462 to 506. The colour key ends at y = 594. The stage title, “The Origin of Complex Numbers,” is on that screen at y = 642. Two presses make “Two turns. i² landed on −1.”
+
+`#chapter-1` at scroll 0, light and dark, is the other door (the drawer’s Chapter 1). The Book is 109×44. The title is Iowan Old Style, 25.85px, weight 600, `rgb(26, 34, 48)` in the light and `rgb(233, 237, 245)` in the dark. The lede is 16.8px, “Press Times i. The purple point turns.” Paper is `rgb(246, 243, 236)` and `rgb(13, 18, 28)`. The plane is 324×324. The claim and Times i are on the screen. Times i runs from y = 680 to 724, 94×44. The colour key runs from y = 732 to 812, so the 844 edge clears it. The stage title starts at y = 860, under that fold. Same heights in the dark. The header icons are 44×44. The site name is 237×30 inside the 56px header.
+
+**1280×800.** The sidebar is The Book and chapters 1 through 7. Chapter 1 is current. No chapters 8 through 11. At `#chapter-1` scroll 0, light, the title is 36px. Times i runs from y = 750 to 794, so the button is on the screen. The colour key starts at y = 802 and ends at y = 855. The window cuts the whole sentence. The stage title starts at y = 855. Walk’s hash, `#chapter-1-1-1`, is the screen that holds the key: Times i ends at y = 582 and the key ends at y = 643, and the stage title is at y = 643. The same stack in the dark. The green handle is 32×32 with a fine pointer and 44×44 with a coarse pointer. The drawn dot stays the small one. The 4+3i chip on 1.3 is 67×44.
+
+**The turn, then the cubic.** The row under the tick, while the turn has not held, reads “Press Times i until two turns land on −1. The sum and the cubic check open this.” A fourth press is “Back at 1.” and the claim’s hold flag is false. The cubic then accepts 4 and 0, the summit names Bombelli’s 4, and the tick stays disabled on that same sentence. The cubic alone, with no press, does the same thing: the summit names 4, the tick stays disabled. Two presses, stopped on −1, then 4 and 0, enable the tick. The row at that moment reads “Next is stage 1.1. 0 of 6 stages.” beside Mark stage complete. A miss of 5 names the slip and leaves the cubic blank closed. Got it and Missed stay hidden until Show the back. After Show, both are 44px and the back is the identity.
+
+**The tick, Go, and Back.** Mark stage complete is 324×44 until it is pressed. After the press the row is “Next is stage 1.2. 1 of 6 stages.”, Stage complete at x = 36, 157×44, and Go to 1.2 at x = 201, 157×44, href `#chapter-1-1-2`. Eight pixels between them. Go opens 1.2 with the title at y = 96, 40px under the 56px header. Back returns to scroll 2277, the scroll the tick was on, with Go on screen at y = 102. From 1.4, The Book and Back return to `#chapter-1-1-4` at scroll 12113, title at y = 72. From scroll 900, Back returns to `#chapter-1-1-1` at scroll 900.
+
+One tap on Stage complete, after that return from the book, hid Go, disabled the tick, and put the press sentence back. The summit on that screen was the short one, “Two turns. i² landed on −1.”, without Bombelli’s 4. The tick is stored. The two presses and the cubic are not, so the button that still says Stage complete is an undo that the gate will not reopen.
+
+**The book, after the tick.** The status is “Next is stage 1.2. 1 of 6 stages.” The button is Go to 1.2, href `#chapter-1-1-2`, 44px. The 1.1 row reads Done and the 1.2 row reads Next. A tap on the word Next hits the row. Every section row is at least 44px tall: 1.1 and 1.6 are 58, the wrapped 1.2 through 1.5 are 85, and 4.1, 4.2, and 4.4 are 44. The chapter heading “Complex Numbers” is a separate link, 185×25. “Elementary Functions” is 218×25. The wrapped Chapter 4 heading happens to be 52. Chapters 8 through 11 are on the page, titled, not links. The drawer does not list them.
+
+**The stages.** 1.2 puts “The first two unlock the stage.”, those two cards, the summit, and the action row together, then eight cards. 1.1 is 2632px. The cubic check sits 861px above the tick, with the card, the summit, the memory line, and the pins between them. 1.3 is 4735px, nine cards before the summit, and the summit is 3388px below the drag. 1.4 is 3338px, five cards, 1943px from the drag to the summit. 1.5 is 3104px, four cards, 1684px. 1.6 is 3545px, five cards, summit at the foot. Each stage hash from 1.2 through 1.6 puts the title at y = 96 or 97 and the gesture on the phone: the 44px handle, or Next root from y = 573 to 617. Next root names the angle on every press and says “Five equal turns on this circle.” The press that lands on 1 adds “and this one is 1.” On 1.6 the three place buttons stay disabled until the green point moves, then they enable at 44px. The annulus buttons are open, closed, domain, and bounded. The Book at the end of 1.6 is 109×44, 32px after the stage, with the scroll room under the link.
+
+**The drawer.** On the chapter it is The Book and chapters 1 through 7, each row 44px, Chapter 1 current. Chapter 2 leaves the hash on `#book` and scrolls the Later card to y = 56. Chapter 3, tapped from the book, does the same. The first practice heading renders “i² = −1”. The source line under it renders. No raw dollar sign in the chapter. The identity card uses the same rendered heading.
+
+### Verdict
+
+ANOTHER BATCH. The first screen, the 44px controls, Go to 1.2, and Back are the site’s. The turn the picture invites closes the stage, the way on sits beside an undo, and the summit of 1.1 and of 1.3 through 1.6 is still a long way below the gesture.
+
+### Ranked cut or fix
+
+1. **Remember the turn.** At 390, four presses end on “Back at 1.” with the hold flag false. The cubic then takes 4 and 0, the summit names Bombelli’s 4, and Mark stage complete stays disabled. The row still reads “Press Times i until two turns land on −1. The sum and the cubic check open this.” The cubic with no press does the same. Two presses stopped on −1 are what enable the tick. Change: once that claim has held, it stays held. “Back at 1.” does not close the stage. The summit names 4 when the tick opens, and that sentence is the one a return shows.
+
+2. **The way on is one button.** After the mark, Stage complete is 157×44 at x = 36 and Go to 1.2 is 157×44 at x = 201, eight pixels apart. Before the mark, the same row says “Next is stage 1.1. 0 of 6 stages.” beside Mark stage complete. After a return from the book, one tap on Stage complete hid Go, disabled the tick, and put the press sentence back. The stored tick and the turn do not agree. Change: until the stage is marked, the row keeps the opener, the sum and the cubic. After the mark, the only control in that row is Go to 1.2. Done stays the flag. A stored tick does not ask for the two presses again.
+
+3. **Put the summit and Go under the cards that open the stage.** 1.2 already does it: the unlock line, two cards, the summit, the action row, then the rest. 1.1 leaves 861px between the cubic check and the tick, and that gap is the card, the summit, the memory, and the pins. 1.3 is 4735px, with the summit 3388px below the drag and nine cards in front of it. 1.4 is 1943px and five cards. 1.5 is 1684px and four cards. 1.6 is 3545px and five cards, summit at the foot. Change: the same fold as 1.2, on 1.1 and on 1.3 through 1.6. The cards that open the stage, the summit sentence, and the action row. Memory, pins, and the other cards follow.
+
+4. **Make the chapter name a 44px target.** On the book, “Complex Numbers” is 185×25 and “Elementary Functions” is 218×25. The section row under each is the link, 58px or 85px, and Next is inside it. The heading is a second link at the size of a line of type. Change: that heading uses the 44px min-height the section row already has.
+
+5. **The book’s first sentence still says eleven chapters.** The lede is “Eleven chapters, in the order Howell and Mathews print them.” Chapters 8 through 11 are on the page, Residue through the Laplace transform, not links. The drawer stops at 7. Change: the lede says the seven chapters this walk uses, and 8 through 11 stay off this page.
+
+6. **Bring the colour key onto the 1280×800 chapter screen.** At `#chapter-1`, scroll 0, Times i ends at y = 794 and the key starts at y = 802. The sentence is the next thing, and the window cuts it. `#chapter-1-1-1` already clears it: the key ends at y = 643. The phone clears it at y = 812. Change: the plane cap that already uses `min(100%, calc(100dvh - 25rem))` shortens on this window so the key’s last line clears 800. Same type, same colours.
+
+### What to keep
+
+The four colours, the Iowan title, the muted lede, the paper, and the accent button, in light and in dark. Times i on the phone, at y = 724 from the top of the chapter and at y = 506 from Walk Chapter 1, and the same positions in the dark. The colour key on that phone, ending at y = 812 and at y = 594. The 44px coarse hit, the small drawn dot, and the 32px fine handle. The 4+3i chip at 44px. Check, the choices, Show the back, Got it, Missed, and Mark stage complete, on the 44px button. A miss of 5 names the slip and keeps the cubic blank closed. One card at a time, the back closed until Show. The rendered heading “i² = −1” and the rendered source line. No second border on the practice. The 1.2 fold: the first two cards, the summit, and the tick, then the other cards. Next root naming the angle, and “Five equal turns on this circle.” The 1.6 place buttons waiting for the green point, and the annulus buttons open, closed, domain, and bounded. Go to 1.2 with href `#chapter-1-1-2`, the title 40px under the header, and Back returning to the stage scroll. The book after the tick: “Next is stage 1.2. 1 of 6 stages.”, the button Go to 1.2, Done and Next inside the rows, every section row at least 44px. The drawer of chapters 1 through 7, each row 44px, a later chapter staying on `#book` and the card at y = 56. Chapter 1’s Book link at 109×44. Chapter 5 still uses the 19px kicker. That is the older page, and it is the reason to leave Chapter 1’s link at 44.
+
+## Chapter 1, batch 5
+
+Started from `62261b5`. Headless Chrome, 390×844 and 1280×800, light and dark. No console errors. No failed requests. No sideways scroll (`scrollWidth` 390 at 390; 1265 at 1280). Not merged. `gh-pages` was not touched.
+
+The two-press claim stays earned after it has held. A fourth press still says “Back at 1.” and the tick stays enabled. The summit names Bombelli’s 4 only when that tick opens, and a reload of a stored tick shows that sentence with Go to 1.2 alone. The cubic without the two presses does not open the tick. Before the mark, the row keeps the sum and the cubic. After the mark, Stage complete is gone.
+
+Every stage folds like 1.2: the cards that open it, the summit, the action row, then the deck, the memory, and the pins. The six colour captions and the phone spacer are gone. Times i still ends at y = 724 on the phone and y = 794 on the laptop, and the phone title sits under the button at y = 724. The period stays inside `$5.$`, `$D_1(0).$`, `$|z_1-z_2|.$`, and `$|z|=1.$`. “Page 18.” wraps as its own phrase. The tracked labels are gone. A card’s heading is the task and the source tag is the cite. The chapter ends on The Book; the footer sits 40px under that link.
+
+The book lede says seven chapters. Chapters 8–11 are off the page. “Complex Numbers” and “Elementary Functions” are 44px. The 1+i card cites Example 1.7, page 22. The modulus flash names Identities (1.25) and (1.26). The addition flash names Definitions 1.1 and 1.2. The closed-disk flash cites Equations (1.51) and (1.52), page 37. Example 1.25 stays on the boundary.
+
+The shared practice engine is not on this branch, so Chapter 1 still renders the schema with the local card. Progress is still localStorage. The plane was left at the size that keeps Times i on the 800px screen, so the stage title begins at that edge.
+
+## reviewer (chapter-1 batch 5)
+
+Preview https://ch1-preview.complexanalysis.pages.dev, tip `b1a7c70` on `cursor/chapter-1` (PR #44), checked against Howell & Mathews, Complex Analysis, 202 Updated Edition (PDF, 471 pages; page labels i–ii are the contents, printed pages 1–42). Two corrections are pushed on `cursor/chapter-1`. Did not merge. Did not touch `gh-pages`.
+
+### Verdict
+
+ACCEPT WITH FIXES. The stage arithmetic, the named pages, and the generator values match the print edition. One source tag pointed at a different set, and one blank rejected the formula the book prints.
+
+### What the book says
+
+Equation (1.6), page 3, is \((2+\sqrt{-1})+(2-\sqrt{-1})=4\). The same page says that \(x=4\) solves \(x^3-15x-4=0\) and can be checked by hand. Formula (1.3) is page 2. Property (P1) is named on page 12, and its proof is page 13: definition, real commute, definition again, ending at \(z_2+z_1\). Page 13 also has \((0,1)(0,1)=(-1,0)=-1\) and \(i=(0,1)\). Definitions 1.1 and 1.2 are page 10, equations (1.8) and (1.9). Definition 1.3 is page 10. Definition 1.4 is page 11. Definitions 1.5–1.7 and identities (1.12)–(1.19) are page 14. Exercise 1(a), page 15, is \(i^{275}\). Exercise 1(f) is \((7-2i)(3i+5)\). Exercise 6 asks to prove or disprove the real-part sum and the real-part product.
+
+Definition 1.8, page 17, is \(|z|=\sqrt{x^2+y^2}\), and the same page computes \(|4+3i|=5\). Figure 1.10, page 18, draws that point. The distance formula and identity (1.22) are page 18. Theorem 1.2, equation (1.23), is page 18, and the proof on page 19 bounds \(\operatorname{Re}(z_1\overline{z_2})\) by identity (1.21), then takes square roots. Identity (1.24) is \(|z_1+z_2|\ge |z_1|-|z_2|\), page 19. Identity (1.25) is \(|z_1 z_2|=|z_1||z_2|\). Identity (1.26) is the quotient, \(z_2\neq 0\). Example 1.6, page 20, is \(1+2i\) and \(3+2i\). Exercise 1(a) is \(\sqrt{10}\), Exercise 1(c) is \(2^{25}\), Exercise 2(a) is \(2+3i\) and \(4+i\), and Exercise 3(b) is \(\sqrt{2}+i(\sqrt{2}+1)\) on \(|z-i|=2\).
+
+Example 1.7, page 22, is the first polar form of \(1+i\): length \(\sqrt{2}\), angle \(\pi/4\), written \(r(\cos\theta+i\sin\theta)\). Definition 1.11, page 23, equation (1.30), is the one value in \((-\pi,\pi]\). Example 1.9 on that page is \(\operatorname{Arg}(1+i)=\pi/4\). Euler’s formula is equation (1.32), page 25, and the exponential form is (1.35) on that page. Figure 1.16 writes \(e^{i 7\pi/4}=e^{-i\pi/4}\). Theorem 1.3, page 26, is the set equality \(\arg(z_1 z_2)=\arg z_1+\arg z_2\). Exercise 7, page 28, is \(z_1=-1+i\sqrt{3}\) and \(z_2=-\sqrt{3}+i\).
+
+Equation (1.40), page 30, is De Moivre for cosine and sine. Theorem 1.4 on that page says precisely \(n\) solutions, not necessarily distinct. Equation (1.43), page 31, is \(e^{i 2\pi k/n}\). Equation (1.45), page 32, is the general root. Theorem 1.5 and Example 1.21, page 33, solve \(z^2+(1+i)z+5i=0\). The square roots of \(-18i\) are \(3-3i\) and \(-3+3i\), and the roots are \(1-2i\) and \(-2+i\). Exercise 2, page 34, is \((\sqrt{3}+i)^4=-8+8\sqrt{3}\,i\).
+
+Equation (1.48), page 35, is \(z(t)=z_0+(z_1-z_0)t\) for \(0\le t\le 1\). Exercise 1(a), page 41, is the segment from \(0\) to \(1+i\). Equations (1.50), (1.51), and (1.52) are page 37: the open disk, the closed disk \(|z-z_0|\le\varepsilon\), and the punctured disk \(0<|z-z_0|<\varepsilon\). The boundary point, every neighborhood meeting the set and its complement, is the same page. Example 1.25, page 38, is \(D_1(0)\) with \(\varepsilon=1-|z_0|\), exterior \(|z|>1\), boundary \(|z|=1\). Figure 1.30, page 39, is the open annulus \(1<|z|<2\), and the page calls that annulus a connected open set. Page 40 defines a region and a bounded set. Exercise 6, page 41, is the open disk as a domain and the closed disk not.
+
+The contents, pages i–ii, print chapters 1–7 on the pages the book path uses, from page 1 through page 239. Chapters 8–11 begin at page 244.
+
+`generate(seed, params)` recomputed cleanly across 400 seeds of add, subtract, multiply, divide, modulus, Arg, and polar form. Arg stays in \((-\pi,\pi]\). A \(2\pi\) shift is rejected, and \(-\pi\) is not \(\operatorname{Arg}(-1)\).
+
+### Fixes
+
+The half-closed annulus \(\{z:1<|z|\le 2\}\) was cited as Figure 1.30, page 39. That figure is the open annulus, which is a domain. The card’s answer, bounded, is the page 40 definition, and the why now says the figure is the other set. The source tag is “Bounded set, page 40,” opening `sec_topology.html#sec_topology-27`.
+
+The segment blank asked for the trip from \(0\) to \(1+i\) and accepted only \(z_0+t(z_1-z_0)\). Equation (1.48) prints \(z_0+(z_1-z_0)t\), and Exercise 1(a) is \(t(1+i)\). Both are accepted now, with \(t+it\). The reversed segment is still a miss.
+
+`node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. `js/core/map-route.js` is byte-identical to the kit copy. No live file imports `kit/`. Headless Chrome on the preview, 390×844 and 1280×800, light and dark: no console errors, no failed requests, no sideways scroll. Times i ends at y = 724 on the phone and y = 794 on the laptop. The stage title starts at y = 724 on the phone and y = 794 on the laptop. Two presses say \(i^2\) landed on \(-1\), and the tick stays shut until the sum is 4 and the cubic is 0. That opening writes Bombelli’s 4 and Equation (1.6), page 3. Two further presses say “Back at 1.” and leave the tick enabled. After the mark, the only control is Go to 1.2. The book lede is the seven chapters, every chapter heading is at least 44px, and chapters 8–11 are absent.
+
+### Still open
+
+1. The length card for \((\sqrt{3}+i)^{10}\) says ten times \(\pi/6\) is \(5\pi/3\). That product is an argument. \(\operatorname{Arg}\) of the power is \(-\pi/3\), the value in \((-\pi,\pi]\). The blank only asks for \(1024\).
+2. The 1.4 idea and the picture claim call \(\pi/4\) Arg and cite Example 1.7. The example writes the angle. Example 1.9, page 23, is the sentence \(\operatorname{Arg}(1+i)=\pi/4\). The card’s angle step already cites Definition 1.11.
+3. The 1.4 summit calls polar form the length times \(e^{i\theta}\). Definition 1.9 is \(r(\cos\theta+i\sin\theta)\). Equation (1.35), page 25, is the exponential form.
+4. The shared practice engine is not on this branch. Chapter 1 still renders the schema with the local card. Progress is still localStorage.
+5. On a 1280×800 window the stage title begins at y = 794. Times i is on that screen. The plane was left at that size on purpose.
+
+## ux-veteran (chapter-1 batch 5)
+
+Preview https://ch1-preview.complexanalysis.pages.dev at `b1a7c70`. Headless Chrome, coarse pointer, 390×844, then 1280×800, light and dark. Fresh storage. The walk entered from the map menu, The Book, and Walk Chapter 1, then again from `#chapter-1` and from `#chapter-1-1-1`. No product code was changed. No console errors. No failed requests. No sideways scroll (`scrollWidth` 390 at 390, 1280 at 1280). The page is 20386px on the phone.
+
+### How the walk went
+
+**First screen, phone, light.** The bare URL is still The Map. The menu button is 44×44, and its name there is Places. The list is The Book, Test 1, Test 2, The Map, and stops 1 through 23, each row 44px. The Book opens the roadmap. The lede is “Seven chapters, in the order Howell and Mathews print them.” The status is “Next is stage 1.1. 0 of 6 stages.” Walk Chapter 1 is 163×44, href `#chapter-1-1-1`. That landing puts the flag at y = 73 and Times i from y = 462 to 506. The stage title, “The Origin of Complex Numbers,” is on that screen at y = 506. The why ends at y = 764, so the whole reason is on the screen. The worked paragraph is what the 844 edge meets.
+
+`#chapter-1` at scroll 0 is the other door, the one the chapter list uses. The Book is 109×44. The title is Iowan Old Style, 25.85px, weight 600, `rgb(26, 34, 48)`. The lede is 16.8px, “Press Times i. The purple point turns.”, `rgb(81, 91, 108)`. Paper is `rgb(246, 243, 236)`. The plane is 322×322 and starts at y = 315. The claim is “This point is 1. It has not been turned.” Times i runs from y = 680 to 724, 94×44. The stage title runs from y = 724 to 751, and Page 1 ends at y = 782. Both are on the screen. The why starts at y = 798, and the 844 edge shaves its second line. The colour captions are gone. The tracked labels are gone. No raw dollar sign in the chapter. The dark stack matches: paper `rgb(13, 18, 28)`, title `rgb(233, 237, 245)`, lede `rgb(166, 176, 195)`, Times i ending at y = 721 and the stage title at y = 721, still clear of 844. The header icons are 44×44.
+
+**1280×800, light and dark.** The sidebar is The Book and chapters 1 through 7. Chapter 1 is current. The menu button is hidden. At `#chapter-1`, scroll 0, fresh storage, the title is 36px. Times i runs from y = 750 to 794, so the button is on the screen. The stage title starts at y = 794 and ends at y = 821. Six pixels of a 27px heading show under the button, and the rest is below the fold. The same cut in the dark, title `rgb(233, 237, 245)`. Walk’s hash, `#chapter-1-1-1`, is the screen that holds the title: Times i ends at y = 582 and the title ends at y = 609, and the why is on the screen. The square is 398×398, with the open field to its right. The green handle is 32×32 with a fine pointer and 44×44 with a coarse pointer.
+
+**The turn, then the cubic.** A miss of 5 names the slip, “Treating √−1 as 1 and adding it gives 5,” and the cubic blank stays closed. The tick stays disabled. The summit stays “Two turns. i² landed on −1.” The sum 4 and the cubic check 0, with no press, do the same: the tick stays disabled and the summit does not name 4. Two presses make the claim hold, enable Mark stage complete, and change the summit to “Two turns. i² landed on −1. Bombelli’s 4 is (2 + √−1) + (2 − √−1). Equation (1.6), page 3.” Two more presses say “Back at 1.” The hold flag on the claim is false. The tick stays enabled, and the summit keeps Bombelli’s 4. The row while the tick is disabled reads “Press Times i until two turns land on −1. The sum and the cubic check open this.” After the two presses it reads “The sum and the cubic check open this.”
+
+**The tick, Go, and Back.** Mark stage complete is 324×44 until it is pressed. After the press the tick is gone. The row is “Next is stage 1.2. 1 of 6 stages.” and Go to 1.2, 321×44, href `#chapter-1-1-2`. Go opens 1.2 with the title at y = 96, 40px under the 56px header. Back returns to scroll 1174, with Go on screen at y = 453. A reload of the stored tick shows the unturned point, the flag Done, the Bombelli summit, and Go to 1.2 alone. From `#chapter-1-1-4` the title lands at y = 97. Scrolling on by 500 leaves the hash on `#chapter-1-1-4` at scroll 11508. The Book and Back return to that hash and that scroll. From a stage title brought to the top, the hash follows: `#chapter-1-1-1`, `#chapter-1-1-2`, `#chapter-1-1-3`, `#chapter-1-1-6`, each with the title at y = 72.
+
+**The book, and the drawer on the chapter.** After the 1.1 tick the status is “Next is stage 1.2. 1 of 6 stages.” and the button is Go to 1.2. The 1.1 row reads Done and the 1.2 row reads Next. With nothing marked, the 1.1 row and the 4.1 row both read Next. Tapping 2 Complex Functions from the chapter drawer leaves the hash on `#book`, marks The Book current, and puts that Later card at y = 56. The Next still in view is then 4.1. The same landing from the sidebar, card at y = 56. Every chapter row in that drawer is 44px, chapters 1 through 7. The button’s name on that drawer is still Places. On the book, “Complex Numbers” and “Elementary Functions” are 44px. The wrapped headings, chapter 3 and chapter 4, are 54 on the phone and 44 on the laptop. Section rows are 44, 58, or 85. Chapters 8 through 11 are off the page. After all six stages the status is “Next is §4.1, Exercise 3. 0 of 8 exercises.” and the button is Walk Chapter 4. Stage 1.6’s only control is Back to the book, 321×44, under “Done. 6 of 6 stages.”
+
+**The stages.** Each summit sits 16px under the cards that open the stage. From the picture to that summit is 776px on 1.1, 919 on 1.2, 920 on 1.3, 878 on 1.4, 914 on 1.5, and 1052 on 1.6. Stage 1.1 is 1831px. The deck, the memory, and the pins follow the action row. Dragging the 1.2 handle, 44×44, changes the claim to “Times i is a quarter turn. The product is not real.” The 4 + 3i chip is 67×44. The 1.3 claim is one box, 324×53, and its second line is only “5.” The 1.6 claim wraps as “Outside. This is not the open disk” and then “D₁(0).” Dragging that point inside enables Inside, On the boundary, and Outside, each 44px, and the claim becomes “Inside the open unit disk. Example 1.25, page 38.” Next root runs from y = 573 to 617. The press that lands on 1 adds “and this one is 1.” Show the back is the only deck button on screen. Got it and Missed take no height until then. The Book at the end of 1.6 is 109×44, and the footer starts 40px under it.
+
+### Verdict
+
+ANOTHER BATCH. The latch, the summit, Go to 1.2, the fold, and the phone’s first screen are the site’s. The desktop door still cuts the stage name in half, and the book shows a second Next.
+
+### Ranked cut or fix
+
+1. **Let the stage title clear the 1280×800 chapter screen.** At `#chapter-1`, scroll 0, fresh, light and dark, Times i ends at y = 794 and the title runs from y = 794 to 821. Six pixels of “The Origin of Complex Numbers” show under the button. `#chapter-1-1-1` already clears it: the title ends at y = 609. The phone already clears it: the title ends at y = 751 and Page 1 ends at y = 782. Change: the plane cap `min(100%, calc(100dvh - 25rem))` becomes `calc(100dvh - 27rem)`. At 800 that shortens the square by 32px, Times i stays on the screen, and the title ends above 800. At 390 the cap is still wider than the 322px column, so the phone plane, the button at y = 724, and the title stay. Same type. The open field beside the square stays empty.
+
+2. **One Next.** With nothing marked, the 1.1 row and the 4.1 row both read Next. Tapping 2 Complex Functions, from the phone drawer or the sidebar, leaves the hash on `#book` and the card at y = 56, and the Next on that screen is 4.1 Sequences and Series. The line “Next is stage 1.1” has scrolled away. Change: the Next mark is only the row the walk button points at. While that row is a chapter 1 stage, 4.1 has no Next. After the six stages, 4.1 is the row that says Next, and the button is already Walk Chapter 4.
+
+3. **Keep “5.” with “not”.** At 390 the 1.3 claim is 324×53, one box, and the second line is only “5.” The period is inside the math. The number wrapped away from “It is not”. The 1.6 claim’s second line is the whole “D₁(0).”, and that line can stay. Change: “not 5.” is one unbreakable phrase, so the break falls in the sentence. The second line reads “It is not 5.”, or the sentence stays one line.
+
+4. **Name the phone menu for the list it opens.** On `#chapter-1` the drawer is The Book and chapters 1 through 7, each row 44px, and the button’s name is Places. The title is “Hide the places” while `data-book` is true. On the map that name matches the list. Change: on a book route the name is Chapters, and the title is Show the chapters or Hide the chapters. The icon stays. The sidebar already hides the button.
+
+### What to keep
+
+The four colours, the Iowan title, the muted lede, the paper, and the accent button, in light and in dark. Times i on the phone, at y = 724 from the top of the chapter and at y = 506 from Walk Chapter 1, with the stage title on both of those screens. The same stack in the dark. The 44px coarse hit, the small drawn dot, and the 32px fine handle. The 4 + 3i chip at 67×44. A drag that changes the 1.2 sentence, and a 1.6 drag that enables the three place buttons. Next root on the phone, naming the angle, and “Five equal turns on this circle.” Check, the choices, Show the back, and Mark stage complete, on the 44px button. A miss of 5 names the slip and keeps the cubic blank closed. The cubic without the two presses leaves the tick disabled and leaves 4 out of the summit. Two presses, then “Back at 1.”, leave the tick enabled and leave Bombelli’s 4 in the summit. One card at a time, the back closed until Show, Got it and Missed with no height until then. The rendered headings and the rendered source lines. No second border on the practice. The fold on every stage: the opener cards, the summit 16px under them, the action row, then the deck, the memory, and the pins. After the mark, Go to 1.2 alone, 321×44, href `#chapter-1-1-2`, the 1.2 title 40px under the header, and Back returning to that scroll. From 1.4, Back returning to `#chapter-1-1-4` at the scroll that was left. The book lede of seven chapters, the headings at 44px, every section row at least 44px, and a later chapter staying on `#book` with the card at y = 56. The Book at the end of 1.6, 109×44, with the footer 40px under it. The drawer of chapters 1 through 7. Chapter 5 still uses the older kicker. That is the older page, and it is the reason to leave Chapter 1’s link at 44.
+
+## unslop (chapter-1 batch 5)
+
+Preview https://ch1-preview.complexanalysis.pages.dev, tip `b1a7c70` on `cursor/chapter-1` (PR #44). The live `js/stations/chapter1.js` has the Bombelli latch and the line “The first two unlock the stage.” Headless Chrome, 390×844 then 1280×800, light then dark. Fresh storage. No product code was changed. No console errors. No failed requests. No sideways scroll (`scrollWidth` 390 at 390, 1280 at 1280, scrollbars hidden). Judged with unslop @ `a6f121ee`. Kit rules win where they meet that skill: the source tag, the four colours, the one gesture, and the plane size that keeps Times i on the screen all stay.
+
+The picture is the one bright thing on the page. The words around it are quiet, and each sentence is said once. The world is the plane on this paper.
+
+### Verdict
+
+ANOTHER BATCH. The colour captions, the forty-two tracked section labels, the cite printed three times inside one card, and the blank under The Book are gone. What is left is on the first laptop screen, and again under the pictures. The plane sits in the middle of the card while the sentence sits in the left margin, and the stage title is cut through the letters. A worked paragraph repeats the source tag above it. Next is the status sentence, then a tracked NEXT, then the 1.1 row, and 4.1 says it again. One polish batch, the six cuts below, then this lens rests.
+
+### What the first screen holds
+
+**390×844, light and dark.** The same boxes in both themes. Paper is `rgb(246, 243, 236)` in the light and `rgb(13, 18, 28)` in the dark. The title is Iowan Old Style, 25.85px, weight 600, `rgb(26, 34, 48)` in the light and `rgb(233, 237, 245)` in the dark. The lede is 16.8px, “Press Times i. The purple point turns.”, `rgb(81, 91, 108)` in the light and `rgb(166, 176, 195)` in the dark. The Book is 109×44 at y = 80. The source tag is two lines, 37px tall: “Howell & Mathews, Complex Analysis, Chapter 1, Complex Numbers, page 1. CC BY 4.0.” The flag “1.1” is 12.48px, weight 700, tracking 0.75px, at y = 291. The plane is 324×324, from y = 314 to 638, filling the card. The claim is one line at y = 646: “This point is 1. It has not been turned.” Times i is 94×44, from y = 680 to 724. The stage title is a whole line at y = 724, and Page 1 ends at y = 782. Two presses change the claim to “Two turns. i² landed on −1,” and the orange quarter is on the plane, green on i, purple on −1. In the dark the four colours are `#62adf2`, `#ff9d5c`, `#3fd0a0`, and `#e48fd2`. The button is the surface, `rgb(21, 28, 43)`, with the sentence colour on it. `.ch1-key` is 0. `.book-label` is 0. The footer colour key is `display: none`.
+
+**1280×800, light and dark.** The sidebar is The Book and chapters 1 through 7, The Book a 263×44 row at y = 72. The page draws a second The Book, 109×44, at x = 304, y = 80. The source tag is one line. The plane is 400×400 at x = 580, y = 308. The claim is at x = 321, y = 716, 303px wide, so the sentence sits in the card to the left of the plane and overlaps it by 44px. Times i is 94×44 at x = 321, y = 750, and ends at y = 794. The stage title starts at y = 794, height 27, so an 800px window shows the top 6px and cuts “The Origin of Complex Numbers” through the letters. Page 1 is at y = 825. Stage 1.2 is the same split: the plane at x = 580, width 400, the claim at x = 321. The same boxes in the dark.
+
+### Ranked cut or fix
+
+1. **The plane shares the claim’s left edge.** At 1280, light and dark, the 1.1 plane is at x = 580 and the claim and Times i are at x = 321. The shared plane rule is `margin-inline: auto`, and the claim is `align-self: flex-start`. Stage 1.2 measures the same, plane x = 580 and claim x = 321. On the phone the plane is 324px in a 324px card, so the two already meet. Change: `.ch1-picture .plane` uses `margin-inline: 0`. The other stations keep the centered plane. The plane stays 400×400 on this window and 324×324 on the phone, so this cut on its own leaves Times i ending at y = 794. The empty field stays to the right of the square.
+
+2. **The stage title is a whole line.** At 1280 the title’s box is y = 794 to 821, and Page 1 is at y = 825. The header already has The Book in the sidebar, 44px tall, and the page paints another at y = 80 with 8px under it. That pair is 52px. Change: from the sidebar breakpoint up, the header link is the sidebar row alone. The phone keeps the 109×44 button, because the drawer is closed. The Book at the end of 1.6 stays at both widths. The 52px comes off the top of the stack, the title moves from y = 794 to about y = 742, and its 27px line ends near y = 769. Page 1 ends near y = 799. The plane cap stays `calc(100dvh - 25rem)`.
+
+3. **The worked block says the locator once.** The source tag is the cite. On 1.2, with the stage title at the top of the phone, the tag at y = 697 reads “Howell & Mathews, Complex Analysis, Page 13, from Definition 1.3. CC BY 4.0.” The paragraph opens “Definition 1.3 says…” and later “Page 13 identifies…”. On 1.5 the tag is “§1.5, Exercise 2, page 34.” and the paragraph opens “Exercise 2, page 34, raises…”. On 1.6 the tag is “Example 1.25, page 38.” and the paragraph says “Example 1.25 takes a point inside…”. The same screen then repeats the worked heading as the first card: 1.2 “Multiply (0, 1) by itself” at y = 662 and again at y = 977, 1.3 “The length of 4+3i” at y = 738 and again at y = 1056. Change: the tag stays, kit and all, book name and licence included. The 1.2 paragraph starts at the rule and “Apply that rule to (0, 1) and (0, 1).” The 1.5 paragraph starts at “Raise √3 + i to the fourth power.” The 1.6 paragraph starts at “Take a point inside and choose ε = 1 − |z₀|.” The first card on 1.2 and on 1.3 drops the h3 that copies the worked title. The prompt and the source tag stay.
+
+4. **The memory line carries its own link.** At the end of 1.6 on the phone, a memory bullet reads “A segment from z₀ to z₁ is z(t) = z₀ + t(z₁ − z₀) for 0 ≤ t ≤ 1. Equation (1.48), page 35.” The list under the sheet is “Equation (1.48), the segment from z₀ to z₁, page 35,” and the same pair for (1.50), page 37, and (1.51) and (1.52). Stages 1.3, 1.4, and 1.5 end the same way: the sheet already names the definition and the page, and `.book-read` names them again. Change: on 1.3 through 1.6 the equation or definition in the memory line is the link, and that pin is not listed a second time. The formula stays. Stage 1.1 keeps its three pins. Its memory line does not name them.
+
+5. **Next is the row the walk points at, and the flag stops shouting.** On `#book` at 390, light and dark, the status is “Next is stage 1.1. 0 of 6 stages.” The flag under it is NEXT, 12.48px, weight 700, tracking 0.75px, uppercase, at y = 401, in the text colour. The 1.1 row, 58px tall, ends with Next, weight 700. The page’s section marks are two Nexts, so 4.1 says it as well. LATER and OPEN use that tracked face on the cards below, muted `rgb(81, 91, 108)` in the light and `rgb(166, 176, 195)` in the dark. Chapter 1, which already has six stages, adds “Already drawn: One Point, Two Addresses.” Chapters 2 and 3 are the later cards, and that line is the picture they have. Change: the flag on the chapter the status names goes. The row the walk points at keeps Next, and 4.1 is quiet while that walk is chapter 1. Later and Open stay, in sentence case, weight 500, tracking normal. The section flags on the chapter, “1.1” through “1.6”, stay. Chapter 1’s Already drawn line goes. Chapters 2 and 3 keep theirs.
+
+6. **The sentence under the cards names the two that open the stage.** On 1.2 the line “The first two unlock the stage.” is at y = 935, and the action row says “(0, 1)(0, 1) and Exercise 1(f) open this.” The same unlock sentence is on 1.3 at y = 1013, on 1.4 at y = 961, on 1.5 at y = 962, and on 1.6 at y = 930. Change: that generic line goes. The two cards stay, and the action row keeps the sentence that names them.
+
+### What to keep
+
+The four colours, the Iowan title, the muted lede, the paper, and the button, in light and in dark. On the phone, Times i from y = 680 to 724, the stage title at y = 724, and Page 1 ending at y = 782, in both themes. The claim at rest, and “Two turns. i² landed on −1.” after two presses, with the orange quarter on the plane. The plane at the size that keeps Times i on the 800px screen, 400×400 there and 324×324 on the phone. One gesture. The section flag “1.1” through “1.6”. The source tag on the chapter and on every card, forty-two of them, book name and licence included. A card heading that is the task, with the cite in the tag once. The period inside the math, with the quantity. The 1.2 fold: the cards that open the stage, the summit, the action row, then the deck. The book lede, “Seven chapters, in the order Howell and Mathews print them.” Chapters 8 through 11 off the page. Chapter headings at 44px. The Book at the end of 1.6, and the footer 40px under it: “The book path for MAT 412. Chapters 1, 4, and 5 are open. The other chapters are later.” The accent border on the current book card. Later and Open as the words on the cards that are not the one you are walking. No colour caption, no tracked section label, no second border on a practice card.
+
+### Another batch
+
+Yes. One batch, then this lens rests. It is the six cuts above.
+
+The picture already teaches the turn, and the sentence follows the point. When the plane and the sentence share an edge, the stage title is a whole line, and each locator is said once, nothing real is left of this pass.
+
+## Chapter 1, batch 6
+
+Started from `fb33e4b` (product), on `cursor/chapter-1` at `e3e1a9d`. Headless Chrome, 390×844 and 1280×800, light and dark. No sideways scroll (`scrollWidth` matched the window). Not merged. `gh-pages` was not touched.
+
+From the sidebar breakpoint up, the in-page Book link is hidden and the sidebar row is the way back. The phone keeps the 109×44 button. The Book at the end of 1.6 stays. The plane cap stays `calc(100dvh - 25rem)`: 400×400 on the 800px screen, 324×324 on the phone. Times i ends at y = 742 on the laptop and y = 724 on the phone. The stage title is a whole line, y = 742 to 769 on the laptop and y = 724 to 751 on the phone. Page 1 sits on the 800 edge. At 1280 the plane and the claim share x = 321.
+
+One Next. With nothing marked, only the 1.1 row says Next, and the button is Walk Chapter 1. After the six stages, only 4.1 says Next, and the button is Walk Chapter 4. The chapter flag under the status is gone. Later and Open are sentence case, weight 500, tracking normal. Chapter 1’s “Already drawn” line is gone. Chapters 2 and 3 keep theirs.
+
+On the phone the 1.3 claim breaks as “The length is the distance to 0.” and then “It is not 5.” The drawer button on a book route is named Chapters. The map still says Places.
+
+The worked paragraph starts at the rule or the verb. The source tag still carries the book, the licence, and the cite. The first cards of 1.2 and 1.3 no longer repeat the worked heading. On 1.3–1.6 the formula in the memory line is the link, and that pin is not listed again. Stage 1.1 keeps its three pins. “The first two unlock the stage.” is gone. The opener sentence in the action row stays.
+
+The length card names the Arg wrap, \(-\pi/3\), and the blank is still 1024. Example 1.9, page 23, is \(\operatorname{Arg}(1+i)=\pi/4\). Example 1.7, page 22, stays the angle. The 1.4 summit calls polar form Definition 1.9, \(r(\cos\theta+i\sin\theta)\), and Equation (1.35), page 25, the exponential form.
+
+The shared practice engine is not on this branch, so Chapter 1 still renders the schema with the local card. Progress is still localStorage. Sign-in is not on this branch. Chapters 8 and later were not touched.
+
+## reviewer (chapter-1 batch 6)
+
+Preview https://ch1-preview.complexanalysis.pages.dev, tip `295e9e2` on `cursor/chapter-1` (PR #44), checked against Howell & Mathews, Complex Analysis, 202 Updated Edition (PDF, 471 pages; title page “202 Updated Edition”; contents i–ii; printed pages 1–42). Two corrections are pushed on `cursor/chapter-1`. Did not merge. Did not touch `gh-pages`.
+
+### Verdict
+
+ACCEPT WITH FIXES. The stage arithmetic, the named pages, and the batch 6 sentences match the print edition. One pin drop removed Equation (1.52) from the page, and one memory line still called the exponential form polar form. Those are corrected.
+
+### What the book says
+
+Definition 1.9, page 22, is identity (1.27): \(z=r(\cos\theta+i\sin\theta)\). Example 1.7, the same page, writes \(1+i\) with length \(\sqrt{2}\) and angle \(\pi/4\). Definition 1.11, page 23, is the one value in \((-\pi,\pi]\). Example 1.9, the same page, is \(\operatorname{Arg}(1+i)=\pi/4\). Euler’s formula is equation (1.32), page 25. The exponential form is equation (1.35) on that page, \(z=re^{i\theta}\). The HTML anchor `sec_geometry-2-13` is that Arg sentence; the HTML heading numbers it Example 1.4.7. `Exponential_Form` is \(z=re^{i\theta}\); the HTML tag is (1.4.9).
+
+\((\sqrt{3}+i)\) has length \(2\) and argument \(\pi/6\). The tenth power has length \(2^{10}=1024\) and argument \(5\pi/3\). Arg, in \((-\pi,\pi]\), is \(-\pi/3\). Exercise 2, page 34, is the fourth power, \(-8+8\sqrt{3}\,i\).
+
+Equation (1.48), page 35, prints \(z(t)=z_0+(z_1-z_0)t\) for \(0\le t\le 1\). Equations (1.50), (1.51), and (1.52), page 37, are the open disk, the closed disk \(|z-z_0|\le\varepsilon\), and the punctured disk \(0<|z-z_0|<\varepsilon\). Example 1.25, page 38, chooses \(\varepsilon=1-|z_0|\) inside \(D_1(0)\). Definition 1.8, page 17, computes \(|4+3i|=5\). The distance \(|z_1-z_2|\) is the paragraph on page 18. Figure 1.9, on page 17, is the difference \(z_1-z_2\).
+
+`node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. Fractal smoke was run again after the corrections. `js/core/map-route.js` is byte-identical to the kit copy. No live file imports `kit/`.
+
+### Fixes
+
+The closed-disk memory linked \(|z-z_0|\le\varepsilon\) under the name of both (1.51) and (1.52), and the pin that named the punctured disk was dropped. The line now links the closed disk to Equation (1.51) and the punctured disk \(0<|z-z_0|<\varepsilon\) to Equation (1.52). Both open `sec_topology-14`. The combined pin stays off the list.
+
+The generated card’s memory said polar form is the length times \(e\) to the \(i\) times the angle. That sentence is Equation (1.35). The memory now says so, and it names Definition 1.9 as \(r(\cos\theta+i\sin\theta)\). The card’s source tag is Equation (1.35), page 25. The headings are “Exponential form” and “A fresh exponential form.” The 1.4 opener names that pair.
+
+### The walk
+
+Headless Chrome on the preview, 390×844 then 1280×800, light then dark. Fresh storage. No console errors. No failed requests. No sideways scroll (`scrollWidth` 390 at 390; 1265 at 1280, matching the client width).
+
+The plane is 324×324 on the phone and 400×400 on the laptop, at x = 33 and x = 321, the same x as the claim. Times i is 94×44 and ends at y = 724 on the phone and y = 742 on the laptop, in both themes. The stage title is a whole line, y = 724 to 751 on the phone and y = 742 to 769 on the laptop. Page 1 ends at y = 782 on the phone and sits on the 800 edge on the laptop. From the sidebar breakpoint up, the in-page Book is `display: none` and the sidebar row is 263×44. The phone keeps the 109×44 Book. Paper is `rgb(246, 243, 236)` in the light and `rgb(13, 18, 28)` in the dark. The title is `rgb(26, 34, 48)` and `rgb(233, 237, 245)`.
+
+Two presses say \(i^2\) landed on \(-1\). Two more say “Back at 1.” The \(1+i\) chip says length \(\sqrt{2}\), angle \(\pi/4\), Example 1.7, page 22, and Arg \(\pi/4\), Example 1.9, page 23. The \(4+3i\) chip says the length is 5. On the phone the 1.3 claim is 324×53, and “It is not 5.” is one line.
+
+With nothing marked, the only Next is the 1.1 row, and the button is Walk Chapter 1. After the six stages, the only Next is 4.1, the status is “Next is §4.1, Exercise 3. 0 of 8 exercises,” and the button is Walk Chapter 4. Chapter 1 then says Open. Later and Open are sentence case. Chapter 1 has no “Already drawn” line. Chapters 2 and 3 keep theirs. On a book route the menu is named Chapters, “Show the chapters.” On the map it is Places.
+
+“The first two unlock the stage.” is absent. The first cards of 1.2 and 1.3 have no repeated heading. The 1.2, 1.5, and 1.6 paragraphs start at the rule or the verb. Stage 1.1 keeps its three pins. On 1.3 through 1.6 the linked formula is not listed again. The length card says ten times \(\pi/6\) is \(5\pi/3\), Arg wraps it to \(-\pi/3\), and the blank is \(2^{10}\).
+
+### Still open
+
+1. The 1.3 worked paragraph still opens “Definition 1.8 writes \(|4+3i|\) as \(\sqrt{4^2+3^2}\).” The tag already names page 17 and Figure 1.10.
+2. The segment memory writes \(z(t)=z_0+t(z_1-z_0)\). Equation (1.48) prints \(z_0+(z_1-z_0)t\). The blank accepts both.
+3. The polar flash still faces “Polar form” and answers \(r(\cos\theta+i\sin\theta)=re^{i\theta}\). The why splits Definition 1.9 and Equation (1.35). The equality is true.
+4. The distance link opens Figure 1.9, the difference picture. The formula sentence is the next paragraph, printed page 18.
+5. Several memory lines still name the definition in prose after the formula that is already the link.
+6. The shared practice engine is not on this branch. Chapter 1 still renders the schema with the local card. Progress is still localStorage.
+
+### What to keep
+
+The four colours, the Iowan title, the muted lede, the paper, and the button, in light and in dark. The plane at 400×400 on the 800px screen and 324×324 on the phone, with Times i ending at y = 742 and y = 724. The stage title as a whole line. The sidebar Book at the wide breakpoint, and the 109×44 Book on the phone. One Next, on the row the walk points at. The Chapters name on a book route, and Places on the map. The Arg wrap on the length card, with the blank still 1024. Example 1.9 on the \(1+i\) claim, and the 1.4 summit splitting Definition 1.9 from Equation (1.35). The first cards of 1.2 and 1.3 without a repeated heading. The opener sentence in the action row. Stage 1.1’s three pins. “It is not 5.” on one line. Two presses landing on \(-1\), and “Back at 1.” leaving the sentence able to be earned again only by the turn the picture shows.
+
+## ux-veteran (chapter 1 batch 6)
+
+Preview https://ch1-preview.complexanalysis.pages.dev at `295e9e2`. Headless Chrome, coarse pointer, 390×844 first, then 1280×800, light and dark. Fresh storage. The walk entered from `#chapter-1`, from the drawer, from The Book and Walk Chapter 1, then from `#chapter-1-1-1` through `#chapter-1-1-6`. No product code was changed. No console errors. No failed requests. No sideways scroll (`scrollWidth` 390 at 390, 1280 at 1280).
+
+### How the walk went
+
+**First screen, phone, light.** The menu button is 44×44, and on this route its name is Chapters, title “Show the chapters.” The theme button beside it is 44×44. The Book is 109×44 at y = 80. The title is Iowan Old Style, 25.85px, weight 600, `rgb(26, 34, 48)`. The lede is 16.8px, “Press Times i. The purple point turns.”, `rgb(81, 91, 108)`. Paper is `rgb(246, 243, 236)`. The source tag is 358×37. The flag is “1.1”. The plane is 324×324 and starts at y = 314. The claim is one line, “This point is 1. It has not been turned.” Times i is 94×44, from y = 680 to 724. The stage title runs from y = 724 to 751, and Page 1 ends at y = 782. The why starts at y = 798, so the 844 edge takes the first line and cuts the second. The colour captions are gone. The tracked section labels are gone.
+
+**The walk door holds the reason.** Walk Chapter 1 is 163×44, href `#chapter-1-1-1`. That landing puts the flag at y = 73 and Times i from y = 462 to 506. The stage title is at y = 506. The why runs from y = 580 to 764, so the whole reason is on the screen, and the worked heading starts under it.
+
+**Dark, phone.** The same boxes. Paper `rgb(13, 18, 28)`. Title `rgb(233, 237, 245)`. Lede `rgb(166, 176, 195)`. Times i is the surface `rgb(21, 28, 43)` with the sentence colour on it, still y = 680 to 724. The stage title still ends at y = 751. A reload keeps the dark.
+
+**1280×800, light and dark.** The menu button is hidden. The sidebar Book is 263×44 at y = 72. The in-page Book is `display: none`. Chapter 1 is the current row. The plane is 400×400. The claim starts on the same x as the plane, and the field to the right of the square stays empty. Times i runs from y = 698 to 742. The stage title is a whole line, y = 742 to 769. Page 1 runs from y = 773 to 800, and the line is on the screen. Dark uses those same edges. The title there is `rgb(233, 237, 245)` on `rgb(13, 18, 28)`.
+
+**The drawer and the book.** On the chapter the drawer is The Book and chapters 1 through 7, each row 44px, Chapter 1 current, and the button’s title while it is open is “Hide the chapters.” Tapping 2 Complex Functions leaves the hash on `#book`, marks The Book current, and puts that Later card at y = 56. The book lede is “Seven chapters, in the order Howell and Mathews print them.” The status is “Next is stage 1.1. 0 of 6 stages.” The only Next is the 1.1 row, 58px tall, on that first screen. The 4.1 mark is empty. The chapter flag under the status is empty and takes no height. Later and Open are sentence case, weight 500, tracking normal. “Complex Numbers” is 44px. The wrapped headings, chapters 3 and 4, are 54 on the phone and 44 on the laptop. Chapters 8 through 11 are off the page. Chapters 2 and 3 keep “Already drawn.” Chapter 1 does not.
+
+**One Next after the six.** With 1.1 through 1.6 marked, the status is “Next is §4.1, Exercise 3. 0 of 8 exercises.” The button is Walk Chapter 4, href `#chapter-4`. The six section rows say Done. The only Next is 4.1. Chapter 1 says Open.
+
+**The turn, Go, and Back.** Two presses make “Two turns. i² landed on −1.” Two more say “Back at 1.” The tick stays disabled until the sum is 4 and the cubic is 0, and the summit then names Bombelli’s 4. After the mark the tick is gone. Go to 1.2 is 321×44, href `#chapter-1-1-2`, and it opens 1.2 with the title at y = 96, 40px under the 56px header. The Book from a stage opens `#book` at scroll 0. Browser Back returns to the stage hash and the scroll that was left: `#chapter-1-1-1` at the Go row, and `#chapter-1-1-4` at scroll 10724. The Book at the end of 1.6 is 109×44, and the footer starts 40px under it.
+
+**The climb.** Each later stage, brought to the top of the phone, puts the title, the plane, the claim, a 44px control, and the whole why on the 844 screen. The 1.2 handle is 44×44. The 4 + 3i chip is 67×44. The 1 + i chip is 58×44. Next root is 115×44. On 1.6 the handle is 44×44 and Inside, On the boundary, and Outside stay disabled until the point moves. The 1.3 claim is 324×53 and breaks as “The length is the distance to 0.” and then “It is not 5.” The 1.6 claim breaks as “Outside. This is not the open disk” and then “D₁(0).” From the picture to the summit is 862px on 1.1, 858 on 1.2, 962 on 1.3, 976 on 1.4, 984 on 1.5, and 1044 on 1.6. The opener cards, the summit, and the action row are that gap.
+
+### Verdict
+
+REST. The wide fold, the 400px plane, Times i, the sidebar Book, the phone’s 109×44 Book, and one Next are the page. The turn is the first screen, each next stage lands on its gesture, and the way back is a 44px control.
+
+### Ranked cut or fix
+
+None that earns another pass.
+
+After the mark, the stage flag’s text is “Done” and `.book-flag` still uppercases it: 12.48px, weight 700, tracking 0.75px, muted `rgb(81, 91, 108)`, so the plane is labelled DONE. The book row says Done in sentence case, and the card’s green edge is already the done state. If a later edit is already in that flag, leave the section number and let Done stay on the row. It does not earn a batch. The site title is 237×30 inside the 56px header, the source tag is 37px, and the pins in the memory lines are 23px. Those are the word, the cite, and the sentence. The header icons, The Book, the chips, and the rows are 44.
+
+### What to keep
+
+The four colours, the Iowan title, the muted lede, the paper, and the button, in light and in dark. On the phone, Times i from y = 680 to 724, the stage title from y = 724 to 751, and Page 1 ending at y = 782. On the walk door, Times i ending at y = 506 and the whole why on the screen. On the laptop, the 400×400 plane, Times i ending at y = 742, the stage title a whole line ending at y = 769, and Page 1 on the 800 edge. The plane and the claim on one left edge, with the empty field to the right of the square. The in-page Book hidden from the sidebar breakpoint up, and the sidebar Book at 263×44. The phone Book at 109×44, at the top and at the end of 1.6, with the footer 40px under the last one. One Next: the 1.1 row until the six are marked, then only 4.1, with Walk Chapter 4. Later and Open in sentence case. The drawer named Chapters, chapters 1 through 7, a later chapter staying on `#book` with the card at y = 56. Go to 1.2 alone after the mark, the 1.2 title 40px under the header, and Back returning to the stage scroll. The 44px coarse hit, the 4 + 3i chip, Next root, and the 1.6 place buttons waiting for the green point. The 1.3 break “It is not 5.” The claim that waits for the second press, and “Back at 1.” on the fourth, with the tick still waiting for 4 and 0. The fold on every stage: the opener cards, the summit, the action row, then the rest. No colour caption, no tracked section label, no second border on a practice card.
+
+## appllama (chapter-1 batch 6)
+
+Preview https://ch1-preview.complexanalysis.pages.dev, tip `295e9e2` on `cursor/chapter-1` (PR #44). The pinned skill is appllama-app-design-skill at `dd5caaec`. Kit rules win where they meet that skill: one paint, the four teaching colours, the source tag, and no motion added for its own sake. The Appllama MCP was not connected. Headless Chrome, 390×844 then 1280×800, light then dark. The drag was measured in the 390px window. A separate check with touch emulation made `(pointer: coarse)` match, and the handle was then 44×44 around the 14px dot. No product code was changed. No console errors. No failed requests. No sideways scroll (`scrollWidth` 390 at 390, 1265 at 1280). Not merged. `gh-pages` was not touched. A copy commit landed on the branch during the walk. It restores the punctured-disk pin and names the exponential form. It does not change the plane, the snap, or the first-screen stack measured here.
+
+## Verdict
+
+ANOTHER BATCH. The first screen already holds the turn, and the page does not move unless the finger does. Times i lands in one frame. A drag on 1.4 and on 1.6 stays on the finger. A drag on 1.2 and on 1.3 hops by a half unit.
+
+That hop is the one cut. Then this lens rests. Do not tween the quarter turn, and do not slide the drawer.
+
+## The finger
+
+At rest the purple point is 1, on the real axis. A press on the green dot, held, leaves the value at 1 + 0i. Letting go leaves it. With touch emulation the target is 44×44 and the drawn dot is 14px. A press 36px off the dot hits the canvas and leaves the value.
+
+On 1.2 the finger walked right in 8px steps. The real part went 1, 1, 1.5, 1.5, 2, 2, 2, 2.5, 2.5, 3, 3. The miss from the finger to the centre of the dot was 8, 4.1, 3.9, 8.3, 0.3, 7.8, 4.4, 3.6, 8.5, 0.5 pixels. The worst miss is 8.5px. The plane is 324px across a range of 8, so a half unit is about 20px and the dot can sit 10px off the finger before it jumps to the nearest half. The outline stayed none. While the finger was down the dot scaled to 1.15, on the 80ms transform the plane already uses.
+
+On 1.3 the same hop is smaller, about 5 to 7px, until the finger leaves the square. At the corner the real part stopped at 5.5 and the imaginary part at 5, and the miss grew to 32px. That last miss is the clamp. The half-unit hop is the part before it.
+
+On 1.4 the miss was 0 on every sample. The real part moved from −1 through −0.91, −0.81, −0.72, and on, with no jump. On 1.6 the miss was 0 from 1.5 down to 0.25, and the sentence changed from “Outside” to “Inside the open unit disk” without the claim box moving. Both claims stayed 53px at the same y.
+
+A drag that starts on the empty 1.2 plane scrolls. Scroll went from 2094 to 2159 and the real part stayed 3. A drag that starts on the handle does not scroll. Scroll stayed 2159 and the real part went from 3 to 4.
+
+The 4 + 3i chip is 67×44, and pressed it is 68×44 with `aria-pressed` true. The claim stays 53px and the chip stays at y = 436. The 1 + i chip stays at y = 573, 44px, and that claim stays 53px too. Next root’s button stays at y = 436. Each press schedules one frame. The claim height stays 53.
+
+## The first screen
+
+On the phone, light and dark, the boxes match. Paper is rgb(246, 243, 236) in the light and rgb(13, 18, 28) in the dark. The title is 25.85px. The lede is “Press Times i. The purple point turns.” The plane is 324×324, from y = 314 to 638. The claim ends at 672. Times i is 94×44, from y = 680 to 724. The stage title runs from y = 724 to 751. Page 1 ends at 782. The fold cuts the why paragraph, which is the next thing. The Book is 109×44. The menu button is 44×44, named Chapters, titled “Show the chapters.”
+
+On the laptop, light and dark, the plane is 400×400 at x = 321, the same edge as the claim and Times i. Times i ends at y = 742. The stage title ends at 769. Page 1 ends at 800, on the last pixel of the window, and the words are on the screen. The field to the right of the square is the rest of the column. That is the cap that keeps the title a whole line.
+
+The book door, on the phone, puts “Next is stage 1.1. 0 of 6 stages.” above Walk Chapter 1. That button is 163×44 and ends at y = 343. No sideways scroll.
+
+A press on Times i moves the button 1px down and puts it back. The four sentences stay one line. The claim box goes from 26px to 27px, and the button follows by 1px. The picture does not move to make room.
+
+## What does not move
+
+Idle, the page scheduled 0 frames in 500ms, at both widths, in both themes. Each Times i schedules one frame. Each Next root schedules one frame. Reduced motion is the same: 0 frames while it sits, one frame on the press, and the button still says Times i. The dot’s transform duration drops to 0.01ms.
+
+The drawer opens with `transition-duration` 0s. Two frames, then it is there. The rows are 44px: The Book and chapters 1 through 7. It covers the page. The theme toggle is not a fade. The dark sentence is rgb(233, 237, 245). Blue, orange, green, and purple stay the teaching colours.
+
+## Cut
+
+- The half-unit snap on the 1.2 and 1.3 pointer. The green dot stays under the finger, as it already does on 1.4 and on 1.6. The keyboard step stays 0.5. On 1.3 the “length is 5” sentence holds while the point is within about 0.15 of radius 5, so the dashed circle is a place the finger can rest. The 4 + 3i chip still sets that point, and it stays pressed only while the value matches.
+
+## Add
+
+Nothing. No spring, no tween on the quarter turn, no drawer slide, no scale on Times i. The 1px press and the 1.15 dot stay.
+
+## Another batch
+
+Yes. One cut, then this lens rests.
+
+The turn, the 44px handle, the one-frame paint, and the first screen are the lesson, and they already hold. Something real is left, and it is the hop under the finger on 1.2 and 1.3. After that snap is gone, nothing of this walk’s touch is left.
+
+## Chapter 1, batch 7
+
+Started from `8c77c2c` (product). The branch tip above that was `a5f2c9b`, the batch 6 review notes. Headless Chrome, 390×844 and 1280×800, light and dark. No sideways scroll (`scrollWidth` 390 at 390, 1265 at 1280). No console errors. No failed requests. Not merged. `gh-pages` was not touched. Howell & Mathews, *Complex Analysis*, 202 Updated Edition, printed pages 17–18, 22, 25, and 35.
+
+The 1.2 and 1.3 pointer no longer snaps to a half unit. On the 324px 1.2 plane, 8px steps moved the real part through 1, 1.199, 1.398, 1.596, 1.795, 1.994. The centre of the dot stayed on the finger. Arrow Right still adds 0.5: 1 to 1.5 on 1.2, and 1+i to 1.5+i on 1.3. A drag that starts on the handle does not scroll.
+
+On 1.3 the sentence “The length is 5.” holds while the radius is within 0.15 of 5. Radius 5 and radius 4.9 say it. Radius 4.7 says “It is not 5.”, and that clause stays on its own line. 3.5+3.5i, radius about 4.95, rests on the dashed circle. The 4+3i chip sets that point and stays pressed only while the value is 4+3i. A 3px drag leaves the chip and keeps the length sentence. Definition 1.8, page 17, is |4+3i|=5. Figure 1.10, page 18, is that picture.
+
+The 1.3 worked paragraph starts at the equality. The tag still names page 17 and Figure 1.10. The distance link opens the formula paragraph on page 18, `sec_geometry-1-13`, not Figure 1.9. Equation (1.48), page 35, is printed z(t)=z₀+(z₁−z₀)t. The blank still accepts both orders. The polar card faces Definition 1.9 and Equation (1.35). The back gives r(cos θ+i sin θ) and re^{iθ} as two forms. A memory line that already links a formula does not repeat the definition’s name after it.
+
+After Mark, the plane flag stays 1.1. The book row says Done. The card’s green edge is the done state. The flag’s type is still uppercase, 12.48px, tracking 0.75px. The section number does not become DONE.
+
+The first screen is the same stack. Phone, light and dark: paper `rgb(246, 243, 236)` and `rgb(13, 18, 28)`. The title is Iowan Old Style, 25.85px. The Book is 109×44. The plane is 324×324 from y = 314. Times i runs from y = 680 to 724. The stage title runs from y = 724 to 751. Page 1 ends at y = 781. Laptop, light and dark: the plane is 400×400 at x = 321, the claim’s left edge. Times i ends at y = 742. The stage title runs from y = 742 to 769. Page 1 ends at y = 799. The in-page Book is hidden. The sidebar is chapters 1 through 7.
+
+The shared practice engine is not on this branch, so Chapter 1 still renders the local card. Progress is still localStorage. Sign-in is not on this branch. Chapters 8 and later are outside this walk. The ux pass was REST, so the page was not restyled.

@@ -189,6 +189,14 @@ export function start() {
     /* not available */
   }
 
+  const scrollMem = new Map();
+  const mv = (window.__mv = window.__mv || { planes: new Map() });
+  if (!mv.planes) mv.planes = new Map();
+  mv.scrollMem = scrollMem;
+  mv.keepScroll = false;
+  mv.restoreY = 0;
+  mv.bookScroll = '';
+
   // ------------------------------------------------------------ navigation list
 
   let activeMap = 'test1';
@@ -213,7 +221,7 @@ export function start() {
     const note = document.getElementById('site-footer-note');
     if (!note) return;
     if (bookRoute) {
-      note.textContent = 'The book path for MAT 412. Chapters 4 and 5 are open. The other chapters are later. It runs in your browser and works offline.';
+      note.textContent = 'The book path for MAT 412. Chapters 1, 4, and 5 are open. The other chapters are later. It runs in your browser and works offline.';
       return;
     }
     note.textContent = mapId === 'test2'
@@ -230,9 +238,16 @@ export function start() {
       ])));
     const list = el('ul', { class: 'nav-list', id: 'nav-chapters', 'aria-label': 'Chapters' });
     for (const ch of BOOK_CHAPTERS) {
-      list.append(el('li', {}, el('a', {
-        class: 'nav-link', id: `nav-chapter-${ch.n}`, href: `#chapter-${ch.n}`, 'data-chapter': String(ch.n),
-      }, [
+      if (ch.n > 7) continue;
+      const later = !ch.open;
+      const attrs = {
+        class: 'nav-link',
+        id: `nav-chapter-${ch.n}`,
+        href: later ? '#book' : `#chapter-${ch.n}`,
+      };
+      if (!later) attrs['data-chapter'] = String(ch.n);
+      if (later) attrs['data-book-scroll'] = String(ch.n);
+      list.append(el('li', {}, el('a', attrs, [
         el('span', { class: 'nav-num', 'aria-hidden': 'true' }, String(ch.n)),
         el('span', { class: 'nav-title' }, ch.title),
       ])));
@@ -321,14 +336,22 @@ export function start() {
     return document.body.dataset.navOpen === 'true';
   }
 
+  function syncNavName(open) {
+    const book = document.body.dataset.book === 'true';
+    const noun = book ? 'chapters' : 'places';
+    if (navToggle) {
+      navToggle.setAttribute('aria-label', book ? 'Chapters' : 'Places');
+      navToggle.setAttribute('title', `${open ? 'Hide' : 'Show'} the ${noun}`);
+    }
+    nav.setAttribute('aria-label', book ? 'Chapters' : 'Places on the map');
+  }
+
   function setNavOpen(open, { restoreFocus = false } = {}) {
+    syncNavName(open);
     if (open === navIsOpen()) return;
     const hadFocus = nav.contains(document.activeElement);
     document.body.dataset.navOpen = String(open);
-    if (navToggle) {
-      navToggle.setAttribute('aria-expanded', String(open));
-      navToggle.setAttribute('title', open ? 'Hide the places' : 'Show the places');
-    }
+    if (navToggle) navToggle.setAttribute('aria-expanded', String(open));
     // While the phone drawer covers the page, the page behind it must not take Tab stops
     // (the CSS also stops it scrolling). The header and the drawer stay live.
     for (const node of [view, footer]) if (node) node.toggleAttribute('inert', open);
@@ -433,7 +456,7 @@ export function start() {
     if (!first) view.focus({ preventScroll: true });
   }
 
-  async function renderBook(seq, route, first) {
+  async function renderBook(seq, route, first, restoreY) {
     const spec = route.book;
     const label = spec.kind === 'chapter' ? `Chapter ${spec.chapter}` : 'The Book';
     view.dataset.state = 'loading';
@@ -453,6 +476,7 @@ export function start() {
         store,
         book: spec,
         map: activeMap,
+        keepScroll: restoreY != null,
       }));
       if (seq !== state.seq) {
         runUnmount('book', unmount);
@@ -460,6 +484,7 @@ export function start() {
       }
       state.current = { id: 'book', unmount: typeof unmount === 'function' ? unmount : null };
       view.dataset.state = 'ready';
+      if (restoreY != null) window.scrollTo(0, restoreY);
       finish(first, label);
     } catch (err) {
       if (seq !== state.seq) return;
@@ -499,11 +524,13 @@ export function start() {
     view.dataset.route = route.raw || 'home';
     view.dataset.station = st ? st.id : '';
     view.dataset.map = mapId;
-    window.scrollTo(0, 0);
+    const restoreY = mv.keepScroll ? mv.restoreY : null;
+    mv.keepScroll = false;
+    if (restoreY == null) window.scrollTo(0, 0);
     markCurrent(st ? st.id : null, route.book);
 
     if (route.book) {
-      await renderBook(seq, route, first);
+      await renderBook(seq, route, first, restoreY);
       return;
     }
 
@@ -561,6 +588,7 @@ export function start() {
         : null;
       state.current = { id: st.id, unmount: both };
       view.dataset.state = 'ready';
+      if (restoreY != null) window.scrollTo(0, restoreY);
       finish(first, st.title);
     } catch (err) {
       // A superseded navigation must not touch the timer: it now belongs to the newer one.
@@ -593,9 +621,19 @@ export function start() {
   listen(nav, 'click', (e) => {
     const link = e.target instanceof Element ? e.target.closest('a.nav-link') : null;
     if (!link) return;
+    const scrollTo = link.dataset.bookScroll;
+    if (scrollTo) {
+      if ((location.hash || '#') === '#book') {
+        e.preventDefault();
+        const node = document.getElementById(`book-node-${scrollTo}`);
+        if (node) node.scrollIntoView({ block: 'start' });
+      } else {
+        mv.bookScroll = scrollTo;
+      }
+    }
     const staysHere = link.getAttribute('href') === location.hash;
     setNavOpen(false);
-    if (staysHere) view.focus({ preventScroll: true });
+    if (staysHere && !scrollTo) view.focus({ preventScroll: true });
   });
   listen(document, 'keydown', (e) => {
     if (e.key === 'Escape' && navIsOpen()) setNavOpen(false, { restoreFocus: true });
@@ -625,10 +663,27 @@ export function start() {
     });
   }
 
+  let scrollFrame = 0;
+  listen(window, 'scroll', () => {
+    if (scrollFrame) return;
+    scrollFrame = requestAnimationFrame(() => {
+      scrollFrame = 0;
+      const y = window.scrollY;
+      const prev = history.state && typeof history.state === 'object' ? history.state : {};
+      try { history.replaceState({ ...prev, y, hash: location.hash }, '', location.hash); }
+      catch { /* a sandboxed frame can refuse replaceState */ }
+      scrollMem.set(location.hash || '#', y);
+    });
+  }, { passive: true });
+  listen(window, 'popstate', (e) => {
+    const fromState = e.state && Number.isFinite(e.state.y) ? e.state.y : null;
+    const fromMem = scrollMem.get(location.hash || '#');
+    const y = fromState != null ? fromState : fromMem;
+    mv.keepScroll = Number.isFinite(y);
+    mv.restoreY = Number.isFinite(y) ? y : 0;
+  });
   listen(window, 'hashchange', render);
 
-  const mv = (window.__mv = window.__mv || { planes: new Map() });
-  if (!mv.planes) mv.planes = new Map();
   mv.app = { render, navigate, state: () => view.dataset.state };
 
   function stop() {

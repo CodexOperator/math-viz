@@ -1,0 +1,2044 @@
+[
+  {
+    "id": "ch1-1.1-eq16",
+    "chapter": 1,
+    "section": "1.1",
+    "cite": {
+      "ref": "Equation (1.6)",
+      "page": 3
+    },
+    "kind": "next-step-blank",
+    "prompt": "Simplify $(2+\\sqrt{-1})+(2-\\sqrt{-1})$, then test it in $x^3-15x-4$.",
+    "steps": [
+      {
+        "text": "The two square roots cancel. The sum is ___",
+        "answer": "4",
+        "accept": [
+          "4",
+          "+4"
+        ],
+        "why": "Equation (1.6), page 3.",
+        "slips": [
+          {
+            "match": [
+              "5",
+              "+5"
+            ],
+            "near": 5,
+            "miss": "The two square roots are opposites. Treating $\\sqrt{-1}$ as $1$ and adding it gives $5$."
+          },
+          {
+            "match": [
+              "2",
+              "0"
+            ],
+            "miss": "Both real parts are in the sum, and the square roots cancel each other."
+          }
+        ],
+        "miss": "The square roots cancel. What is left is the pair of real parts."
+      },
+      {
+        "text": "$4^3-15\\cdot 4-4=$ ___",
+        "answer": "0",
+        "accept": [
+          "0"
+        ],
+        "why": "The cubic in the sum is $0$, so the sum really is a root. Equation (1.6), page 3.",
+        "slips": [
+          {
+            "match": [
+              "4"
+            ],
+            "near": 4,
+            "miss": "That is the sum from the previous blank. This blank substitutes the sum into the cubic."
+          },
+          {
+            "match": [
+              "64",
+              "60"
+            ],
+            "miss": "That is one term of the cubic. Two more terms are still in $x^3-15x-4$."
+          }
+        ],
+        "miss": "Substitute the sum into $x^3-15x-4$."
+      }
+    ],
+    "generator": null,
+    "memory": "Add the conjugate pair first. Then substitute the real number you got."
+  },
+  {
+    "id": "ch1-1.1-eq16-flash",
+    "chapter": 1,
+    "section": "1.1",
+    "cite": {
+      "ref": "Equation (1.6)",
+      "page": 3
+    },
+    "kind": "flash",
+    "prompt": "Bombelli’s identity for the real root of $x^3-15x-4=0$.",
+    "steps": [
+      {
+        "text": "Bombelli’s identity for the real root of $x^3-15x-4=0$.",
+        "answer": "$(2+\\sqrt{-1})+(2-\\sqrt{-1})=4$",
+        "accept": [],
+        "why": "Equation (1.6), page 3: the imaginaries cancel and the root is 4."
+      }
+    ],
+    "generator": null,
+    "memory": "Equation (1.6), page 3: the imaginaries cancel and the root is 4."
+  },
+  {
+    "id": "ch1-1.2-ii",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Identity $i^2=-1$",
+      "page": 13
+    },
+    "kind": "next-step-blank",
+    "prompt": "Multiply $(0,1)$ by $(0,1)$.",
+    "steps": [
+      {
+        "text": "$(0,1)(0,1)=$ ___",
+        "answer": "(-1,0)",
+        "accept": [
+          "(-1, 0)",
+          "(-1,0)",
+          "-1"
+        ],
+        "why": "Definition 1.3: $(0\\cdot 0-1\\cdot 1,\\, 0\\cdot 1+1\\cdot 0)=(-1,0)$. Page 13 calls that pair $-1$.",
+        "value": {
+          "re": -1,
+          "im": 0
+        },
+        "slips": [
+          {
+            "match": [
+              "(0,1)",
+              "(1,0)",
+              "(0,0)",
+              "0",
+              "1",
+              "i"
+            ],
+            "miss": "The product rule is not the pair of coordinate products. The real part subtracts $y_1 y_2$."
+          },
+          {
+            "match": [
+              "(0,-1)",
+              "0-i",
+              "-i"
+            ],
+            "miss": "The second coordinate is $x_1 y_2+x_2 y_1$."
+          }
+        ],
+        "miss": "Use the four-term rule. The real part subtracts the product of the second coordinates."
+      }
+    ],
+    "generator": null,
+    "memory": "Page 13: $(0,1)(0,1)$ is the pair the book calls $-1$."
+  },
+  {
+    "id": "ch1-1.2-ex1f",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "§1.2, Exercise 1(f)",
+      "page": 15
+    },
+    "kind": "next-step-blank",
+    "prompt": "Compute $(7-2i)(3i+5)$.",
+    "steps": [
+      {
+        "text": "Write the second factor as $5+3i$. The four products are $35$, $21i$, $-10i$, and ___",
+        "answer": "-6i^2",
+        "accept": [
+          "-6i^2",
+          "-6i^{2}",
+          "-6\\,i^2"
+        ],
+        "why": "$(-2i)(3i)=-6i^2$. Definition 1.3, page 10.",
+        "slips": [
+          {
+            "match": [
+              "41+11i",
+              "41 + 11i",
+              "41+11*i",
+              "41 + 11*i",
+              "41+11 i"
+            ],
+            "miss": "That's the collected answer. This blank is the $-6i^2$ term."
+          }
+        ],
+        "miss": "This blank is one of the four products, before $i^2$ is replaced."
+      },
+      {
+        "text": "Replace $i^2$ by $-1$. That product becomes ___",
+        "answer": "6",
+        "accept": [
+          "6",
+          "+6"
+        ],
+        "why": "$-6(-1)=6$. Page 13: $i^2=-1$.",
+        "slips": [
+          {
+            "match": [
+              "41+11i",
+              "-6",
+              "-6i^2"
+            ],
+            "miss": "This blank is what the $-6i^2$ term becomes after $i^2$ is replaced."
+          }
+        ],
+        "miss": "Replace $i^2$ by $-1$, and keep the sign that replacement makes."
+      },
+      {
+        "text": "Collect. The product is ___",
+        "answer": "41+11i",
+        "accept": [
+          "41+11i",
+          "41 + 11i",
+          "41+11 i",
+          "41 + 11 i"
+        ],
+        "why": "$35+6=41$ and $21i-10i=11i$.",
+        "value": {
+          "re": 41,
+          "im": 11
+        },
+        "miss": "Add the real pieces, and add the imaginary pieces."
+      }
+    ],
+    "generator": null,
+    "memory": "Multiply, then replace $i^2$ with $-1$, then collect."
+  },
+  {
+    "id": "ch1-1.2-ex1a",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "§1.2, Exercise 1(a)",
+      "page": 15
+    },
+    "kind": "next-step-mc",
+    "prompt": "Reduce $i^{275}$.",
+    "steps": [
+      {
+        "text": "The powers of $i$ repeat every 4. $275=4\\cdot 68+3$, so $i^{275}=$ ___",
+        "answer": "$-i$",
+        "accept": [],
+        "choices": [
+          "$-i$",
+          "$i$",
+          "$-1$",
+          "$1$"
+        ],
+        "why": "The cycle is $i$, $-1$, $-i$, $1$. Remainder 3 is the third of those.",
+        "slips": [
+          {
+            "match": [
+              "$i$"
+            ],
+            "miss": "Remainder 1 would be $i$. The remainder here is 3."
+          },
+          {
+            "match": [
+              "$-1$"
+            ],
+            "miss": "Remainder 2 would be $-1$. The remainder here is 3."
+          },
+          {
+            "match": [
+              "$1$"
+            ],
+            "miss": "Remainder 0 would be $1$. The remainder here is 3."
+          }
+        ],
+        "miss": "Divide the exponent by 4 and use the remainder."
+      }
+    ],
+    "generator": null,
+    "memory": "Divide the exponent by 4. The remainder 0, 1, 2, 3 means $1$, $i$, $-1$, $-i$."
+  },
+  {
+    "id": "ch1-1.2-comm-mc",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Proof of (P1)",
+      "page": 13
+    },
+    "kind": "proof-mc",
+    "prompt": "Addition of pairs commutes. Pick the line that adds the coordinates.",
+    "steps": [
+      {
+        "text": "By Definition 1.1, $z_1+z_2$ equals ___",
+        "answer": "$(x_1+x_2,\\, y_1+y_2)$",
+        "accept": [],
+        "choices": [
+          "$(x_1+x_2,\\, y_1+y_2)$",
+          "$(x_1+y_1,\\, x_2+y_2)$",
+          "$(x_1 x_2,\\, y_1 y_2)$",
+          "$(x_1-x_2,\\, y_1-y_2)$"
+        ],
+        "why": "Definition 1.1, page 10, adds the two coordinates.",
+        "slips": [
+          {
+            "match": [
+              "$(x_1+y_1,\\, x_2+y_2)$"
+            ],
+            "miss": "Those coordinates were paired across the two numbers. Definition 1.1 adds within each coordinate."
+          },
+          {
+            "match": [
+              "$(x_1 x_2,\\, y_1 y_2)$"
+            ],
+            "miss": "That is a product of coordinates. Definition 1.1 adds."
+          },
+          {
+            "match": [
+              "$(x_1-x_2,\\, y_1-y_2)$"
+            ],
+            "miss": "Definition 1.2 subtracts. This line is the sum."
+          }
+        ],
+        "miss": "Definition 1.1 adds the two coordinates."
+      },
+      {
+        "text": "After real addition commutes, the pair equals ___",
+        "answer": "$(x_2+x_1,\\, y_2+y_1)$",
+        "accept": [],
+        "choices": [
+          "$(x_2+x_1,\\, y_2+y_1)$",
+          "$(y_1+y_2,\\, x_1+x_2)$",
+          "$(x_1+x_2,\\, y_2+y_1)$",
+          "$(x_2-x_1,\\, y_2-y_1)$"
+        ],
+        "why": "Real addition commutes, so the coordinates may swap places.",
+        "slips": [
+          {
+            "match": [
+              "$(y_1+y_2,\\, x_1+x_2)$"
+            ],
+            "miss": "The coordinates swapped roles. Real addition reorders inside each coordinate."
+          },
+          {
+            "match": [
+              "$(x_1+x_2,\\, y_2+y_1)$"
+            ],
+            "miss": "Only one coordinate was reordered."
+          },
+          {
+            "match": [
+              "$(x_2-x_1,\\, y_2-y_1)$"
+            ],
+            "miss": "This line is still a sum. The signs stay plus."
+          }
+        ],
+        "miss": "Real addition commutes inside each coordinate."
+      },
+      {
+        "text": "That pair is ___",
+        "answer": "$z_2+z_1$",
+        "accept": [],
+        "choices": [
+          "$z_2+z_1$",
+          "$z_1 z_2$",
+          "$z_1-z_2$",
+          "$\\overline{z_1}+\\overline{z_2}$"
+        ],
+        "why": "Definition 1.1, read from the pair back to the sum, is $z_2+z_1$.",
+        "slips": [
+          {
+            "match": [
+              "$z_1 z_2$"
+            ],
+            "miss": "The proof is about addition, not the product."
+          },
+          {
+            "match": [
+              "$z_1-z_2$"
+            ],
+            "miss": "Definition 1.1, read backwards, is a sum."
+          },
+          {
+            "match": [
+              "$\\overline{z_1}+\\overline{z_2}$"
+            ],
+            "miss": "The conjugate is not in this proof."
+          }
+        ],
+        "miss": "Read Definition 1.1 from the pair back to a sum."
+      }
+    ],
+    "generator": null,
+    "memory": "Page 13: the three lines are definition, real commute, definition again."
+  },
+  {
+    "id": "ch1-1.2-re-product",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "§1.2, Exercise 6",
+      "page": 15
+    },
+    "kind": "next-step-mc",
+    "prompt": "Which identity fails?",
+    "steps": [
+      {
+        "text": "For $z_1=1+i$ and $z_2=1+i$, ___",
+        "answer": "$\\operatorname{Re}(z_1 z_2)=\\operatorname{Re} z_1\\operatorname{Re} z_2$ is false",
+        "accept": [],
+        "choices": [
+          "$\\operatorname{Re}(z_1 z_2)=\\operatorname{Re} z_1\\operatorname{Re} z_2$ is false",
+          "$\\operatorname{Re}(z_1+z_2)=\\operatorname{Re} z_1+\\operatorname{Re} z_2$ is false",
+          "both identities are false",
+          "both identities are true"
+        ],
+        "why": "$(1+i)^2=2i$, so the real part of the product is $0$. The product of the real parts is $1$. The sum identity does hold.",
+        "miss": "Check the sum and the product as two different claims.",
+        "slips": [
+          {
+            "match": [
+              "$\\operatorname{Re}(z_1+z_2)=\\operatorname{Re} z_1+\\operatorname{Re} z_2$ is false"
+            ],
+            "miss": "The sum identity holds. Real parts add."
+          },
+          {
+            "match": [
+              "both identities are false"
+            ],
+            "miss": "The sum identity holds. Only the product identity fails."
+          },
+          {
+            "match": [
+              "both identities are true"
+            ],
+            "miss": "Real parts add. They do not multiply."
+          }
+        ]
+      }
+    ],
+    "generator": null,
+    "memory": "Re and Im add. They do not multiply. Exercise 6, page 15."
+  },
+  {
+    "id": "ch1-1.2-div5",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Definition 1.4",
+      "page": 11
+    },
+    "kind": "next-step-blank",
+    "prompt": "Write $(-5)/(5i)$ as $a+bi$.",
+    "steps": [
+      {
+        "text": "The conjugate of the denominator $5i$ is ___",
+        "answer": "-5i",
+        "accept": [
+          "-5i",
+          "-5\\,i",
+          "-5 i"
+        ],
+        "why": "Definition 1.7 flips the sign of $5i$.",
+        "value": {
+          "re": 0,
+          "im": -5
+        },
+        "slips": [
+          {
+            "match": [
+              "5i",
+              "+5i",
+              "i"
+            ],
+            "miss": "The conjugate flips the sign of the imaginary part, and it keeps the coefficient."
+          },
+          {
+            "match": [
+              "-i"
+            ],
+            "miss": "The sign is right. The conjugate of $5i$ keeps the coefficient $5$."
+          }
+        ],
+        "miss": "Flip the sign of the imaginary part. Keep the coefficient."
+      },
+      {
+        "text": "After multiplying by that conjugate, the quotient is ___",
+        "answer": "i",
+        "accept": [
+          "i",
+          "+i",
+          "0+i"
+        ],
+        "why": "$(-5)(-5i)/(5i\\cdot -5i)=25i/25$. Definition 1.4, page 11.",
+        "value": {
+          "re": 0,
+          "im": 1
+        },
+        "slips": [
+          {
+            "match": [
+              "1",
+              "+1",
+              "1+0i"
+            ],
+            "near": 1,
+            "miss": "Multiply by the conjugate first. Cancelling the $5$ leaves the $i$ in the denominator."
+          },
+          {
+            "match": [
+              "-1",
+              "-i"
+            ],
+            "miss": "The conjugate flips the denominator. Check the sign on the numerator."
+          }
+        ],
+        "miss": "Multiply by the conjugate of the denominator first."
+      }
+    ],
+    "generator": null,
+    "memory": "Multiply by the conjugate, then divide by the sum of squares."
+  },
+  {
+    "id": "ch1-1.2-gen-add",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Definition 1.1",
+      "page": 10
+    },
+    "kind": "blank",
+    "prompt": "A fresh pair, from the same rule.",
+    "steps": [
+      {
+        "text": "The result is ___",
+        "answer": "",
+        "accept": [],
+        "why": ""
+      }
+    ],
+    "generator": {
+      "template": "ch1-arithmetic",
+      "params": {
+        "mode": "add",
+        "re": [
+          -5,
+          5
+        ],
+        "im": [
+          -5,
+          5
+        ]
+      }
+    },
+    "memory": "Add the real parts. Add the imaginary parts."
+  },
+  {
+    "id": "ch1-1.2-gen-mul",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Definition 1.3",
+      "page": 10
+    },
+    "kind": "blank",
+    "prompt": "A fresh pair, from the same rule.",
+    "steps": [
+      {
+        "text": "The result is ___",
+        "answer": "",
+        "accept": [],
+        "why": ""
+      }
+    ],
+    "generator": {
+      "template": "ch1-arithmetic",
+      "params": {
+        "mode": "mul",
+        "re": [
+          -5,
+          5
+        ],
+        "im": [
+          -5,
+          5
+        ]
+      }
+    },
+    "memory": "Four products, then $i^2=-1$."
+  },
+  {
+    "id": "ch1-1.2-gen-div",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Definition 1.4",
+      "page": 11
+    },
+    "kind": "blank",
+    "prompt": "A fresh pair, from the same rule.",
+    "steps": [
+      {
+        "text": "The result is ___",
+        "answer": "",
+        "accept": [],
+        "why": ""
+      }
+    ],
+    "generator": {
+      "template": "ch1-arithmetic",
+      "params": {
+        "mode": "div",
+        "re": [
+          -5,
+          5
+        ],
+        "im": [
+          -5,
+          5
+        ]
+      }
+    },
+    "memory": "Multiply by the conjugate. Divide by the sum of squares."
+  },
+  {
+    "id": "ch1-1.2-def11",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Definitions 1.1 and 1.2",
+      "page": 10
+    },
+    "kind": "flash",
+    "prompt": "Add or subtract coordinate by coordinate.",
+    "steps": [
+      {
+        "text": "Add or subtract coordinate by coordinate.",
+        "answer": "$(x_1,y_1)\\pm(x_2,y_2)=(x_1\\pm x_2,\\, y_1\\pm y_2)$",
+        "accept": [],
+        "why": "Definitions 1.1 and 1.2, page 10."
+      }
+    ],
+    "generator": null,
+    "memory": "Definitions 1.1 and 1.2, page 10."
+  },
+  {
+    "id": "ch1-1.2-def13",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Definition 1.3",
+      "page": 10
+    },
+    "kind": "flash",
+    "prompt": "Multiply by the four-term rule, then replace $i^2$ with $-1$.",
+    "steps": [
+      {
+        "text": "Multiply by the four-term rule, then replace $i^2$ with $-1$.",
+        "answer": "$(x_1,y_1)(x_2,y_2)=(x_1 x_2-y_1 y_2,\\, x_1 y_2+x_2 y_1)$",
+        "accept": [],
+        "why": "Definition 1.3, page 10."
+      }
+    ],
+    "generator": null,
+    "memory": "Definition 1.3, page 10."
+  },
+  {
+    "id": "ch1-1.2-def14",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Definition 1.4",
+      "page": 11
+    },
+    "kind": "flash",
+    "prompt": "Divide by multiplying by the conjugate.",
+    "steps": [
+      {
+        "text": "Divide by multiplying by the conjugate.",
+        "answer": "Multiply numerator and denominator by $\\overline{z_2}$, then divide by $|z_2|^2$.",
+        "accept": [],
+        "why": "Definition 1.4, page 11."
+      }
+    ],
+    "generator": null,
+    "memory": "Definition 1.4, page 11."
+  },
+  {
+    "id": "ch1-1.2-parts",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "Definition 1.5",
+      "page": 14
+    },
+    "kind": "flash",
+    "prompt": "Read Re, Im, and the conjugate off the pair.",
+    "steps": [
+      {
+        "text": "Read Re, Im, and the conjugate off the pair.",
+        "answer": "$\\operatorname{Re}(x+iy)=x$, $\\operatorname{Im}(x+iy)=y$, $\\overline{x+iy}=x-iy$. Also $(z+\\overline{z})/2$ and $(z-\\overline{z})/(2i)$.",
+        "accept": [],
+        "why": "Definitions 1.5–1.7 and Identities (1.16) and (1.17), page 14."
+      }
+    ],
+    "generator": null,
+    "memory": "Definitions 1.5–1.7, page 14."
+  },
+  {
+    "id": "ch1-1.2-powers",
+    "chapter": 1,
+    "section": "1.2",
+    "cite": {
+      "ref": "§1.2, Exercise 1(a)",
+      "page": 15
+    },
+    "kind": "flash",
+    "prompt": "Powers of $i$.",
+    "steps": [
+      {
+        "text": "Powers of $i$.",
+        "answer": "$i^{275}=-i$. The cycle is $i$, $-1$, $-i$, $1$.",
+        "accept": [],
+        "why": "Exercise 1(a), page 15. Remainder 3 is $-i$."
+      }
+    ],
+    "generator": null,
+    "memory": "Powers of $i$ repeat every four: $i$, $-1$, $-i$, $1$."
+  },
+  {
+    "id": "ch1-1.3-len",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "Definition 1.8",
+      "page": 17
+    },
+    "kind": "next-step-blank",
+    "prompt": "Find the length of $4+3i$.",
+    "steps": [
+      {
+        "text": "$|4+3i|=$ ___",
+        "answer": "5",
+        "accept": [
+          "5"
+        ],
+        "why": "$\\sqrt{4^2+3^2}=\\sqrt{25}$. Definition 1.8, page 17.",
+        "value": {
+          "real": 5
+        },
+        "slips": [
+          {
+            "match": [
+              "4",
+              "3",
+              "7"
+            ],
+            "miss": "A leg, or the sum of the legs, is not the hypotenuse."
+          },
+          {
+            "match": [
+              "25"
+            ],
+            "miss": "25 is the sum of the squares. The modulus is the square root."
+          }
+        ],
+        "miss": "Square the two legs, add, and take the square root."
+      }
+    ],
+    "generator": null,
+    "memory": "Definition 1.8: the modulus is the distance to $0$."
+  },
+  {
+    "id": "ch1-1.3-ex1a",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "§1.3, Exercise 1(a)",
+      "page": 20
+    },
+    "kind": "next-step-blank",
+    "prompt": "Evaluate $|(1+i)(2+i)|$.",
+    "steps": [
+      {
+        "text": "Identity (1.25) says this equals $|1+i|\\,|2+i|$. $|1+i|=$ ___",
+        "answer": "\\sqrt{2}",
+        "accept": [
+          "\\sqrt{2}",
+          "sqrt(2)",
+          "√2"
+        ],
+        "why": "$1^2+1^2=2$. Definition 1.8, page 17.",
+        "value": {
+          "real": 1.4142135623730951
+        }
+      },
+      {
+        "text": "$|2+i|=$ ___",
+        "answer": "\\sqrt{5}",
+        "accept": [
+          "\\sqrt{5}",
+          "sqrt(5)",
+          "√5"
+        ],
+        "why": "$2^2+1^2=5$.",
+        "value": {
+          "real": 2.23606797749979
+        }
+      },
+      {
+        "text": "The product of the lengths is ___",
+        "answer": "\\sqrt{10}",
+        "accept": [
+          "\\sqrt{10}",
+          "sqrt(10)",
+          "√10"
+        ],
+        "why": "Identity (1.25), page 19: the moduli multiply, and $\\sqrt{2}\\sqrt{5}=\\sqrt{10}$.",
+        "value": {
+          "real": 3.1622776601683795
+        }
+      }
+    ],
+    "generator": null,
+    "memory": "A modulus of a product is the product of the moduli. Identity (1.25)."
+  },
+  {
+    "id": "ch1-1.3-conj-prod",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "Identity (1.22)",
+      "page": 18
+    },
+    "kind": "next-step-mc",
+    "prompt": "Compute $(1+i)(1-i)$.",
+    "steps": [
+      {
+        "text": "The product is ___",
+        "answer": "$2$",
+        "accept": [],
+        "choices": [
+          "$2$",
+          "$0$",
+          "$1+i$",
+          "$2i$"
+        ],
+        "why": "$(1+i)(1-i)=1-(i)^2=1-(-1)$, and that is $|1+i|^2$. Identity (1.22), page 18.",
+        "slips": [
+          {
+            "match": [
+              "$0$",
+              "0"
+            ],
+            "miss": "That uses $i^2=+1$. Conjugate products are $|z|^2 > 0$."
+          },
+          {
+            "match": [
+              "$1+i$"
+            ],
+            "miss": "That is one of the factors. The product multiplies them."
+          },
+          {
+            "match": [
+              "$2i$"
+            ],
+            "miss": "The imaginary parts are opposites, so they do not survive."
+          }
+        ],
+        "miss": "A number times its conjugate is the square of the modulus."
+      }
+    ],
+    "generator": null,
+    "memory": "Identity (1.22): $z\\overline{z}=|z|^2$, and that square is positive when $z\\neq 0$."
+  },
+  {
+    "id": "ch1-1.3-ex2a",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "§1.3, Exercise 2(a)",
+      "page": 20
+    },
+    "kind": "next-step-mc",
+    "prompt": "Add and subtract. $z_1=2+3i$ and $z_2=4+i$.",
+    "steps": [
+      {
+        "text": "The sum $z_1+z_2$ is ___",
+        "answer": "$6+4i$",
+        "accept": [],
+        "choices": [
+          "$6+4i$",
+          "$6+2i$",
+          "$8+4i$",
+          "$6+3i$"
+        ],
+        "why": "Definition 1.1, page 10, adds the coordinates.",
+        "miss": "Add both coordinates.",
+        "slips": [
+          {
+            "match": [
+              "$6+2i$"
+            ],
+            "miss": "The imaginary parts are $3$ and $1$. One of them was dropped."
+          },
+          {
+            "match": [
+              "$8+4i$"
+            ],
+            "miss": "The real parts are $2$ and $4$. One of them was doubled."
+          },
+          {
+            "match": [
+              "$6+3i$"
+            ],
+            "miss": "That keeps the first imaginary part. Both coordinates are added."
+          }
+        ]
+      },
+      {
+        "text": "The difference $z_1-z_2$ is ___",
+        "answer": "$-2+2i$",
+        "accept": [],
+        "choices": [
+          "$-2+2i$",
+          "$6+4i$",
+          "$-2-2i$",
+          "$2+2i$"
+        ],
+        "why": "Definition 1.2, page 10, subtracts the coordinates.",
+        "miss": "Subtract both coordinates.",
+        "slips": [
+          {
+            "match": [
+              "$6+4i$"
+            ],
+            "miss": "That is the sum from the previous step. This step subtracts."
+          },
+          {
+            "match": [
+              "$-2-2i$"
+            ],
+            "miss": "The imaginary parts are $3$ and $1$. Subtraction does not make both parts negative."
+          },
+          {
+            "match": [
+              "$2+2i$"
+            ],
+            "miss": "Subtraction is the first minus the second, so the real part changes sign."
+          }
+        ]
+      }
+    ],
+    "generator": null,
+    "memory": "Add for the sum. Subtract for the difference. Definitions 1.1 and 1.2, page 10."
+  },
+  {
+    "id": "ch1-1.3-ex3b",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "§1.3, Exercise 3(b)",
+      "page": 20
+    },
+    "kind": "next-step-mc",
+    "prompt": "Which points lie inside the circle $|z-i|=2$? Consider $\\sqrt{2}+i(\\sqrt{2}+1)$.",
+    "steps": [
+      {
+        "text": "The distance from this point to $i$ is ___",
+        "answer": "$2$, so the point is on the circle, not inside",
+        "accept": [],
+        "choices": [
+          "$2$, so the point is on the circle, not inside",
+          "less than $2$, so inside",
+          "greater than $2$, so outside",
+          "$0$, so it is the centre"
+        ],
+        "why": "$z-i=\\sqrt{2}+i\\sqrt{2}$, and that length is $\\sqrt{4}=2$. Inside means strictly less.",
+        "slips": [
+          {
+            "match": [
+              "less than $2$, so inside"
+            ],
+            "miss": "Inside means strictly less than the radius. This point meets the radius."
+          },
+          {
+            "match": [
+              "greater than $2$, so outside"
+            ],
+            "miss": "The length is not greater than the radius."
+          },
+          {
+            "match": [
+              "$0$, so it is the centre"
+            ],
+            "miss": "The point is not the centre $i$."
+          }
+        ],
+        "miss": "Compare the distance to $i$ with the radius $2$."
+      }
+    ],
+    "generator": null,
+    "memory": "Inside $|z-z_0|=R$ means $|z-z_0|<R$. Equal is the circle itself."
+  },
+  {
+    "id": "ch1-1.3-ex1c",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "§1.3, Exercise 1(c)",
+      "page": 20
+    },
+    "kind": "next-step-blank",
+    "prompt": "Evaluate $|(1+i)^{50}|$.",
+    "steps": [
+      {
+        "text": "$|1+i|=$ ___",
+        "answer": "\\sqrt{2}",
+        "accept": [
+          "\\sqrt{2}",
+          "sqrt(2)",
+          "√2"
+        ],
+        "why": "$1^2+1^2=2$.",
+        "value": {
+          "real": 1.4142135623730951
+        }
+      },
+      {
+        "text": "Identity (1.25), repeated, says $|(1+i)^{50}|=(|1+i|)^{50}=$ ___",
+        "answer": "2^{25}",
+        "accept": [
+          "2^{25}",
+          "2^25",
+          "33554432"
+        ],
+        "why": "$(\\sqrt{2})^{50}=2^{25}$.",
+        "value": {
+          "real": 33554432
+        }
+      }
+    ],
+    "generator": null,
+    "memory": "$|z^n|=|z|^n$. The power sits on the length."
+  },
+  {
+    "id": "ch1-1.3-triangle",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "Theorem 1.2",
+      "page": 18
+    },
+    "kind": "proof-mc",
+    "prompt": "Which line finishes the triangle inequality?",
+    "steps": [
+      {
+        "text": "After $|z_1+z_2|^2=|z_1|^2+2\\operatorname{Re}(z_1\\overline{z_2})+|z_2|^2$, the proof uses ___",
+        "answer": "$\\operatorname{Re} w \\le |w|$, then square roots",
+        "accept": [],
+        "choices": [
+          "$\\operatorname{Re} w \\le |w|$, then square roots",
+          "$|z_1+z_2|=|z_1|+|z_2|$ for every pair",
+          "$|z_1+z_2|^2=|z_1|^2+|z_2|^2$ with nothing left over",
+          "the conjugate of a sum is the sum of the lengths"
+        ],
+        "why": "Identity (1.21) bounds the real part by the modulus. Square roots keep the inequality. Page 19.",
+        "miss": "Bound the real part, then take square roots.",
+        "slips": [
+          {
+            "match": [
+              "$|z_1+z_2|=|z_1|+|z_2|$ for every pair"
+            ],
+            "miss": "Equality is not the theorem."
+          },
+          {
+            "match": [
+              "$|z_1+z_2|^2=|z_1|^2+|z_2|^2$ with nothing left over"
+            ],
+            "miss": "The cross term does not vanish."
+          },
+          {
+            "match": [
+              "the conjugate of a sum is the sum of the lengths"
+            ],
+            "miss": "The conjugate of a sum is the sum of the conjugates, not of the lengths."
+          }
+        ]
+      }
+    ],
+    "generator": null,
+    "memory": "Expand $|z_1+z_2|^2$, bound the real part, take square roots."
+  },
+  {
+    "id": "ch1-1.3-gen-mod",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "Definition 1.8",
+      "page": 17
+    },
+    "kind": "blank",
+    "prompt": "A fresh pair, from the same rule.",
+    "steps": [
+      {
+        "text": "The result is ___",
+        "answer": "",
+        "accept": [],
+        "why": ""
+      }
+    ],
+    "generator": {
+      "template": "ch1-arithmetic",
+      "params": {
+        "mode": "mod",
+        "re": [
+          -5,
+          5
+        ],
+        "im": [
+          -5,
+          5
+        ]
+      }
+    },
+    "memory": "Square, add, square root. The answer is a length."
+  },
+  {
+    "id": "ch1-1.3-def18",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "Definition 1.8",
+      "page": 17
+    },
+    "kind": "flash",
+    "prompt": "Modulus.",
+    "steps": [
+      {
+        "text": "Modulus.",
+        "answer": "$|x+iy|=\\sqrt{x^2+y^2}$",
+        "accept": [],
+        "why": "Definition 1.8, page 17: the distance from $z$ to $0$."
+      }
+    ],
+    "generator": null,
+    "memory": "Definition 1.8, page 17: the distance from $z$ to $0$."
+  },
+  {
+    "id": "ch1-1.3-dist",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "Distance formula",
+      "page": 18
+    },
+    "kind": "flash",
+    "prompt": "Distance between two points.",
+    "steps": [
+      {
+        "text": "Distance between two points.",
+        "answer": "$|z_1-z_2|=\\sqrt{(x_1-x_2)^2+(y_1-y_2)^2}$",
+        "accept": [],
+        "why": "Page 18: the length of the displacement from $z_2$ to $z_1$."
+      }
+    ],
+    "generator": null,
+    "memory": "Page 18: the length of the displacement from $z_2$ to $z_1$."
+  },
+  {
+    "id": "ch1-1.3-id22",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "Identity (1.22)",
+      "page": 18
+    },
+    "kind": "flash",
+    "prompt": "Modulus squared, without a square root.",
+    "steps": [
+      {
+        "text": "Modulus squared, without a square root.",
+        "answer": "$|z|^2=z\\overline{z}$",
+        "accept": [],
+        "why": "Identity (1.22), page 18."
+      }
+    ],
+    "generator": null,
+    "memory": "Identity (1.22), page 18."
+  },
+  {
+    "id": "ch1-1.3-th12",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "Theorem 1.2",
+      "page": 18
+    },
+    "kind": "flash",
+    "prompt": "The triangle inequality, and the reverse.",
+    "steps": [
+      {
+        "text": "The triangle inequality, and the reverse.",
+        "answer": "$|z_1+z_2|\\le |z_1|+|z_2|$, and $|z_1+z_2|\\ge |z_1|-|z_2|$.",
+        "accept": [],
+        "why": "Theorem 1.2, page 18, and Identity (1.24), page 19."
+      }
+    ],
+    "generator": null,
+    "memory": "Theorem 1.2 and Identity (1.24)."
+  },
+  {
+    "id": "ch1-1.3-id25",
+    "chapter": 1,
+    "section": "1.3",
+    "cite": {
+      "ref": "Identities (1.25) and (1.26)",
+      "page": 19
+    },
+    "kind": "flash",
+    "prompt": "Moduli multiply and divide.",
+    "steps": [
+      {
+        "text": "Moduli multiply and divide.",
+        "answer": "$|z_1 z_2|=|z_1|\\,|z_2|$, and $|z_1/z_2|=|z_1|/|z_2|$ when $z_2\\neq 0$.",
+        "accept": [],
+        "why": "Identities (1.25) and (1.26), page 19."
+      }
+    ],
+    "generator": null,
+    "memory": "Identities (1.25) and (1.26), page 19."
+  },
+  {
+    "id": "ch1-1.4-ex113",
+    "chapter": 1,
+    "section": "1.4",
+    "cite": {
+      "ref": "Example 1.7",
+      "page": 22
+    },
+    "kind": "next-step-blank",
+    "prompt": "Write $1+i$ as $re^{i\\theta}$.",
+    "steps": [
+      {
+        "text": "The modulus is ___",
+        "answer": "\\sqrt{2}",
+        "accept": [
+          "\\sqrt{2}",
+          "sqrt(2)",
+          "√2"
+        ],
+        "why": "$1^2+1^2=2$. Definition 1.8, page 17.",
+        "value": {
+          "real": 1.4142135623730951
+        },
+        "slips": [
+          {
+            "match": [
+              "2",
+              "1"
+            ],
+            "miss": "2 is the sum of squares, and 1 is a leg. The modulus is the square root."
+          }
+        ],
+        "miss": "Square the legs, add, and take the square root."
+      },
+      {
+        "text": "Arg, in $(-\\pi,\\pi]$, is ___",
+        "answer": "\\pi/4",
+        "accept": [
+          "\\pi/4",
+          "pi/4",
+          "π/4"
+        ],
+        "why": "The legs are equal and the point is in the first quadrant. Definition 1.11, page 23.",
+        "value": {
+          "angle": 0.7853981633974483
+        },
+        "slips": [
+          {
+            "match": [
+              "0",
+              "\\pi/2",
+              "pi/2",
+              "\\pi/6",
+              "pi/6"
+            ],
+            "miss": "The point is in the first quadrant, and the two legs are equal."
+          }
+        ],
+        "miss": "Measure from the positive real axis. The two legs are equal."
+      },
+      {
+        "text": "The exponential form is ___",
+        "answer": "\\sqrt{2}\\,e^{i\\pi/4}",
+        "accept": [
+          "\\sqrt{2} e^{i\\pi/4}",
+          "\\sqrt{2}e^{i\\pi/4}",
+          "sqrt(2)e^{i pi/4}",
+          "sqrt(2) e^{ipi/4}"
+        ],
+        "why": "Equation (1.35), page 25, is $re^{i\\theta}$. Definition 1.9, page 22, is $r(\\cos\\theta+i\\sin\\theta)$.",
+        "miss": "The length times $e$ to the $i$ times the angle from the previous blank."
+      }
+    ],
+    "generator": null,
+    "memory": "Length, then the one angle in $(-\\pi,\\pi]$, then $re^{i\\theta}$."
+  },
+  {
+    "id": "ch1-1.4-gen-polar",
+    "chapter": 1,
+    "section": "1.4",
+    "cite": {
+      "ref": "Equation (1.35)",
+      "page": 25
+    },
+    "kind": "blank",
+    "prompt": "A fresh pair, from the same rule.",
+    "steps": [
+      {
+        "text": "The result is ___",
+        "answer": "",
+        "accept": [],
+        "why": ""
+      }
+    ],
+    "generator": {
+      "template": "ch1-arithmetic",
+      "params": {
+        "mode": "polar",
+        "re": [
+          -5,
+          5
+        ],
+        "im": [
+          -5,
+          5
+        ]
+      }
+    },
+    "memory": "Equation (1.35), page 25, is $re^{i\\theta}$. Definition 1.9 is $r(\\cos\\theta+i\\sin\\theta)$."
+  },
+  {
+    "id": "ch1-1.4-gen-arg",
+    "chapter": 1,
+    "section": "1.4",
+    "cite": {
+      "ref": "Definition 1.11",
+      "page": 23
+    },
+    "kind": "blank",
+    "prompt": "A fresh pair, from the same rule.",
+    "steps": [
+      {
+        "text": "The result is ___",
+        "answer": "",
+        "accept": [],
+        "why": ""
+      }
+    ],
+    "generator": {
+      "template": "ch1-arithmetic",
+      "params": {
+        "mode": "arg",
+        "re": [
+          -5,
+          5
+        ],
+        "im": [
+          -5,
+          5
+        ]
+      }
+    },
+    "memory": "Arg is the one angle in $(-\\pi,\\pi]$, from the positive real axis."
+  },
+  {
+    "id": "ch1-1.4-ex7",
+    "chapter": 1,
+    "section": "1.4",
+    "cite": {
+      "ref": "§1.4, Exercise 7",
+      "page": 28
+    },
+    "kind": "next-step-mc",
+    "prompt": "Find the arguments of the product. $z_1=-1+i\\sqrt{3}$ and $z_2=-\\sqrt{3}+i$.",
+    "steps": [
+      {
+        "text": "Arg $z_1$ is $2\\pi/3$ and Arg $z_2$ is $5\\pi/6$. Their sum is ___",
+        "answer": "$3\\pi/2$, outside $(-\\pi,\\pi]$",
+        "accept": [],
+        "choices": [
+          "$3\\pi/2$, outside $(-\\pi,\\pi]$",
+          "$-\\pi/2$",
+          "$0$",
+          "$\\pi$"
+        ],
+        "why": "$2\\pi/3+5\\pi/6=3\\pi/2$, and $3\\pi/2$ is not in $(-\\pi,\\pi]$.",
+        "miss": "Add the two arguments you were given.",
+        "slips": [
+          {
+            "match": [
+              "$-\\pi/2$"
+            ],
+            "miss": "That angle is a candidate for the product. This blank is the sum of the two Args."
+          },
+          {
+            "match": [
+              "$0$"
+            ],
+            "miss": "Both arguments are in the second quadrant. Their sum is not $0$."
+          },
+          {
+            "match": [
+              "$\\pi$"
+            ],
+            "miss": "$\\pi$ is the argument of a negative real. Neither factor is a negative real."
+          }
+        ]
+      },
+      {
+        "text": "The product is $-4i$, so Arg$(z_1 z_2)$ is ___",
+        "answer": "$-\\pi/2$",
+        "accept": [],
+        "choices": [
+          "$-\\pi/2$",
+          "$3\\pi/2$",
+          "$2\\pi/3$",
+          "$\\pi$"
+        ],
+        "why": "Arg$(-4i)=-\\pi/2$. It is the sum brought back by $2\\pi$, so the printed equation fails.",
+        "slips": [
+          {
+            "match": [
+              "$3\\pi/2$"
+            ],
+            "miss": "$3\\pi/2$ sits outside $(-\\pi,\\pi]$. Fold a negative imaginary number back into that interval."
+          },
+          {
+            "match": [
+              "$2\\pi/3$"
+            ],
+            "miss": "That is an argument of the first factor, not of the product."
+          },
+          {
+            "match": [
+              "$\\pi$"
+            ],
+            "miss": "The product is a negative imaginary number, not a negative real."
+          }
+        ],
+        "miss": "Arg of a negative imaginary number lies in $(-\\pi,\\pi]$."
+      }
+    ],
+    "generator": null,
+    "memory": "Add the angles, then wrap into $(-\\pi,\\pi]$ before you call the result Arg."
+  },
+  {
+    "id": "ch1-1.4-arg",
+    "chapter": 1,
+    "section": "1.4",
+    "cite": {
+      "ref": "Definition 1.11",
+      "page": 23
+    },
+    "kind": "flash",
+    "prompt": "The argument you are allowed to write.",
+    "steps": [
+      {
+        "text": "The argument you are allowed to write.",
+        "answer": "$\\operatorname{Arg} z$ is the one angle in $(-\\pi,\\pi]$.",
+        "accept": [],
+        "why": "Definition 1.11, page 23. Undefined at $0$."
+      }
+    ],
+    "generator": null,
+    "memory": "Definition 1.11, page 23. Undefined at $0$."
+  },
+  {
+    "id": "ch1-1.4-polar",
+    "chapter": 1,
+    "section": "1.4",
+    "cite": {
+      "ref": "Definition 1.9",
+      "page": 22
+    },
+    "kind": "flash",
+    "prompt": "Polar form is Definition 1.9. The exponential form is Equation (1.35).",
+    "steps": [
+      {
+        "text": "Polar form is Definition 1.9. The exponential form is Equation (1.35).",
+        "answer": "Polar form is $r(\\cos\\theta+i\\sin\\theta)$. The exponential form is $re^{i\\theta}$.",
+        "accept": [],
+        "why": "Definition 1.9, page 22, is $r(\\cos\\theta+i\\sin\\theta)$. Equation (1.35), page 25, is $re^{i\\theta}$."
+      }
+    ],
+    "generator": null,
+    "memory": "Definition 1.9, page 22, is $r(\\cos\\theta+i\\sin\\theta)$. Equation (1.35), page 25, is $re^{i\\theta}$."
+  },
+  {
+    "id": "ch1-1.4-add",
+    "chapter": 1,
+    "section": "1.4",
+    "cite": {
+      "ref": "Theorem 1.3",
+      "page": 26
+    },
+    "kind": "flash",
+    "prompt": "What happens to angles under multiplication.",
+    "steps": [
+      {
+        "text": "What happens to angles under multiplication.",
+        "answer": "An argument of $z_1 z_2$ is an argument of $z_1$ plus an argument of $z_2$.",
+        "accept": [],
+        "why": "Theorem 1.3, page 26, equates the sets $\\arg$. Arg is the one value in $(-\\pi,\\pi]$, and the sum of two Args can leave that interval."
+      }
+    ],
+    "generator": null,
+    "memory": "Theorem 1.3, page 26: arguments add as a set. Wrap into $(-\\pi,\\pi]$ only when the name is Arg."
+  },
+  {
+    "id": "ch1-1.4-wrap",
+    "chapter": 1,
+    "section": "1.4",
+    "cite": {
+      "ref": "§1.4, Exercise 7",
+      "page": 28
+    },
+    "kind": "flash",
+    "prompt": "When the sum of the Args is not the Arg of the product.",
+    "steps": [
+      {
+        "text": "When the sum of the Args is not the Arg of the product.",
+        "answer": "The sum can leave $(-\\pi,\\pi]$. Wrap by $2\\pi$ before you call it Arg.",
+        "accept": [],
+        "why": "Exercise 7, page 28: $-1+i\\sqrt{3}$ and $-\\sqrt{3}+i$."
+      }
+    ],
+    "generator": null,
+    "memory": "Exercise 7, page 28: $-1+i\\sqrt{3}$ and $-\\sqrt{3}+i$."
+  },
+  {
+    "id": "ch1-1.5-power",
+    "chapter": 1,
+    "section": "1.5",
+    "cite": {
+      "ref": "Equation (1.40)",
+      "page": 30
+    },
+    "kind": "next-step-blank",
+    "prompt": "Find the length of $(\\sqrt{3}+i)^{10}$. Exercise 2, page 34, is the same move on a different exponent.",
+    "steps": [
+      {
+        "text": "The modulus of $\\sqrt{3}+i$ is ___",
+        "answer": "2",
+        "accept": [
+          "2"
+        ],
+        "why": "$(\\sqrt{3})^2+1^2=4$, and the modulus is the square root. Definition 1.8.",
+        "value": {
+          "real": 2
+        },
+        "slips": [
+          {
+            "match": [
+              "4"
+            ],
+            "near": 4,
+            "miss": "4 is the square of the length. The modulus is the square root."
+          },
+          {
+            "match": [
+              "\\sqrt{3}",
+              "sqrt(3)",
+              "√3"
+            ],
+            "miss": "That is one leg. Square both legs, add, and take the square root."
+          }
+        ],
+        "miss": "Square both legs, add, and take the square root."
+      },
+      {
+        "text": "Ten times $\\pi/6$ is $5\\pi/3$, an argument. Arg wraps it to $-\\pi/3$, and $2^{10}=$ ___",
+        "answer": "1024",
+        "accept": [
+          "1024"
+        ],
+        "why": "Equation (1.40) raises the length to the tenth. $10\\cdot\\pi/6=5\\pi/3$ is an argument. Arg, in $(-\\pi,\\pi]$, is $-\\pi/3$. The blank is the length.",
+        "value": {
+          "real": 1024
+        },
+        "slips": [
+          {
+            "match": [
+              "16",
+              "32",
+              "4"
+            ],
+            "miss": "The length is raised to the tenth, not to the fourth."
+          }
+        ],
+        "miss": "The length $2$ is raised to the tenth."
+      }
+    ],
+    "generator": null,
+    "memory": "Length to the $n$th, angle times $n$, then back to $a+bi$."
+  },
+  {
+    "id": "ch1-1.5-angle",
+    "chapter": 1,
+    "section": "1.5",
+    "cite": {
+      "ref": "Equation (1.43)",
+      "page": 31
+    },
+    "kind": "next-step-blank",
+    "prompt": "Name the angle. The fifth roots of unity are $e^{i 2\\pi k/5}$.",
+    "steps": [
+      {
+        "text": "The angle for $k=1$ is ___",
+        "answer": "2\\pi/5",
+        "accept": [
+          "2\\pi/5",
+          "2pi/5",
+          "2π/5"
+        ],
+        "why": "Equation (1.43): the angle is $2\\pi k/n$ with $n=5$ and $k=1$.",
+        "value": {
+          "angle": 1.2566370614359172
+        },
+        "slips": [
+          {
+            "match": [
+              "0"
+            ],
+            "near": 0,
+            "miss": "$k=0$ sits at angle $0$. This blank is $k=1$."
+          },
+          {
+            "match": [
+              "\\pi/5",
+              "pi/5",
+              "2\\pi/4",
+              "pi/2",
+              "\\pi/2"
+            ],
+            "miss": "Five roots split a full turn of $2\\pi$, not a half turn and not a quarter turn."
+          }
+        ],
+        "miss": "The step from one fifth root to the next is a fifth of a full turn."
+      }
+    ],
+    "generator": null,
+    "memory": "The $n$th roots of unity sit at angles $2\\pi k/n$."
+  },
+  {
+    "id": "ch1-1.5-quad-step",
+    "chapter": 1,
+    "section": "1.5",
+    "cite": {
+      "ref": "Theorem 1.5",
+      "page": 33
+    },
+    "kind": "next-step-mc",
+    "prompt": "Solve $z^2+(1+i)z+5i=0$. Use both square roots of the discriminant $-18i$.",
+    "steps": [
+      {
+        "text": "Both square roots of $-18i$ are ___",
+        "answer": "$3-3i$ and $-3+3i$",
+        "accept": [],
+        "choices": [
+          "$3-3i$ and $-3+3i$",
+          "only $3-3i$",
+          "$3+3i$ and $-3-3i$",
+          "$0$"
+        ],
+        "why": "$(3-3i)^2=-18i$, and the other square root is the negative of that. Theorem 1.5, page 33, takes both.",
+        "slips": [
+          {
+            "match": [
+              "only $3-3i$"
+            ],
+            "miss": "Theorem 1.5 takes every distinct square root, not one of them."
+          },
+          {
+            "match": [
+              "$3+3i$ and $-3-3i$"
+            ],
+            "miss": "The two square roots differ by a sign. Those signs are on the wrong parts."
+          },
+          {
+            "match": [
+              "$0$"
+            ],
+            "miss": "The discriminant is $-18i$, which is not $0$."
+          }
+        ],
+        "miss": "Theorem 1.5 takes every distinct square root of the discriminant."
+      },
+      {
+        "text": "Using $3-3i$ in the formula, one solution is ___",
+        "answer": "$1-2i$",
+        "accept": [],
+        "choices": [
+          "$1-2i$",
+          "$-2+i$",
+          "$1+2i$",
+          "$0$"
+        ],
+        "why": "$[-(1+i)+(3-3i)]/2=1-2i$. The other square root gives $-2+i$. Example 1.21, page 33.",
+        "slips": [
+          {
+            "match": [
+              "$-2+i$"
+            ],
+            "miss": "That solution comes from the other square root."
+          },
+          {
+            "match": [
+              "$1+2i$"
+            ],
+            "miss": "The imaginary part of $3-3i$ is negative, and it stays negative after you add $-b$."
+          },
+          {
+            "match": [
+              "$0$"
+            ],
+            "miss": "A root of this quadratic is not $0$."
+          }
+        ],
+        "miss": "Divide $-b$ plus that square root by $2a$."
+      }
+    ],
+    "generator": null,
+    "memory": "Theorem 1.5, page 33: both square roots of $b^2-4ac$ go into the formula."
+  },
+  {
+    "id": "ch1-1.5-demoivre",
+    "chapter": 1,
+    "section": "1.5",
+    "cite": {
+      "ref": "Equation (1.40)",
+      "page": 30
+    },
+    "kind": "flash",
+    "prompt": "De Moivre's formula.",
+    "steps": [
+      {
+        "text": "De Moivre's formula.",
+        "answer": "$(\\cos\\theta+i\\sin\\theta)^n=\\cos n\\theta+i\\sin n\\theta$.",
+        "accept": [],
+        "why": "Equation (1.40), page 30. The length becomes $r^n$."
+      }
+    ],
+    "generator": null,
+    "memory": "Equation (1.40), page 30. The length becomes $r^n$."
+  },
+  {
+    "id": "ch1-1.5-roots",
+    "chapter": 1,
+    "section": "1.5",
+    "cite": {
+      "ref": "Equation (1.43)",
+      "page": 31
+    },
+    "kind": "flash",
+    "prompt": "The $n$th roots of unity.",
+    "steps": [
+      {
+        "text": "The $n$th roots of unity.",
+        "answer": "$e^{i 2\\pi k/n}$ for $k=0,\\ldots,n-1$.",
+        "accept": [],
+        "why": "Equation (1.43), page 31. The general roots are Equation (1.45), page 32."
+      }
+    ],
+    "generator": null,
+    "memory": "Equation (1.43), page 31. The general roots are Equation (1.45), page 32."
+  },
+  {
+    "id": "ch1-1.5-quad",
+    "chapter": 1,
+    "section": "1.5",
+    "cite": {
+      "ref": "Theorem 1.5",
+      "page": 33
+    },
+    "kind": "flash",
+    "prompt": "The quadratic formula for complex coefficients.",
+    "steps": [
+      {
+        "text": "The quadratic formula for complex coefficients.",
+        "answer": "Both square roots of $b^2-4ac$ belong in the formula.",
+        "accept": [],
+        "why": "Theorem 1.5, page 33."
+      }
+    ],
+    "generator": null,
+    "memory": "Theorem 1.5, page 33."
+  },
+  {
+    "id": "ch1-1.6-where",
+    "chapter": 1,
+    "section": "1.6",
+    "cite": {
+      "ref": "Example 1.25",
+      "page": 38
+    },
+    "kind": "next-step-mc",
+    "prompt": "Drag the green point, then say where it is.",
+    "steps": [
+      {
+        "text": "The green point is ___",
+        "answer": "the place the green point is now",
+        "accept": [],
+        "live": "disk",
+        "choices": [
+          "Inside the open disk",
+          "On the boundary",
+          "Outside the circle"
+        ],
+        "places": [
+          "inside",
+          "boundary",
+          "outside"
+        ],
+        "why": "Example 1.25, page 38: inside means $|z|<1$, the boundary is $|z|=1$, and outside is $|z|>1$.",
+        "miss": "Compare the green point with the orange circle."
+      }
+    ],
+    "generator": null,
+    "memory": "Inside $D_1(0)$ means $|z|<1$. The circle itself is the boundary."
+  },
+  {
+    "id": "ch1-1.6-annulus",
+    "chapter": 1,
+    "section": "1.6",
+    "cite": {
+      "ref": "Bounded set",
+      "page": 40
+    },
+    "kind": "next-step-mc",
+    "prompt": "Classify $\\{z: 1<|z|\\le 2\\}$.",
+    "steps": [
+      {
+        "text": "This set is ___",
+        "answer": "bounded",
+        "accept": [],
+        "choices": [
+          "open",
+          "closed",
+          "domain",
+          "bounded"
+        ],
+        "why": "Page 40: a set inside some closed disk is bounded. The outer circle is in this set, so it is not open and not a domain. The inner circle is out, so it is not closed. Figure 1.30, page 39, is the open annulus $1<|z|<2$.",
+        "slips": [
+          {
+            "match": [
+              "open"
+            ],
+            "miss": "The outer circle is in the set, so the set is not open."
+          },
+          {
+            "match": [
+              "closed"
+            ],
+            "miss": "The inner circle is not in the set, so the set is not closed."
+          },
+          {
+            "match": [
+              "domain"
+            ],
+            "miss": "A domain is open. The outer circle is in the set, so the set is not open."
+          }
+        ],
+        "miss": "Check the inner circle and the outer circle separately."
+      }
+    ],
+    "generator": null,
+    "memory": "A domain is open and connected. A region may keep some of the boundary."
+  },
+  {
+    "id": "ch1-1.6-segment-blank",
+    "chapter": 1,
+    "section": "1.6",
+    "cite": {
+      "ref": "Equation (1.48)",
+      "page": 35
+    },
+    "kind": "next-step-blank",
+    "prompt": "Write the segment from $z_0$ to $z_1$, with $z_0=0$ and $z_1=1+i$.",
+    "steps": [
+      {
+        "text": "For $0\\le t\\le 1$, $z(t)=$ ___",
+        "answer": "z_0+(z_1-z_0)t",
+        "accept": [
+          "z0+t(z1-z0)",
+          "z_0+t(z_1-z_0)",
+          "z_0 + t(z_1 - z_0)",
+          "z0+(z1-z0)t",
+          "z_0+(z_1-z_0)t",
+          "t(1+i)",
+          "(1+i)t",
+          "t+it",
+          "t+ti",
+          "0+t(1+i)"
+        ],
+        "why": "Equation (1.48), page 35: start at $z_0$ and add the fraction $t$ of $z_1-z_0$.",
+        "slips": [
+          {
+            "match": [
+              "z_1+t(z_0-z_1)",
+              "z1+t(z0-z1)"
+            ],
+            "miss": "That runs the segment from the other end."
+          },
+          {
+            "match": [
+              "z_0+z_1",
+              "z0+z1",
+              "t"
+            ],
+            "miss": "The parameter has to scale the trip from the first point to the second."
+          }
+        ],
+        "miss": "Start at the first point. Scale the difference of the endpoints by $t$."
+      }
+    ],
+    "generator": null,
+    "memory": "Equation (1.48), page 35: $z(t)=z_0+(z_1-z_0)t$ for $0\\le t\\le 1$."
+  },
+  {
+    "id": "ch1-1.6-ex6",
+    "chapter": 1,
+    "section": "1.6",
+    "cite": {
+      "ref": "§1.6, Exercise 6",
+      "page": 41
+    },
+    "kind": "next-step-mc",
+    "prompt": "Which set is a domain?",
+    "steps": [
+      {
+        "text": "A domain is open and connected. ___",
+        "answer": "$D_1(0)$ is a domain, and the closed disk is not",
+        "accept": [],
+        "choices": [
+          "$D_1(0)$ is a domain, and the closed disk is not",
+          "both the open disk and the closed disk are domains",
+          "the closed disk is a domain, and the open disk is not",
+          "neither is a domain"
+        ],
+        "why": "The open disk is open and connected. A point on $|z|=1$ is in the closed disk and is not an interior point.",
+        "miss": "A domain is open and connected. Check the boundary of each disk.",
+        "slips": [
+          {
+            "match": [
+              "both the open disk and the closed disk are domains"
+            ],
+            "miss": "The closed disk includes its boundary, so it is not open."
+          },
+          {
+            "match": [
+              "the closed disk is a domain, and the open disk is not"
+            ],
+            "miss": "The open disk is open and connected. The closed disk includes its boundary."
+          },
+          {
+            "match": [
+              "neither is a domain"
+            ],
+            "miss": "The open disk is a domain. \"Neither\" drops that set."
+          }
+        ]
+      }
+    ],
+    "generator": null,
+    "memory": "Domain means open and connected. Exercise 6, page 41."
+  },
+  {
+    "id": "ch1-1.6-segment",
+    "chapter": 1,
+    "section": "1.6",
+    "cite": {
+      "ref": "Equation (1.48)",
+      "page": 35
+    },
+    "kind": "flash",
+    "prompt": "The segment from $z_0$ to $z_1$.",
+    "steps": [
+      {
+        "text": "The segment from $z_0$ to $z_1$.",
+        "answer": "$z(t)=z_0+(z_1-z_0)t$, $0\\le t\\le 1$.",
+        "accept": [],
+        "why": "Equation (1.48), page 35. Exercise 1(a), page 41, is the segment from $0$ to $1+i$."
+      }
+    ],
+    "generator": null,
+    "memory": "Equation (1.48), page 35, prints $z(t)=z_0+(z_1-z_0)t$. Exercise 1(a), page 41, is the segment from $0$ to $1+i$."
+  },
+  {
+    "id": "ch1-1.6-open",
+    "chapter": 1,
+    "section": "1.6",
+    "cite": {
+      "ref": "Equation (1.50)",
+      "page": 37
+    },
+    "kind": "flash",
+    "prompt": "The open disk.",
+    "steps": [
+      {
+        "text": "The open disk.",
+        "answer": "$D_\\varepsilon(z_0)=\\{z:\\,|z-z_0|<\\varepsilon\\}$.",
+        "accept": [],
+        "why": "Equation (1.50), page 37. The circle is not included."
+      }
+    ],
+    "generator": null,
+    "memory": "Equation (1.50), page 37. The circle is not included."
+  },
+  {
+    "id": "ch1-1.6-closed",
+    "chapter": 1,
+    "section": "1.6",
+    "cite": {
+      "ref": "Equations (1.51) and (1.52)",
+      "page": 37
+    },
+    "kind": "flash",
+    "prompt": "Closed, punctured, boundary.",
+    "steps": [
+      {
+        "text": "Closed, punctured, boundary.",
+        "answer": "Closed uses $\\le$. Punctured leaves out the center. The boundary meets every neighborhood both ways.",
+        "accept": [],
+        "why": "Equations (1.51) and (1.52), page 37. Example 1.25, page 38."
+      }
+    ],
+    "generator": null,
+    "memory": "Equations (1.51) and (1.52), page 37. Example 1.25, page 38."
+  },
+  {
+    "id": "ch1-1.6-domain",
+    "chapter": 1,
+    "section": "1.6",
+    "cite": {
+      "ref": "§1.6, Exercise 6",
+      "page": 41
+    },
+    "kind": "flash",
+    "prompt": "What a domain is.",
+    "steps": [
+      {
+        "text": "What a domain is.",
+        "answer": "Open and connected. $D_1(0)$ is one. The closed disk is not.",
+        "accept": [],
+        "why": "Exercise 6, page 41."
+      }
+    ],
+    "generator": null,
+    "memory": "Exercise 6, page 41."
+  }
+]

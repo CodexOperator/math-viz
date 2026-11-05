@@ -21,12 +21,12 @@ function deepFreeze(o) {
   return o;
 }
 
-// Chapters the router will open as their own page. 1–3 and 6–11 stay on the book.
-export const OPEN_CHAPTERS = Object.freeze([4, 5]);
+// Chapters the router will open as their own page. 2, 3, and 6–11 stay on the book.
+export const OPEN_CHAPTERS = Object.freeze([1, 4, 5]);
 
 export const BOOK_CHAPTERS = deepFreeze([
   {
-    n: 1, title: 'Complex Numbers', page: 1, open: false, door: 'addresses',
+    n: 1, title: 'Complex Numbers', page: 1, open: true, door: 'addresses',
     sections: [
       { id: '1.1', title: 'The Origin of Complex Numbers', page: 1 },
       { id: '1.2', title: 'The Algebra of Complex Numbers, Part I', page: 9 },
@@ -206,6 +206,19 @@ export const CHAPTER_4 = deepFreeze({
 
 export function bookChapter(n) {
   return BOOK_CHAPTERS.find((ch) => ch.n === n) || null;
+}
+
+// The one button on the roadmap. Chapter 1 is the walk until its drawn stages
+// are marked. Chapter 4 is the walk after that. Chapter 5 follows a finished Chapter 4.
+export function bookWalkTarget(ch1, ch4) {
+  if (!ch1 || !ch1.complete) {
+    const id = (ch1 && ch1.nextId) || '1.1';
+    const href = `#chapter-1-${String(id).replace(/\./g, '-')}`;
+    const label = id === '1.1' ? 'Walk Chapter 1' : `Go to ${id}`;
+    return { label, href, chapter: 1 };
+  }
+  if (ch4 && ch4.complete) return { label: 'Open Chapter 5', href: '#chapter-5', chapter: 5 };
+  return { label: 'Walk Chapter 4', href: '#chapter-4', chapter: 4 };
 }
 
 export function chapter4Section(id) {

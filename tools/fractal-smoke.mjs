@@ -5,7 +5,10 @@ import { readFileSync } from 'node:fs';
 import { stationsForMap, stationForTopic, stationForProblem, stationById, threadsOn, stationPart, STATIONS } from '../js/registry.js';
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
-import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, chapter4ExerciseIds, chapter5ExerciseIds } from '../js/data/book-path.js';
+import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, bookWalkTarget, chapter4ExerciseIds, chapter5ExerciseIds } from '../js/data/book-path.js';
+import { CHAPTER_1, chapter1StageIds, citeHref, turnClaim, timesIClaim, modulusClaim, polarClaim, rootClaim, diskClaim } from '../js/data/chapter1.js';
+import { generate as generateCh1, matches as matchesCh1, parseComplex } from '../js/practice/gen/ch1-arithmetic.js';
+import practiceCh1 from '../data/practice/ch1.json' with { type: 'json' };
 import { chapterTally, sectionFinished, foldLegacyExercises, saveSharedTicks, toggleTick } from '../js/book/progress.js';
 import { EXP_DURATION, expFrame, finishedStops } from '../js/core/live-film.js';
 import { compile } from '../js/core/parse.js';
@@ -116,9 +119,181 @@ check('an unknown hash forces no map', mapForcedByRoute(null, parseRoute('#nope'
 check('the book is its own route', parseRoute('#book').station == null && parseRoute('#book').book.kind === 'roadmap' && mapForcedByRoute(null, parseRoute('#book')) == null);
 check('#chapter-4 opens chapter 4', parseRoute('#chapter-4').book.kind === 'chapter' && parseRoute('#chapter-4').book.chapter === 4 && parseRoute('#chapter-4').book.focus == null);
 check('#chapter-4-4-1-3 focuses exercise 4.1.3', parseRoute('#chapter-4-4-1-3').book.focus === '4.1.3');
-check('#chapter-1 stays on the roadmap', parseRoute('#chapter-1').book.kind === 'roadmap' && parseRoute('#chapter-1').book.chapter === 1);
-check('a junk token on a later chapter is not a page', parseRoute('#chapter-1-extra').station == null && parseRoute('#chapter-1-extra').book == null);
-check('eleven chapters, 4 and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_CHAPTERS.join() === '4,5' && BOOK_CHAPTERS.filter((ch) => ch.open).map((ch) => ch.n).join() === '4,5');
+check('#chapter-1 opens chapter 1', parseRoute('#chapter-1').book.kind === 'chapter' && parseRoute('#chapter-1').book.chapter === 1 && parseRoute('#chapter-1').book.focus == null);
+check('#chapter-1-1-2 focuses section 1.2', parseRoute('#chapter-1-1-2').book.kind === 'chapter' && parseRoute('#chapter-1-1-2').book.focus === '1.2');
+check('a junk token on a later chapter is not a page', parseRoute('#chapter-2-extra').station == null && parseRoute('#chapter-2-extra').book == null);
+check('eleven chapters, 1, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_CHAPTERS.join() === '1,4,5' && BOOK_CHAPTERS.filter((ch) => ch.open).map((ch) => ch.n).join() === '1,4,5');
+{
+  const walked = CHAPTER_1.sections.filter((s) => s.exercises.length);
+  const flashes = practiceCh1.filter((item) => item.kind === 'flash');
+  const refs = new Set(flashes.map((item) => item.cite.ref));
+  const need = ['Equation (1.6)', 'Definitions 1.1 and 1.2', 'Definition 1.3', 'Definition 1.4', 'Definition 1.8', 'Identity (1.22)', 'Identities (1.25) and (1.26)', 'Definition 1.9', 'Definition 1.11', 'Theorem 1.3', 'Equation (1.40)', 'Equation (1.43)', 'Equation (1.50)', 'Equations (1.51) and (1.52)'];
+  const flashCount = (section) => flashes.filter((item) => item.section === section).length;
+  check('chapter 1 walks all six stages',
+    walked.map((s) => s.id).join() === '1.1,1.2,1.3,1.4,1.5,1.6'
+    && chapter1StageIds().join() === '1.1,1.2,1.3,1.4,1.5,1.6'
+    && CHAPTER_1.sections.every((s) => s.memory.length > 0));
+  check('chapter 1 flashes are the lines the exam writes', need.every((ref) => refs.has(ref)) && !refs.has('Equation (1.1)') && !refs.has('Equation (1.3)') && flashCount('1.2') === 5 && flashCount('1.3') === 5);
+  {
+    const prod = practiceCh1.find((item) => item.id === 'ch1-1.2-ex1f').steps.at(-1);
+    const modLast = practiceCh1.find((item) => item.id === 'ch1-1.3-ex1a').steps.at(-1);
+    const modFirst = practiceCh1.find((item) => item.id === 'ch1-1.3-ex1a').steps[0];
+    const diff = practiceCh1.find((item) => item.id === 'ch1-1.3-ex2a');
+    check('the answer blank takes 41+11i and the modulus takes sqrt(10)',
+      matchesCh1('41+11i', prod) && matchesCh1('41 + 11 i', prod) && matchesCh1('41+11*i', prod)
+      && matchesCh1('sqrt(10)', modLast) && matchesCh1('√10', modLast) && !matchesCh1('sqrt(2)', modLast)
+      && matchesCh1('sqrt(2)', modFirst) && !matchesCh1('sqrt(10)', modFirst)
+      && diff.steps.length === 2 && /difference/.test(diff.steps[1].text) && diff.steps[1].answer.includes('-2+2i'));
+  }
+  const proofs = practiceCh1.filter((item) => item.section === '1.2' && (item.kind === 'proof-blank' || item.kind === 'proof-mc'));
+  const order12 = practiceCh1.filter((item) => item.section === '1.2' && item.kind !== 'flash').map((item) => item.id);
+  check('chapter 1 practice has one commutativity proof and a generator',
+    proofs.length === 1 && proofs[0].kind === 'proof-mc'
+    && order12[0] === 'ch1-1.2-ii' && order12[1] === 'ch1-1.2-ex1f' && order12[2] === 'ch1-1.2-ex1a'
+    && practiceCh1.some((item) => item.kind === 'next-step-blank' && item.cite.page === 15)
+    && practiceCh1.some((item) => item.generator && item.generator.template === 'ch1-arithmetic' && item.generator.params.mode === 'polar'));
+  const made = generateCh1(7, { mode: 'div', re: [-4, 4], im: [-4, 4] });
+  const nextDiv = generateCh1(8, { mode: 'div', re: [-4, 4], im: [-4, 4] });
+  const mod = generateCh1(1, { mode: 'mod' });
+  const polar = generateCh1(2, { mode: 'polar' });
+  const argA = generateCh1(20, { mode: 'arg' });
+  const argB = generateCh1(21, { mode: 'arg' });
+  check('the chapter 1 generator computes its answers',
+    matchesCh1(made.steps[0].answer, made.steps[0])
+    && made.prompt !== nextDiv.prompt
+    && argA.prompt !== argB.prompt
+    && Number(mod.steps[0].answer) === mod.steps[0].value.real
+    && polar.steps.length === 3
+    && matchesCh1(polar.steps[1].answer, polar.steps[1]));
+  check('the chapter 1 sentences flip',
+    turnClaim(2).holds === true && turnClaim(0).holds === false && turnClaim(2).text !== turnClaim(0).text
+    && turnClaim(4).text.includes('Back at') && turnClaim(0).text.includes('not been turned')
+    && timesIClaim({ re: 0, im: 1 }).holds === true && timesIClaim({ re: 1, im: 0 }).holds === false
+    && modulusClaim({ re: 4, im: 3 }).holds === true && modulusClaim({ re: 4, im: 3 }).text.includes('4+3i')
+    && modulusClaim({ re: 1, im: 1 }).holds === false
+    && modulusClaim({ re: 5, im: 0 }).holds === true && modulusClaim({ re: -3, im: 4 }).holds === true
+    && modulusClaim({ re: 3.5, im: 3.5 }).holds === true && modulusClaim({ re: 5, im: 1 }).holds === true
+    && modulusClaim({ re: 4.86, im: 0 }).text.includes('The length is $5.$')
+    && modulusClaim({ re: 6, im: 0 }).holds === false && modulusClaim({ re: 0, im: 4.8 }).text.includes('It is not $5.$')
+    && polarClaim({ re: 1, im: 1 }).holds === true && polarClaim({ re: -1, im: 0 }).holds === false
+    && rootClaim(0).holds === true && rootClaim(1).holds === false
+    && rootClaim(1).text.includes('2\\pi\\cdot 1/5') && rootClaim(0).text.includes('Five equal turns')
+    && !rootClaim(1).text.includes('not the finished')
+    && diskClaim({ re: 0.2, im: 0 }).holds === true && diskClaim({ re: 1, im: 0 }).holds === false && diskClaim({ re: 1.5, im: 0 }).holds === false);
+  {
+    const neg = generateCh1(4, { mode: 'polar' });
+    const book = `${neg.steps[0].answer}e^{-i${neg.steps[1].answer.slice(1)}}`;
+    const ann = practiceCh1.find((item) => item.id === 'ch1-1.6-annulus');
+    const worked = CHAPTER_1.sections.find((s) => s.id === '1.3').worked.body;
+    check('a negative argument keeps the book’s e to the minus i theta',
+      neg.steps[1].answer.startsWith('-') && matchesCh1(book, neg.steps[2]) && matchesCh1(neg.steps[2].answer, neg.steps[2]));
+    const seg = CHAPTER_1.sections.find((s) => s.id === '1.6').memory[0];
+    const polarFlash = practiceCh1.find((item) => item.id === 'ch1-1.4-polar');
+    check('the half-closed annulus cites the bounded set, and Example 1.6 is another pair',
+      ann.cite.ref === 'Bounded set' && ann.cite.page === 40 && !/Exercise 9/.test(ann.prompt) && /Page 40/.test(ann.steps[0].why)
+      && /Figure 1\.30/.test(ann.steps[0].why) && /open annulus/.test(ann.steps[0].why)
+      && /1\+2i/.test(worked) && /3\+2i/.test(worked) && !/\\sqrt\{3\}\+2i/.test(worked) && !/same length/.test(worked)
+      && !/^Definition 1\.8 writes/.test(worked));
+    check('the segment memory prints Equation (1.48), and the distance link opens the formula',
+      seg.includes('z_0+(z_1-z_0)t') && !seg.includes('z_0+t(z_1-z_0)')
+      && citeHref('Distance formula').includes('#sec_geometry-1-13')
+      && !citeHref('Distance formula').includes('fig_ch-01-09')
+      && /Equation \(1\.35\)/.test(polarFlash.prompt)
+      && !/=re\^\{i\\theta\}/.test(polarFlash.steps[0].answer));
+  }
+  {
+    let zeroCoord = false;
+    for (let seed = 1; seed <= 40; seed++) {
+      const g = generateCh1(seed, { mode: 'mod' });
+      const z = parseComplex((g.prompt.match(/\|([^|]+)\|/) || [])[1] || '');
+      if (!z || z.re === 0 || z.im === 0) zeroCoord = true;
+    }
+    check('the modulus generator skips a zero coordinate', zeroCoord === false);
+  }
+  {
+    const fresh = bookWalkTarget({ complete: false, nextId: '1.1' }, { complete: false });
+    const stage = bookWalkTarget({ complete: false, nextId: '1.2' }, { complete: false });
+    const later = bookWalkTarget({ complete: true, nextId: null }, { complete: false });
+    const done = bookWalkTarget({ complete: true, nextId: null }, { complete: true });
+    check('the roadmap walks Chapter 1 before Chapter 4',
+      fresh.label === 'Walk Chapter 1' && fresh.href === '#chapter-1-1-1' && fresh.chapter === 1
+      && stage.label === 'Go to 1.2' && stage.href === '#chapter-1-1-2'
+      && later.label === 'Walk Chapter 4' && later.href === '#chapter-4'
+      && done.label === 'Open Chapter 5' && done.href === '#chapter-5');
+  }
+  {
+    const close = (a, b) => Math.abs(a - b) <= 1e-6;
+    const pairOf = (text) => {
+      const m = String(text).match(/\(([^)]+)\)\s*(?:\\cdot|\+|\/|-)\s*\(([^)]+)\)/);
+      if (!m) return null;
+      return [parseComplex(m[1]), parseComplex(m[2])];
+    };
+    const arithOf = (mode, a, b) => {
+      if (mode === 'add') return { re: a.re + b.re, im: a.im + b.im };
+      if (mode === 'sub') return { re: a.re - b.re, im: a.im - b.im };
+      if (mode === 'mul') return { re: a.re * b.re - a.im * b.im, im: a.re * b.im + a.im * b.re };
+      const d = b.re * b.re + b.im * b.im;
+      return { re: (a.re * b.re + a.im * b.im) / d, im: (a.im * b.re - a.re * b.im) / d };
+    };
+    let argOk = true;
+    let sawNeg = false;
+    let sawQ4 = false;
+    let axisPoint = false;
+    let sawSixth = false;
+    for (let seed = 1; seed <= 48; seed++) {
+      for (const mode of ['add', 'sub', 'mul', 'div']) {
+        const g = generateCh1(seed, { mode, re: [-5, 5], im: [-5, 5] });
+        const pair = pairOf(g.prompt);
+        const got = parseComplex(g.steps[0].answer);
+        if (!pair || !pair[0] || !pair[1] || !got) { argOk = false; continue; }
+        const want = arithOf(mode, pair[0], pair[1]);
+        if (!close(got.re, want.re) || !close(got.im, want.im)) argOk = false;
+        if (!close(g.steps[0].value.re, want.re) || !close(g.steps[0].value.im, want.im)) argOk = false;
+        if (!matchesCh1(g.steps[0].answer, g.steps[0])) argOk = false;
+      }
+      const modG = generateCh1(seed, { mode: 'mod' });
+      const modZ = parseComplex((modG.prompt.match(/\|([^|]+)\|/) || [])[1] || '');
+      if (!modZ || Number(modG.steps[0].answer) !== Math.hypot(modZ.re, modZ.im)) argOk = false;
+      const argG = generateCh1(seed, { mode: 'arg' });
+      const argZ = parseComplex((argG.prompt.match(/Arg\}\(([^)]+)\)/) || [])[1] || '');
+      const polarG = generateCh1(seed, { mode: 'polar' });
+      const polarZ = parseComplex((polarG.prompt.match(/Write \$([^$]+)\$/) || [])[1] || '');
+      for (const [g, z, mode] of [[argG, argZ, 'arg'], [polarG, polarZ, 'polar']]) {
+        if (!z) { argOk = false; continue; }
+        const theta = Math.atan2(z.im, z.re);
+        const argStep = mode === 'arg' ? g.steps[0] : g.steps[1];
+        if (!close(argStep.value.angle, theta)) argOk = false;
+        if (theta <= -Math.PI || theta > Math.PI + 1e-9) argOk = false;
+        if (!matchesCh1(argStep.answer, argStep)) argOk = false;
+        if (argStep.answer.includes('\\pi') && matchesCh1(argStep.answer.replace('\\pi', '3\\pi'), argStep)) argOk = false;
+        if (Math.abs(z.re) < 1e-9 || Math.abs(z.im) < 1e-9) axisPoint = true;
+        if (Math.abs(Math.abs(theta) - Math.PI / 6) < 1e-6 || Math.abs(Math.abs(theta) - Math.PI / 3) < 1e-6) sawSixth = true;
+        if (z.re > 0 && z.im < 0) sawQ4 = true;
+        if (theta < 0) sawNeg = true;
+        if (mode === 'polar' && !close(g.steps[0].value.real, Math.hypot(z.re, z.im))) argOk = false;
+      }
+    }
+    const onAxis = { answer: '\\pi', accept: ['\\pi', 'pi'], value: { angle: Math.PI } };
+    check('chapter 1 generator answers recompute, and Arg stays principal',
+      argOk && sawNeg && sawQ4 && axisPoint === true && sawSixth
+      && matchesCh1('\\pi', onAxis) && !matchesCh1('-\\pi', onAxis) && !matchesCh1('-pi', onAxis));
+  }
+  {
+    const euler = CHAPTER_1.sections.find((s) => s.id === '1.4').read.find((item) => item.pin.startsWith('Euler'));
+    const roots = CHAPTER_1.sections.find((s) => s.id === '1.5').read.find((item) => item.pin.startsWith('Theorem 1.4'));
+    check('Euler’s formula and Theorem 1.4 open the printed statements',
+      euler.href.endsWith('#Euler_s_Formula') && euler.pin.includes('(1.32)')
+      && roots.href.endsWith('#NRoots') && roots.pin.includes('not necessarily distinct'));
+  }
+  const mem = { 'progress.test2': { '4.1.3': true, '5.1.1': true } };
+  const store = {
+    get(key, fallback) { return Object.prototype.hasOwnProperty.call(mem, key) ? mem[key] : fallback; },
+    set(key, value) { mem[key] = value; },
+  };
+  saveSharedTicks(store, { '1.2': true });
+  check('a chapter 1 tick keeps the other chapters',
+    mem['progress.test2']['1.2'] === true && mem['progress.test2']['4.1.3'] === true && mem['progress.test2']['5.1.1'] === true);
+}
 check('chapter 4 sections follow the contents', CHAPTER_4.sections.map((s) => `${s.id} ${s.page}`).join() === '4.1 102,4.2 109,4.3 118,4.4 123');
 check('chapter 4 exercises are the homework set plus 4.4.6', chapter4ExerciseIds().join() === '4.1.3,4.1.13,4.2.3,4.2.4,4.2.5,4.3.1,4.3.2,4.4.6');
 {

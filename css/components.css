@@ -1055,8 +1055,10 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   gap: var(--space-3);
 }
 
-/* The last section can still scroll its title up under the header. */
+/* The last section can still scroll its title up under the header.
+   Chapter 1 puts that room under The Book, so the link sits at the end of 1.6. */
 .chapter-path { padding-bottom: calc(100dvh - var(--header-h)); }
+.ch1-path { padding-bottom: 0; }
 
 .exp-picture {
   display: flex;
@@ -1158,6 +1160,18 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .book-node-head h2,
 .section-node h2 { margin-bottom: var(--space-1); }
 
+.book-node-head h2 {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap);
+}
+
+.book-node-head h2 a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+}
+
 .book-num {
   display: inline-block;
   min-width: 1.4em;
@@ -1179,6 +1193,14 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   text-transform: uppercase;
 }
 
+.book-node-head .book-flag {
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.book-node-head .book-flag:empty { display: none; }
+
 .book-node[data-state="next"] > .book-node-head .book-flag,
 .section-node[data-state="next"] > .book-flag { color: var(--text); }
 
@@ -1193,12 +1215,17 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 
 .book-sections { display: flex; flex-direction: column; gap: var(--space-1); margin-top: var(--space-2); }
 
-.book-sections li {
+.book-sections li { min-width: 0; }
+
+.book-section-link {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   gap: 0.35rem 0.75rem;
-  min-width: 0;
+  min-height: var(--tap);
+  width: 100%;
+  color: inherit;
+  text-decoration: none;
 }
 
 .book-section-page { margin-left: auto; font-variant-numeric: tabular-nums; }
@@ -1209,17 +1236,95 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 
 .book-read { margin: 0; padding-left: 1.2rem; }
 .book-read li { margin: 0.15rem 0; }
-.book-label {
-  margin: var(--space-3) 0 var(--space-1);
-  font-family: var(--font);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
+
+.section-idea { max-width: 62ch; margin: var(--space-3) 0 0; }
+
+.ch1-stage-picture,
+.ch1-deck {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+  min-width: 0;
 }
 
-.section-idea { max-width: 62ch; margin: 0; }
+.ch1-stage-picture .btn,
+.ch1-stage-picture .chip,
+.ch1-stage-picture .ch1-claim { align-self: flex-start; }
+
+.ch1-picture { width: 100%; min-width: 0; max-width: 100%; }
+.ch1-picture .plane {
+  width: min(100%, calc(100dvh - 25rem));
+  max-width: min(100%, 32rem, calc(100dvh - 25rem));
+}
+
+@media (min-width: 56.25rem) {
+  .ch1-book-top { display: none; }
+  .ch1-picture .plane { margin-inline: 0; }
+}
+
+.ch1-keep { white-space: nowrap; }
+
+.ch1-item { min-width: 0; }
+.ch1-practice { gap: var(--space-4); }
+.station-header > .station-link { margin-bottom: var(--space-2); }
+
+.ch1-claim,
+.stage-summit,
+.ch1-note { max-width: 62ch; margin: 0; }
+
+.ch1-note { color: var(--text-muted); }
+
+.stage-summit { font-weight: 600; margin-top: var(--space-3); }
+
+.section-node > .ch1-practice,
+.section-node > .ch1-deck,
+.section-node > .ch1-sheet,
+.section-node > .book-read,
+.section-node > .book-status,
+.section-node > .ch1-done { margin-top: var(--space-3); }
+
+.ch1-sheet {
+  margin: 0;
+  padding-left: 1.2rem;
+  max-width: 62ch;
+}
+
+.ch1-sheet li { margin: 0.2rem 0; }
+.ch1-done { width: 100%; }
+.ch1-done .book-status { flex: 1 1 14rem; }
+
+.ch1-steps {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ch1-ask { margin: 0; min-width: 0; }
+.ch1-blank { width: min(100%, 18rem); }
+
+.ch1-choices {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+}
+
+.ch1-choices .btn {
+  justify-content: flex-start;
+  white-space: normal;
+  text-align: left;
+}
+
+.ch1-step[data-right="true"] {
+  border-left: 4px solid var(--ok);
+  padding-left: var(--space-2);
+}
+
+.ch1-choices .btn[data-right="false"] { border-color: var(--danger); }
+.ch1-card { min-width: 0; }
 .chapter-exercises { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
 .chapter-card { min-width: 0; }
 .chapter-card p { min-width: 0; }

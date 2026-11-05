@@ -46,7 +46,7 @@ export function sourceTag(cite) {
   const p = h('p', { class: 'source-tag' });
   p.append(document.createTextNode(`${BOOK.short}, ${BOOK.title}, `));
   const a = h('a', { href: cite.href, target: '_blank', rel: 'noopener noreferrer' });
-  a.textContent = cite.pin;
+  appendRich(a, cite.pin);
   p.append(a);
   p.append(document.createTextNode(`. ${BOOK.licence}.`));
   return p;
