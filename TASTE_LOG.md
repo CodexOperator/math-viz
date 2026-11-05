@@ -1552,3 +1552,49 @@ The Book, headless Chrome. 390×844 and 1280×800, light and dark. With no provi
 ### What to keep
 
 The signed-out site. PKCE plus the signed state cookie. SameSite=Lax. The union of ticks. The `rev` check. The handle in the cookie and not in the KV value. The header using the quiet button, the 44px target, and the type and paper the station pages already use.
+
+## ux-veteran (sign-in batch 1)
+
+Branch `cursor/sign-in` at `112173e`. Local `wrangler pages dev` with the provider variables and `PROGRESS` stubbed, so `/api/me` returns both providers and the header paints the control. Phone first: 390×844, light and dark, touch. Then 1280×800, light and dark. A 360×780 check for sideways scroll. No product code was changed. The book pages logged no console errors. `scrollWidth` matched the window at 360, 390, and 1280, both themes.
+
+The unmodified tap is the first finding. The cancel, merge, and Back notes below are the same buttons after a navigation is allowed to reach the function, which is what the tap does not do today.
+
+### The walk
+
+**Where it sits.** On The Book at 390×844, light, the header is 148px. The name is one line. Under it, the theme button (44×44) and Chapters (118×44). Under those, right-aligned, "Sign in to keep your progress", 225×44, at y = 97, type 13px, border transparent. The same stack in the dark, paper `rgb(13, 18, 28)`, text `rgb(233, 237, 245)`. The branch preview, where `/api/me` is the 404 page, leaves the slot empty and the header at 96px, and The Book still shows the status and a 44px Continue. The sign-in row is the extra 52px. Continue sits at y = 442 with the row, and at y = 390 on the preview. It stays on the first screen.
+
+Opening it at 390 grows the header to 199px. Google is 93×44 and X is 45×44, both bordered like Chapters, on the row under the sentence. Continue moves to y = 492 and stays on the screen. The drawer opens with its top at the real header (the page sets `--header-h` to 147px). "1 Complex Numbers" is 358×44 at y = 164, clear of the sign-in row. Scrolling Chapter 4's card to the anchor puts it at y = 163, under a header that ends at 148. At 360 the name is still one line, the control is still 225×44, and nothing scrolls sideways.
+
+At 1280×800 the header is one row, 59px, light and dark. The sidebar is Chapters 1–7 and Test prep. The sentence sits at the right, 225×44, beside the theme button. Google and X open on that same row. The first sidebar row is at y = 75, under the 59px header. Focus on the sentence is the site's ring, 3px `rgb(26, 34, 48)`, offset 2px.
+
+**The tap.** From `#chapter-5`, scrolled, the Google control goes to `/auth/google/start?return=%2F%23chapter-5`. The page that loads is titled "Not found · One Point, Two Addresses". The words are "That page is not on the map." The only link is 223×17, "Back to One Point, Two Addresses", and its href is `/auth/google/index.html`. The stylesheets 404, so the type is the browser's, black on white, with no header and no paper. The dev log for that request is `Sec-Fetch-Mode: navigate` and `not_found_handling`. `wrangler.jsonc` sets the compatibility date to 2026-10-20 and `not_found_handling` to `404-page`, which is the switch that serves `404.html` for a browser navigation and never runs the function. Browser Back from that 404 returns to `#chapter-5` and restores the scroll (y = 551).
+
+**Wording.** The sentence is the whole control. It does not say optional. "Keep your progress" is the promise. The phone already keeps the ticks: after Sign out, `mv:progress.test2` was still `{"5.1.2":true}` and the status read "Next is §4.1, Exercise 3. 1 of 10 exercises." The preview, with an empty slot, shows the same card at "0 of 10".
+
+**Signed in.** A Google session with `shael.student@university.edu` paints the handle at 160×16 and clips it to "shael.student@unive…". The element has no `title`. Sign out is 104×44, the same borderless type, on the right of that third row. An X session paints `@mat412notes` in full, 101×16, and the same Sign out, in the dark at 1280 on the one header row. Sign out reloads `#book` at scroll 0 and puts the sign-in sentence back. The tick stays.
+
+**First sign-in.** The phone had `4.1.3` and `5.1.2` ticked. The book said "2 of 10". Nothing was written to the account until a later edit, and the write that did happen was the store after that edit (`5.1.2` only). A different account that already held `4.1.3` reloaded the chapter on its own (`mv:account-synced` set, two loads) at scroll 0. Chapter 5's status stayed "0 of 2". The tick was in `localStorage`. No sentence said a tick had moved.
+
+**Cancel and Back.** With the function actually running, cancelling at the provider (`error=access_denied`, state matched) returns to `#chapter-5` at scroll 0. The button still says "Sign in to keep your progress". The live region says "Chapter 5". The same cancel on X returns to `#book` in the dark and the live region says "The Book". A callback whose state does not match is a 302 to `/#book` with an empty body. Back from the returned chapter loads the provider authorize URL again. Back from the provider itself, before cancel, returns to `#chapter-5` at the old scroll (y = 531).
+
+### Verdict
+
+ANOTHER BATCH. The control is on The Book, the targets are 44px, and a signed-out phone still has the book. The tap a student makes opens an unstyled 404, and the flows behind that tap never say what happened to the ticks.
+
+### Ranked fixes
+
+1. **The sign-in tap opens "That page is not on the map."** From `#chapter-5` the Google control loads `/auth/google/start?return=%2F%23chapter-5`. The page is the site's 404, unstyled, because `theme.css` and `components.css` 404 under `/auth/google/`. The only link is 223×17 and points at `/auth/google/index.html`. The log names `Sec-Fetch-Mode: navigate` and `not_found_handling`. Change: a navigation to `/auth/*` and `/api/*` runs the function. In `wrangler.jsonc`, run the worker first on those paths, or set the compatibility flag that stops a navigation from being answered with `404.html`. The 404's own link, for a page that is actually missing, goes to `#book`, and its CSS is root-relative.
+
+2. **Cancel looks like the tap never happened.** A matched `access_denied` returns to `#chapter-5` at scroll 0, the sentence unchanged, the live region saying "Chapter 5". X returns to `#book` the same way. A callback with a bad state is a 302 to `/#book` and an empty body. Change: the return lands on the chapter the student left, and `#route-status` says "Sign-in cancelled. Your ticks are still on this phone." A failed exchange uses that same line with "Sign-in didn't finish."
+
+3. **Back after cancel opens the provider again.** From the chapter the cancel returned to, Back's address is the provider authorize URL. Back from the provider, before cancel, already does the right thing: `#chapter-5` at the scroll the student left (y = 531). Change: the callback redirect drops the provider entry. After a cancel or a success, Back is the page from before the tap, at the scroll it had.
+
+4. **The ticks already on the phone are not copied, and a tick that arrives reloads the chapter in silence.** Two local ticks, `4.1.3` and `5.1.2`, produced no save until a later edit, and that save was the store after the edit. An account that already had `4.1.3` reloaded `#chapter-5` at scroll 0. The status stayed "0 of 2". The tick was in `localStorage`, and nothing on the page said so. Change: the first signed-in load writes the merged record, including when the account is empty. Apply the result on the page that is open. One line on the status the book already has: "Kept 2 ticks from this phone." or "Brought 1 tick from your other device." Leave the scroll.
+
+5. **The sentence takes a third row and over-claims.** At 390 the header is 148px with the control and 96px on the preview without it. The control is 225×44 of 13px type, right-aligned, with no border, under Chapters. "Keep your progress" reads as the way the ticks survive. They already survive on the phone, including after Sign out ("1 of 10", `5.1.2` still stored). Change: one bordered 44px button on the Chapters row, two lines at the 13px size, "Sign in" and "for another device". The header stays the preview's height. Google and X stay the second tap, on the bordered buttons they already are.
+
+6. **The signed-in address is cut off, and Sign out jumps to the top.** `shael.student@university.edu` renders as "shael.student@unive…" in a 160×16 line with no `title`. `@mat412notes` fits. Sign out is 104×44 and reloads `#book` at scroll 0. The tick is still there when the page comes back. Change: the header shows `@name` or the part before `@`, and the full address is the control's accessible name. Sign out clears the session and leaves the page where it is.
+
+### What to keep
+
+The slot stays empty when `/api/me` does not answer, and The Book is unchanged: status, 44px Continue, the eight drawer rows. Sign-in is that one header control on The Book, not a second block in the page. Google and X are the site's bordered buttons, on the paper and the type the book already uses (`rgb(246, 243, 236)` and `rgb(13, 18, 28)`, Iowan title, the accent Continue). The sentence, Google, X, and Sign out are all at least 44px tall. The focus ring is the site's. The drawer and the chapter anchor follow the real header height, so the extra row does not cover "1 Complex Numbers" or the Chapter 4 title. When the function runs, the return hash is the chapter the student left, Back from the provider restores that chapter's scroll, Sign out leaves the ticks on the phone, and a tick held on the account does come down into `localStorage`. Dark matches light.
