@@ -5980,3 +5980,45 @@ Headless Chrome, 390×844 and 1280×800. `#test-prep` opens at scroll 0 on the w
 `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the practice catalog, the three generators, the Leitner merge, and the miss merge. `node kit/smoke.mjs` exits 0.
 
 **ACCEPT WITH FIXES**
+
+## Practice engine, batch 5 — review
+
+Verdict: **ACCEPT**. Pull request 43, branch `cursor/practice-engine`, reviewed from `87c474de9a6b50a3741790eb428b4071fa02fc4e`. Not merged. Nothing was deployed, and `gh-pages` was not touched. No practice line was rewritten on this pass.
+
+The preview at https://practice-preview.complexanalysis.pages.dev serves this tip: `js/practice/catalog.js` fetches only the chapter files on disk, and the Definition 4.13 card names a sequence of positive real numbers.
+
+### The two pins, against the 202 Updated Edition
+
+Printed page P is PDF page P+9. The title page is the 202 Updated Edition. Theorem 4.9 is printed on page 113. The page defines \(K_c\) as the set of points whose orbit under \(f_c(z)=z^2+c\) stays bounded, and it defines the Julia set as the boundary of \(K_c\). The theorem is two sentences: the boundary of \(K_c\) is connected if and only if \(0\in K_c\), and the Julia set is connected if and only if the orbit of 0 is bounded. The flash back is the second sentence. The sheet line, “Connected Julia set exactly when \(0\) is in \(K_c\)”, is the first. The anchor is `#Kc_Connected`.
+
+Theorem 4.11 is printed on page 116. The numbered statement is: \(f_c(z)=z^2+c\) has attracting fixed points if and only if \(|1+\sqrt{1-4c}|<1\) or \(|1-\sqrt{1-4c}|<1\), principal square root. The flash back is that statement. The paragraph immediately before the theorem says the main cardioid-shaped body of the Mandelbrot set is made of those \(c\), and that Theorem 4.11 characterizes them. Exercise 10 on page 118 asks the student to show that the solutions of those inequalities form that cardioid. The sheet line, “an attracting fixed point precisely when \(c\) lies inside the main cardioid”, is that page’s reading. “Inside” matches the strict inequality: at the cusp \(c=1/4\) the modulus is 1, so the fixed point does not attract. The fixed point is a \(z\)-value. The cardioid is a set of \(c\).
+
+### The rest of the cites
+
+Every practice cite in `ch2.json`, `ch4.json`, and `ch5.json` was read against the printed page. The batch 5 edit is Definition 4.13, page 121: the sequence is positive real numbers, \(L\) is the smallest real number such that only finitely many terms exceed \(L+\varepsilon\), and the limit supremum is infinity when no such \(L\) exists. The card says that.
+
+The other statements still sit where the batch 4 review put them. Linear \(w=Az+B\) is page 50. Definitions 4.1 and Theorem 4.1 are page 103, and the triangle-inequality step is page 104. Definitions 4.2 through 4.5 and Theorems 4.2 and 4.3 are pages 104–105. Definitions 4.6 and 4.7 and Theorems 4.4 and 4.5 are page 106. Theorem 4.6, Definition 4.8, Theorems 4.7 and 4.8, and Corollary 4.1 are page 107. Exercise 1(a) is page 108, and the selected answer on page 437 is 0. Definitions 4.9 and 4.10 and Theorem 4.10 are page 115. Definitions 4.11 and 4.12 are page 116. Exercise 3 is page 117, and the selected answer on page 438 is one step to \(-b/a\), or zero steps when the guess is already the root. Theorem 4.12 and Equation (4.14) are page 118. Corollaries 4.2 and 4.3 are page 119. Theorem 4.13 is page 120. The note that \(L=1\) decides nothing is on page 122, under Theorems 4.13 and 4.14. Exercise 1(b) on page 122 is \(\sum (1/(2+i))^n\), which sums to \((3-i)/2\). Exercise 2 on that page is the disk \(|z+i|<2\). Exercise 6 on page 123 is \(z^n\to 0\) when \(|z|<1\). Theorem 4.15 is page 124. Theorems 4.16 and 4.17 are page 125. The HTML anchor `#th15` is the radius theorem; the HTML numbers it 4.4.3 and the PDF numbers it Theorem 4.16. Definition 5.1 and the start of Theorem 5.1, including part (i), are page 130. Parts (ii) and (iii) are printed on page 131. Identity (5.1) is page 132. Equations (5.5), (5.6), and (5.7) and Figure 5.2 are page 133. Exercise 2(c) is page 135. Definition 1.11, \(\operatorname{Arg} z\in(-\pi,\pi]\), is page 23.
+
+### Generators
+
+Seeds 1 through 400 were recomputed. Every inside ratio has `geometricSum` equal to \(1/(1-z)\). Every outside ratio is marked diverges, including \(|z|=1\). Every radius is \(|c|\) for \(\sum (z-\alpha)^n/c^n\), and the centre does not enter it. Every exponential keeps \(|e^z|=e^x\) symbolic and \(\operatorname{Arg}(e^z)\) in \((-\pi,\pi]\), with both ends \(\pm\pi\) returning \(\pi\). Every linear image is \(ax+b\) and \(ay\).
+
+### Walked
+
+Headless Chrome, local copy of this tip, 390×844 and 1280×800, light and dark, plus the book at 360×780. The mixed status is “Chapters 4 and 5. 1 of 18.” The only practice files requested are `ch2.json`, `ch4.json`, and `ch5.json`. Nothing under `kit/` is requested. The console is quiet. The sheet lede is one sentence, the sections are 4.1 through 5.1, and chapter 2 is not on it. Both theorem lines above are on the sheet.
+
+The worked proof of Theorem 4.1 is one filled step. The count is “Step 1 of 2”. Next ends at 825px on the phone and at 539px at 1280, in both themes, at scroll 0. Each formula is one line, about 25px tall. The page does not scroll sideways. The closed title “Analytic and Harmonic Functions” is the full string at 360, 390, and 1280, on the book row and in the chapter list.
+
+`#test-prep-4-4-2`, `#test-prep-4-4-4`, and `#test-prep-5-5-1` open on a filled example. On the faded proof, Hint becomes Next hint, and after the second hint the button is gone. The sheet opened on that empty blank does not print \(|x_n-u|+|y_n-v|\).
+
+A wrong check on Exercise 3 stores `ch4-4.2-ex-3` step 0 as pending and the status becomes “2 of 3”. Reload comes back as “Section 4.2. 1 of 3” with the flag still pending. The third card is that step again. A correct \(-b/a\) clears the flag. Set complete names the one-step Newton fact.
+
+Section 4.1 flashcards open on “limit of a sequence”, cite Definition 4.1, page 103, and show one counter, “1 of 17”. The back is the \(\varepsilon\)-\(N\) sentence and does not repeat the cite. Again stores box 1, due today, and the next front is Theorem 4.1. The same card returns later in the pile. The Definition 4.13 back says “a sequence of positive real numbers”.
+
+The multiply film’s way up is The Book, linking `#book`. The note does not say Story Map.
+
+### Smoke
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the open-chapter mix, the positive-sequence card, book-order flashcards, Again due today, and the pending miss. `node kit/smoke.mjs` exits 0. `js/core/map-route.js` is byte-identical to `kit/template/js/core/map-route.js`. No file under `js/` imports `kit/`.
+
+**ACCEPT**
