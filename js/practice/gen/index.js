@@ -3,10 +3,16 @@
 
 import * as geometricSeries from './geometric-series.js';
 import * as expModArg from './exp-mod-arg.js';
+import * as ratioRadius from './ratio-radius.js';
+import * as twoModuli from './two-moduli.js';
+import * as sinParts from './sin-parts.js';
 
 export const GENERATORS = Object.freeze({
   [geometricSeries.id]: geometricSeries,
   [expModArg.id]: expModArg,
+  [ratioRadius.id]: ratioRadius,
+  [twoModuli.id]: twoModuli,
+  [sinParts.id]: sinParts,
 });
 
 export function generateItem(template, seed, params) {

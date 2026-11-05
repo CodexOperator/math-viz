@@ -134,6 +134,19 @@ function closeComplex(a, b) {
   return Math.abs(a.re - b.re) <= 1e-6 && Math.abs(a.im - b.im) <= 1e-6;
 }
 
+// A known slip, or the step's own why when the attempt is not one of those slips.
+export function explainMiss(step, value) {
+  const list = Array.isArray(step && step.misses) ? step.misses : [];
+  for (const miss of list) {
+    const target = miss && (miss.choice != null ? miss.choice : miss.match);
+    const extra = miss && miss.accept;
+    if (target && answersMatch(value, target, extra)) {
+      return { why: miss.why || (step && step.why) || '', matched: true };
+    }
+  }
+  return { why: (step && step.why) || '', matched: false };
+}
+
 export function answersMatch(input, expected, accept) {
   const got = canon(input);
   if (!got) return false;

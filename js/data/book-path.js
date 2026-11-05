@@ -309,18 +309,18 @@ export function pictureGroup(id) {
     CHAPTER_PICTURE[k].station === pic.station && CHAPTER_PICTURE[k].chip === pic.chip));
 }
 
-// Where a section title goes. 4.x open the picture. 5.2–5.5 open the reading,
-// except 5.4, which already has a station.
+// Where a section title goes. 4.x open the picture. 5.1 stays on this page.
+// 5.2, 5.3, and 5.5 open their Later rows. 5.4 opens its stage, not the circuit.
 export const SECTION_DOOR = deepFreeze({
   '4.1': '#sequence-chapter-4-1-3',
   '4.2': '#julia',
   '4.3': '#geometric-chapter-4-3-1',
   '4.4': '#powerseries-chapter-4-4-6',
   '5.1': '#chapter-exp',
-  '5.2': sectionHref('sec_complex-log.html'),
-  '5.3': sectionHref('sec_complex-exponents.html'),
-  '5.4': '#phasor-current',
-  '5.5': sectionHref('sec_inverse-trig-hyperbolics.html'),
+  '5.2': '#chapter-5-5-2',
+  '5.3': '#chapter-5-5-3',
+  '5.4': '#chapter-5-5-4',
+  '5.5': '#chapter-5-5-5',
 });
 
 // The next camp, named in the sentence a finished stage leaves behind.

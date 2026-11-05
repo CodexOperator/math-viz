@@ -121,6 +121,12 @@ function sumItem(rand, seed) {
         hints: converges
           ? ['The closed form is $1/(1-z)$.', 'Clear the denominator of $z$ before you simplify.']
           : ['There is no finite sum on or outside the unit circle.', 'The word the theorem uses is diverges.'],
+        misses: converges ? [
+          {
+            match: '0',
+            why: 'A denominator written as $0$ treats the conjugate product as $0$. A conjugate product is $|z|^2$, which is positive.',
+          },
+        ] : [],
       },
     ],
     witness: { kind: 'sum', a, b, den, converges },
@@ -143,26 +149,140 @@ function radiusItem(rand) {
         text: 'The radius is ___.',
         answer: String(rho),
         accept: [`\\sqrt{${pair[0] * pair[0] + pair[1] * pair[1]}}`],
-        why: `Theorem 4.16, page 125: dividing by $(${coeff})^n$ makes the radius $|${coeff}|$. The centre does not change it.`,
+        why: `Theorem 4.16, page 125: dividing by $(${coeff})^n$ makes the radius $|${coeff}|$.`,
         hints: [
           'The centre $\\alpha$ does not appear in the radius.',
-          'For $\\sum (z-\\alpha)^n/c^n$ the radius is $|c|$. The ratio uses the full term, not the coefficient alone.',
+          'For $\\sum (z-\\alpha)^n/c^n$ the radius is $|c|$.',
         ],
-        misses: [
-          {
-            match: String(cx),
-            accept: [String(cy), 'goes to infinity', 'R goes to \\infty'],
-            why: 'The centre is not the radius, and a radius does not go to $\\infty$. Theorem 4.16, page 125, gives $|c|$, or $R=\\infty$ when that is the case. The ratio is of the full terms $a_n z^n$, not of the coefficients alone.',
-          },
-        ],
+        misses: radiusMisses(cx, cy, centre, coeff, rho),
       },
     ],
     witness: { kind: 'radius', p, q, rho, cx, cy },
   };
 }
 
+const CENTRE_ZERO = 'The centre is not the radius. Write $R=0$ only when the series converges only at the centre.';
+const GOES = 'Write $R=\\infty$. The radius does not go to $\\infty$.';
+const COEFF = 'That is the coefficient alone. The radius is the modulus of the coefficient.';
+const CENTRE = 'The centre is not the radius.';
+
+function radiusMisses(cx, cy, centre, coeff, rho) {
+  const misses = [
+    {
+      match: '0',
+      accept: ['R=0', 'R = 0'],
+      why: CENTRE_ZERO,
+    },
+    {
+      match: 'goes to infinity',
+      accept: ['R goes to \\infty', 'R goes to infinity', 'goes to \\infty', '\\infty'],
+      why: GOES,
+    },
+  ];
+  if (coeff !== String(rho)) {
+    misses.push({
+      match: coeff,
+      accept: [coeff.replace(/[{}]/g, '')],
+      why: COEFF,
+    });
+  }
+  const centreAccept = [centre];
+  if (String(cx) !== '0') centreAccept.push(String(cx));
+  if (String(cy) !== '0' && String(cy) !== String(cx)) centreAccept.push(String(cy));
+  misses.push({ match: centre, accept: centreAccept, why: CENTRE });
+  return misses;
+}
+
+function zMinus(a, b) {
+  if (a === 0 && b === 0) return 'z';
+  if (a === 0 && b === 1) return 'z-i';
+  if (a === 0 && b === -1) return 'z+i';
+  if (a === 0 && b > 1) return `z-${b}i`;
+  if (a === 0 && b < -1) return `z+${-b}i`;
+  if (b === 0 && a > 0) return `z-${a}`;
+  if (b === 0 && a < 0) return `z+${-a}`;
+  return `z-(${texComplex(a, b)})`;
+}
+
+function shiftedItem(rand) {
+  let a = 0;
+  let b = -1;
+  let radius = 2;
+  let p = 1;
+  let q = 1;
+  let den = 3;
+  for (let n = 0; n < 20; n++) {
+    a = pickInt(rand, -2, 2);
+    b = pickInt(rand, -2, 2);
+    radius = pickInt(rand, 2, 4);
+    p = pickInt(rand, -2, 2);
+    q = pickInt(rand, -2, 2);
+    den = pickInt(rand, 2, 5);
+    if (p === 0 && q === 0) continue;
+    if (p * p + q * q < den * den) break;
+  }
+  if (p * p + q * q >= den * den) {
+    p = 1;
+    q = 1;
+    den = 3;
+  }
+  const inside = zMinus(a, b);
+  const disk = `|${inside}|<${radius}`;
+  const ratio = texRatio(p, q, den);
+  const sum = geometricSum(p, q, den);
+  return {
+    prompt: `Where does $\\sum_{n=0}^{\\infty}\\left(\\dfrac{${inside}}{${radius}}\\right)^n$ converge, and what is the sum when that ratio equals $${ratio}$?`,
+    steps: [
+      {
+        text: 'The series converges when ___.',
+        answer: `$${disk}$`,
+        accept: [disk, disk.replace(/\|/g, '|')],
+        why: `Set $w=(${inside})/${radius}$. Theorem 4.12, page 118, needs $|w|<1$, which is $${disk}$.`,
+        hints: [
+          'Convergence needs $|w|<1$.',
+          `Multiply that inequality by ${radius}.`,
+        ],
+        misses: [
+          {
+            match: `(${inside})/${radius}<1`,
+            accept: [`${inside}/${radius}<1`, 'w<1', 'w < 1'],
+            why: 'That compares the complex ratio to $1$. The test is $|w|<1$, the modulus. Theorem 4.12, page 118.',
+          },
+          {
+            match: `|${inside}|<1`,
+            why: `That forgot the rescale. $|w|<1$ with $w=(${inside})/${radius}$ is $${disk}$.`,
+          },
+          {
+            match: `|(${inside})/${radius}|<${radius}`,
+            accept: [`|${inside}/${radius}|<${radius}`],
+            why: `${radius} bounds $|${inside}|$, not $|w|$. The threshold on $|w|$ is $1$.`,
+          },
+        ],
+      },
+      {
+        text: 'The sum is ___.',
+        answer: sum,
+        accept: [sum.replace(/\\frac\{([^{}]+)\}\{([^{}]+)\}/, '($1)/($2)')],
+        why: `The modulus of the ratio is less than $1$, so Theorem 4.12, page 118, gives $1/(1-w)$.`,
+        hints: [
+          'The closed form is $1/(1-w)$.',
+          'Clear the denominator, then multiply by the conjugate.',
+        ],
+        misses: [
+          {
+            match: '0',
+            why: 'A denominator written as $0$ treats the conjugate product as $0$. A conjugate product is $|z|^2$, which is positive.',
+          },
+        ],
+      },
+    ],
+    witness: { kind: 'shifted', a, b, radius, p, q, den },
+  };
+}
+
 export function generate(seed, params = {}) {
   const rand = mulberry32(seed);
-  const kind = params.kind === 'radius' ? 'radius' : 'sum';
-  return kind === 'radius' ? radiusItem(rand) : sumItem(rand, Number(seed) || 1);
+  if (params.kind === 'radius') return radiusItem(rand);
+  if (params.kind === 'shifted') return shiftedItem(rand);
+  return sumItem(rand, Number(seed) || 1);
 }

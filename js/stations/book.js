@@ -20,7 +20,7 @@ import { mountExpPicture } from './exp-picture.js';
 import { mountPrep } from '../practice/mount.js';
 import { paintSetStill } from '../book/stills.js';
 import { PRACTICE } from '../practice/catalog.js';
-import { answersMatch } from '../practice/check.js';
+import { answersMatch, explainMiss } from '../practice/check.js';
 
 function slug(id) {
   return String(id).replace(/\./g, '-');
@@ -34,8 +34,9 @@ function ticksOf(store) {
   return loadSharedTicks(store, tickOwned, chapter4ExerciseIds());
 }
 
-function upLink(id, href, label) {
-  return h('a', { class: 'station-link', id, href, 'data-dir': 'prev' }, label);
+function upLink(id, href, label, extra) {
+  const cls = extra ? `station-link ${extra}` : 'station-link';
+  return h('a', { class: cls, id, href, 'data-dir': 'prev' }, label);
 }
 
 function exerciseHint(section, problem) {
@@ -126,7 +127,7 @@ function orbitFromZero(cRe, cIm, count) {
   return lines;
 }
 
-function miniBlank(id, prompt, answer, accept, onRight) {
+function miniBlank(id, prompt, answer, accept, onRight, step) {
   const line = h('p', { class: 'exp-blank', id });
   appendRich(line, prompt);
   const input = h('input', {
@@ -142,8 +143,10 @@ function miniBlank(id, prompt, answer, accept, onRight) {
       onRight();
       return;
     }
+    const told = explainMiss(step, input.value);
     note.hidden = false;
-    note.textContent = 'Not that line.';
+    note.replaceChildren();
+    appendRich(note, told.why || (step && step.why) || '');
   });
   return h('div', { class: 'chapter-blank-work', id: `${id}-work` }, line, input, h('div', { class: 'problem-actions' }, check), note);
 }
@@ -151,11 +154,19 @@ function miniBlank(id, prompt, answer, accept, onRight) {
 function stageMemory(sectionId) {
   const flash = PRACTICE.find((it) => it.id === `ch4-${sectionId}-stage-flash` || it.id === `ch5-${sectionId}-stage-flash`);
   const host = h('div', { class: 'card', id: `chapter-memory-${slug(sectionId)}` });
-  if (!flash) return host;
+  if (!flash) {
+    host.hidden = true;
+    return host;
+  }
   host.append(
     h('h3', null, `${flash.cite.ref}, page ${flash.cite.page}`),
     h('p', { class: 'book-page' }, 'Howell & Mathews, Complex Analysis, 202 Updated Edition.'),
   );
+  if (flash.formula) {
+    const formula = h('p', { id: `chapter-formula-${slug(sectionId)}` });
+    appendRich(formula, flash.formula);
+    host.append(formula);
+  }
   const ol = h('ol');
   for (const step of String(flash.memory || '').split(/\s(?=\d+\.\s)/)) {
     const li = h('li');
@@ -188,7 +199,6 @@ function stageFoot(section) {
   } else if (next && next.label) {
     kids.push(h('p', { id: `chapter-done-next-${slug(section.id)}` }, next.label));
   }
-  kids.push(stageMemory(section.id));
   box.append(...kids);
   return box;
 }
@@ -400,7 +410,7 @@ function mountChapter4(el, ctx, focus) {
     if (titleAttrs) titleAttrs.class = 'chapter-door';
     const extra = [];
     if (section.id === '4.1') extra.push(pair41(), proof41());
-    if (section.id === '4.2') extra.push(orbit42(), sets42(), beatNewton(), beatDisk());
+    if (section.id === '4.2') extra.push(sets42(), orbit42(), beatNewton(), beatDisk());
     if (section.id === '4.3') extra.push(beatSums());
     if (section.id === '4.4') extra.push(beatCloser());
     path.append(h('li', {
@@ -414,6 +424,7 @@ function mountChapter4(el, ctx, focus) {
       read,
       h('p', { class: 'book-door', id: `${scope}-practice-row` },
         h('a', { href: `#${prepHash(4, section.id)}`, id: `${scope}-practice` }, `Practice ${section.id}`)),
+      stageMemory(section.id),
       exerciseHost,
       stageFoot(section)));
   }
@@ -443,24 +454,28 @@ function mountChapter4(el, ctx, focus) {
     proofHost = miniBlank('chapter-4-1-proof', step.text, step.answer, step.accept, () => {
       work.proof = true;
       paint();
-    });
+    }, step);
     proofHost.hidden = true;
     return proofHost;
   }
 
   function orbit42() {
     const list = h('p', { class: 'chapter-orbit', id: 'chapter-4-2-orbit' }, '0');
+    const line = h('p', { id: 'chapter-4-2-connected', hidden: '' },
+      'The orbit of 0 is bounded, so the Julia set is connected. Theorem 4.9, page 113.');
     const btn = h('button', { type: 'button', class: 'btn', id: 'chapter-4-2-again' }, 'Next landing');
     btn.addEventListener('click', () => {
       if (work.orbit >= 6) return;
       work.orbit += 1;
       list.textContent = orbitFromZero(0, 1, work.orbit).join(' → ');
+      if (work.orbit >= 4) line.hidden = false;
       if (work.orbit >= 6) btn.disabled = true;
       paint();
     });
     return h('div', { id: 'chapter-4-2-orbit-work' },
       h('p', null, 'The orbit of 0 at c = i. Each press is one landing.'),
       list,
+      line,
       h('div', { class: 'problem-actions' }, btn));
   }
 
@@ -498,12 +513,15 @@ function mountChapter4(el, ctx, focus) {
   }
 
   function beatNewton() {
+    const item = PRACTICE.find((it) => it.id === 'ch4-4.2-ex-3');
+    const step = item && item.steps[0];
     return miniBlank(
       'chapter-4-2-newton',
       'For $f(z)=az+b$, one Newton step sends every guess to ___.',
       '-b/a',
       ['-b/a', '-\\frac{b}{a}'],
       () => { work.newton = true; paint(); },
+      step,
     );
   }
 
@@ -514,6 +532,7 @@ function mountChapter4(el, ctx, focus) {
       'disk',
       ['the disk', 'unit disk', 'closed unit disk'],
       () => { work.disk = true; paint(); },
+      { why: 'Example 4.9, page 113: when $c=0$ the filled set is the closed unit disk.' },
     );
   }
 
@@ -524,16 +543,20 @@ function mountChapter4(el, ctx, focus) {
       '1/(1-z)',
       ['\\frac{1}{1-z}', '\\dfrac{1}{1-z}'],
       () => { work.sums = true; paint(); },
+      { why: 'Inside the unit disk the geometric series sums to $1/(1-z)$. Theorem 4.12, page 118.' },
     );
   }
 
   function beatCloser() {
+    const item = PRACTICE.find((it) => it.id === 'ch4-4.4-ex-6');
+    const step = item && item.steps[item.steps.length - 1];
     return miniBlank(
       'chapter-4-4-closer',
       'Theorem 4.15, page 124, spreads convergence to every point ___ the centre.',
       'closer to',
       ['closer', 'nearer to', 'inside'],
       () => { work.closer = true; paint(); },
+      step,
     );
   }
 
@@ -579,8 +602,8 @@ function mountChapter4(el, ctx, focus) {
   }
 
   el.append(
+    upLink('chapter-back', '#book', 'The Book', 'chapter-up'),
     h('header', { class: 'station-header' },
-      upLink('chapter-back', '#book', 'The Book'),
       h('h1', { id: 'chapter-title' }, 'Chapter 4. Sequences, Series, and Fractals'),
       h('p', { class: 'where-line', id: 'where-line' }, 'Chapter 4 · Sequences, Series, and Fractals'),
       h('p', { class: 'station-lede', id: 'chapter-lede' }, 'An orbit is a sequence. Each section says why, then the work, then the sentence.'),
@@ -592,9 +615,9 @@ function mountChapter4(el, ctx, focus) {
   paint();
 
   if (focus) {
-    const card = cards.find((c) => c.getAttribute('data-problem') === focus);
-    const sectionNode = el.querySelector(`#chapter-section-${slug(focus)}`);
-    const target = card || sectionNode;
+    const owner = CHAPTER_4.sections.find((s) => s.id === focus || s.exercises.includes(focus));
+    const sectionNode = owner ? el.querySelector(`#chapter-section-${slug(owner.id)}`) : null;
+    const target = sectionNode || el.querySelector(`#chapter-section-${slug(focus)}`);
     if (target) {
       target.classList.add('is-target');
       target.scrollIntoView({ block: 'start' });
@@ -662,19 +685,48 @@ function mountChapter5(el, ctx, focus) {
     read,
     h('p', { class: 'book-door', id: 'chapter-section-5-1-practice-row' },
       h('a', { href: `#${prepHash(5, '5.1')}`, id: 'chapter-section-5-1-practice' }, 'Practice 5.1')),
+    stageMemory('5.1'),
     h('ul', { class: 'exp-blanks', id: 'chapter-blanks' }, quarterLi),
     exerciseHost,
     stageFoot(section));
 
+  const trig = bookChapter(5).sections.find((s) => s.id === '5.4');
+  const trigIdea = h('p', { class: 'section-idea', id: 'chapter-section-5-4-idea' });
+  appendRich(trigIdea, 'Sine and cosine are the exponential, written as a series. A vertical line in the strip goes to a hyperbola.');
+  const trigRead = h('ul', { class: 'book-read', id: 'chapter-section-5-4-read' });
+  [
+    { pin: 'Definition 5.5, page 148', href: sectionHref('sec_trig-hyperbolics.html') },
+    { pin: 'Theorem 5.4, page 149', href: sectionHref('sec_trig-hyperbolics.html') },
+    { pin: 'Identity (5.35), page 150', href: sectionHref('sec_trig-hyperbolics.html') },
+    { pin: 'Figure 5.7, page 152', href: sectionHref('sec_trig-hyperbolics.html') },
+  ].forEach((item, i) => {
+    trigRead.append(h('li', null, h('a', {
+      href: item.href, target: '_blank', rel: 'noopener noreferrer', id: `chapter-section-5-4-read-${i + 1}`,
+    }, item.pin)));
+  });
+  const stage54 = h('section', {
+    class: 'section-node chapter-stage', id: 'chapter-section-5-4', 'data-section': '5.4',
+  },
+    h('p', { class: 'book-flag', id: 'chapter-section-5-4-flag' }, '5.4'),
+    h('h2', { id: 'chapter-section-5-4-title' }, trig.title),
+    h('p', { class: 'book-page' }, `Page ${trig.page}`),
+    trigIdea,
+    trigRead,
+    h('p', { class: 'book-door', id: 'chapter-section-5-4-practice-row' },
+      h('a', { href: `#${prepHash(5, '5.4')}`, id: 'chapter-section-5-4-practice' }, 'Practice 5.4')),
+    stageMemory('5.4'));
+
   const later = h('ol', { class: 'book-path exp-later', id: 'chapter-later-sections' });
   for (const s of bookChapter(5).sections) {
-    if (s.id === '5.1') continue;
+    if (s.id === '5.1' || s.id === '5.4') continue;
+    const href = `#chapter-5-${slug(s.id)}`;
     later.append(h('li', {
       class: 'book-node', id: `chapter-later-${slug(s.id)}`, 'data-section': s.id, 'data-state': 'later',
     },
-      h('p', { class: 'book-flag' }, 'Later'),
-      h('h2', null, `${s.id} ${s.title}`),
-      h('p', { class: 'book-page' }, `Page ${s.page}`)));
+      h('a', { class: 'book-row', id: `chapter-later-link-${slug(s.id)}`, href },
+        h('p', { class: 'book-flag' }, 'Later'),
+        h('h2', null, `${s.id} ${s.title}`),
+        h('p', { class: 'book-page' }, `Page ${s.page}`))));
   }
 
   function paintStatus() {
@@ -715,23 +767,28 @@ function mountChapter5(el, ctx, focus) {
   if (observed) observer.observe(observed, { attributes: true, attributeFilter: ['data-probe-re', 'data-probe-im'] });
 
   el.append(
+    upLink('chapter-back', '#book', 'The Book', 'chapter-up'),
     h('header', { class: 'station-header' },
-      upLink('chapter-back', '#book', 'The Book'),
       h('h1', { id: 'chapter-title' }, 'Chapter 5. The exponential'),
       h('p', { class: 'where-line', id: 'where-line' }, 'Chapter 5 · The exponential'),
       h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Drag the green dot. Play turns the angle. A blank fills when the picture makes it true.'),
       sourceTag({ pin: 'Chapter 5, Elementary Functions, page 130', href: sectionHref('sec_exponential-function.html') })),
+    h('div', { class: 'book-next', id: 'chapter-next-row' }, status),
     picture,
     off,
-    h('div', { class: 'book-next', id: 'chapter-next-row' }, status),
     walk,
+    stage54,
     later,
     upLink('chapter-back-end', '#book', 'The Book'));
 
   paint();
 
-  const laterId = focus && focus !== '5.1' && !CHAPTER_5.cards[focus] ? `chapter-later-${slug(focus)}` : '';
-  const targetId = focus === '5.1' ? scope : (CHAPTER_5.cards[focus] ? `chapter-card-${slug(focus)}` : laterId);
+  const laterId = focus && focus !== '5.1' && focus !== '5.4' && !CHAPTER_5.cards[focus] ? `chapter-later-${slug(focus)}` : '';
+  const targetId = focus === '5.1' || CHAPTER_5.cards[focus]
+    ? scope
+    : focus === '5.4'
+      ? 'chapter-section-5-4'
+      : laterId;
   const target = targetId ? el.querySelector(`#${targetId}`) : null;
   if (target) {
     target.classList.add('is-target');

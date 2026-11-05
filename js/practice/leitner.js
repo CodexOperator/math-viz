@@ -94,6 +94,9 @@ export function dueOrder(items, deck, today) {
     (isDue(rec, today) ? due : later).push({ item: it, rec });
   }
   const byBox = (a, b) => {
+    const la = a.item && a.item.lead ? 0 : 1;
+    const lb = b.item && b.item.lead ? 0 : 1;
+    if (la !== lb) return la - lb;
     const ba = a.rec ? a.rec.box : 0;
     const bb = b.rec ? b.rec.box : 0;
     if (ba !== bb) return ba - bb;

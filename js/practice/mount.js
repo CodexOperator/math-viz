@@ -2,22 +2,10 @@
 // and Leitner flashcards. The two existing test maps stay behind their own links.
 
 import { h } from '../stations/test2-ui.js';
-import { mount as mountProblems } from '../stations/problems.js';
-import { mount as mountIndex } from '../stations/test2-index.js';
-import { stationById, threadsForMap } from '../registry.js';
 import { BOOK_CHAPTERS } from '../data/book-path.js';
 import { PRACTICE, realize } from './catalog.js';
 import { selectItems, sectionOfFocus, practiceEntries } from './queue.js';
-import { answersMatch } from './check.js';
-
-function missWhy(step, value) {
-  const list = Array.isArray(step && step.misses) ? step.misses : [];
-  for (const miss of list) {
-    const target = miss && (miss.choice != null ? miss.choice : miss.match);
-    if (target && answersMatch(value, target, miss.accept)) return miss.why || step.why;
-  }
-  return step && step.why;
-}
+import { answersMatch, explainMiss } from './check.js';
 import { loadDeck, saveDeck, reviewCard, dueOrder, localDay } from './leitner.js';
 import { renderCard, renderSheet, renderFlash } from './render.js';
 
@@ -40,7 +28,9 @@ function sectionTitle(chapter, section) {
 function memoryGroups(items) {
   const groups = [];
   const index = new Map();
-  for (const it of items) {
+  const leads = items.filter((it) => it.lead && it.memory);
+  const source = leads.length ? leads : items;
+  for (const it of source) {
     if (!it.memory) continue;
     let group = index.get(it.section);
     if (!group) {
@@ -80,6 +70,7 @@ export function mountPrep(el, ctx, spec) {
   let phase = 'ask';
   let right = false;
   let toldWhy = '';
+  let slip = false;
   let done = false;
   let deck = loadDeck(ctx.store);
   let flashShow = false;
@@ -109,10 +100,9 @@ export function mountPrep(el, ctx, spec) {
     });
   }
   const stage = h('div', { class: 'practice-stage', id: 'practice-stage' });
-  const fold1 = h('section', { id: 'prep-test-1', class: 'prep-fold' });
-  const fold2 = h('section', { id: 'prep-test-2', class: 'prep-fold' });
-  let stop1 = function stopProblems() {};
-  let stop2 = function stopIndex() {};
+  const doors = h('div', { class: 'practice-doors', id: 'practice-doors' },
+    h('a', { class: 'btn', id: 'practice-door-test-1', href: '#problems' }, 'Test 1'),
+    h('a', { class: 'btn', id: 'practice-door-test-2', href: '#index' }, 'Test 2'));
 
   function currentEntry() {
     return queue[index] || null;
@@ -129,6 +119,7 @@ export function mountPrep(el, ctx, spec) {
     hint = 0;
     phase = 'ask';
     right = false;
+    slip = false;
   }
 
   function nextSeed(source) {
@@ -144,6 +135,7 @@ export function mountPrep(el, ctx, spec) {
     if (!entry || !entry.source.generator) return;
     entry.seed = (entry.seed || 1) + 1;
     resetStep();
+    slip = false;
     done = false;
     paint();
   }
@@ -156,6 +148,7 @@ export function mountPrep(el, ctx, spec) {
       hint = 0;
       phase = 'ask';
       right = false;
+      slip = false;
       paint();
       return;
     }
@@ -186,7 +179,9 @@ export function mountPrep(el, ctx, spec) {
     if (!item || phase !== 'ask') return;
     const s = item.steps[step];
     right = answersMatch(value, s.answer, s.accept);
-    toldWhy = right ? s.why : missWhy(s, value);
+    const told = explainMiss(s, value);
+    toldWhy = right ? s.why : told.why;
+    slip = !right && told.matched;
     phase = 'told';
     paint();
   }
@@ -201,7 +196,7 @@ export function mountPrep(el, ctx, spec) {
       if (!pool.length) {
         stage.replaceChildren(h('article', { class: 'card practice-card', id: 'practice-card' },
           h('h2', { id: 'practice-prompt' }, 'Nothing filed here yet'),
-          h('p', null, 'Chapters 4 and 5, section 5.1, are the sets on this page.')));
+          h('p', null, 'This section has no practice filed yet.')));
         return;
       }
       renderCard(stage, { done: true }, { memory: () => { mode = 'memory'; paint(); } });
@@ -216,6 +211,7 @@ export function mountPrep(el, ctx, spec) {
       hint,
       phase: entry.view === 'worked' ? 'ask' : phase,
       right,
+      slip,
       why: toldWhy,
       kindLabel: KIND_LABEL[item.kind] || 'Practice',
       count: `Step ${Math.min(step + 1, item.steps.length)} of ${item.steps.length}`,
@@ -283,9 +279,12 @@ export function mountPrep(el, ctx, spec) {
     else paintPractice();
   }
 
-  const lede = walk
-    ? 'A worked proof, then the same proof with the steps missing, then the exercises.'
-    : 'Items from more than one section, mixed. Check, then read the reason.';
+  const hasProof = pool.some((it) => it.kind === 'proof-blank');
+  const lede = !walk
+    ? 'Items from more than one section, mixed. Check, then read the reason.'
+    : hasProof
+      ? 'A worked proof, then the same proof with the steps missing, then the exercises.'
+      : 'The steps of the exercise. Check, then read the reason.';
   el.append(
     h('header', { class: 'station-header' },
       h('p', { class: 'book-kicker', id: 'practice-book' }, 'The Book'),
@@ -294,32 +293,7 @@ export function mountPrep(el, ctx, spec) {
     h('div', { class: 'book-next', id: 'practice-next-row' }, status, back),
     h('div', { class: 'practice-toolbar', id: 'practice-toolbar' }, modeRow, hasGenerator ? endlessBtn : null),
     stage,
-    fold1,
-    fold2);
-  const indexStation = stationById('index');
-  const problemsUnmount = mountProblems(fold1, {
-    store: ctx.store,
-    navigate: ctx.navigate,
-    map: 'test1',
-    station: stationById('problems'),
-    threads: threadsForMap('test1'),
-    preset: null,
-    embedTitle: 'Test 1',
-  });
-  const indexUnmount = mountIndex(fold2, {
-    store: ctx.store,
-    navigate: ctx.navigate,
-    map: 'test2',
-    station: indexStation,
-    threads: threadsForMap('test2'),
-    preset: null,
-    embedTitle: 'Test 2',
-  });
-  if (typeof problemsUnmount === 'function') stop1 = problemsUnmount;
-  if (typeof indexUnmount === 'function') stop2 = indexUnmount;
+    doors);
   paint();
-  return function unmount() {
-    stop1();
-    stop2();
-  };
+  return function unmount() {};
 }

@@ -2,9 +2,8 @@
 // The walk is every exercise the open chapters actually have, in book order.
 // Ticks stay in progress.test2. This file only reads them.
 
-import { CHAPTER_4, CHAPTER_5, shellChapters } from '../data/book-path.js';
+import { CHAPTER_4, CHAPTER_5, activeWalk, shellChapters } from '../data/book-path.js';
 import { chapterTally } from './progress.js';
-import { chapterHash } from './route.js';
 import { test2ProblemById } from '../data/test2-problems.js';
 
 export function walkSections() {
@@ -29,10 +28,8 @@ export function continueTarget(ticks) {
   if (!tally.nextExercise) {
     return { tally, href: '#test-prep', label: 'Continue' };
   }
-  const section = walkSections().find((s) => s.exercises.includes(tally.nextExercise));
-  const chapter = section ? section.chapter : 1;
-  const href = section ? `#${chapterHash(chapter, tally.nextExercise)}` : '#chapter-1';
-  return { tally, href, label: 'Continue' };
+  const walked = activeWalk(ticks);
+  return { tally, href: `#chapter-${walked.chapter}`, label: 'Continue' };
 }
 
 export function continueSentence(ticks) {

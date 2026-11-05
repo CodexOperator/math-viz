@@ -1111,8 +1111,9 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 }
 
 .exp-stage {
-  /* On a phone the square is the column, about 358px, and Play stays on screen. */
-  width: min(100%, calc(100dvh - 20rem));
+  /* The status card sits above the square. 16rem leaves that card, the claim,
+     and Play inside a 844px phone. */
+  width: min(100%, 16rem);
   max-width: 100%;
   aspect-ratio: 1;
   touch-action: none;
@@ -1122,9 +1123,8 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
    above Play, about 440px, and do not inherit the phone's height cap. */
 @media (min-width: 52rem) {
   .exp-stage {
-    /* About 440px when the window is tall enough that Play still fits.
-       25rem is the title, the lede, the source, the claim, and Play. */
-    width: min(100%, 440px, calc(100dvh - 25rem));
+    /* 18rem keeps the status card, the claim, and Play inside an 800px window. */
+    width: min(100%, 16.5rem, calc(100dvh - 34rem));
     max-height: none;
   }
 }
@@ -1286,6 +1286,16 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   border-radius: 0;
   background: transparent;
   box-shadow: none;
+  /* html already has scroll-padding for the site header. This extra is the sticky Book link. */
+  scroll-margin-top: 2.25rem;
+}
+
+a.station-link.chapter-up {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 6;
+  margin-bottom: var(--space-2);
+  background: var(--bg);
 }
 
 .section-node.chapter-stage[data-state="next"],
@@ -1307,8 +1317,8 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .chapter-off[hidden] { display: none; }
 
 .chapter-sets {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-wrap: wrap;
   gap: var(--space-3);
   min-width: 0;
 }
@@ -1316,6 +1326,7 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .chapter-set {
   display: flex;
   flex-direction: column;
+  width: min(11rem, calc(50% - var(--space-3)));
   min-width: 0;
   min-height: var(--tap);
   overflow: hidden;
@@ -1409,8 +1420,27 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .practice-formulas { margin: 0; padding-left: 1.2rem; }
 .practice-memories li,
 .practice-formulas li { margin: 0.35rem 0; }
-.practice-doors { margin-top: var(--space-3); }
+.practice-doors {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.practice-doors .btn { width: 100%; justify-content: flex-start; }
 .practice-doors h2 { margin-bottom: var(--space-2); }
+
+@media (pointer: coarse) {
+  #station-julia .plane-btn {
+    min-width: var(--tap);
+    height: var(--tap);
+    padding: 0 0.5rem;
+  }
+  #station-julia .plane-btn[id$="-zoom-in"],
+  #station-julia .plane-btn[id$="-zoom-out"] {
+    width: var(--tap);
+    padding: 0;
+  }
+}
 .practice-hint-line { margin: 0.2rem 0; }
 
 @media print {

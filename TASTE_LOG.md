@@ -1644,3 +1644,17 @@ ANOTHER BATCH. Four multiple-choice slips fire and name the mistake, and the geo
 ### What to keep
 
 The geometric proof is the exam shape. Practice 4.3 shows the worked Theorem 4.12, page 118, then the three blanks, and the choices include dropping \(z^n\) too early. The disk choices are the three slips from the homework, and the live why for \((z+i)/2<1\) names the modulus. The factorial choice, the coefficient-only ratio, “\(R\) goes to \(\infty\)”, and \(m/2^n\) each came back, on the phone, with a why that names that one slip. The geometric generator’s closed forms check out, and Endless is on the §4.4 card. The \(c=i\) list on the chapter is the bounded orbit a student should compute. The §5.4 row stays a title and a page, so the circuit station is not pretending to be the trig section. The stage recipes, once the foot opens, are the right three lines, with the page on the card. Dark type on the sheet and on the factorial card can be read, and the choice buttons are 48px at 1280.
+
+## Chapter 4 and 5, batch 3
+
+The batch-2 list, on the same branch. Cites are the 202 Updated Edition.
+
+§5.4 is a stage on the chapter, linked from the book row, with the five-line recipe (Identities (5.34) and (5.36), page 150; the derivative pair, Theorem 5.4, page 149; Identity (5.35), page 150; Figure 5.7, page 152). Practice 5.4 opens on the proof choice for \(d/dz\cos z=-\sin z\) (Exercise 1, page 156), then \(\sin(2i)\) (Exercise 6(c), page 157), then a generator that computes both parts of Identity (5.35). No circuit picture on that stage.
+
+Practice 4.2 opens on Exercise 4(a)(b)(c), page 117, then the \(2\pi m/2^n\) choice, then the bounded-orbit line for Theorem 4.9, page 113, then Newton. Exercise 4.4.6, page 129, leads §4.4: \(|4-i|=\sqrt{17}\), \(|2+3i|=\sqrt{13}\), converges at both, closer last. Typing 0 on \(\sum (z-(2+2i))^n/(3i)^n\) gets the centre why and does not print the answer. The ratio generator asks the factorial, the full term, then \(R=\infty\), with a separate why for the centre, for “goes to infinity”, and for the coefficient alone. Exercise 2, page 122, is a proof blank (\(w=(z+i)/2\), \(|w|<1\), \(|z+i|<2\), terms do not go to 0, Theorem 4.5, page 106) and the old choices stay next. A shifted-disk generator carries the same three misses, and a denominator written as 0 names the conjugate product.
+
+The numbered recipe sits on the stage before the tick. The print sheet is those recipes. Definition cards start behind the stage cards. A chapter blank uses the practice why. §4.4 no longer says a worked proof is coming.
+
+At 390×844 and 1280×800, light and dark, the Chapter 5 status card ends inside the window (420 and 388) and Play does too (829 and 772). On `#chapter-4-4-2` the Mandelbrot still is on that screen and the Book link stays at 44px under the header. Julia’s + and − are 44×44 with a coarse pointer. §§5.2, 5.3, and 5.5 are Later rows that open `#chapter-5-5-2`, `#chapter-5-5-3`, and `#chapter-5-5-5`. Continue on `#book` opens `#chapter-4`. The drawer is Chapters 1–7, then Test prep. Test prep links to the two indexes instead of mounting them.
+
+`node tools/check_vectors.mjs` 234/234. `node tools/fractal-smoke.mjs` passed. `node kit/smoke.mjs` passed.

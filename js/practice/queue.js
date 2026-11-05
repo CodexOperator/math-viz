@@ -25,8 +25,15 @@ export function selectItems(items, { chapter = null, section = null } = {}) {
   });
 }
 
+function placeOf(item) {
+  return Number.isFinite(item && item.place) ? item.place : 1000;
+}
+
 function bySectionThenKind(a, b) {
   if (a.section !== b.section) return a.section < b.section ? -1 : 1;
+  const ap = placeOf(a);
+  const bp = placeOf(b);
+  if (ap !== bp) return ap - bp;
   const ag = a.generator ? 1 : 0;
   const bg = b.generator ? 1 : 0;
   if (ag !== bg) return ag - bg;

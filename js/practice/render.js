@@ -9,6 +9,11 @@ function rich(text, attrs) {
   return node;
 }
 
+function recipeSteps(memory) {
+  const parts = String(memory || '').split(/\s(?=\d+\.\s)/).map((s) => s.replace(/^\d+\.\s*/, '').trim()).filter(Boolean);
+  return parts.length > 1 ? parts : null;
+}
+
 function fillStep(parent, text, answer) {
   const parts = String(text || '').split('___');
   if (parts.length === 1) {
@@ -136,7 +141,7 @@ export function renderCard(host, vm, act) {
     const last = vm.step >= item.steps.length - 1;
     const nextLabel = !last ? 'Next step' : (vm.endless && item.generator ? 'Generate another' : 'Next');
     actions.push(h('button', { type: 'button', class: 'btn btn-primary', id: 'practice-next' }, nextLabel));
-    kids.push(verdict, vm.right ? null : reveal, why, h('div', { class: 'problem-actions' }, ...actions));
+    kids.push(verdict, (vm.right || vm.slip) ? null : reveal, why, h('div', { class: 'problem-actions' }, ...actions));
   }
 
   const card = h('article', { class: 'card practice-card', id: 'practice-card', 'data-kind': item.kind, 'data-view': vm.view }, ...kids.filter(Boolean));
@@ -169,15 +174,27 @@ export function renderSheet(host, groups) {
       formulas.forEach((line) => ul.append(h('li', null, rich(line.formula))));
       block.append(ul);
     }
-    block.append(h('p', { class: 'book-flag' }, 'Takeaways'));
-    const ul = h('ul', { class: 'practice-memories' });
-    group.lines.forEach((line) => {
-      const li = h('li');
-      appendRich(li, line.memory);
-      li.append(document.createTextNode(` (${line.ref}, page ${line.page})`));
-      ul.append(li);
-    });
-    block.append(ul);
+    const recipe = group.lines.length === 1 ? recipeSteps(group.lines[0].memory) : null;
+    if (recipe) {
+      block.append(h('p', { class: 'book-page' }, `${group.lines[0].ref}, page ${group.lines[0].page}`));
+      const ol = h('ol', { class: 'practice-memories' });
+      recipe.forEach((line) => {
+        const li = h('li');
+        appendRich(li, line);
+        ol.append(li);
+      });
+      block.append(ol);
+    } else {
+      block.append(h('p', { class: 'book-flag' }, 'Takeaways'));
+      const ul = h('ul', { class: 'practice-memories' });
+      group.lines.forEach((line) => {
+        const li = h('li');
+        appendRich(li, line.memory);
+        li.append(document.createTextNode(` (${line.ref}, page ${line.page})`));
+        ul.append(li);
+      });
+      block.append(ul);
+    }
     sheet.append(block);
   }
   host.append(sheet);

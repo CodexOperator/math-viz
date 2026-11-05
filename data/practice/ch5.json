@@ -119,7 +119,11 @@
     "id": "ch5-5.1-stage-flash",
     "chapter": 5,
     "section": "5.1",
-    "cite": { "ref": "Identity (5.1)", "page": 132, "href": "https://complexanalysis.org/web/sec_exponential-function.html#exp_z__Def" },
+    "cite": {
+      "ref": "Identity (5.1)",
+      "page": 132,
+      "href": "https://complexanalysis.org/web/sec_exponential-function.html#exp_z__Def"
+    },
     "kind": "flash",
     "prompt": "What is $e^{z}$ for $z=x+iy$?",
     "steps": [
@@ -131,6 +135,159 @@
     ],
     "generator": null,
     "memory": "1. Write $e^{z}=e^{x}(\\cos y+i\\sin y)$. 2. The modulus is $e^{x}$. 3. The angle is $y$.",
-    "formula": "$e^{x+iy}=e^{x}(\\cos y+i\\sin y)$."
+    "formula": "$e^{x+iy}=e^{x}(\\cos y+i\\sin y)$.",
+    "lead": true
+  },
+  {
+    "id": "ch5-5.4-stage-flash",
+    "chapter": 5,
+    "section": "5.4",
+    "lead": true,
+    "cite": {
+      "ref": "Identity (5.35)",
+      "page": 150,
+      "href": "https://complexanalysis.org/web/sec_trig-hyperbolics.html"
+    },
+    "kind": "flash",
+    "prompt": "How do you write $\\sin z$ and $\\cos z$ for an exam?",
+    "steps": [
+      {
+        "text": "How do you write $\\sin z$ and $\\cos z$ for an exam?",
+        "answer": "$\\sin z=(e^{iz}-e^{-iz})/(2i)$, $\\cos z=(e^{iz}+e^{-iz})/2$, the derivative pair, $\\sin(x+iy)=\\sin x\\cosh y+i\\cos x\\sinh y$, and vertical segments go to hyperbolas.",
+        "why": "Definition 5.5, page 148, Identities (5.34)–(5.35), page 150, Theorem 5.4, page 149, and Figure 5.7, page 152."
+      }
+    ],
+    "generator": null,
+    "memory": "1. $\\sin z=(e^{iz}-e^{-iz})/(2i)$. Identity (5.34), page 150. 2. $\\cos z=(e^{iz}+e^{-iz})/2$. Identity (5.36), page 150. 3. $\\frac{d}{dz}\\sin z=\\cos z$ and $\\frac{d}{dz}\\cos z=-\\sin z$. Theorem 5.4, page 149. 4. $\\sin(x+iy)=\\sin x\\cosh y+i\\cos x\\sinh y$. Identity (5.35), page 150. 5. Vertical segments map to hyperbolas. Figure 5.7, page 152.",
+    "formula": "$\\sin(x+iy)=\\sin x\\cosh y+i\\cos x\\sinh y$."
+  },
+  {
+    "id": "ch5-5.4-cos-derivative",
+    "chapter": 5,
+    "section": "5.4",
+    "cite": {
+      "ref": "§5.4, Exercise 1",
+      "page": 156,
+      "href": "https://complexanalysis.org/web/sec_trig-hyperbolics.html"
+    },
+    "kind": "proof-mc",
+    "prompt": "Establish $\\frac{d}{dz}\\cos z=-\\sin z$. Exercise 1, page 156. The method is the one in the proof of Theorem 5.4, page 149.",
+    "steps": [
+      {
+        "text": "The derivative of the general term $(-1)^n z^{2n}/(2n)!$ is ___.",
+        "answer": "$(-1)^n z^{2n-1}/(2n-1)!$",
+        "why": "Bring down $2n$ and cancel it against $(2n)!$. Theorem 5.4, page 149, does the same for $\\sin z$.",
+        "choices": [
+          "$(-1)^n z^{2n-1}/(2n-1)!$",
+          "$(-1)^n z^{2n-1}/(2n)!$",
+          "$(-1)^{n+1} z^{2n}/(2n)!$",
+          "$\\sin z$"
+        ],
+        "misses": [
+          {
+            "choice": "$(-1)^n z^{2n-1}/(2n)!$",
+            "why": "That forgot to cancel the $2n$ from the power rule against $(2n)!$."
+          },
+          {
+            "choice": "$(-1)^{n+1} z^{2n}/(2n)!$",
+            "why": "The power has to drop by one. Differentiating does not only flip the sign."
+          },
+          {
+            "choice": "$\\sin z$",
+            "why": "That is the end of the argument, not this term. Finish the term first."
+          }
+        ]
+      },
+      {
+        "text": "The differentiated series equals ___.",
+        "answer": "$-\\sin z$",
+        "why": "Reindex $n=k+1$. The series is $-\\sum (-1)^k z^{2k+1}/(2k+1)!=-\\sin z$. Exercise 1, page 156.",
+        "choices": [
+          "$-\\sin z$",
+          "$\\sin z$",
+          "$\\cos z$",
+          "$-\\cos z$"
+        ],
+        "misses": [
+          {
+            "choice": "$\\sin z$",
+            "why": "That drops the minus. The reindex $n=k+1$ produces $(-1)^{k+1}$, which is $-\\sin z$."
+          },
+          {
+            "choice": "$\\cos z$",
+            "why": "The derivative of $\\cos z$ is not $\\cos z$. Theorem 5.4, page 149, leaves this one as $-\\sin z$."
+          },
+          {
+            "choice": "$-\\cos z$",
+            "why": "$-\\cos z$ is not this series. The odd powers that remain are $-\\sin z$."
+          }
+        ]
+      }
+    ],
+    "generator": null,
+    "memory": "$\\frac{d}{dz}\\cos z=-\\sin z$. Exercise 1, page 156. The pair is Theorem 5.4, page 149.",
+    "formula": "$\\dfrac{d}{dz}\\cos z=-\\sin z$."
+  },
+  {
+    "id": "ch5-5.4-sin-2i",
+    "chapter": 5,
+    "section": "5.4",
+    "cite": {
+      "ref": "§5.4, Exercise 6(c)",
+      "page": 157,
+      "href": "https://complexanalysis.org/web/sec_trig-hyperbolics.html"
+    },
+    "kind": "next-step-blank",
+    "prompt": "Express $\\sin(2i)$ in the form $u+iv$. Exercise 6(c), page 157. Identity (5.35), page 150.",
+    "steps": [
+      {
+        "text": "The real part is ___.",
+        "answer": "$0$",
+        "accept": [
+          "0"
+        ],
+        "why": "$\\sin(2i)=\\sin 0\\cosh 2+i\\cos 0\\sinh 2$. The real part is $0$. Identity (5.35), page 150.",
+        "hints": [
+          "$2i$ has real part $0$.",
+          "$\\sin 0=0$."
+        ]
+      },
+      {
+        "text": "The imaginary part is ___.",
+        "answer": "$\\sinh 2$",
+        "accept": [
+          "\\sinh 2",
+          "sinh 2",
+          "sinh(2)"
+        ],
+        "why": "$\\cos 0\\sinh 2=\\sinh 2$. So $\\sin(2i)=i\\sinh 2$. Exercise 6(c), page 157.",
+        "hints": [
+          "$\\cos 0=1$.",
+          "The imaginary part is $\\sinh 2$."
+        ]
+      }
+    ],
+    "generator": null,
+    "memory": "$\\sin(2i)=i\\sinh 2$. Exercise 6(c), page 157. Identity (5.35), page 150.",
+    "formula": "$\\sin(iy)=i\\sinh y$."
+  },
+  {
+    "id": "ch5-5.4-gen-sin",
+    "chapter": 5,
+    "section": "5.4",
+    "cite": {
+      "ref": "Identity (5.35)",
+      "page": 150,
+      "href": "https://complexanalysis.org/web/sec_trig-hyperbolics.html"
+    },
+    "kind": "blank",
+    "prompt": "Both parts of a seeded sine.",
+    "steps": [],
+    "generator": {
+      "template": "sin-parts",
+      "params": {}
+    },
+    "memory": "$\\sin(x+iy)=\\sin x\\cosh y+i\\cos x\\sinh y$. Compute the two parts. Identity (5.35), page 150.",
+    "formula": "$\\sin(x+iy)=\\sin x\\cosh y+i\\cos x\\sinh y$."
   }
 ]
