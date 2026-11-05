@@ -1713,3 +1713,47 @@ The circle, the claim, and Play are on the first screen at both widths, in both 
 Blue is `#0b63ad`, orange `#a84300`, green `#006e53`, purple `#9d3a8a`, on the axes, the dashed circle and the ray, the handle, and the point. Dark paper is rgb(13, 18, 28), the claim is rgb(233, 237, 245), and the lede is rgb(166, 176, 195). The where-line stays, tracked small caps under the title. The Book is 44px. The two §4.1 chips are 44px. Practice 4.1 is 44px tall. Julia's + and − are 44×44, and the disk starts on the phone screen. The §4.2 stills are 161 CSS pixels and 161 bitmap pixels.
 
 §4.1's three recipe lines render as three lines. Continue is `#chapter-4` and opens that chapter at the top. The §5.2 row opens `#chapter-5-5-2`, scrolls the Later card to y = 227, and the card says Later. The book rows for 5.2, 5.3, and 5.5 are 44px. Practice choices are 44×324. Hints start closed. The drawer is Chapters 1–7, then Test prep. The kicker, the paper, the serif title, and the white card stay.
+
+## ux-veteran (chapter-4-5 batch 3)
+
+Preview https://book-preview.complexanalysis.pages.dev at tip `6259ffa`. `js/stations/book.js` and `css/components.css` on that preview are the same bytes as this tip. Fresh storage. Phone first, 390×844, light, then the same walk in the dark, then 1280×800, light and dark. The phone pointer was coarse. The laptop pointer was a mouse. No product code was changed. No console errors. No failed requests. No sideways scroll (`scrollWidth` was 390 and 1280).
+
+`fef9ced` landed after this walk. It leaves `book.js` and the §5.4 recipe string as they were, so the screens below are the same.
+
+Read `## ux-veteran (mobile audit)` on `cursor/ux-veteran-audit` and `## ux-veteran (practice batch 2)`. The bar is the same: a 44px target, one up control, and a first screen that names the next action.
+
+### Verdict
+
+ANOTHER BATCH. The status card, the Book link, the Mandelbrot still, and the coarse zoom are in. The §5.4 recipe a student is supposed to read is nine rows, four of them empty, and the book's first screen still shows three closed chapters while Continue names §4.1. One batch, the five cuts below. After that, this walk can rest.
+
+### What the six checks did
+
+**Chapter 5 status, both themes.** At 390 the card ends at y = 420 and reads "Next is §5.1, Exercise 1, page 135. 0 of 2 exercises." Play is 70×44 and ends at 829. The square is 256×256, from y = 461 to 717. The claim is "The point sits on the bottom of the unit circle." The green disc is 20px inside a 44px ring. At 1280 the same sentence is one line ending at y = 387, the square is the same 256px, and Play ends at 771. Dark paper is rgb(13, 18, 28). The status is rgb(233, 237, 245) on rgb(21, 28, 43), contrast 14.5. The lede is rgb(166, 176, 195) on that paper, contrast 8.6.
+
+**Mandelbrot.** `#chapter-4-4-2` lands with The Book stuck under the header, 44px tall, and the 4.2 flag 8px below it. On the phone the Mandelbrot canvas is 161×161, bitmap 161, bottom 464, inside the window. At 1280 it is 174×174, bitmap 174, bottom 477. The Julia still beside it is the same size. Both cards are the links.
+
+**Julia zoom.** With a coarse pointer, + and − are 44×44, 6px apart, and Reset is 57×44. A press in the center, on the left edge, and on the bottom edge each zooms: units across go 4, then 3.70, then 3.43. A press in the 6px gap leaves the view where it is. On the laptop mouse the same buttons are 32×32, and a center press zooms.
+
+**§5.4.** `#chapter-5-5-4` puts the flag 8px under the Book link. The title is the thing under the finger. Practice 5.4 is 91×44 and opens `#test-prep-5-5-4` at scroll 0, with Chapter 5 as a 116×44 button and the proof on that screen. The recipe under Identity (5.35) is nine numbered rows. Rows 2, 4, 6, and 8 are empty, 26px tall. Row 1 ends at "Identity (5.34), page". The same nine rows are on the 1280 screen, light and dark. The last row keeps "page 152", because nothing follows that period.
+
+**Later rows.** 5.2, 5.3, and 5.5 are white cards, 85px or taller, linking to `#chapter-5-5-2`, `#chapter-5-5-3`, and `#chapter-5-5-5`. A cold open of `#chapter-5-5-2` leaves the Later flag 143px below the Book link. The heading is the thing under the finger.
+
+**Continue and Book.** Continue is 111×44 and its href is `#chapter-4`. The press opens Chapter 4 at scroll 0, the title at y = 158, and The Book at 44px. Back from a book scrolled to 900 returns to `#book` at 900, on the phone and on the laptop, in both themes. On the phone the Chapter 4 card starts at y = 841, so the first screen is Later chapters 1, 2, and 3. At 1280 that card starts at y = 748, and the window shows its top 52px.
+
+### Ranked
+
+1. **The §5.4 recipe breaks at the page number.** On the stage, light and dark, at 390 and at 1280, the list is 1 sin z … page, 2 blank, 3 cos z … page, 4 blank, 5 the derivative pair … page, 6 blank, 7 sin(x+iy) … page, 8 blank, 9 vertical segments, page 152. "page 150." is being read as the next step, so the number becomes an empty row and the line above it loses the page. Change: five rows. Each row keeps its page. The blank rows go.
+
+2. **The book names §4.1 and shows three closed chapters.** At 390 the status says "Next is §4.1, Exercise 3. 0 of 10 exercises." and Continue, 111×44, is on the screen. The cards on that screen are Later: Complex Numbers, Complex Functions, and Analytic and Harmonic Functions. Chapter 4 starts at y = 841. At 1280 the same three cards fill the column, and Chapter 4 starts at y = 748. Change: a Later chapter is one line, the number and the title. Book order stays. Chapter 4, flagged Next, sits under the status card at 390 and at 1280.
+
+3. **On the book, §5.4 looks like a closed section.** The rows for 5.2, 5.3, 5.4, and 5.5 are all state `later`, and the mark is empty, so each row is a title and a page. 5.1 is the only one marked ahead. Tapping 5.4 opens the stage. Tapping 5.2 opens the Later card. Change: the 5.4 row reads Open. The 5.2, 5.3, and 5.5 rows read Later.
+
+4. **The line above the stills repeats the idea.** On `#chapter-4-4-2`, both themes and both widths, the idea says "An orbit is the sequence from §4.1. The picture records every start, not one list." The next line says "The orbit is the sequence from §4.1." Then the two stills. Change: one sentence. The stills stay on this screen.
+
+5. **The last drawer row is "· Test prep".** At 390 the drawer is eight rows, each 44×358: chapters 1–7, then "· Test prep". The same middot is the last row of the 1280 sidebar. Change: the row reads Test prep. It stays last, and it stays 44px.
+
+### What to keep
+
+The Chapter 5 status card and Play are inside the window at 390 and at 1280, light and dark. The square stays 256px so that card and that button both fit. The walk still opens on the bottom of the circle, and the claim names that frame. The green ring is 44px. The Book link is the 44px station link, stuck under the header, with the section flag 8px below it. Continue opens `#chapter-4` at the top, and Back puts the book back where it was scrolled.
+
+The Mandelbrot and Julia stills are drawn at the size they are shown, 161px on the phone and 174px at 1280, and both are on the §4.2 screen. Julia's + and − are 44×44 under a coarse pointer, and a press on the edge of the button zooms. The mouse buttons stay the plane's 32px. §§5.2, 5.3, and 5.5 are Later cards that open those rows, and the flag is clear of the Book link. Practice 5.4 lands at the top of Test prep, with a 44px way back to Chapter 5. The drawer is chapters 1–7, then Test prep, and at 1280 that list is the sidebar, with the chapter you are on marked. The type, the paper, the white card, and the blue Continue button are the station pages' own.
