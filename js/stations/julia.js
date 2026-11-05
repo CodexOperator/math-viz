@@ -11,6 +11,7 @@ import { attachFractal, FINAL_EDGE } from '../core/fractal-view.js';
 import { createFrame, elapsedMs, nextFilmFrame } from '../core/anim.js';
 import { fillJulia, paintJulia, juliaWalk, parseCssColor, effectiveEscape, samplePath } from '../core/fractal.js';
 import { fillAutoJulia, iterForWidth } from '../core/deep-fill.js';
+import { detailForStep } from '../core/step-detail.js';
 import { mountSetTools, drawParamPath, drawOrbitDisks } from '../core/set-tools.js';
 import { orbitSentence, quadraticAbsDeriv } from '../core/orbit-settle.js';
 import { mountStepControl, formatStep, substepsForFrame, quantize, traceOf, pointOnTrace, FRAME_BUDGET_MS, runSubsteps } from '../core/stepper.js';
@@ -29,7 +30,9 @@ const MAX_ITER = 40;
 const ESCAPE_R = 2;
 // One stored frame every step units of the path, when the step is at least 0.04.
 // Past 96 frames the step widens so a long scribble still runs from the start to the end.
-// A finer step is not stored: the picture advances many quanta per frame and paints one coarse frame.
+// A finer step is not stored as a film. The picture advances many quanta per frame and
+// paints one frame. That frame's pixel count grows with 1/step, until four times the
+// coarse frame, which is the budget of a moving picture.
 // Stored frames stay at most 220 samples on the long edge. The frame on screen is drawn again
 // at the canvas's own device size, the same cap as the still, and shown in its place.
 // The film advances every 90 ms, and it waits for that sharp frame instead of blitting the stored one.
@@ -168,6 +171,7 @@ export function mount(el, ctx) {
   let trace = null;
   let dropDrag = false;
   let livePath = null;
+  let livePlaying = false;
   const COARSE_STEP = 0.04;
   const stepControl = mountStepControl(stepHost, {
     id: 'julia-step',
@@ -196,7 +200,11 @@ export function mount(el, ctx) {
     const used = Number.isFinite(actual) ? actual : ask;
     const tail = 'The loop, the nudge, and each zoom use this step.';
     if (button < COARSE_STEP) {
-      stepReadout.textContent = `Step ${formatStep(button)}. The drag draws one coarse picture. ${tail}`;
+      const d = detailForStep(button);
+      const times = d.pixels / (96 * 96);
+      const shown = times >= 10 ? String(Math.round(times)) : String(Math.round(times * 10) / 10);
+      const budget = d.capped ? ' That is the frame budget.' : '';
+      stepReadout.textContent = `Step ${formatStep(button)}. The moving picture is ${d.edge} pixels on a side, ${shown} times the coarse frame.${budget} ${tail}`;
     } else if (used > ask + 0.0005) {
       stepReadout.textContent = `Step ${formatStep(used)}, widened from ${formatStep(ask)}, so the drag stays short. ${tail}`;
     } else {
@@ -282,6 +290,7 @@ export function mount(el, ctx) {
   }
 
   function cancelAnim({ resumePicture = true } = {}) {
+    livePlaying = false;
     animToken += 1;
     stopFilmClock();
     clearTimeout(loadTimer);
@@ -484,6 +493,7 @@ export function mount(el, ctx) {
   }
 
   function finishFilm() {
+    livePlaying = false;
     if (animPhase === 'done') return;
     if (!loadArmed) noteFirstFrame();
     animFrame = -1;
@@ -547,13 +557,21 @@ export function mount(el, ctx) {
   function paintLive(c) {
     if (!parts.plane || !parts.fractal) return;
     const view = parts.plane.getView();
-    const fv = { centerRe: view.center.re, centerIm: view.center.im, unitsAcross: view.unitsAcross };
-    const w = 96;
-    const h = 96;
-    const iter = 24;
+    const sz = parts.plane.getSize();
+    const long = Math.max(sz.w || 2, sz.h || 2, 2);
+    const detail = detailForStep(stepSize(), { longEdge: Math.min(320, Math.round(long)) });
+    const edge = detail.edge;
+    const w = Math.max(2, Math.round(edge * ((sz.w || long) / long)));
+    const h = Math.max(2, Math.round(edge * ((sz.h || long) / long)));
+    const fv = {
+      centerRe: view.center.re, centerIm: view.center.im,
+      centerReLo: view.center.reLo || 0, centerImLo: view.center.imLo || 0,
+      unitsAcross: view.unitsAcross,
+    };
+    const iter = iterForWidth(view.unitsAcross, detail.iter);
     const field = new Float64Array(w * h);
     const R = usedR();
-    fillJulia(field, w, h, 0, h, fv, { re: c.re, im: c.im }, iter, R * R);
+    fillAutoJulia(field, w, h, 0, h, fv, { re: c.re, im: c.im }, iter, R * R);
     const pixels = new Uint8ClampedArray(w * h * 4);
     const colours = { inside: rgb('--cart'), slow: rgb('--polar'), fast: rgb('--surface-2') };
     paintJulia(pixels, field, w, h, 0, h, iter, colours.inside, colours.slow, colours.fast);
@@ -572,6 +590,7 @@ export function mount(el, ctx) {
     const token = ++animToken;
     stopFilmClock();
     killWorker();
+    livePlaying = true;
     livePath = path.map((c) => ({ re: c.re, im: c.im }));
     animSamples = livePath.slice();
     animSamples.spacing = stepSize();
@@ -841,6 +860,9 @@ export function mount(el, ctx) {
       },
     });
     parts.offView = plane.on('viewchange', (v) => {
+      // Live frames are painted from the window as it is now. A zoom during
+      // that film used to cancel it, so the picture never followed the window.
+      if (livePlaying) return;
       if (animPhase !== 'loading' && animPhase !== 'playing') return;
       const same = filmView && v && v.center
         && Math.abs(v.center.re - filmView.center.re) < 1e-9
