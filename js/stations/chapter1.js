@@ -91,7 +91,10 @@ export function mountChapter1(el, ctx, focus) {
     const mount = PICTURES[section.picture];
     if (mount) {
       const onClaim = section.id === '1.1'
-        ? (c) => { turnHolds = !!c.holds; paintTicks(); }
+        ? (c) => {
+            if (c && c.holds) turnHolds = true;
+            paintTicks();
+          }
         : undefined;
       stops.push(mount(picture, onClaim));
     }
@@ -104,21 +107,16 @@ export function mountChapter1(el, ctx, focus) {
       sheet.append(li);
     }
     const items = practiceItems(section.id);
-    const fold = section.id === '1.2';
     const practice = h('div', { class: 'chapter-exercises ch1-practice', id: `${scope}-practice` });
     const more = h('div', { class: 'chapter-exercises ch1-practice', id: `${scope}-more` });
     const onItem = (id) => {
       if (!earned.has(section.id)) earned.set(section.id, new Set());
       earned.get(section.id).add(id);
-      if (section.id === '1.1' && id === 'ch1-1.1-eq16') setLine(summit, SUMMIT_FOUR);
       paintTicks();
     };
-    if (fold) {
-      mountPractice(practice, items.slice(0, 2), onItem);
-      mountPractice(more, items.slice(2), onItem);
-    } else {
-      mountPractice(practice, items, onItem);
-    }
+    const openers = items.slice(0, Math.min(2, items.length));
+    mountPractice(practice, openers, onItem);
+    mountPractice(more, items.slice(openers.length), onItem);
     const deck = h('div', { class: 'ch1-deck', id: `${scope}-deck` });
     mountDeck(deck, flashItems(section.id), store);
     const summit = h('p', { class: 'stage-summit', id: `${scope}-summit` });
@@ -141,47 +139,26 @@ export function mountChapter1(el, ctx, focus) {
       ? [flag, picture, title, page]
       : [flag, title, page, picture];
     const actions = h('div', { class: 'problem-actions ch1-done', id: `${scope}-actions` }, where, tick, go);
-    const head = [
-      ...lead,
-      h('p', { class: 'book-label' }, 'Why you\'d care'),
-      why,
-      h('p', { class: 'book-label' }, 'Worked example'),
-      worked,
-      h('p', { class: 'book-label' }, 'Practice'),
+    const head = [...lead, why, worked];
+    const tail = [
+      openers.length > 1
+        ? h('p', { class: 'book-status', id: `${scope}-unlock` }, 'The first two unlock the stage.')
+        : null,
+      practice,
+      summit,
+      actions,
+      items.length > openers.length ? more : null,
+      deck,
+      sheet,
+      read,
     ];
-    const tail = fold
-      ? [
-        h('p', { class: 'book-status', id: `${scope}-unlock` }, 'The first two unlock the stage.'),
-        practice,
-        h('p', { class: 'book-label' }, 'Summit'),
-        summit,
-        actions,
-        more,
-        h('p', { class: 'book-label' }, 'Cards'),
-        deck,
-        h('p', { class: 'book-label' }, 'Memory'),
-        sheet,
-        h('p', { class: 'book-label' }, 'Pinned'),
-        read,
-      ]
-      : [
-        practice,
-        h('p', { class: 'book-label' }, 'Cards'),
-        deck,
-        h('p', { class: 'book-label' }, 'Summit'),
-        summit,
-        h('p', { class: 'book-label' }, 'Memory'),
-        sheet,
-        h('p', { class: 'book-label' }, 'Pinned'),
-        read,
-        actions,
-      ];
     const node = h('li', {
       class: 'section-node', id: scope, 'data-section': section.id, 'data-state': 'ahead',
     }, ...head, ...tail);
     node._tick = tick;
     node._go = go;
     node._where = where;
+    node._summit = summit;
     node._gate = gateIds(section.id);
     return node;
   }
@@ -250,20 +227,29 @@ export function mountChapter1(el, ctx, focus) {
       if (!node || !node._tick) continue;
       const on = ticks[section.id] === true;
       const open = on || gateMet(node);
-      setLine(node._where, open ? sentence : blocked(section));
-      node._tick.disabled = !open;
-      node._tick.setAttribute('aria-pressed', on ? 'true' : 'false');
-      node._tick.textContent = on ? 'Stage complete' : 'Mark stage complete';
       const go = node._go;
-      if (go) {
-        if (on) {
+      if (on) {
+        setLine(node._where, sentence);
+        node._tick.hidden = true;
+        node._tick.disabled = true;
+        node._tick.setAttribute('aria-pressed', 'true');
+        if (go) {
           const target = goTarget(section.id);
           go.hidden = false;
           go.href = target.href;
           go.textContent = target.label;
-        } else {
-          go.hidden = true;
         }
+      } else {
+        setLine(node._where, blocked(section));
+        node._tick.hidden = false;
+        node._tick.disabled = !open;
+        node._tick.setAttribute('aria-pressed', 'false');
+        node._tick.textContent = 'Mark stage complete';
+        if (go) go.hidden = true;
+      }
+      if (node._summit) {
+        const line = section.id === '1.1' && open ? SUMMIT_FOUR : section.summit;
+        setLine(node._summit, line);
       }
     }
     paint();

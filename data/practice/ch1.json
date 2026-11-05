@@ -8,7 +8,7 @@
       "page": 3
     },
     "kind": "next-step-blank",
-    "prompt": "Equation (1.6), page 3. Simplify $(2+\\sqrt{-1})+(2-\\sqrt{-1})$, then test it in $x^3-15x-4$.",
+    "prompt": "Simplify $(2+\\sqrt{-1})+(2-\\sqrt{-1})$, then test it in $x^3-15x-4$.",
     "steps": [
       {
         "text": "The two square roots cancel. The sum is ___",
@@ -96,7 +96,7 @@
       "page": 13
     },
     "kind": "next-step-blank",
-    "prompt": "Definition 1.3, page 10. Multiply $(0,1)$ by $(0,1)$.",
+    "prompt": "Multiply $(0,1)$ by $(0,1)$.",
     "steps": [
       {
         "text": "$(0,1)(0,1)=$ ___",
@@ -147,7 +147,7 @@
       "page": 15
     },
     "kind": "next-step-blank",
-    "prompt": "Exercise 1(f), page 15. Compute $(7-2i)(3i+5)$.",
+    "prompt": "Compute $(7-2i)(3i+5)$.",
     "steps": [
       {
         "text": "Write the second factor as $5+3i$. The four products are $35$, $21i$, $-10i$, and ___",
@@ -221,7 +221,7 @@
       "page": 15
     },
     "kind": "next-step-mc",
-    "prompt": "Exercise 1(a), page 15. $i^{275}$.",
+    "prompt": "Reduce $i^{275}$.",
     "steps": [
       {
         "text": "The powers of $i$ repeat every 4. $275=4\\cdot 68+3$, so $i^{275}=$ ___",
@@ -269,7 +269,7 @@
       "page": 13
     },
     "kind": "proof-mc",
-    "prompt": "Addition of pairs commutes. Which line is Definition 1.1?",
+    "prompt": "Addition of pairs commutes. Pick the line that adds the coordinates.",
     "steps": [
       {
         "text": "By Definition 1.1, $z_1+z_2$ equals ___",
@@ -383,7 +383,7 @@
       "page": 15
     },
     "kind": "next-step-mc",
-    "prompt": "Exercise 6, page 15. Which identity fails?",
+    "prompt": "Which identity fails?",
     "steps": [
       {
         "text": "For $z_1=1+i$ and $z_2=1+i$, ___",
@@ -431,7 +431,7 @@
       "page": 11
     },
     "kind": "next-step-blank",
-    "prompt": "Definition 1.4, page 11. Write $(-5)/(5i)$ as $a+bi$.",
+    "prompt": "Write $(-5)/(5i)$ as $a+bi$.",
     "steps": [
       {
         "text": "The conjugate of the denominator $5i$ is ___",
@@ -608,7 +608,7 @@
     "chapter": 1,
     "section": "1.2",
     "cite": {
-      "ref": "Definition 1.1",
+      "ref": "Definitions 1.1 and 1.2",
       "page": 10
     },
     "kind": "flash",
@@ -717,7 +717,7 @@
       "page": 17
     },
     "kind": "next-step-blank",
-    "prompt": "The length of $4+3i$. Definition 1.8, page 17.",
+    "prompt": "Find the length of $4+3i$.",
     "steps": [
       {
         "text": "$|4+3i|=$ ___",
@@ -760,7 +760,7 @@
       "page": 20
     },
     "kind": "next-step-blank",
-    "prompt": "Exercise 1(a), page 20. Evaluate $|(1+i)(2+i)|$.",
+    "prompt": "Evaluate $|(1+i)(2+i)|$.",
     "steps": [
       {
         "text": "Identity (1.25) says this equals $|1+i|\\,|2+i|$. $|1+i|=$ ___",
@@ -814,7 +814,7 @@
       "page": 18
     },
     "kind": "next-step-mc",
-    "prompt": "Identity (1.22), page 18. Compute $(1+i)(1-i)$.",
+    "prompt": "Compute $(1+i)(1-i)$.",
     "steps": [
       {
         "text": "The product is ___",
@@ -863,7 +863,7 @@
       "page": 20
     },
     "kind": "next-step-mc",
-    "prompt": "Exercise 2(a), page 20. $z_1=2+3i$ and $z_2=4+i$.",
+    "prompt": "Add and subtract. $z_1=2+3i$ and $z_2=4+i$.",
     "steps": [
       {
         "text": "The sum $z_1+z_2$ is ___",
@@ -944,7 +944,7 @@
       "page": 20
     },
     "kind": "next-step-mc",
-    "prompt": "Exercise 3, page 20. Which points lie inside the circle $|z-i|=2$? Consider $\\sqrt{2}+i(\\sqrt{2}+1)$.",
+    "prompt": "Which points lie inside the circle $|z-i|=2$? Consider $\\sqrt{2}+i(\\sqrt{2}+1)$.",
     "steps": [
       {
         "text": "The distance from this point to $i$ is ___",
@@ -992,7 +992,7 @@
       "page": 20
     },
     "kind": "next-step-blank",
-    "prompt": "Exercise 1(c), page 20. Evaluate $|(1+i)^{50}|$.",
+    "prompt": "Evaluate $|(1+i)^{50}|$.",
     "steps": [
       {
         "text": "$|1+i|=$ ___",
@@ -1033,7 +1033,7 @@
       "page": 18
     },
     "kind": "proof-mc",
-    "prompt": "Theorem 1.2, page 18. Which line finishes the triangle inequality?",
+    "prompt": "Which line finishes the triangle inequality?",
     "steps": [
       {
         "text": "After $|z_1+z_2|^2=|z_1|^2+2\\operatorname{Re}(z_1\\overline{z_2})+|z_2|^2$, the proof uses ___",
@@ -1195,7 +1195,7 @@
     "chapter": 1,
     "section": "1.3",
     "cite": {
-      "ref": "Identity (1.25)",
+      "ref": "Identities (1.25) and (1.26)",
       "page": 19
     },
     "kind": "flash",
@@ -1216,11 +1216,11 @@
     "chapter": 1,
     "section": "1.4",
     "cite": {
-      "ref": "Example 1.13",
-      "page": 27
+      "ref": "Example 1.7",
+      "page": 22
     },
     "kind": "next-step-blank",
-    "prompt": "Example 1.13, page 27. Write $1+i$ in polar form $re^{i\\theta}$.",
+    "prompt": "Write $1+i$ in polar form $re^{i\\theta}$.",
     "steps": [
       {
         "text": "The modulus is ___",
@@ -1364,7 +1364,7 @@
       "page": 28
     },
     "kind": "next-step-mc",
-    "prompt": "Exercise 7, page 28. $z_1=-1+i\\sqrt{3}$ and $z_2=-\\sqrt{3}+i$.",
+    "prompt": "Find the arguments of the product. $z_1=-1+i\\sqrt{3}$ and $z_2=-\\sqrt{3}+i$.",
     "steps": [
       {
         "text": "Arg $z_1$ is $2\\pi/3$ and Arg $z_2$ is $5\\pi/6$. Their sum is ___",
@@ -1529,7 +1529,7 @@
       "page": 30
     },
     "kind": "next-step-blank",
-    "prompt": "Equation (1.40), page 30. Find the length of $(\\sqrt{3}+i)^{10}$. Exercise 2, page 34, is the same move on a different exponent.",
+    "prompt": "Find the length of $(\\sqrt{3}+i)^{10}$. Exercise 2, page 34, is the same move on a different exponent.",
     "steps": [
       {
         "text": "The modulus of $\\sqrt{3}+i$ is ___",
@@ -1595,7 +1595,7 @@
       "page": 31
     },
     "kind": "next-step-blank",
-    "prompt": "Equation (1.43), page 31. The fifth roots of unity are $e^{i 2\\pi k/5}$.",
+    "prompt": "Name the angle. The fifth roots of unity are $e^{i 2\\pi k/5}$.",
     "steps": [
       {
         "text": "The angle for $k=1$ is ___",
@@ -1643,7 +1643,7 @@
       "page": 33
     },
     "kind": "next-step-mc",
-    "prompt": "Example 1.21, page 33. Solve $z^2+(1+i)z+5i=0$. Theorem 1.5 uses both square roots of the discriminant $-18i$.",
+    "prompt": "Solve $z^2+(1+i)z+5i=0$. Use both square roots of the discriminant $-18i$.",
     "steps": [
       {
         "text": "Both square roots of $-18i$ are ___",
@@ -1787,7 +1787,7 @@
       "page": 38
     },
     "kind": "next-step-mc",
-    "prompt": "Drag the green point, then say where it is. Example 1.25, page 38.",
+    "prompt": "Drag the green point, then say where it is.",
     "steps": [
       {
         "text": "The green point is ___",
@@ -1820,7 +1820,7 @@
       "page": 39
     },
     "kind": "next-step-mc",
-    "prompt": "Figure 1.30, page 39, draws the open annulus $1<|z|<2$. This set is $\\{z: 1<|z|\\le 2\\}$.",
+    "prompt": "Classify $\\{z: 1<|z|\\le 2\\}$.",
     "steps": [
       {
         "text": "This set is ___",
@@ -1868,7 +1868,7 @@
       "page": 35
     },
     "kind": "next-step-blank",
-    "prompt": "Equation (1.48), page 35. The segment from $z_0$ to $z_1$. Exercise 1(a), page 41, is this formula with $z_0=0$ and $z_1=1+i$.",
+    "prompt": "Write the segment from $z_0$ to $z_1$, with $z_0=0$ and $z_1=1+i$.",
     "steps": [
       {
         "text": "For $0\\le t\\le 1$, $z(t)=$ ___",
@@ -1912,7 +1912,7 @@
       "page": 41
     },
     "kind": "next-step-mc",
-    "prompt": "Exercise 6, page 41. Which set is a domain?",
+    "prompt": "Which set is a domain?",
     "steps": [
       {
         "text": "A domain is open and connected. ___",
@@ -1998,8 +1998,8 @@
     "chapter": 1,
     "section": "1.6",
     "cite": {
-      "ref": "Example 1.25",
-      "page": 38
+      "ref": "Equations (1.51) and (1.52)",
+      "page": 37
     },
     "kind": "flash",
     "prompt": "Closed, punctured, boundary.",

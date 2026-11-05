@@ -1059,12 +1059,6 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
    Chapter 1 puts that room under The Book, so the link sits at the end of 1.6. */
 .chapter-path { padding-bottom: calc(100dvh - var(--header-h)); }
 .ch1-path { padding-bottom: 0; }
-.ch1-path + .book-footer-link { margin-bottom: calc(100dvh - var(--header-h)); }
-
-/* The phone’s first screen ends on the colour key. The stage title starts under that fold. */
-@media (max-width: 40rem) {
-  #chapter-section-1-1-picture { margin-bottom: 3rem; }
-}
 
 .exp-picture {
   display: flex;
@@ -1166,6 +1160,18 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .book-node-head h2,
 .section-node h2 { margin-bottom: var(--space-1); }
 
+.book-node-head h2 {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap);
+}
+
+.book-node-head h2 a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+}
+
 .book-num {
   display: inline-block;
   min-width: 1.4em;
@@ -1222,17 +1228,8 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 
 .book-read { margin: 0; padding-left: 1.2rem; }
 .book-read li { margin: 0.15rem 0; }
-.book-label {
-  margin: var(--space-3) 0 var(--space-1);
-  font-family: var(--font);
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
 
-.section-idea { max-width: 62ch; margin: 0; }
+.section-idea { max-width: 62ch; margin: var(--space-3) 0 0; }
 
 .ch1-stage-picture,
 .ch1-deck {
@@ -1245,8 +1242,7 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 
 .ch1-stage-picture .btn,
 .ch1-stage-picture .chip,
-.ch1-stage-picture .ch1-claim,
-.ch1-stage-picture .ch1-key { align-self: flex-start; }
+.ch1-stage-picture .ch1-claim { align-self: flex-start; }
 
 .ch1-picture { width: 100%; min-width: 0; max-width: 100%; }
 .ch1-picture .plane {
@@ -1259,14 +1255,19 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .station-header > .station-link { margin-bottom: var(--space-2); }
 
 .ch1-claim,
-.ch1-key,
 .stage-summit,
 .ch1-note { max-width: 62ch; margin: 0; }
 
-.ch1-key,
 .ch1-note { color: var(--text-muted); }
 
-.stage-summit { font-weight: 600; }
+.stage-summit { font-weight: 600; margin-top: var(--space-3); }
+
+.section-node > .ch1-practice,
+.section-node > .ch1-deck,
+.section-node > .ch1-sheet,
+.section-node > .book-read,
+.section-node > .book-status,
+.section-node > .ch1-done { margin-top: var(--space-3); }
 
 .ch1-sheet {
   margin: 0;

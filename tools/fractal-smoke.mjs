@@ -127,7 +127,7 @@ check('eleven chapters, 1, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_C
   const walked = CHAPTER_1.sections.filter((s) => s.exercises.length);
   const flashes = practiceCh1.filter((item) => item.kind === 'flash');
   const refs = new Set(flashes.map((item) => item.cite.ref));
-  const need = ['Equation (1.6)', 'Definition 1.1', 'Definition 1.3', 'Definition 1.4', 'Definition 1.8', 'Identity (1.22)', 'Definition 1.9', 'Definition 1.11', 'Theorem 1.3', 'Equation (1.40)', 'Equation (1.43)', 'Equation (1.50)'];
+  const need = ['Equation (1.6)', 'Definitions 1.1 and 1.2', 'Definition 1.3', 'Definition 1.4', 'Definition 1.8', 'Identity (1.22)', 'Identities (1.25) and (1.26)', 'Definition 1.9', 'Definition 1.11', 'Theorem 1.3', 'Equation (1.40)', 'Equation (1.43)', 'Equation (1.50)', 'Equations (1.51) and (1.52)'];
   const flashCount = (section) => flashes.filter((item) => item.section === section).length;
   check('chapter 1 walks all six stages',
     walked.map((s) => s.id).join() === '1.1,1.2,1.3,1.4,1.5,1.6'

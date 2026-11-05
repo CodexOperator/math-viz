@@ -89,7 +89,7 @@ function watchDisk(fn) {
 
 function diskWhy(place) {
   if (place === 'inside') return 'Inside means $|z|<1$. Example 1.25, page 38.';
-  if (place === 'boundary') return 'The open disk does not include $|z|=1$. Example 1.25, page 38.';
+  if (place === 'boundary') return 'The open disk does not include $|z|=1.$ Example 1.25, page 38.';
   return 'Outside means $|z|>1$. Example 1.25, page 38.';
 }
 
@@ -104,6 +104,43 @@ function diskMiss(picked, place) {
   return 'Look at the green point against the orange circle.';
 }
 
+const TASK = {
+  'ch1-1.1-eq16': 'Simplify the sum',
+  'ch1-1.2-ii': 'Multiply $(0,1)$ by itself',
+  'ch1-1.2-ex1f': 'Compute the product',
+  'ch1-1.2-ex1a': 'A power of $i$',
+  'ch1-1.2-comm-mc': 'Addition commutes',
+  'ch1-1.2-re-product': 'Which identity fails',
+  'ch1-1.2-div5': 'Write the quotient',
+  'ch1-1.2-gen-add': 'Add a fresh pair',
+  'ch1-1.2-gen-mul': 'Multiply a fresh pair',
+  'ch1-1.2-gen-div': 'Divide a fresh pair',
+  'ch1-1.3-len': 'The length of $4+3i$',
+  'ch1-1.3-ex1a': 'Modulus of a product',
+  'ch1-1.3-conj-prod': 'A product with the conjugate',
+  'ch1-1.3-ex2a': 'Add and subtract',
+  'ch1-1.3-ex3b': 'Inside the circle',
+  'ch1-1.3-ex1c': 'A high power',
+  'ch1-1.3-triangle': 'Finish the inequality',
+  'ch1-1.3-gen-mod': 'A fresh modulus',
+  'ch1-1.4-ex113': 'Polar form',
+  'ch1-1.4-gen-polar': 'A fresh polar form',
+  'ch1-1.4-gen-arg': 'A fresh argument',
+  'ch1-1.4-ex7': 'Arguments of a product',
+  'ch1-1.5-power': 'The length of a power',
+  'ch1-1.5-angle': 'Fifth roots of unity',
+  'ch1-1.5-quad-step': 'Solve the quadratic',
+  'ch1-1.6-where': 'Where the point sits',
+  'ch1-1.6-annulus': 'The half-closed annulus',
+  'ch1-1.6-segment-blank': 'The segment',
+  'ch1-1.6-ex6': 'Which set is a domain',
+};
+
+function taskHeading(item) {
+  if (TASK[item.id]) return TASK[item.id];
+  return String(item.prompt || '').replace(/\.$/, '');
+}
+
 function practiceCard(item, onItem) {
   let seed = seedOf(item.id);
   const slug = domId(item.id);
@@ -114,7 +151,7 @@ function practiceCard(item, onItem) {
   appendRich(memory, item.memory || '');
   memory.hidden = true;
   const title = h('h3', { id: `ch1-title-${slug}` });
-  appendRich(title, item.cite.ref);
+  appendRich(title, taskHeading(item));
   card.append(
     title,
     sourceTag({ pin: `${item.cite.ref}, page ${item.cite.page}`, href: citeHref(item.cite.ref) }),
@@ -319,13 +356,14 @@ function flashCard(item, onShow) {
     if (typeof onShow === 'function') onShow();
   });
   const title = h('h3');
-  appendRich(title, item.cite.ref);
+  const heading = taskHeading(item);
+  appendRich(title, heading);
+  const face = String(item.prompt || '').replace(/\.$/, '');
   card.append(
     title,
     sourceTag({ pin: `${item.cite.ref}, page ${item.cite.page}`, href: citeHref(item.cite.ref) }),
-    front,
-    show,
-    back,
   );
+  if (face !== heading) card.append(front);
+  card.append(show, back);
   return card;
 }

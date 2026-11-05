@@ -43,12 +43,6 @@ function plane(parent, id, range, label) {
   return { host, view };
 }
 
-function keyLine(parent, id, text) {
-  const p = h('p', { class: 'ch1-key', id });
-  appendRich(p, text);
-  parent.append(p);
-}
-
 export function mountTurn(parent, onClaim) {
   const { host, view } = plane(parent, 'ch1-turn', [-2, 2],
     'The point 1, turned by i. Purple is the point. Orange is the quarter turn. Blue axes.');
@@ -70,7 +64,6 @@ export function mountTurn(parent, onClaim) {
   }
   btn.addEventListener('click', () => { n += 1; paint(); });
   parent.append(claim, btn);
-  keyLine(parent, 'ch1-turn-key', 'Purple is the point. Green is where it was. Orange is the quarter turn. Blue is the axes.');
   paint();
   return () => view.destroy();
 }
@@ -106,7 +99,6 @@ export function mountTimes(parent) {
     view.requestDraw();
   }
   parent.append(claim);
-  keyLine(parent, 'ch1-times-key', 'Green is the point you drag. Purple is that point times $i$. Orange is the turn. Blue is the address.');
   paint();
   return () => view.destroy();
 }
@@ -148,7 +140,6 @@ export function mountModulus(parent) {
     paint();
   });
   parent.append(claim, chip);
-  keyLine(parent, 'ch1-mod-key', 'Green is the point you drag. Orange is its length, and the circle of length $5$. Purple is $4+3i$. Blue is the address.');
   paint();
   return () => view.destroy();
 }
@@ -189,7 +180,6 @@ export function mountPolar(parent) {
     paint();
   });
   parent.append(claim, chip);
-  keyLine(parent, 'ch1-polar-key', 'Green is the point you drag. Orange is the ray and the angle. Purple is $1+i$. Blue is the axes.');
   paint();
   return () => view.destroy();
 }
@@ -215,7 +205,6 @@ export function mountRoots(parent) {
   }
   btn.addEventListener('click', () => { k = (k + 1) % 5; paint(); });
   parent.append(claim, btn);
-  keyLine(parent, 'ch1-roots-key', 'Purple is the root you are on. Green marks the other four. Orange is the unit circle.');
   paint();
   return () => view.destroy();
 }
@@ -258,7 +247,6 @@ export function mountDisk(parent) {
     view.requestDraw();
   }
   parent.append(claim);
-  keyLine(parent, 'ch1-disk-key', 'Green is the point you drag. Orange is $|z|=1$. Inside the circle the disk is open.');
   paint();
   return () => { diskListeners.clear(); view.destroy(); };
 }

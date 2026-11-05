@@ -107,7 +107,7 @@ export const CHAPTER_1 = deepFreeze({
       },
       memory: [
         '$|z|=\\sqrt{x^2+y^2}$. That is the distance to $0$. Definition 1.8.',
-        'The distance from $z_1$ to $z_2$ is $|z_1-z_2|$. Page 18.',
+        'The distance from $z_1$ to $z_2$ is $|z_1-z_2|.$ Page 18.',
         '$|z|^2=z\\overline{z}$. Identity (1.22). Use it when you want to avoid the square root.',
         'Triangle: $|z_1+z_2|\\le |z_1|+|z_2|$. Reverse: $|z_1+z_2|\\ge |z_1|-|z_2|$.',
         'Moduli multiply and divide. Identities (1.25) and (1.26).',
@@ -121,7 +121,7 @@ export const CHAPTER_1 = deepFreeze({
       page: 22,
       why: 'Multiplication has a direction. The modulus is the length you already have, and Arg is the angle from the positive real axis, kept in $(-\\pi,\\pi]$.',
       summit: 'Polar form is the length times $e^{i\\theta}$. Definition 1.9 allows any argument. The one value in $(-\\pi,\\pi]$ is Arg, Definition 1.11.',
-      idea: 'Example 1.13, page 27: $1+i$ has length $\\sqrt{2}$ and Arg $\\pi/4$.',
+      idea: 'Example 1.7, page 22: $1+i$ has length $\\sqrt{2}$ and Arg $\\pi/4$.',
       read: [
         { pin: 'Definition 1.9, polar representation, page 22', href: sectionHref(GEO2, 'def_polar_rep') },
         { pin: 'Definition 1.10, $\\arg z$, page 23', href: sectionHref(GEO2, 'arg_z') },
@@ -130,8 +130,8 @@ export const CHAPTER_1 = deepFreeze({
         { pin: 'Theorem 1.3, arguments add, page 26', href: sectionHref(GEO2, 'thm_arg-sum') },
       ],
       worked: {
-        pin: 'Example 1.13, page 27',
-        href: sectionHref(GEO2, 'sec_geometry-2-43'),
+        pin: 'Example 1.7, page 22',
+        href: sectionHref(GEO2, 'sec_geometry-2-6'),
         title: '$1+i$ in polar form',
         body: '$1+i$ sits one unit right and one unit up. Definition 1.8 is the length, Definition 1.11 is the angle in $(-\\pi,\\pi]$, and Definition 1.9 is the polar form. Euler\'s formula, page 25, writes the same point.',
       },
@@ -178,7 +178,7 @@ export const CHAPTER_1 = deepFreeze({
       id: '1.6',
       title: 'The Topology of Complex Numbers',
       page: 35,
-      why: 'The unit circle from stage 1.5 is the boundary of $D_1(0)$. Open, closed, and domain are the words the exercises grade for the disk inside that circle and for the regions between circles.',
+      why: 'The unit circle from stage 1.5 is the boundary of $D_1(0).$ Open, closed, and domain are the words the exercises grade for the disk inside that circle and for the regions between circles.',
       summit: 'The open unit disk is a domain. The closed disk is not, because the boundary is not interior.',
       idea: 'Equation (1.50), page 37: $D_\\varepsilon(z_0)=\\{z:\\,|z-z_0|<\\varepsilon\\}$. Exercise 6, page 41: $D_1(0)$ is a domain and the closed disk is not.',
       read: [
@@ -191,7 +191,7 @@ export const CHAPTER_1 = deepFreeze({
         pin: 'Example 1.25, page 38',
         href: sectionHref(TOP, 'TopologyEx'),
         title: 'The open unit disk',
-        body: '$S=D_1(0)=\\{z:\\,|z|<1\\}$. Example 1.25 takes a point inside and chooses $\\varepsilon=1-|z_0|$, so a whole disk about that point stays in $S$. The exterior is $|z|>1$ and the boundary is the circle $|z|=1$.',
+        body: '$S=D_1(0)=\\{z:\\,|z|<1\\}$. Example 1.25 takes a point inside and chooses $\\varepsilon=1-|z_0|$, so a whole disk about that point stays in $S$. The exterior is $|z|>1$ and the boundary is the circle $|z|=1.$',
       },
       memory: [
         'A segment from $z_0$ to $z_1$ is $z(t)=z_0+t(z_1-z_0)$ for $0\\le t\\le 1$. Equation (1.48), page 35.',
@@ -249,7 +249,11 @@ const CITE_HREF = {
   'Definition 1.10': sectionHref(GEO2, 'arg_z'),
   'Definition 1.11': sectionHref(GEO2, 'Arg_z'),
   'Theorem 1.3': sectionHref(GEO2, 'thm_arg-sum'),
+  'Example 1.7': sectionHref(GEO2, 'sec_geometry-2-6'),
   'Example 1.13': sectionHref(GEO2, 'sec_geometry-2-43'),
+  'Definitions 1.1 and 1.2': sectionHref(ALG1, 'def_addition'),
+  'Identities (1.25) and (1.26)': sectionHref(GEO1, 'ModProduct'),
+  'Equations (1.51) and (1.52)': sectionHref(TOP, 'sec_topology-14'),
   '§1.4, Exercise 7': sectionHref(GEO2, 'x1_4_7'),
   'Equation (1.40)': sectionHref(ALG2, 'De_Moivre_s_formula'),
   'Equation (1.43)': sectionHref(ALG2, 'Roots_of_Unity'),
@@ -316,17 +320,17 @@ export function modulusClaim(z) {
   const im = Number(z && z.im);
   const r2 = re * re + im * im;
   const lengthFive = Math.abs(r2 - 25) <= 1e-6;
-  if (near(re, 4, 1e-6) && near(im, 3, 1e-6)) return { holds: true, text: 'The length is $5$. This is the book’s $4+3i$.' };
-  if (lengthFive) return { holds: true, text: 'The length is $5$. The point is on the circle through $4+3i$.' };
-  return { holds: false, text: 'The length is the distance to $0$. It is not $5$.' };
+  if (near(re, 4, 1e-6) && near(im, 3, 1e-6)) return { holds: true, text: 'The length is $5.$ This is the book’s $4+3i$.' };
+  if (lengthFive) return { holds: true, text: 'The length is $5.$ The point is on the circle through $4+3i$.' };
+  return { holds: false, text: 'The length is the distance to $0$. It is not $5.$' };
 }
 
-// True only at the book's 1+i, Example 1.13, page 27. A nearby point does not have length √2.
+// True only at the book's 1+i, Example 1.7, page 22. A nearby point does not have length √2.
 export function polarClaim(z) {
   const re = Number(z && z.re);
   const im = Number(z && z.im);
   if (near(re, 1, 1e-4) && near(im, 1, 1e-4)) {
-    return { holds: true, text: 'Length $\\sqrt{2}$, Arg $\\pi/4$. Example 1.13, page 27.' };
+    return { holds: true, text: 'Length $\\sqrt{2}$, Arg $\\pi/4$. Example 1.7, page 22.' };
   }
   return { holds: false, text: 'Arg is the angle from the positive real axis, in $(-\\pi,\\pi]$. This point is not $1+i$.' };
 }
@@ -365,6 +369,6 @@ export function diskClaim(z) {
   const im = Number(z && z.im);
   const r = Math.hypot(re, im);
   if (r < 1 - 1e-4) return { holds: true, text: 'Inside the open unit disk. Example 1.25, page 38.' };
-  if (r <= 1 + 1e-4) return { holds: false, text: 'On the boundary. The open disk does not include $|z|=1$.' };
-  return { holds: false, text: 'Outside. This is not the open disk $D_1(0)$.' };
+  if (r <= 1 + 1e-4) return { holds: false, text: 'On the boundary. The open disk does not include $|z|=1.$' };
+  return { holds: false, text: 'Outside. This is not the open disk $D_1(0).$' };
 }
