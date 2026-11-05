@@ -251,7 +251,14 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
     && !answersMatch('2z - i', [], '-(i+2z)')
     && !answersMatch('2z - i', [], 'i-2z')
     && !answersMatch('2z - i', [], '-(2z-i)')
-    && answersMatch('both hold', ['u_x = 0 = v_y and u_y = -1 = -v_x'], 'u_y=-1=-v_x and u_x=0=v_y'));
+    && answersMatch('both hold', ['u_x = 0 = v_y and u_y = -1 = -v_x'], 'u_y=-1=-v_x and u_x=0=v_y')
+    && answersMatch('u_x + i v_x', [], 'u_x(x_0,y_0) + i v_x(x_0,y_0)')
+    && answersMatch('-y and x + 4', ['u=-y, v=x+4'], 'u(x,y)=-y and v(x,y)=x+4')
+    && answersMatch('-3xy^2 + C(x)', [], '-3xy^2+C(x)')
+    && !answersMatch('x^3 - 3xy^2 + C', [], 'x^3 - 3xy^2 + C(x)')
+    && !answersMatch('-3xy^2 + C(x)', [], '-3xy^2+C')
+    && !answersMatch('0', [], '0(x)')
+    && answersMatch('2z', [], '2(z)'));
   const mem = { 'progress.test2': { '4.1.3': true } };
   const store = {
     get(key, fallback) { return Object.prototype.hasOwnProperty.call(mem, key) ? mem[key] : fallback; },

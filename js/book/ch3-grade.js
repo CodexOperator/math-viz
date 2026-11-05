@@ -27,7 +27,9 @@ function canon(s) {
     const next = raw[i + 1];
     if (prev && /[0-9]/.test(prev) && next && /[0-9]/.test(next)) out += DOT;
   }
-  return out.replace(/\((x0|y0|x|y|z0|z)(,(x0|y0|x|y))*\)/g, '');
+  // Drop the point on a partial, so u_x(x_0, y_0) matches u_x. Leave C(x)
+  // alone: on the conjugate, C(x) is still a function and C is a constant.
+  return out.replace(/([uv](?:x|y)?)\((?:x0|y0|x|y|z0|z)(?:,(?:x0|y0|x|y))*\)/g, '$1');
 }
 
 function splitSum(s) {

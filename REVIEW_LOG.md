@@ -5968,3 +5968,28 @@ Checked against Howell & Mathews, *Complex Analysis*, 202 Updated Edition, print
 ### Left, and not another batch
 
 A parenthesized negation such as `-(i-2z)` is still marked wrong. `-i+2z` is accepted. The Cauchy-Riemann generator does not build the "only at 0" case; Exercise 11 and Example 3.6 are the cards for that.
+
+## Chapter 3 batch 3
+
+Branch `cursor/chapter-3`, reviewed at `e18c094`. Verdict: **accept with fixes**. One fix is on the branch. Not merged. gh-pages was not touched.
+
+Checked against Howell & Mathews, *Complex Analysis*, 202 Updated Edition, printed pages 79–101 and the selected answers on printed pages 435–436. The preview at that tip serves the same `ch3-grade.js` and `ch3-math.js`. HTML anchors open the same statements; the HTML numbers them 3.1.n / 3.2.n / 3.3.n.
+
+### Fixed
+
+The blank checker deleted every `(x)`, `(y)`, and `(z)`. That made the final conjugate `x^3 - 3xy^2 + C` accept `x^3 - 3xy^2 + C(x)`, and it made the Laplace answer `0` accept `0(x)`. Equation (3.27) still has `C(x)` on the middle step; the constant is the last step, and the selected answer on page 436 is `x^3 - 3xy^2 + c`. Partials still match with their point attached, `u(x,y)` and `v(x,y)` still match the labeled real and imaginary parts, and `2(z)` matches `2z`.
+
+### Checked and left as is
+
+- Pins match the printed pages: Equation (3.1) and Example 3.1, page 79; Example 3.2 and Remark 3.1, page 80; Definitions 3.1 and 3.2, the singular-point sentence, and Equations (3.4)–(3.12), page 81; Theorem 3.1, page 82; Theorem 3.2, with the proof deferred to Corollary 7.11, page 83; Exercises 1(a) and 2(a), page 83; Exercises 7(a) and 11, page 84; Theorem 3.3 and Equations (3.14)–(3.16), page 86; Example 3.4, page 87; Example 3.6, page 88; Theorem 3.4, page 89; Theorem 3.5, page 91, whose polar equations are the `r U_r = V_θ` form Exercise 10(b) asks for; Theorem 3.6, page 92; Theorem 3.7 and Exercises 1(a), 1(g), and 7(b), page 93; Laplace, Theorem 3.8, and the conjugate definition, page 95; Example 3.11, page 96; Theorem 3.9 and Equation (3.27), page 97; Exercise 2 and Exercise 5(a), page 100.
+- Theorem 3.4's flash is the book's three hypotheses, then `f'(z_0) = u_x + i v_x`. Example 3.6 is the counterexample on page 88: partials `u_x = v_y = 1`, `u_y = v_x = 0`, paths 1 and −1.
+- `|z|^2`: horizontal limit `2x_0`, vertical limit `-2iy_0`, agree only at 0 with `f'(0) = 0`. Re z: horizontal 1, vertical 0. Exercise 7(a) is `-4i`. Exercise 1(a) of §3.2 is `f' = i`. Exercise 7(b) is `z + conj(z) = 2x`, nowhere differentiable. Exercise 5(a) is `x^3 - 3xy^2 + C`, which is `Re(z^3)`.
+- At `1+i`, `z^2` turns by 45° and stretches by `2√2` for every direction. At 2 the claim is turn 0° and stretch 4. At 0 the derivative is 0. Conjugate of a step at 60° turns by −120°. A turned square stays a square. Stretch at angle 0 is a right angle with unequal sides; at 45° the sides are equal and the angle is not. Conjugate levels are orthogonal off the origin. Circles are orthogonal on the diagonal and not at `1+0.45i`. The origin says both slopes vanish, and Circles from there returns to `1+0.45i`.
+- `-(i-2z)` matches `2z - i`. `-(i+2z)`, `i-2z`, and `-(2z-i)` do not. `5(z^2-iz+9)^45` does not match the chain-rule factor.
+- Generators recomputed off the printed polynomials, not off `selfCheck`. Eight hundred Cauchy-Riemann seeds: 401 hold everywhere and `f'` matches `u_x + i v_x` at six points, 133 hold only on the real axis with `f' = 2ax` there, 133 fail everywhere, 133 hold only at 0 with `f'(0) = 0`. Five hundred harmonic seeds: 375 pass Laplace, the integral differentiates back to `u_x`, `C'(x)` is the match to `-u_y`, and `v` satisfies Cauchy-Riemann; 125 fail Laplace and say no conjugate.
+- No `kit/` import in live code. `js/core/map-route.js` matches the kit template. A Chapter 3 tick still keeps a Chapter 4 tick.
+- `node tools/check_vectors.mjs` (234/234), `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed after the fix.
+
+### Left
+
+The selected answer on page 435 for §3.1 Exercise 1(a) prints `15z^2 - 8z + 7`. That is not the derivative of `(z^2 - iz + 9)^5`. The same page labels `h'(z) = 3/(z+2)^2` as 1c; `h` is Exercise 1(b). The card keeps `5(z^2 - iz + 9)^4(2z - i)`. The §3.2 recipe line omits the neighborhood hypothesis that the Theorem 3.4 flash states in full.
