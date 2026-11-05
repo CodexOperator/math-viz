@@ -92,7 +92,7 @@ const STAGES = [
   },
   {
     id: '6.4',
-    why: '6.3 gives $0$ on a closed curve. Two ends use an antiderivative.',
+    why: 'In a simply connected domain, two ends use an antiderivative.',
     go: '6.5',
     goLabel: 'Go to 6.5',
     gesture: 'Drag the green bend. The ends stay put, and the integrand is $z$.',
@@ -108,7 +108,7 @@ const STAGES = [
       'Theorem 6.9, page 194: in a simply connected domain, $\\int_{z_0}^{z_1} f = F(z_1)-F(z_0)$.',
       'In a simply connected domain, an analytic integrand does not care which path you draw between the same ends.',
     ],
-    summit: 'For an analytic integrand, the integral is the antiderivative at the end minus the antiderivative at the start.',
+    summit: 'In a simply connected domain, the integral of an analytic integrand is the antiderivative at the end minus the antiderivative at the start.',
   },
   {
     id: '6.5',
