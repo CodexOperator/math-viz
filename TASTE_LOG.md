@@ -2038,3 +2038,57 @@ Two or more flashes say "1 of 2" at the flag's size. The `h3` is the question, a
 The positive real start is not home. A full turn after the parameter has passed \(\pi\) says the point is home. Outside the unit circle the claim is "Outside, the formula does not apply." Typing 0 there checks right, and moving inside clears that mark. Theorem 6.5 on the 6.3 sheet is the book's hypothesis: analytic in a simply connected domain, simple closed contour in that domain (page 183). A segment card splits Theorem 6.1, page 172 (parametrize) from Theorem 6.9, page 194 (evaluate at the ends).
 
 Deferred: the shared practice engine is another loop, so this chapter still renders `data/practice/ch6.json` with the local card. Chapter 7 is that loop's page and stays a Later card here. Chapters 8–11 are outside this loop.
+
+## ux-veteran (chapter-6 batch 6)
+
+Branch `cursor/chapter-6`, tip `a501fb1`. Preview https://ch6-preview.complexanalysis.pages.dev. The served `js/stations/chapter-6.js`, `js/stations/ch6-pictures.js`, `js/stations/ch6-cards.js`, `js/stations/book.js`, `js/app.js`, and `css/components.css` match that commit. `version.json` still names `fa0f69f`. Headless Chrome, touch on the phone, fresh storage. 390×844 light, then dark. Then 1280×800, light, then dark. The theme was `mv:theme`, set before load. No console errors. No failed assets. `scrollWidth` was 390 and 1280. No product code was changed. The phone page is 24609px and stays 24609px when the half-turn line fills. The laptop page is 19575px and stays 19575px.
+
+### Verdict
+
+ANOTHER BATCH. The reserved slot, the camp arrival, the book doors, and the drawer are the page this batch asked for. On the first screen the next control is cut in half, and The Book's hit covers the title. One batch is the two cuts below. When the field and Check are whole and the title clears that hit, this lens rests.
+
+### What the walk showed
+
+First screen, 390, light and dark, before the latch. The header is 56px. The Book draws at 69×19, at y = 80. The title is Iowan Old Style, 25.85px, weight 600, at y = 103. The lede is the six stages, 16.8px. The flag reads `6.1 · 0 OF 6`. One gesture sits above the square. The square is 284×284 at y = 385. The claim "The total has left 0." is one line, 26px. `#ch6-real-half` is in the stack, empty, 26px. Play is 70×44 at y = 745 and ends at 789. The prompt "From 0 to π the integral is" is on that screen. The field under it is 266×44 at y = 816 and ends at 860, so the 844 window shows 28px of the box. Dark paper is `rgb(13, 18, 28)`. The title and the claim are `rgb(233, 237, 245)`. The lede is `rgb(166, 176, 195)`.
+
+The latch. Pressing Play says Pause. At 180ms the slot is still empty and Play still ends at 789. At 880ms the slot reads "The point is on the left side." and is still 26px. Play still ends at 789. A full turn changes the claim to "A full turn brings the point home." The slot stays. Play stays at 789. A second press says Play. The page height does not change. A drag of the green point to the left side sets the phase to half, fills the same sentence, and leaves Play at the same height. The sentence does not print \(2i\).
+
+At 1280, both themes, the square is 272×272. The gesture is one line. The slot is 26px from the first paint. Resting Play ends at 737, and it ends at 737 while pausing and after the full turn. The field is whole, y = 737 to 781. Check is 85×44 at y = 781 and ends at 825, so the 800 window shows 19px of the button.
+
+Back. From `#chapter-6` at scroll 1200, Go to 6.2 sets `#chapter-6-6-2`, puts the 6.2 flag at y = 73, and leaves the 6.1 blank mounted. Back returns to `#chapter-6` at scroll 1200. From 6.4, after the slot has filled, the flag is at y = 73 and the scroll is 15342. The Book in the drawer opens `#book` at scroll 0. Back returns to `#chapter-6-6-4` at that scroll. The picture has remounted, the phase is move, and the slot is empty again at 26px. The flag is at y = 73 and the title is at y = 96. The same Back on the laptop returns the flag to y = 73.
+
+Camps. `#chapter-6-6-1` through `#chapter-6-6-6` each put the flag at y = 73 and the title at y = 96. Play is on that screen. On the phone the bottoms are 611, 630, 629, 683, 630, and 630. At 1280, 6.2 and 6.3 end at 564 and 6.6 ends at 539. The flag carries the count. Under the blanks: the summit, Go, then Stage complete. The sheet and the cards follow. On 6.3, Go to 6.4 and the tick sit above "Drag the green handle. The integrand is \(1/z\)." "Next camp is Chapter 7, Taylor and Laurent series." is the only next-camp paragraph, on 6.6. The 6.4 why is "In a simply connected domain, two ends use an antiderivative." and that camp's Play still ends at 683.
+
+Drawer, light and dark. Places is 44×44. The list is The Book and chapters 1–7, each row 44px, and the list fits. Chapters 1, 2, 3, and 7 say Later. Chapter 6 is the current row. The page behind the drawer stays put (`overflow: hidden`, and `#view` is inert). At 1280 the menu button is hidden, the sidebar is the same list, and Chapter 6 is the current row. Chapter 3 and Chapter 4 wrap inside the sidebar and stay at 47px, with the whole title on the row.
+
+The book. Walk Chapter 6 is 163×44. The six section rows go to `#chapter-6-6-1` through `#chapter-6-6-6`. On the phone, 6.2, 6.3, 6.4, and 6.6 wrap the title to a second line, and the page shares the first line (the page's text top matches the title's first line, delta 0). Chapter 4.3 does the same with "p. 118". On 6.1, Next sits to the right of "p. 163" and the two do not meet. At 1280 every Chapter 6 row is one 44px line and the page is on the right.
+
+Choices. Forty-four of them, every one at least 44px, none clipped. On the phone six wrap. "Theorem 6.1, so parametrize both curves" is 54px. "the integral equals the length of \(C\)" is 88px. At 1280 none wrap. Check under a picture blank is 85×44. The picture inputs are 266×44.
+
+Flash. The 6.1 count is "1 of 2", class `book-flag`, 12.48px, weight 700, letter-spacing 0.75px, uppercase, the same size as `6.1 · 0 OF 6`. The heading is the question. Show the back opens the definition. Missed is 141×44, closes the back, stays on that card, and adds "Still this card." A deck of one card hides the count. 6.2 says "1 of 2". 6.3, 6.4, 6.5, and each 6.6 deck do not.
+
+Stage complete is 44px and disabled. The line under it says "Bring the point all the way around". The other camps say "Take all eight steps", "Subdivide the triangle", "Bend the path", "Bring the point inside", and "Cross every circle".
+
+Style. Light paper `rgb(246, 243, 236)`, ink `rgb(26, 34, 48)`, muted `rgb(81, 91, 108)`. Dark paper `rgb(13, 18, 28)`, ink `rgb(233, 237, 245)`, muted `rgb(166, 176, 195)`. The button radius is 6px and the card radius is 10px. Chapter 4 at 390 and chapter 5 at 1280 in the dark use that Iowan title, that lede at 16.8px, that kicker, and that 10px card.
+
+### Ranked cuts
+
+1. **The first screen ends on a whole field, and on a whole Check.** At 390, both themes, Play ends at 789 and the prompt is on the screen. The field is 266×44 at y = 816 and ends at 860, so 28px of the box is in the window and the rest is cut. Check starts at 860, below the window. At 1280 the field is whole and Check is 85×44 at y = 781, ending at 825, so 19px of the button is in the 800 window. "Page 163" is its own 26px line under the section title. An 8px gap sits between the claim and the empty slot. Change: the page joins the flag, `6.1 · 0 of 6` and the page on that one line, and the same on 6.2 through 6.6. The paragraph goes. On 6.1 the 8px gap between the claim and `#ch6-real-half` goes. The slot stays 26px from the first paint, empty until the latch, and that height does not change when the sentence fills in. Play's bottom stays inside 844 and inside 800. The field and Check then sit wholly inside the window. The square stays 284px and 272px.
+
+2. **The Book's hit stops at the title.** The words are 69×19 at y = 80. The hit runs from y = 68 to y = 110. The title starts at y = 103. At x = 20, 40, and 70, both y = 104 and y = 108 land on `#chapter-back`. At y = 112 the title takes the point. Chapter 4 has the same band. A press on the top of "Chapter" opens the book. Change: the 44px band uses the gap under the 56px header and ends at the title, about y = 58 to y = 102. The words stay inside the band. Chapters 4, 5, and 6 share that hit. The type stays 12.48px.
+
+### What to keep
+
+The reserved slot. It is empty on the first paint, 26px, and it is still 26px when it reads "The point is on the left side." Play does not move. Pause does not jump. The sentence stays after the point moves on, and it does not print \(2i\). A full turn says the point is home. The claim on 6.1 is one line. The square stays 284px on the phone and 272px on the laptop.
+
+The first screen before the fold. The lede, `6.1 · 0 of 6`, the one gesture, the square, "The total has left 0.", and Play, in both themes and at both widths. The four colours on the marks. Play, Pause, Play.
+
+The mountain. Each camp opens with its flag under the header, the title clear of the bar, the gesture, the picture, and Play. The count is on the flag. The summit, Go, and Stage complete sit under that camp's blanks, and the reason is on the disabled tick. The sheet and the cards follow. On 6.3 the deform gesture follows the tick. The next-camp sentence is only on 6.6, and it names Chapter 7.
+
+The drawer. Chapters 1–7, Later on the chapters that are still cards, Chapter 6 marked, every row at least 44px, the page behind it held still. The laptop sidebar is that list, with the menu button hidden.
+
+Back. Go writes the camp hash and returns to the scroll you left. The Book, then Back, returns to 6.4 with the flag at y = 73, including after the slot has filled and the picture has remounted.
+
+The Book kicker and Back to the book, the words at the size they were. Walk Chapter 6 at 163×44. Section rows that wrap the title and keep the page on the first line, on Chapter 4 and Chapter 6. Next beside p. 163, with space between them.
+
+Wrapped choices, the whole sentence on the button, Check at 85×44, inputs at 266×44. The flash count at the flag's size, the question as the heading, and "Still this card." The type, the paper, the 6px button, the 10px card, the same on chapter 4 and chapter 5.
