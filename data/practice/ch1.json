@@ -1466,17 +1466,17 @@
       "page": 22
     },
     "kind": "flash",
-    "prompt": "Polar form.",
+    "prompt": "Polar form is Definition 1.9. The exponential form is Equation (1.35).",
     "steps": [
       {
-        "text": "Polar form.",
-        "answer": "$z=r(\\cos\\theta+i\\sin\\theta)=re^{i\\theta}$.",
+        "text": "Polar form is Definition 1.9. The exponential form is Equation (1.35).",
+        "answer": "Polar form is $r(\\cos\\theta+i\\sin\\theta)$. The exponential form is $re^{i\\theta}$.",
         "accept": [],
         "why": "Definition 1.9, page 22, is $r(\\cos\\theta+i\\sin\\theta)$. Equation (1.35), page 25, is $re^{i\\theta}$."
       }
     ],
     "generator": null,
-    "memory": "Definition 1.9, page 22, and Euler, page 25."
+    "memory": "Definition 1.9, page 22, is $r(\\cos\\theta+i\\sin\\theta)$. Equation (1.35), page 25, is $re^{i\\theta}$."
   },
   {
     "id": "ch1-1.4-add",
@@ -1872,7 +1872,7 @@
     "steps": [
       {
         "text": "For $0\\le t\\le 1$, $z(t)=$ ___",
-        "answer": "z_0+t(z_1-z_0)",
+        "answer": "z_0+(z_1-z_0)t",
         "accept": [
           "z0+t(z1-z0)",
           "z_0+t(z_1-z_0)",
@@ -1907,7 +1907,7 @@
       }
     ],
     "generator": null,
-    "memory": "Equation (1.48): $z(t)=z_0+t(z_1-z_0)$ for $0\\le t\\le 1$."
+    "memory": "Equation (1.48), page 35: $z(t)=z_0+(z_1-z_0)t$ for $0\\le t\\le 1$."
   },
   {
     "id": "ch1-1.6-ex6",
@@ -1970,13 +1970,13 @@
     "steps": [
       {
         "text": "The segment from $z_0$ to $z_1$.",
-        "answer": "$z(t)=z_0+t(z_1-z_0)$, $0\\le t\\le 1$.",
+        "answer": "$z(t)=z_0+(z_1-z_0)t$, $0\\le t\\le 1$.",
         "accept": [],
         "why": "Equation (1.48), page 35. Exercise 1(a), page 41, is the segment from $0$ to $1+i$."
       }
     ],
     "generator": null,
-    "memory": "Equation (1.48), page 35. Exercise 1(a), page 41, is the segment from $0$ to $1+i$."
+    "memory": "Equation (1.48), page 35, prints $z(t)=z_0+(z_1-z_0)t$. Exercise 1(a), page 41, is the segment from $0$ to $1+i$."
   },
   {
     "id": "ch1-1.6-open",

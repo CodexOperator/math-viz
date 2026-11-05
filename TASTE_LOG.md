@@ -2071,3 +2071,19 @@ Nothing. No spring, no tween on the quarter turn, no drawer slide, no scale on T
 Yes. One cut, then this lens rests.
 
 The turn, the 44px handle, the one-frame paint, and the first screen are the lesson, and they already hold. Something real is left, and it is the hop under the finger on 1.2 and 1.3. After that snap is gone, nothing of this walk’s touch is left.
+
+## Chapter 1, batch 7
+
+Started from `8c77c2c` (product). The branch tip above that was `a5f2c9b`, the batch 6 review notes. Headless Chrome, 390×844 and 1280×800, light and dark. No sideways scroll (`scrollWidth` 390 at 390, 1265 at 1280). No console errors. No failed requests. Not merged. `gh-pages` was not touched. Howell & Mathews, *Complex Analysis*, 202 Updated Edition, printed pages 17–18, 22, 25, and 35.
+
+The 1.2 and 1.3 pointer no longer snaps to a half unit. On the 324px 1.2 plane, 8px steps moved the real part through 1, 1.199, 1.398, 1.596, 1.795, 1.994. The centre of the dot stayed on the finger. Arrow Right still adds 0.5: 1 to 1.5 on 1.2, and 1+i to 1.5+i on 1.3. A drag that starts on the handle does not scroll.
+
+On 1.3 the sentence “The length is 5.” holds while the radius is within 0.15 of 5. Radius 5 and radius 4.9 say it. Radius 4.7 says “It is not 5.”, and that clause stays on its own line. 3.5+3.5i, radius about 4.95, rests on the dashed circle. The 4+3i chip sets that point and stays pressed only while the value is 4+3i. A 3px drag leaves the chip and keeps the length sentence. Definition 1.8, page 17, is |4+3i|=5. Figure 1.10, page 18, is that picture.
+
+The 1.3 worked paragraph starts at the equality. The tag still names page 17 and Figure 1.10. The distance link opens the formula paragraph on page 18, `sec_geometry-1-13`, not Figure 1.9. Equation (1.48), page 35, is printed z(t)=z₀+(z₁−z₀)t. The blank still accepts both orders. The polar card faces Definition 1.9 and Equation (1.35). The back gives r(cos θ+i sin θ) and re^{iθ} as two forms. A memory line that already links a formula does not repeat the definition’s name after it.
+
+After Mark, the plane flag stays 1.1. The book row says Done. The card’s green edge is the done state. The flag’s type is still uppercase, 12.48px, tracking 0.75px. The section number does not become DONE.
+
+The first screen is the same stack. Phone, light and dark: paper `rgb(246, 243, 236)` and `rgb(13, 18, 28)`. The title is Iowan Old Style, 25.85px. The Book is 109×44. The plane is 324×324 from y = 314. Times i runs from y = 680 to 724. The stage title runs from y = 724 to 751. Page 1 ends at y = 781. Laptop, light and dark: the plane is 400×400 at x = 321, the claim’s left edge. Times i ends at y = 742. The stage title runs from y = 742 to 769. Page 1 ends at y = 799. The in-page Book is hidden. The sidebar is chapters 1 through 7.
+
+The shared practice engine is not on this branch, so Chapter 1 still renders the local card. Progress is still localStorage. Sign-in is not on this branch. Chapters 8 and later are outside this walk. The ux pass was REST, so the page was not restyled.

@@ -6,7 +6,7 @@ import { stationsForMap, stationForTopic, stationForProblem, stationById, thread
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
 import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, bookWalkTarget, chapter4ExerciseIds, chapter5ExerciseIds } from '../js/data/book-path.js';
-import { CHAPTER_1, chapter1StageIds, turnClaim, timesIClaim, modulusClaim, polarClaim, rootClaim, diskClaim } from '../js/data/chapter1.js';
+import { CHAPTER_1, chapter1StageIds, citeHref, turnClaim, timesIClaim, modulusClaim, polarClaim, rootClaim, diskClaim } from '../js/data/chapter1.js';
 import { generate as generateCh1, matches as matchesCh1, parseComplex } from '../js/practice/gen/ch1-arithmetic.js';
 import practiceCh1 from '../data/practice/ch1.json' with { type: 'json' };
 import { chapterTally, sectionFinished, foldLegacyExercises, saveSharedTicks, toggleTick } from '../js/book/progress.js';
@@ -169,9 +169,12 @@ check('eleven chapters, 1, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_C
     turnClaim(2).holds === true && turnClaim(0).holds === false && turnClaim(2).text !== turnClaim(0).text
     && turnClaim(4).text.includes('Back at') && turnClaim(0).text.includes('not been turned')
     && timesIClaim({ re: 0, im: 1 }).holds === true && timesIClaim({ re: 1, im: 0 }).holds === false
-    && modulusClaim({ re: 4, im: 3 }).holds === true && modulusClaim({ re: 1, im: 1 }).holds === false
+    && modulusClaim({ re: 4, im: 3 }).holds === true && modulusClaim({ re: 4, im: 3 }).text.includes('4+3i')
+    && modulusClaim({ re: 1, im: 1 }).holds === false
     && modulusClaim({ re: 5, im: 0 }).holds === true && modulusClaim({ re: -3, im: 4 }).holds === true
-    && modulusClaim({ re: 3.5, im: 3.5 }).holds === false && modulusClaim({ re: 5, im: 1 }).holds === false
+    && modulusClaim({ re: 3.5, im: 3.5 }).holds === true && modulusClaim({ re: 5, im: 1 }).holds === true
+    && modulusClaim({ re: 4.86, im: 0 }).text.includes('The length is $5.$')
+    && modulusClaim({ re: 6, im: 0 }).holds === false && modulusClaim({ re: 0, im: 4.8 }).text.includes('It is not $5.$')
     && polarClaim({ re: 1, im: 1 }).holds === true && polarClaim({ re: -1, im: 0 }).holds === false
     && rootClaim(0).holds === true && rootClaim(1).holds === false
     && rootClaim(1).text.includes('2\\pi\\cdot 1/5') && rootClaim(0).text.includes('Five equal turns')
@@ -184,10 +187,19 @@ check('eleven chapters, 1, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_C
     const worked = CHAPTER_1.sections.find((s) => s.id === '1.3').worked.body;
     check('a negative argument keeps the book’s e to the minus i theta',
       neg.steps[1].answer.startsWith('-') && matchesCh1(book, neg.steps[2]) && matchesCh1(neg.steps[2].answer, neg.steps[2]));
+    const seg = CHAPTER_1.sections.find((s) => s.id === '1.6').memory[0];
+    const polarFlash = practiceCh1.find((item) => item.id === 'ch1-1.4-polar');
     check('the half-closed annulus cites the bounded set, and Example 1.6 is another pair',
       ann.cite.ref === 'Bounded set' && ann.cite.page === 40 && !/Exercise 9/.test(ann.prompt) && /Page 40/.test(ann.steps[0].why)
       && /Figure 1\.30/.test(ann.steps[0].why) && /open annulus/.test(ann.steps[0].why)
-      && /1\+2i/.test(worked) && /3\+2i/.test(worked) && !/\\sqrt\{3\}\+2i/.test(worked) && !/same length/.test(worked));
+      && /1\+2i/.test(worked) && /3\+2i/.test(worked) && !/\\sqrt\{3\}\+2i/.test(worked) && !/same length/.test(worked)
+      && !/^Definition 1\.8 writes/.test(worked));
+    check('the segment memory prints Equation (1.48), and the distance link opens the formula',
+      seg.includes('z_0+(z_1-z_0)t') && !seg.includes('z_0+t(z_1-z_0)')
+      && citeHref('Distance formula').includes('#sec_geometry-1-13')
+      && !citeHref('Distance formula').includes('fig_ch-01-09')
+      && /Equation \(1\.35\)/.test(polarFlash.prompt)
+      && !/=re\^\{i\\theta\}/.test(polarFlash.steps[0].answer));
   }
   {
     let zeroCoord = false;

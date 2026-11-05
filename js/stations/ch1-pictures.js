@@ -85,7 +85,6 @@ export function mountTimes(parent) {
     'Drag the green point. Purple is that point times i. Orange is the quarter turn.');
   const claim = h('p', { class: 'ch1-claim', id: 'ch1-times-claim' });
   let z = { re: 1, im: 0 };
-  const snap = (w) => ({ re: Math.round(w.re * 2) / 2, im: Math.round(w.im * 2) / 2 });
   view.addLayer((ctx, p) => {
     const w = mul(z, { re: 0, im: 1 });
     const r = Math.hypot(z.re, z.im);
@@ -101,7 +100,6 @@ export function mountTimes(parent) {
     z,
     color: '--input',
     step: 0.5,
-    snap,
     name: 'z',
     onDrag: (w) => { z = { re: w.re, im: w.im }; paint(); },
   });
@@ -123,13 +121,12 @@ export function mountModulus(parent) {
     type: 'button', class: 'chip', id: 'ch1-mod-example', 'aria-pressed': 'false',
   }, '4 + 3i');
   let z = { re: 1, im: 1 };
-  const snap = (w) => ({ re: Math.round(w.re * 2) / 2, im: Math.round(w.im * 2) / 2 });
+  const bookPoint = (w) => Math.abs(w.re - 4) <= 1e-6 && Math.abs(w.im - 3) <= 1e-6;
   const handle = view.addPoint({
     id: 'z',
     z,
     color: '--input',
     step: 0.5,
-    snap,
     name: 'z',
     onDrag: (w) => { z = { re: w.re, im: w.im }; paint(); },
   });
@@ -142,7 +139,7 @@ export function mountModulus(parent) {
   function paint() {
     const c = modulusClaim(z);
     say(claim, c.text, c.holds);
-    const on = Math.abs(z.re - 4) <= 0.12 && Math.abs(z.im - 3) <= 0.12;
+    const on = bookPoint(z);
     chip.setAttribute('aria-pressed', on ? 'true' : 'false');
     view.requestDraw();
   }

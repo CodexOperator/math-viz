@@ -75,7 +75,8 @@ export function mountChapter1(el, ctx, focus) {
       const finished = sectionFinished(section, ticks);
       node.setAttribute('data-state', finished ? 'done' : (t.nextId === id ? 'next' : 'ahead'));
       const flag = node.querySelector('.book-flag');
-      if (flag) flag.textContent = finished ? 'Done' : id;
+      // The book row says Done. Uppercase on this flag would print DONE.
+      if (flag) flag.textContent = id;
     }
   }
 

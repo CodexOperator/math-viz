@@ -103,12 +103,12 @@ export const CHAPTER_1 = deepFreeze({
         pin: 'Page 17, and Figure 1.10 on page 18',
         href: sectionHref(GEO1, 'fig_ch-01-10'),
         title: 'The length of $4+3i$',
-        body: 'Definition 1.8 writes $|4+3i|$ as $\\sqrt{4^2+3^2}$. The legs are the real part and the imaginary part, and Identity (1.21) says each leg is at most the hypotenuse. Example 1.6, page 20, multiplies the lengths of a different pair, $1+2i$ and $3+2i$.',
+        body: '$|4+3i|=\\sqrt{4^2+3^2}$. The legs are the real part and the imaginary part, and Identity (1.21) says each leg is at most the hypotenuse. Example 1.6, page 20, multiplies the lengths of a different pair, $1+2i$ and $3+2i$.',
       },
       memory: [
-        '[[$|z|=\\sqrt{x^2+y^2}$@@Definition 1.8]]. That is the distance to $0$. Definition 1.8.',
+        '[[$|z|=\\sqrt{x^2+y^2}$@@Definition 1.8]]. That is the distance to $0$.',
         'The distance from $z_1$ to $z_2$ is [[$|z_1-z_2|.$@@Distance formula]] Page 18.',
-        '[[$|z|^2=z\\overline{z}$@@Identity (1.22)]]. Identity (1.22). Use it when you want to avoid the square root.',
+        '[[$|z|^2=z\\overline{z}$@@Identity (1.22)]]. Use it when you want to avoid the square root.',
         'Triangle: [[$|z_1+z_2|\\le |z_1|+|z_2|$@@Theorem 1.2]]. Reverse: [[$|z_1+z_2|\\ge |z_1|-|z_2|$@@Identity (1.24)]].',
         'Moduli multiply and divide. [[Identities (1.25) and (1.26)@@Identities (1.25) and (1.26)]].',
       ],
@@ -136,8 +136,8 @@ export const CHAPTER_1 = deepFreeze({
         body: '$1+i$ sits one unit right and one unit up. The length is $\\sqrt{2}$ and the angle is $\\pi/4$, written $r(\\cos\\theta+i\\sin\\theta)$. $\\operatorname{Arg}(1+i)=\\pi/4$ is Example 1.9, page 23. Equation (1.35), page 25, writes $\\sqrt{2}\\,e^{i\\pi/4}$.',
       },
       memory: [
-        '[[Arg $z$@@Definition 1.11]] is the one angle in $(-\\pi,\\pi]$. Definition 1.11, page 23. It is undefined at $0$.',
-        'Polar form is [[$r(\\cos\\theta+i\\sin\\theta)$@@Definition 1.9]]. The exponential form is [[$re^{i\\theta}$@@Equation (1.35)]]. Definition 1.9, page 22. Equation (1.35), page 25.',
+        '[[Arg $z$@@Definition 1.11]] is the one angle in $(-\\pi,\\pi]$. It is undefined at $0$.',
+        'Polar form is [[$r(\\cos\\theta+i\\sin\\theta)$@@Definition 1.9]]. The exponential form is [[$re^{i\\theta}$@@Equation (1.35)]].',
         'An argument of a product is the sum of arguments. [[Theorem 1.3@@Theorem 1.3]], page 26.',
         'Wrap that sum back into $(-\\pi,\\pi]$ before you call it Arg.',
         'The sum of the two Args can leave the interval. [[Exercise 7@@§1.4, Exercise 7]], page 28.',
@@ -167,8 +167,8 @@ export const CHAPTER_1 = deepFreeze({
       },
       memory: [
         'De Moivre, Equation (1.40), page 30: [[$(\\cos\\theta+i\\sin\\theta)^n=\\cos n\\theta+i\\sin n\\theta$@@Equation (1.40)]]. The length becomes $r^n$.',
-        'The $n$th roots have length $r^{1/n}$ and angles [[$(\\theta+2\\pi k)/n$@@Equation (1.45)]]. Equation (1.45), page 32.',
-        'The $n$th roots of unity are [[$e^{i 2\\pi k/n}$@@Equation (1.43)]]. Equation (1.43), page 31.',
+        'The $n$th roots have length $r^{1/n}$ and angles [[$(\\theta+2\\pi k)/n$@@Equation (1.45)]].',
+        'The $n$th roots of unity are [[$e^{i 2\\pi k/n}$@@Equation (1.43)]].',
         'A quadratic has both square roots of the discriminant. [[Theorem 1.5@@Theorem 1.5]], page 33.',
       ],
       exercises: ['1.5'],
@@ -194,8 +194,8 @@ export const CHAPTER_1 = deepFreeze({
         body: 'Take a point inside and choose $\\varepsilon=1-|z_0|$, so a whole disk about that point stays in $D_1(0)$. The exterior is $|z|>1$ and the boundary is the circle $|z|=1.$',
       },
       memory: [
-        'A segment from $z_0$ to $z_1$ is [[$z(t)=z_0+t(z_1-z_0)$@@Equation (1.48)]] for $0\\le t\\le 1$. Equation (1.48), page 35.',
-        'The open disk is [[$|z-z_0|<\\varepsilon$@@Equation (1.50)]]. Equation (1.50), page 37. The boundary is not included.',
+        'A segment from $z_0$ to $z_1$ is [[$z(t)=z_0+(z_1-z_0)t$@@Equation (1.48)]] for $0\\le t\\le 1$.',
+        'The open disk is [[$|z-z_0|<\\varepsilon$@@Equation (1.50)]]. The boundary is not included.',
         'The closed disk is [[$|z-z_0|\\le\\varepsilon$@@Equation (1.51)]]. The punctured disk is [[$0<|z-z_0|<\\varepsilon$@@Equation (1.52)]], so the center is left out.',
         'A boundary point has every neighborhood meeting the set and its complement.',
         'A domain is open and connected. [[Exercise 6@@§1.6, Exercise 6]], page 41: $D_1(0)$ is one, and the closed disk is not.',
@@ -230,7 +230,7 @@ const CITE_HREF = {
   'Identity (1.19)': sectionHref(ALG1, 'BarReImProperties'),
   'Definition 1.8': sectionHref(GEO1, 'ModDef'),
   'Identity (1.21)': sectionHref(GEO1, 'ReImLEMod'),
-  'Distance formula': sectionHref(GEO1, 'fig_ch-01-09'),
+  'Distance formula': sectionHref(GEO1, 'sec_geometry-1-13'),
   'Identity (1.22)': sectionHref(GEO1, 'ModSq'),
   'Theorem 1.2': sectionHref(GEO1, 'TriangleIneq'),
   'Identity (1.24)': sectionHref(GEO1, 'ReverseTriangleIneq'),
@@ -319,14 +319,14 @@ export function timesIClaim(z) {
   return { holds: false, text: 'Times $i$ is a quarter turn. The product is not real.' };
 }
 
-// True on the circle of radius 5, and names the book's point when the drag is there.
+// True within 0.15 of radius 5, so a finger can rest on the dashed circle.
+// The book’s 4+3i is named only when the point is that point.
 export function modulusClaim(z) {
   const re = Number(z && z.re);
   const im = Number(z && z.im);
-  const r2 = re * re + im * im;
-  const lengthFive = Math.abs(r2 - 25) <= 1e-6;
+  const r = Math.hypot(re, im);
   if (near(re, 4, 1e-6) && near(im, 3, 1e-6)) return { holds: true, text: 'The length is $5.$ This is the book’s $4+3i$.' };
-  if (lengthFive) return { holds: true, text: 'The length is $5.$ The point is on the circle through $4+3i$.' };
+  if (Math.abs(r - 5) <= 0.15) return { holds: true, text: 'The length is $5.$ The point is on the circle through $4+3i$.' };
   return { holds: false, text: 'The length is the distance to $0$. It is not $5.$' };
 }
 
