@@ -6,7 +6,7 @@ import { stationsForMap, stationForTopic, stationForProblem, stationById, thread
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
 import { BOOK_CHAPTERS, CHAPTER_3, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, chapter3StageIds, chapter4ExerciseIds, chapter5ExerciseIds } from '../js/data/book-path.js';
-import { derivativeScene, squareScene, levelScene, circleComparePoint, clampRect, clampDrawn, marksDrawn, sharedGain, markScale, arcRadius, PLANE_SIZE } from '../js/book/ch3-math.js';
+import { derivativeScene, squareScene, levelScene, circleComparePoint, clampRect, clampDrawn, marksDrawn, sharedGain, markScale, arcRadius, PLANE_SIZE, MARK_PX, ARC_PX } from '../js/book/ch3-math.js';
 import { answersMatch } from '../js/book/ch3-grade.js';
 import { selfCheck as crPolyChecks } from '../js/practice/gen/cr-poly.js';
 import { selfCheck as harmonicChecks } from '../js/practice/gen/harmonic-conjugate.js';
@@ -319,37 +319,43 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
   const homeScene = derivativeScene('sq', homeZ, 0);
   const homeShared = sharedGain(homeZ, [homeScene.h, homeScene.image], span);
   check('the opening arrows keep the shared scale',
-    Math.abs(markScale(homeZ, homeScene.h, span, homeShared, 11) - homeShared) < 1e-12);
-  for (const re of [1.99, 2.13, 2.28]) {
-    const z = { re, im: 1 };
-    const scene = derivativeScene('sq', z, 0);
-    const shared = sharedGain(z, [scene.h, scene.image], span);
-    const gs = markScale(z, scene.h, span, shared, 11);
-    const ps = markScale(z, scene.image, span, shared, 11);
-    const gLen = gs * Math.hypot(scene.h.re, scene.h.im) * pxPer;
-    const pLen = ps * Math.hypot(scene.image.re, scene.image.im) * pxPer;
-    const ox = ((z.re + span) / (2 * span)) * PLANE_SIZE;
-    const oy = ((span - z.im) / (2 * span)) * PLANE_SIZE;
-    const radius = arcRadius(ox, oy, 0, scene.turn);
-    const inside = (scale, v) => Math.abs(z.re + scale * v.re) <= span && Math.abs(z.im + scale * v.im) <= span;
-    check(`step, image, and turn stay marks at Re ${re}`,
-      gLen >= 8 && pLen >= 8 && radius >= 8 && inside(gs, scene.h) && inside(ps, scene.image));
-  }
+    Math.abs(markScale(homeZ, homeScene.h, span, homeShared, MARK_PX) - homeShared) < 1e-12);
+  const readable = { re: 1.6, im: 1 };
+  const readableScene = derivativeScene('sq', readable, 0);
+  const readableShared = sharedGain(readable, [readableScene.h, readableScene.image], span);
+  const readableG = markScale(readable, readableScene.h, span, readableShared, MARK_PX);
+  const readableP = markScale(readable, readableScene.image, span, readableShared, MARK_PX);
+  const readableLen = (scale, v) => scale * Math.hypot(v.re, v.im) * pxPer;
+  const readableOx = ((readable.re + span) / (2 * span)) * PLANE_SIZE;
+  const readableOy = ((span - readable.im) / (2 * span)) * PLANE_SIZE;
+  check('inside the square the three marks clear the handle',
+    readableLen(readableG, readableScene.h) >= MARK_PX
+    && readableLen(readableP, readableScene.image) >= MARK_PX
+    && arcRadius(readableOx, readableOy, 0, readableScene.turn) >= ARC_PX);
   const frame = clampRect(3, 1, span);
   check('the drag still stops at the frame', near(frame.re, span) && near(frame.im, 1));
   const stopped = clampDrawn('sq', 3, 1, 0, span);
-  const held = clampDrawn('sq', 2.28, 1, 0, span);
-  check('the point stops while the three marks are still drawn',
-    stopped.re < 2.38 && stopped.re > 2.2 && near(stopped.im, 1)
+  const held = clampDrawn('sq', 1.6, 1, 0, span);
+  const swallowed = clampDrawn('sq', 2.29, 1, 0, span);
+  const stoppedClaim = derivativeScene('sq', stopped, 0).claim.text;
+  check('the point stops while the three marks clear the handle',
+    stopped.re <= 2.11 && stopped.re > 2.05 && near(stopped.im, 1)
     && marksDrawn('sq', stopped, 0, span)
-    && !marksDrawn('sq', { re: span, im: 1 }, 0, span)
-    && near(held.re, 2.28) && near(held.im, 1));
+    && !marksDrawn('sq', { re: 2.29, im: 1 }, 0, span)
+    && near(held.re, 1.6) && near(held.im, 1)
+    && Math.abs(swallowed.re - stopped.re) < 1e-3 && near(swallowed.im, 1)
+    && stoppedClaim.includes('25°') && stoppedClaim.includes('4.65'));
   const t35back = t35.steps[0].answer;
-  check('theorem 3.5 names one polar form of the derivative',
+  check('theorem 3.5 names both polar forms of the derivative',
     t35.kind === 'flash'
     && t35back.includes('U_r + i V_r')
+    && t35back.includes('V_\\theta - i U_\\theta')
     && t35back.includes('(3.23)')
-    && t35back.includes('(3.24)'));
+    && t35back.includes('(3.24)')
+    && t35back.includes('Page 91')
+    && t35.steps[0].why.includes('(3.22)')
+    && t35.steps[0].why.includes('(3.24)')
+    && !t35.steps[0].why.includes('one form'));
   const laplace = ch3Items.find((item) => item.id === 'ch3-3.3-im-001');
   const exists = ch3Items.find((item) => item.id === 'ch3-3.3-im-002');
   check('exercise 2 keeps the Laplace blank apart from the choice',

@@ -2154,3 +2154,36 @@ Same system as chapter 4, measured at 390. Light: the paper is rgb(246, 243, 236
 ### Keep
 
 The 324px phone square, the one-line gesture in the claim's ink, the 45° sentence, and Play ending at y=730, in both themes. The why, both sentences, starts whole at y=894. z² is 44×44. A press 26px out leaves 1+i. The drag stops at Re 2.29 with the green step, the purple image, and the orange turn still drawn, and the claim still names the turn and the stretch. The four teaching colours. The status row absent at 0 of 3. The reload line "3.1 · Differentiable and Analytic Functions · 1 of 3", with "Next is 3.2." on the status, over the derivative square. The Book on chapters 3, 4, and 5 at 108.7×44. Back restoring scrollY 1400. Back from the already-drawn door returning to `#book`. The 44px flag and the memory list at y=72. A cold `#chapter-3-3-1` at scroll 0, with the camp name at y=202. `#chapter-3-3-2` and `#chapter-3-3-3` with the title at y=121. The drawer, chapters 1 through 7, each row 44px, the cover, and Escape. `#chapter-6` and `#chapter-7` at y=56, those rows current. The phone book status at 52.7px, Walk Chapter 4 hidden until 3 of 3, and the two doors at 44px with no Later flag. The lede that counts seven chapters. The source line 49px under the last camp. The type, the paper, and the cards. No sideways scroll.
+
+## reviewer (ch3 batch 6)
+
+Reviewed `6d229c3` on `cursor/chapter-3` (PR #46) against Howell & Mathews, *Complex Analysis*, 202 Updated Edition (professor PDF, 471 pages, title page "202 Updated Edition"). Two fixes are on the branch. Not merged. gh-pages was not touched.
+
+### Verdict
+
+ACCEPT WITH FIXES
+
+Checked against printed pages 79–101 and the selected answers on 435–436. HTML anchors open the same statements; the HTML numbers them 3.1.n / 3.2.n / 3.3.n.
+
+### Fixed
+
+Theorem 3.5, page 91, gives two formulas. Equation (3.23) is \(f'(z_0)=e^{-i\theta_0}(U_r+iV_r)\). Equation (3.24) is \(f'(z_0)=e^{-i\theta_0}(V_\theta-iU_\theta)/r_0\). The flash named both numbers as one formula, and the note said they give one form. The back now states the neighborhood, the four continuous partials, the polar system that verifies (3.22), and each derivative with its own number. The singular-point note keeps the definition on page 81 and puts the \(1/z\) and square-root examples on page 83, where the book prints them.
+
+A horizontal drag at Im = 1 used to stop at Re 2.29. The claim there is true of \(z^2\): the turn is 24° and the stretch is 5. The green shaft was 9px in the 480px square and the handle is a 14px disc, so the shaft sat inside the dot. Purple was a sliver. Orange had no pixels. The drag now stops at Re 2.1, the last place the step, the image, and the turn clear the handle. The claim there is the derivative: turn 25°, stretch 4.65. Asking for 2.29 returns that same place. At 1.6 + i the point is unchanged.
+
+### Checked and left as is
+
+Pins match those pages: Equation (3.1) and Example 3.1 on 79; Example 3.2 and Remark 3.1 on 80; Definitions 3.1 and 3.2, singular points, and (3.4)–(3.12) on 81; Theorem 3.1 on 82; Theorem 3.2, proof deferred to Corollary 7.11, and Exercises 1–3 on 83; Exercises 7 and 11 on 84; Theorem 3.3 and (3.14)–(3.16) on 86; Example 3.4 on 87; Example 3.6 on 88; Theorem 3.4 on 89; Theorem 3.5 and (3.22)–(3.24) on 91; Theorem 3.6 and (3.25) on 92; Theorem 3.7 and Exercises 1, 3, and 7 on 93; Exercise 10 on 94; Laplace (3.26), Theorem 3.8, and the conjugate definition on 95; Example 3.11 on 96; Theorem 3.9 and (3.27) on 97; Exercises 2 and 5 on 100.
+
+The cards compute the book's answers. Exercise 1(a) is \(5(z^2-iz+9)^4(2z-i)\). The key on page 435 prints \(15z^2-8z+7\) and files \(h'\) under 1(c). The card does not. Exercise 1(b) is \(3/(z+2)^2\), singular at \(-2\). Exercise 3: \([f]^3\), \(fg\), \(f(z-1)\), and \(f(g(z))\) must be entire. Exercise 7(a) is \(-4i\). \(|z|^2\): horizontal \(2x_0\), vertical \(-2iy_0\), agree only at 0 with \(f'(0)=0\). Example 3.6: \(u_x=v_y=1\) and \(u_y=-v_x=0\) at the origin, paths 1 and \(-1\). Exercise 1(a) of §3.2 is \(f'=i\). Exercise 1(b) is \(i/z\) off 0, \(f'=-i/z^2\). Exercise 3 is \(a=1\), \(b=2\). Exercise 7(b) is nowhere differentiable. Exercise 10(a) keeps the order: \(\cos\theta\) and \(\sin\theta\), then \(-r\sin\theta\) and \(r\cos\theta\). The swapped pairs fail. Exercise 10(b) is \(rU_r=V_\theta\) and \(rV_r=-U_\theta\). Theorem 3.6 accepts the system in either order. Exercise 2 of §3.3 is a Laplace blank, \(6x+6y\), and a separate choice, "does not exist". Exercise 5(a) is \(x^3-3xy^2+c\).
+
+On the preview and on the local page, 390×844 then 1280×800, light and dark: Play ends at y=730 on the phone. The why starts at y=894. At 1280 the square is 304px at x=321 and the sentence sits beside it; the why ends at y=636. Cold `#chapter-3-3-1` stays at scroll 0, camp line at y=202. The flag puts the memory list at y=72. The phone book status is 53px. Chapters 1 and 2 say Already drawn, and each door link is 44px. Chapters 4 and 5 use "The Book" at 44px. `#chapter-6` sits at y=56. No console errors. No sideways scroll. No live file imports `kit/`. `js/core/map-route.js` is byte-identical to `kit/template/js/core/map-route.js`.
+
+`node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed after the fixes.
+
+### Leftovers
+
+1. The §3.3 summit still restates the why.
+2. The shared practice renderer is not on this branch. A `next-step-blank` that grew a `choices` list would still be graded as a choice. Exercise 2 no longer does that.
+3. Open Chapter 2 is not on the book page. Chapter 2 is not a page on this branch.
+4. The selected-answers key on page 435 still prints \(15z^2-8z+7\) for §3.1 Exercise 1(a). The card keeps the chain-rule derivative.

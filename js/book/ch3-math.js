@@ -222,9 +222,14 @@ export function markScale(z, vector, span, shared, minPx) {
   return scale > 0 ? scale : 0;
 }
 
+// The handle is a disc of radius 7 in the 480px square. A shaft shorter than
+// 28px sits inside that disc, and a turn whose arc radius is under 20px does
+// not clear it. Those two sizes are the smallest marks a reader still sees.
+export const MARK_PX = 28;
+export const ARC_PX = 20;
+
 // The step, the image, and the turn (when the turn is not zero) are the three
-// marks. A zero-length image has nothing to draw. The page hides an arrow
-// shorter than 4px and a turn whose arc cannot sit inside the square.
+// marks. A zero-length image has nothing to draw.
 export function marksDrawn(fn, z, phi, span) {
   const scene = derivativeScene(fn, z, phi);
   const shared = sharedGain(z, [scene.h, scene.image], span);
@@ -234,14 +239,16 @@ export function marksDrawn(fn, z, phi, span) {
     if (!(len > 1e-9)) return Infinity;
     return scale * len * pxPer;
   };
-  const gs = markScale(z, scene.h, span, shared, 11);
-  const ps = markScale(z, scene.image, span, shared, 11);
-  if (lengthPx(scene.h, gs) < 4 || lengthPx(scene.image, ps) < 4) return false;
+  const gs = markScale(z, scene.h, span, shared, MARK_PX);
+  const ps = markScale(z, scene.image, span, shared, MARK_PX);
+  // A scale that lands a hair under the minimum is the same mark.
+  const clears = (px) => px + 1e-4 >= MARK_PX;
+  if (!clears(lengthPx(scene.h, gs)) || !clears(lengthPx(scene.image, ps))) return false;
   const turn = scene.turn || 0;
   if (Math.abs(turn) <= 0.12) return true;
   const ox = ((Number(z.re) + span) / (2 * span)) * PLANE_SIZE;
   const oy = ((span - Number(z.im)) / (2 * span)) * PLANE_SIZE;
-  return arcRadius(ox, oy, Number(phi) || 0, (Number(phi) || 0) + turn) > 0;
+  return arcRadius(ox, oy, Number(phi) || 0, (Number(phi) || 0) + turn) >= ARC_PX;
 }
 
 function lastDrawn(fn, from, to, phi, span) {

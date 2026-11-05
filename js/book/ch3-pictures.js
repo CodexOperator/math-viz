@@ -1,7 +1,7 @@
 // The three Chapter 3 pictures. Each has one gesture, at most three controls, and the site's clock.
 
 import { createFrame, createMotion, prefersReducedMotion } from '../core/anim.js';
-import { derivativeScene, squareScene, levelScene, clampRect, clampDrawn, wrapPi, circleComparePoint, sharedGain, markScale, arcRadius, PLANE_SIZE } from './ch3-math.js';
+import { derivativeScene, squareScene, levelScene, clampRect, clampDrawn, wrapPi, circleComparePoint, sharedGain, markScale, arcRadius, PLANE_SIZE, MARK_PX } from './ch3-math.js';
 import { h, appendRich } from '../stations/test2-ui.js';
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -133,7 +133,7 @@ export function mountDerivativePicture(parent) {
   const pLine = svgEl('line', { stroke: 'var(--output)', 'stroke-width': '3', 'stroke-linecap': 'round' });
   const pHead = svgEl('polygon', { fill: 'var(--output)' });
   const handle = svgEl('circle', { r: '7', fill: 'var(--input)' });
-  shell.stage.append(arc, gLine, gHead, pLine, pHead, handle);
+  shell.stage.append(handle, arc, gLine, gHead, pLine, pHead);
 
   let fn = 'sq';
   let z = { re: 1, im: 1 };
@@ -151,8 +151,8 @@ export function mountDerivativePicture(parent) {
   function paint() {
     const scene = derivativeScene(fn, z, phi);
     const shared = sharedGain(z, [scene.h, scene.image], span);
-    const gs = markScale(z, scene.h, span, shared, 11);
-    const ps = markScale(z, scene.image, span, shared, 11);
+    const gs = markScale(z, scene.h, span, shared, MARK_PX);
+    const ps = markScale(z, scene.image, span, shared, MARK_PX);
     const ox = X(z.re);
     const oy = Y(z.im);
     const gx = X(z.re + gs * scene.h.re);

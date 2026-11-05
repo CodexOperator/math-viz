@@ -279,7 +279,7 @@
       {
         "text": "",
         "answer": "A point where f fails to be analytic.",
-        "why": "Page 81. For 1/z the singular point is 0. For the principal square root, the singular points are 0 and the negative real axis."
+        "why": "Page 81 names a singular point as a point where analyticity stops. Page 83 names the examples: 0 for 1/z, and 0 together with the negative real axis for the principal square root."
       }
     ],
     "generator": null,
@@ -656,12 +656,12 @@
     "steps": [
       {
         "text": "",
-        "answer": "For f = U + iV in r and θ, with continuous partials: r U_r = V_θ and r V_r = -U_θ. Then f'(z_0) = e^{-iθ_0}(U_r + i V_r). Equations (3.23) and (3.24), page 91.",
-        "why": "Theorem 3.5, page 91. Equations (3.23) and (3.24) give one form of f'. The book asks for the proof in Exercise 10."
+        "answer": "For \\(f = U + iV\\) in \\(r\\) and \\(\\theta\\), continuous in a neighborhood of \\(z_0 = r_0 e^{i\\theta_0}\\), with \\(U_r\\), \\(U_\\theta\\), \\(V_r\\), and \\(V_\\theta\\) continuous there, and with \\(r U_r = V_\\theta\\) and \\(r V_r = -U_\\theta\\): \\(f'(z_0) = e^{-i\\theta_0}(U_r + i V_r)\\), Equation (3.23), or \\(f'(z_0) = e^{-i\\theta_0}(V_\\theta - i U_\\theta)/r_0\\), Equation (3.24). Page 91.",
+        "why": "Theorem 3.5, page 91. Equation (3.22) is the polar system \\(r U_r = V_\\theta\\) and \\(r V_r = -U_\\theta\\). Equation (3.23) is \\(e^{-i\\theta_0}(U_r + i V_r)\\). Equation (3.24) is the other form, \\(e^{-i\\theta_0}(V_\\theta - i U_\\theta)/r_0\\). Exercise 10 asks for the proof."
       }
     ],
     "generator": null,
-        "memory": "Polar form: r U_r = V_θ and r V_r = -U_θ. Then f' = e^{-iθ}(U_r + i V_r)."
+    "memory": "Polar form: \\(r U_r = V_\\theta\\) and \\(r V_r = -U_\\theta\\). Then \\(f' = e^{-i\\theta}(U_r + i V_r)\\), Equation (3.23), or \\(e^{-i\\theta}(V_\\theta - i U_\\theta)/r\\), Equation (3.24)."
   },
   {
     "id": "ch3-3.2-flash-t36",
