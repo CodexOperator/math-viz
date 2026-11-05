@@ -1739,3 +1739,35 @@ Left as is:
 4. Exercise 6.3.1 (b) and (d) are not cards. (a) and (c) match the answer key.
 
 Keep: the six pictures, the page cites above, Example 6.1's \(-5/4\), the eight-step total beside \(\exp(2+i\pi/4)-1\), the semicircle \(-2/3\), Example 6.11's \(1/(2\sqrt{5})\), Cauchy's proof blanks, Examples 6.14–6.19 and 6.21 and 6.25, Theorem 6.12 on the dealt circle cards, and the computed generators.
+
+## ux-veteran (chapter-6 batch 3)
+
+Branch `cursor/chapter-6`, tip `c18dde6`. Preview https://ch6-preview.complexanalysis.pages.dev. The served `js/stations/chapter-6.js`, `js/app.js`, `js/stations/book.js`, `css/components.css`, and `index.html` match that commit. Headless Chrome, touch, fresh storage. 390×844 light, then the theme control into the dark. Then 1280×800, both themes. No console errors. No failed assets. `scrollWidth` was 390 and 1280.
+
+The first screen of the chapter is the climb. At 390, light and dark, the square is 284×284 at y = 437, the claim is the quarter-turn sentence, and Play is 70×44 at y = 790, so it ends at 834 in the 844 window. At 1280 the square is 272×272 and Play ends at 756 in the 800 window. The same frames in the dark: paper `rgb(13, 18, 28)`, title `rgb(233, 237, 245)`. A drag on the green point moved it (viewBox cx 240 to 319) and left the claim on the move sentence. Play says Pause, and a second press says Play.
+
+### Verdict
+
+ANOTHER BATCH. The picture, the claim, and Play are on the first screen in both themes and at both widths, and the book drawer is a real list. A student still cannot see the next camp without crossing the cards, Back throws away the camp, and six answers on the phone are cut off mid-sentence. One batch is the five cuts below. After that, this lens rests.
+
+### Ranked cuts
+
+1. **The next camp and Stage complete sit with the picture, and the count sits on the flag.** On the phone the page is 26044px. Play on 6.1 ends at y = 834. "Go to 6.2" is at y = 2239 and Stage complete is at y = 2300, under the sheet and the cards. The summit is at y = 2108, in that same pile. On 6.2, Play is at y = 2959 and Go to 6.3 is at y = 7699. On 6.3 the tick is near the triangle, at y = 8776, and Go to 6.4 is at y = 16031, after the deformation cards. On 6.6, Play is at y = 22777 and "Back to the book" is at y = 25582, under the summit. "Next is 6.1. 0 of 6 stages." lives only under the first Play, at y = 851, so the 844 window does not show it. At 1280 that line ends at y = 799 in the 800 window, and a camp you jump to still has no count. Change: the flag line of the camp on screen carries the count ("6.2 · 0 of 6"). Under that camp's blanks, the summit, then the next-camp line and Go, then Stage complete. The sheet and the cards follow. 6.3 keeps the tick beside the triangle and moves Go up with it, before the deformation cards.
+
+2. **Back returns to the camp you left.** Go to 6.2 scrolls to y = 2321 and leaves the hash on `#chapter-6`. History length stayed 5. Back from there opened `#book` at scroll 0. From 6.4, scrolled to y = 16069, The Book and then Back opened `#chapter-6` at scroll 0. The stage hash already exists, and scroll-padding is already 72px: after Go, the 6.2 flag is at y = 73, under the 56px header, and the title is on the screen. Change: Go sets `#chapter-6-6-2` (and the same for the other camps) so Back returns to the camp before it. A popstate back to this chapter restores the scroll it had. `window.scrollTo(0, 0)` on that return is the line that drops a student at 6.1.
+
+3. **A choice on the phone shows the whole sentence.** Forty choices, all 44px tall. At 1280 every one fits. At 390, six clip inside the button. On `ch6-6.3-which-mc` the button is 288px wide and "Theorem 6.1, so parametrize both curves" is 378px, so the end is off the button. "Corollary 6.1, so the value is always \(2\pi i\)" overflows by 80px. "Theorem 6.6, deformation of contour" overflows by 58px. On `ch6-6.3-cg-mc` the phone shows "the integral equals the length of" and cuts the rest. On `ch6-6.6-which`, "Yes. Every entire function is constant" overflows by 58px. The Example 6.7 parametrization overflows by 1px, so that line already fits. Change: a choice wraps, and the minimum height stays 44. The formula line that already fits stays one line.
+
+4. **The door into a camp is a 44px control, and a Later chapter says Later in the drawer.** On `#book` the first button is Walk Chapter 4, 163×44, and the status is "Next is §4.1, Exercise 3. 0 of 8 exercises." Walk Chapter 6 is a text link, 121×23, at y = 1845 on the phone and y = 1459 at 1280. The 6.1–6.6 rows on that node are text. The book drawer is the path that works: The Book, then chapters 1–7, each at least 44px tall. Chapter 6 is marked current on the laptop sidebar. Chapter 7 in that drawer opens `#chapter-7` on the roadmap, flag LATER, title at y = 97, clear of the header. The row in the drawer reads the same as chapter 6. Change: `#book-open-6` is the same `.btn` as Walk Chapter 4. Each section row links to its stage hash, `#chapter-6-6-1` and the rest. A drawer row that opens a Later card carries the Later flag the roadmap already prints.
+
+5. **The way up on the chapter is 44px tall.** On the first screen, The Book is 69×17, at y = 81. The same link is 17px on chapter 4 and on chapter 5. "Back to the book" at the bottom of chapter 6 is 134×23. The 44px control with those words is the camp button on 6.6, and the drawer row The Book is 358×44. Change: `.book-kicker a` takes the 44px height a `.nav-link` already has, on chapters 4, 5, and 6 together. Chapter 6 keeps the kicker. It gets a hit a thumb can land on.
+
+### What to keep
+
+The first screen. At both widths, both themes, a student sees the lede, 6.1, the why, the gesture, the square, the claim "The integral has left 0. The real part and the imaginary part are still separate.", and Play. The blanks under that picture arrive empty, and each input is 44×266. Play says Pause while it runs, and the next press says Play.
+
+The arrival on the next camp. Go to 6.2 puts the flag under the header, the why on the screen, the segment on the screen, and that camp's Play on the screen. Scroll-padding of 72px is why the title clears the bar. Chapter 1 and chapter 7 from the drawer do the same: the Later title sits at y = 97.
+
+The book drawer and the laptop sidebar: chapters 1 through 7, every row at least 44px, chapter 6 current. The landing Places list still opens on The Book, 44px, as its first row. Buttons, Stage complete, Check, and the icon buttons in the header are 44px. The green point's hit is a 44px circle. The mark itself is 19px across on the 284px square, which is enough to see which point moves.
+
+The type and the paper. The title is Iowan Old Style, 25.85px at 390 and 36px at 1280, weight 600. The lede is 16.8px. Light paper is `rgb(246, 243, 236)`, ink `rgb(26, 34, 48)`, muted `rgb(81, 91, 108)`. Dark paper is `rgb(13, 18, 28)`, ink `rgb(233, 237, 245)`, muted `rgb(166, 176, 195)`. The button radius is 6px and the card radius is 10px, the same on chapter 4 and chapter 5. The square stays the size that keeps Play on the first screen. Four colours, one gesture, one Play.
