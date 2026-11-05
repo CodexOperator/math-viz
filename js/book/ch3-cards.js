@@ -142,25 +142,31 @@ function card(source, cleanups) {
       current.choices.forEach((choice, n) => {
         const b = h('button', { type: 'button', class: 'btn', id: `${source.id}-choice-${n}` });
         write(b, choice);
-        b.addEventListener('click', () => judge(choice));
+        b.addEventListener('click', () => judge(choice, b));
         choices.append(b);
       });
     }
   }
 
-  function judge(given) {
+  function judge(given, button) {
     const current = item.steps[index];
     if (!current) return;
     const right = accepted(current, given);
-    const expected = `The step is ${current.answer}.`;
-    write(why, right ? (current.why || 'Yes.') : `${current.why ? `${current.why} ` : ''}${expected}`);
+    write(why, right ? (current.why || 'Yes.') : (current.why || 'Not that line.'));
     why.hidden = false;
     const node = hostOf();
     if (node) node.dataset.right = right ? 'true' : 'false';
-    if (right && mc()) {
+    if (button) button.dataset.right = right ? 'true' : 'false';
+    field.setAttribute('aria-invalid', right || mc() ? 'false' : 'true');
+    if (!right) {
+      next.hidden = true;
+      check.hidden = mc();
+      return;
+    }
+    if (mc()) {
       for (const b of choices.querySelectorAll('button')) b.disabled = true;
     }
-    if (right) check.hidden = true;
+    check.hidden = true;
     next.hidden = false;
     next.textContent = index + 1 >= item.steps.length ? 'Done' : 'Next step';
   }

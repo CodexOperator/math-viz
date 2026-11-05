@@ -234,11 +234,12 @@ function whereStep(rng, answer, why) {
 }
 
 // generate(seed, params). params is { coef: [lo, hi], deg: [min, max] }.
-// Most seeds are polynomials in z. Some fail everywhere, and some hold only
-// on the real axis, the pattern of §3.2 Exercise 1(g).
+// Most seeds are polynomials in z. Some fail everywhere, some hold only at 0
+// (the |z|^2 pattern), and some hold only on the real axis (§3.2 Exercise 1(g)).
 export function generate(seed, params) {
   const rng = lcg(seed);
-  const mode = Math.abs(seed % 5);
+  const mode = Math.abs(seed % 6);
+  if (mode === 5) return onlyAtZero(rng);
   if (mode === 4) return failEverywhere(rng);
   if (mode === 3) return realAxisOnly(rng, params);
   return analytic(rng, params);
@@ -289,6 +290,26 @@ function realAxisOnly(rng, params) {
   };
 }
 
+function onlyAtZero(rng) {
+  const a = randint(rng, 1, 2);
+  const u = addMap(mono(2, 0, a), mono(0, 2, a));
+  const v = new Map();
+  const atZero = '0, only at 0';
+  return {
+    prompt: pairPrompt(u, v),
+    steps: [
+      whereStep(rng, 'hold only at 0', `\\(u_x = ${2 * a}x\\) and \\(v_y = 0\\), and \\(u_y = ${2 * a}y\\). Both equations hold only at the origin. This is the pattern of \\(|z|^2\\), §3.1 Exercise 11, page 84.`),
+      {
+        text: "So \\(f'(z)\\) equals",
+        answer: atZero,
+        choices: shuffle(rng, [atZero, '2z everywhere', 'does not exist anywhere', '0 everywhere']),
+        why: 'At 0, \\(f\' = u_x + i v_x = 0\\). Off the origin the equations fail, so the derivative does not exist.',
+      },
+    ],
+    memory: 'Cauchy-Riemann at one point is not a disk. |z|^2 is the model.',
+  };
+}
+
 function failEverywhere(rng) {
   const u = mono(1, 0, 1);
   const v = new Map();
@@ -311,6 +332,7 @@ export function selfCheck() {
   let everywhere = 0;
   let line = 0;
   let failed = 0;
+  let origin = 0;
   for (let seed = 1; seed <= 40; seed += 1) {
     const item = generate(seed, { coef: [-2, 2], deg: [1, 3] });
     for (const step of item.steps) {
@@ -321,11 +343,14 @@ export function selfCheck() {
     if (where === 'hold at every point') everywhere += 1;
     else if (where === 'hold only on the real axis') line += 1;
     else if (where === 'fail at every point') failed += 1;
+    else if (where === 'hold only at 0') origin += 1;
     else return false;
   }
   const classic = expand([{ re: 0, im: 0 }, { re: 1, im: 0 }, { re: 1, im: 0 }]);
   const fp = fmtZ(derivativeCoeffs([{ re: 0, im: 0 }, { re: 1, im: 0 }, { re: 1, im: 0 }]));
-  return everywhere > 0 && line > 0 && failed > 0
+  const abs2 = addMap(mono(2, 0, 1), mono(0, 2, 1));
+  return everywhere > 0 && line > 0 && failed > 0 && origin > 0
+    && !crHolds(abs2, new Map())
     && crHolds(classic.u, classic.v)
     && fmtPoly(classic.u) === 'x^{2} - y^{2} + x'
     && fmtPoly(classic.v) === '2xy + y'

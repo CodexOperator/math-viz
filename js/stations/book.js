@@ -49,18 +49,31 @@ function mountRoadmap(el, ctx, spec) {
   const tally3 = () => chapterTally(CHAPTER_3.sections, ticks);
 
   const status = h('p', { class: 'book-status', id: 'book-status' });
-  const walk = h('a', { class: 'btn btn-primary', id: 'book-walk', href: '#chapter-4' }, 'Walk Chapter 4');
+  const open3 = h('a', { class: 'btn btn-primary', id: 'book-open-3', href: '#chapter-3' }, 'Open Chapter 3');
+  const walk = h('a', { class: 'btn', id: 'book-walk', href: '#chapter-4' }, 'Walk Chapter 4');
   const list = h('ol', { class: 'book-path', id: 'book-path' });
 
   function paint() {
     const t = tally();
     const t3 = tally3();
-    if (t.complete) {
+    open3.hidden = t3.complete;
+    if (!t3.complete) {
+      const section = CHAPTER_3.sections.find((s) => s.id === t3.nextId);
+      const name = section ? `${section.id} ${section.title}` : t3.nextId;
+      status.textContent = `Chapter 3: ${t3.sectionsFinished} of ${t3.sectionTotal} stages. Next is ${name}.`;
+      open3.classList.add('btn-primary');
+      walk.classList.remove('btn-primary');
+    } else if (t.complete) {
       status.textContent = `${nextSentence(t)} Chapter 5 is next.`;
+      walk.classList.add('btn-primary');
+    } else {
+      status.textContent = nextSentence(t);
+      walk.classList.add('btn-primary');
+    }
+    if (t.complete) {
       walk.textContent = 'Open Chapter 5';
       walk.setAttribute('href', '#chapter-5');
     } else {
-      status.textContent = nextSentence(t);
       walk.textContent = 'Walk Chapter 4';
       walk.setAttribute('href', '#chapter-4');
     }
@@ -108,17 +121,16 @@ function mountRoadmap(el, ctx, spec) {
     if (ch.n === 3 || ch.n === 4) {
       const sections = h('ol', { class: 'book-sections', id: `book-sections-${ch.n}` });
       for (const s of ch.sections) {
+        const label = `${s.id} ${s.title}`;
+        const name = ch.n === 3
+          ? h('a', { href: `#chapter-3-${slug(s.id)}` }, label)
+          : h('span', null, label);
         sections.append(h('li', { 'data-section': s.id, id: `book-section-${slug(s.id)}` },
-          h('span', null, `${s.id} ${s.title}`),
+          name,
           h('span', { class: 'book-section-page' }, `p. ${s.page}`),
           h('span', { class: 'book-section-mark' }, '')));
       }
       kids.push(sections);
-      if (ch.n === 3) {
-        kids.push(h('p', { class: 'book-door', id: 'book-door-3' },
-          h('a', { href: '#chapter-3' }, 'Open Chapter 3'),
-          '.'));
-      }
     }
     if (!ch.open && ch.door) {
       const st = stationById(ch.door);
@@ -139,7 +151,7 @@ function mountRoadmap(el, ctx, spec) {
       h('h1', { id: 'book-title' }, 'The Book'),
       h('p', { class: 'station-lede', id: 'book-lede' }, 'Eleven chapters, in the order Howell and Mathews print them.'),
       sourceTag({ pin: '202 Updated Edition, table of contents, pages i–ii', href: BOOK.html })),
-    h('div', { class: 'book-next', id: 'book-next' }, status, walk),
+    h('div', { class: 'book-next', id: 'book-next' }, open3, status, walk),
     list);
 
   const focus = spec && spec.chapter;

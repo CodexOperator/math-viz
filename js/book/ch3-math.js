@@ -33,6 +33,30 @@ export function fmtStretch(x) {
   return String(t);
 }
 
+function fmtCoord(x) {
+  if (!Number.isFinite(x) || Math.abs(x) < 1e-9) return '0';
+  if (Math.abs(x - Math.round(x)) < 1e-6) return String(Math.round(x));
+  return String(Math.round(x * 100) / 100);
+}
+
+export function fmtPoint(re, im) {
+  const a = fmtCoord(re);
+  const b = fmtCoord(im);
+  if (b === '0') return a;
+  const imag = b === '1' ? 'i' : b === '-1' ? '-i' : (b.startsWith('-') ? `-${b.slice(1)}i` : `${b}i`);
+  if (a === '0') return imag;
+  if (imag.startsWith('-')) return `${a} - ${imag.slice(1)}`;
+  return `${a} + ${imag}`;
+}
+
+// Circles at the origin have nothing to compare. Put the point back on the opening spot.
+export function circleComparePoint(z) {
+  const re = Number(z && z.re) || 0;
+  const im = Number(z && z.im) || 0;
+  if (Math.hypot(re, im) < 1e-8) return { re: 1, im: 0.45 };
+  return { re, im };
+}
+
 function rot(x, y, theta) {
   const c = Math.cos(theta);
   const s = Math.sin(theta);
@@ -68,12 +92,12 @@ export function derivativeScene(fn, z, phi) {
     im: fp.re * h.im + fp.im * h.re,
   };
   const turn = stretch < 1e-9 ? 0 : Math.atan2(fp.im, fp.re);
-  const claim = stretch < 1e-9
-    ? { holds: true, text: 'The stretch is 0. Every direction agrees, so the derivative is 0.' }
-    : {
-      holds: true,
-      text: `The turn stays ${fmtDeg(turn)} and the stretch stays ${fmtStretch(stretch)}, for every direction.`,
-    };
+  const home = Math.abs(re - 1) < 1e-9 && Math.abs(im - 1) < 1e-9;
+  let text;
+  if (stretch < 1e-9) text = 'The stretch is 0. Every direction agrees, so the derivative is 0.';
+  else if (home) text = `The turn stays ${fmtDeg(turn)} and the stretch stays ${fmtStretch(stretch)}, for every direction.`;
+  else text = `At ${fmtPoint(re, im)}, the turn is ${fmtDeg(turn)} and the stretch is ${fmtStretch(stretch)}.`;
+  const claim = { holds: true, text };
   return { fn: 'sq', h, image, stretch, turn, claim };
 }
 

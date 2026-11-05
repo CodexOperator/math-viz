@@ -156,6 +156,164 @@ function factorKey(s) {
   return factors.sort().join('*');
 }
 
+function cnum(re, im) {
+  return { re, im };
+}
+
+function polyAdd(a, b) {
+  const out = new Map(a);
+  for (const [d, c] of b) {
+    const prev = out.get(d) || cnum(0, 0);
+    const re = prev.re + c.re;
+    const im = prev.im + c.im;
+    if (re === 0 && im === 0) out.delete(d);
+    else out.set(d, cnum(re, im));
+  }
+  return out;
+}
+
+function polyScale(poly, s) {
+  if (s === 1) return poly;
+  const out = new Map();
+  for (const [d, c] of poly) {
+    const re = c.re * s;
+    const im = c.im * s;
+    if (re || im) out.set(d, cnum(re, im));
+  }
+  return out;
+}
+
+function polyMul(a, b) {
+  const out = new Map();
+  for (const [d1, c1] of a) {
+    for (const [d2, c2] of b) {
+      const d = d1 + d2;
+      if (d > 16) return null;
+      const prev = out.get(d) || cnum(0, 0);
+      const re = prev.re + c1.re * c2.re - c1.im * c2.im;
+      const im = prev.im + c1.re * c2.im + c1.im * c2.re;
+      if (re === 0 && im === 0) out.delete(d);
+      else out.set(d, cnum(re, im));
+    }
+  }
+  return out;
+}
+
+function polyPow(poly, n) {
+  if (n === 0) return new Map([[0, cnum(1, 0)]]);
+  let out = new Map([[0, cnum(1, 0)]]);
+  let base = poly;
+  let e = n;
+  while (e) {
+    if (e & 1) {
+      out = polyMul(out, base);
+      if (!out) return null;
+    }
+    e >>= 1;
+    if (e) {
+      base = polyMul(base, base);
+      if (!base) return null;
+    }
+  }
+  return out;
+}
+
+function polyKeyOf(poly) {
+  const degs = [...poly.keys()].sort((a, b) => a - b);
+  if (!degs.length) return '0';
+  return degs.map((d) => {
+    const c = poly.get(d);
+    return `${d}:${c.re},${c.im}`;
+  }).join('|');
+}
+
+// A polynomial in z with Gaussian-integer coefficients. -(i-2z) and 2z-i
+// are the same value. Letters other than i and z, and a huge power, do not parse.
+function polyKey(s) {
+  const parsed = parseExpr(s, 0);
+  if (!parsed || parsed.i !== s.length || !parsed.poly) return null;
+  return polyKeyOf(parsed.poly);
+}
+
+function parseDigits(s, i) {
+  let j = i;
+  while (j < s.length && s.charCodeAt(j) >= 48 && s.charCodeAt(j) <= 57) j += 1;
+  if (j === i) return null;
+  return { n: Number(s.slice(i, j)), i: j };
+}
+
+function parsePow(s, i) {
+  if (s[i] !== '^') return { n: 1, i };
+  const num = parseDigits(s, i + 1);
+  if (!num || num.n > 8) return null;
+  return { n: num.n, i: num.i };
+}
+
+function factorStart(s, i) {
+  const c = s[i];
+  return c === '(' || c === 'i' || c === 'z' || (c >= '0' && c <= '9');
+}
+
+function parseFactor(s, i) {
+  const c = s[i];
+  if (c >= '0' && c <= '9') {
+    const num = parseDigits(s, i);
+    return { poly: new Map([[0, cnum(num.n, 0)]]), i: num.i };
+  }
+  if (c === 'i') return { poly: new Map([[0, cnum(0, 1)]]), i: i + 1 };
+  if (c === 'z') {
+    const pow = parsePow(s, i + 1);
+    if (!pow) return null;
+    return { poly: new Map([[pow.n, cnum(1, 0)]]), i: pow.i };
+  }
+  if (c === '(') {
+    const inner = parseExpr(s, i + 1);
+    if (!inner || s[inner.i] !== ')') return null;
+    const pow = parsePow(s, inner.i + 1);
+    if (!pow) return null;
+    const poly = polyPow(inner.poly, pow.n);
+    if (!poly) return null;
+    return { poly, i: pow.i };
+  }
+  return null;
+}
+
+function parseTerm(s, i) {
+  const first = parseFactor(s, i);
+  if (!first) return null;
+  let poly = first.poly;
+  i = first.i;
+  while (factorStart(s, i)) {
+    const next = parseFactor(s, i);
+    if (!next) return null;
+    poly = polyMul(poly, next.poly);
+    if (!poly) return null;
+    i = next.i;
+  }
+  return { poly, i };
+}
+
+function parseExpr(s, i) {
+  let sign = 1;
+  if (s[i] === '+') i += 1;
+  else if (s[i] === '-') {
+    sign = -1;
+    i += 1;
+  }
+  const first = parseTerm(s, i);
+  if (!first) return null;
+  let poly = polyScale(first.poly, sign);
+  i = first.i;
+  while (s[i] === '+' || s[i] === '-') {
+    const nextSign = s[i] === '-' ? -1 : 1;
+    const term = parseTerm(s, i + 1);
+    if (!term) return null;
+    poly = polyAdd(poly, polyScale(term.poly, nextSign));
+    i = term.i;
+  }
+  return { poly, i };
+}
+
 function same(a, b) {
   const left = canon(a);
   const right = canon(b);
@@ -175,7 +333,10 @@ function same(a, b) {
   if (facL && facL === facR) return true;
   const cL = constProduct(left);
   const cR = constProduct(right);
-  return !!(cL && cL === cR);
+  if (cL && cL === cR) return true;
+  const pL = polyKey(left);
+  const pR = polyKey(right);
+  return !!(pL && pL === pR);
 }
 
 export function answersMatch(answer, accept, given) {

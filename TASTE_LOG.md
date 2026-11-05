@@ -1612,3 +1612,25 @@ I can tell what Play does, and §3.2 and §3.3 show me a square and a right angl
 ### Keep
 
 The three why sentences, and the three summit sentences under the cards. Play and Pause. z² holds one sentence while the direction turns. conj's sentence moves, from 0° to −65° on the phone, with Pause showing. The square that stays a square while the green corner turns, in the light and in the dark, and Stretch's rectangle with the sentence that the sides are not equal. The conjugate levels crossing at a right angle, and the origin saying both slopes vanish. Circles from the opening point. Example 3.1's difference quotient, in rendered math. Theorem 3.3 as a blank and again as four choices, and a right step's note that explains the path and leaves the line I typed. The chain rule, the two paths for Re z, L'Hôpital through −4i, and the conjugate that accepts `C + x^3 - 3xy^2`. One memory list per stage. The flash cards, Missed putting that card next, and Theorem 3.4 left as a statement. Another, including u = x with v = 0 and u = x³ + y³. The deep link `#chapter-3-3-3`. Dark at both widths, with the same layout. Choice buttons at 44px.
+
+## Chapter 3 batch 3
+
+Branch `cursor/chapter-3`, on top of `402039a`. Headless Chrome, light and dark, at 390×844, 360×780, and 1280×800.
+
+The stage flag is 44×44. It points at `#chapter-3-3-1` (and `-3-2`, `-3-3`) and scrolls that stage's memory list to about y=72, under the header. The address stays on the chapter. `#chapter-section-3-1-memory` is gone, so it no longer opens "No such place".
+
+The first screen names the gesture: "Drag the green dot. Green is the step. Purple is where it goes. Orange is the turn." At 1+i the claim is still "The turn stays 45° and the stretch stays 2√2, for every direction." After a drag it names the point and drops that phrase (measured: "At 1.76 + 1.24i, the turn is 35° and the stretch is 4.3."). The purple arrow stays inside the square. "3.1 · Differentiable and Analytic Functions · 0 of 3" sits under the title. The why finishes inside the window: bottom y=759 at 390×844, y=771 at 360×780, y=783 at 1280×800. The opening square is 156px, 141px, and 304px at those three sizes. z² is 44×44.
+
+A miss keeps the reason and does not print "The step is". Next step stays hidden until the line is right. A wrong choice is marked and stays tappable. `-(i-2z)` matches `2z - i`. `-(i+2z)`, `i-2z`, and `-(2z-i)` do not.
+
+The way up is one 44px "The Book" station link. "Back to the book" is gone. The chapter path no longer pads by a viewport, so the source line follows the last stage instead of a blank screen. `#chapter-3-3-3` still puts the title at y=121. Back from the book restores the chapter's scroll.
+
+While Chapter 3 is unfinished, `#book` opens on "Open Chapter 3" (44px, top of the phone) and the status counts those stages. The three rows are 44px links to `#chapter-3-3-1`, `-3-2`, and `-3-3`. The book nav lists chapters 1–7.
+
+Analytic and entire are two sentences before Example 3.1. The Cauchy-Riemann equations are stated before Exercise 11, and that card is now the two paths for `|z|^2` (horizontal `2x_0`, vertical `-2iy_0`, agree only at 0). Section 3.2 states the equations again in the why. Circles tapped at the origin moves the point back to `1+0.45i` and says the curves do not cross at a right angle. The Cauchy-Riemann generator's seed mod 6 includes a family that holds only at 0, the `|z|^2` pattern, so that choice is sometimes the right one.
+
+`node tools/check_vectors.mjs` (234/234), `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed.
+
+## Still open
+
+The shared practice renderer is not on this branch, so the chapter still uses its local card. Theorem 3.4 is a statement and a flash, not a fill-in proof. The opening square is small on a phone so the why can finish; the arrows are the same picture, drawn smaller. The book button and the chapter list live in shared files, so the hand-merge with Chapter 2's "Open Chapter 2" still has to put both buttons on `#book`.

@@ -1039,6 +1039,12 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   margin: 0;
 }
 
+#book-open-3 { min-height: var(--tap); }
+
+@media (max-width: 40rem) {
+  #book-next { flex-direction: column; align-items: stretch; }
+}
+
 .book-path,
 .chapter-path,
 .book-sections {
@@ -1225,6 +1231,35 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   width: min(100%, calc(100dvh - 24rem));
 }
 
+/* The opening square has to leave room for the gesture line, Play, and the why. */
+#chapter-section-3-1-picture .exp-stage {
+  width: min(48%, calc(100dvh - 31rem));
+  align-self: center;
+}
+
+.ch3-path { padding-bottom: 0; }
+
+#chapter-back { margin-bottom: var(--space-2); }
+
+#chapter-stage-line {
+  margin: var(--space-1) 0 0;
+  font-family: var(--font);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+  color: var(--text-muted);
+}
+
+.ch3-deriv-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+#chapter-deriv-sq { min-width: var(--tap); }
+
 .ch3-picture .exp-claim {
   min-height: calc(1.0625rem * 1.55 * 2);
 }
@@ -1232,11 +1267,24 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 a.book-flag {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  min-width: var(--tap);
   min-height: var(--tap);
+  padding: 0 var(--space-2);
   text-decoration: none;
 }
 
-.ch3-memory { scroll-margin-top: calc(var(--header-h) + var(--space-3)); }
+#book-sections-3 li { align-items: center; min-height: var(--tap); }
+#book-sections-3 a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  min-width: var(--tap);
+  text-decoration: none;
+}
+
+/* html already pads the scrollport by the header. A second margin would park the list a header too low. */
+.ch3-memory { scroll-margin-top: 0; }
 
 #chapter-deriv-stage:focus:not(:focus-visible),
 #chapter-square-stage:focus:not(:focus-visible),
@@ -1259,6 +1307,9 @@ a.book-flag {
   white-space: normal;
   text-align: left;
 }
+
+.ch3-choices .btn[data-right="false"] { border-color: var(--danger); }
+.ch3-choices .btn[data-right="true"] { border-color: var(--ok); }
 
 .ch3-card p { margin: 0; }
 .ch3-card input[type="text"] { width: min(100%, 24rem); }

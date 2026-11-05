@@ -14,6 +14,8 @@ const PICTURES = {
   '3.3': mountLevelPicture,
 };
 
+let pendingMemory = '';
+
 function slug(id) {
   return String(id).replace(/\./g, '-');
 }
@@ -34,8 +36,9 @@ export function mount(el, ctx, focus) {
   const store = ctx.store;
   let ticks = load(store);
   const stops = [];
-  const path = h('ol', { class: 'chapter-path', id: 'chapter-path' });
+  const path = h('ol', { class: 'chapter-path ch3-path', id: 'chapter-path' });
   const status = h('p', { class: 'book-status', id: 'chapter-status' });
+  const stageLine = h('p', { id: 'chapter-stage-line' });
   const lede = h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Three stages, from the derivative to a harmonic conjugate.');
   const statusWrap = h('div', { class: 'book-next', id: 'chapter-next-row' }, status);
   const buttons = [];
@@ -43,6 +46,8 @@ export function mount(el, ctx, focus) {
   function paint() {
     const t = chapterTally(CHAPTER_3.sections, ticks);
     status.textContent = statusLine(t);
+    const shown = CHAPTER_3.sections.find((s) => s.id === t.nextId) || CHAPTER_3.sections[CHAPTER_3.sections.length - 1];
+    stageLine.textContent = `${shown.id} · ${shown.title} · ${t.sectionsFinished} of ${t.sectionTotal}`;
     for (const node of path.querySelectorAll('.section-node')) {
       const id = node.getAttribute('data-section');
       const section = CHAPTER_3.sections.find((s) => s.id === id);
@@ -77,6 +82,13 @@ export function mount(el, ctx, focus) {
       appendRich(p, para);
       workedBody.append(p);
     }
+    const termBlock = (section.terms || []).map((line, i) => {
+      const p = h('p', { class: 'section-idea', id: `${scope}-term-${i + 1}` });
+      appendRich(p, line);
+      return p;
+    });
+    const bridge = section.bridge ? h('p', { class: 'section-idea', id: `${scope}-bridge` }) : null;
+    if (bridge) appendRich(bridge, section.bridge);
     const worked = h('article', { class: 'card chapter-card', id: `${scope}-worked` },
       h('h3', { id: `${scope}-worked-title` }, section.worked.pin),
       sourceTag({ pin: section.worked.pin, href: section.worked.href }),
@@ -102,7 +114,16 @@ export function mount(el, ctx, focus) {
       paint();
     });
     buttons.push(mark);
-    const flag = h('a', { class: 'book-flag', href: `#${scope}-memory`, id: `${scope}-flag` }, section.id);
+    const flagHash = `#chapter-3-${slug(section.id)}`;
+    const flag = h('a', { class: 'book-flag', href: flagHash, id: `${scope}-flag` }, section.id);
+    flag.addEventListener('click', (ev) => {
+      pendingMemory = `${scope}-memory`;
+      if (location.hash !== flagHash) return;
+      ev.preventDefault();
+      pendingMemory = '';
+      const node = document.getElementById(`${scope}-memory`);
+      if (node) node.scrollIntoView({ block: 'start' });
+    });
     const heading = [
       flag,
       h('h2', { id: `${scope}-title` }, section.title),
@@ -115,9 +136,11 @@ export function mount(el, ctx, focus) {
     const rest = [
       h('p', { class: 'book-label' }, 'In the book'),
       read,
+      ...termBlock,
       h('p', { class: 'book-label' }, 'Worked'),
       worked,
       h('p', { class: 'book-label' }, 'Practice'),
+      bridge,
       practice,
       h('p', { class: 'book-label' }, 'Memory'),
       memory,
@@ -137,18 +160,20 @@ export function mount(el, ctx, focus) {
   paint();
   el.append(
     h('header', { class: 'station-header' },
-      h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back' }, 'The Book')),
-      h('h1', { id: 'chapter-title' }, 'Chapter 3. Analytic and Harmonic Functions')),
+      h('a', { class: 'station-link', href: '#book', id: 'chapter-back' }, 'The Book'),
+      h('h1', { id: 'chapter-title' }, 'Chapter 3. Analytic and Harmonic Functions'),
+      stageLine),
     path,
-    sourceTag({ pin: CHAPTER_3.pin, href: CHAPTER_3.href }),
-    h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
+    sourceTag({ pin: CHAPTER_3.pin, href: CHAPTER_3.href }));
 
+  const memoryId = pendingMemory;
+  pendingMemory = '';
   const targetId = focusSection(focus);
   const target = targetId ? el.querySelector(`#${targetId}`) : null;
-  if (target) {
-    target.classList.add('is-target');
-    target.scrollIntoView({ block: 'start' });
-  }
+  if (target) target.classList.add('is-target');
+  const memory = memoryId ? el.querySelector(`#${memoryId}`) : null;
+  if (memory) memory.scrollIntoView({ block: 'start' });
+  else if (target) target.scrollIntoView({ block: 'start' });
 
   return function unmount() {
     for (const stop of stops) stop();

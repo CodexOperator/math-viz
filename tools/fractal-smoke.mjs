@@ -6,7 +6,7 @@ import { stationsForMap, stationForTopic, stationForProblem, stationById, thread
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
 import { BOOK_CHAPTERS, CHAPTER_3, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, chapter3StageIds, chapter4ExerciseIds, chapter5ExerciseIds } from '../js/data/book-path.js';
-import { derivativeScene, squareScene, levelScene } from '../js/book/ch3-math.js';
+import { derivativeScene, squareScene, levelScene, circleComparePoint } from '../js/book/ch3-math.js';
 import { answersMatch } from '../js/book/ch3-grade.js';
 import { selfCheck as crPolyChecks } from '../js/practice/gen/cr-poly.js';
 import { selfCheck as harmonicChecks } from '../js/practice/gen/harmonic-conjugate.js';
@@ -215,7 +215,16 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
   const turned = derivativeScene('sq', { re: 1, im: 1 }, 2.1);
   const mirrorA = derivativeScene('conj', { re: 0.2, im: -0.4 }, 0.2);
   const mirrorB = derivativeScene('conj', { re: 0.2, im: -0.4 }, 1.1);
-  check('z squared keeps one turn', straight.claim.holds && turned.claim.holds && straight.claim.text === turned.claim.text && /45°/.test(straight.claim.text) && /2√2/.test(straight.claim.text));
+  check('z squared keeps one turn', straight.claim.holds && turned.claim.holds && straight.claim.text === turned.claim.text && /45°/.test(straight.claim.text) && /2√2/.test(straight.claim.text) && /for every direction/.test(straight.claim.text));
+  const moved = derivativeScene('sq', { re: 0.4, im: -0.2 }, 0.3);
+  const movedAgain = derivativeScene('sq', { re: 0.4, im: -0.2 }, 1.7);
+  check('a moved base point names the point and drops for every direction',
+    moved.claim.holds && moved.claim.text === movedAgain.claim.text
+    && /0\.4 - 0\.2i/.test(moved.claim.text)
+    && !/for every direction/.test(moved.claim.text));
+  const back = circleComparePoint({ re: 0, im: 0 });
+  const stay = circleComparePoint({ re: 0.2, im: -0.3 });
+  check('circles at the origin move to the comparison point', back.re === 1 && back.im === 0.45 && stay.re === 0.2 && stay.im === -0.3);
   check('conj changes the turn with the direction', !mirrorA.claim.holds && mirrorA.claim.text !== mirrorB.claim.text);
   check('a turned square stays a square', squareScene('turn', 0.7).claim.holds === true);
   check('a stretched square is not a square', squareScene('stretch', 0).claim.holds === false && squareScene('stretch', Math.PI / 4).claim.holds === false && squareScene('stretch', 0).claim.text !== squareScene('stretch', Math.PI / 4).claim.text);
@@ -236,6 +245,12 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
     && !answersMatch('-y and x + 4', [], 'u=y and v=x+4')
     && answersMatch('-4i', ['-4*i'], '4(-i)')
     && !answersMatch('-4i', [], '4(i)')
+    && answersMatch('2z - i', [], '-(i-2z)')
+    && answersMatch('2z - i', [], '-(i - 2z)')
+    && answersMatch('2z - i', [], '(-i+2z)')
+    && !answersMatch('2z - i', [], '-(i+2z)')
+    && !answersMatch('2z - i', [], 'i-2z')
+    && !answersMatch('2z - i', [], '-(2z-i)')
     && answersMatch('both hold', ['u_x = 0 = v_y and u_y = -1 = -v_x'], 'u_y=-1=-v_x and u_x=0=v_y'));
   const mem = { 'progress.test2': { '4.1.3': true } };
   const store = {

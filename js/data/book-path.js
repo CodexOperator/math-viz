@@ -231,6 +231,11 @@ export const CHAPTER_3 = deepFreeze({
       title: 'Differentiable and Analytic Functions',
       page: 79,
       why: 'A derivative is one number that turns and stretches every tiny step the same way. Two directions that disagree means there is no derivative.',
+      terms: [
+        'Analytic at $z_0$ means $f\'$ exists at every point of some open disk around $z_0$. Definition 3.1, page 81.',
+        'Entire means analytic at every point of the complex plane. Definition 3.2, page 81.',
+      ],
+      bridge: 'The Cauchy-Riemann equations are $u_x = v_y$ and $u_y = -v_x$. Theorem 3.3, page 86. They say the horizontal derivative and the vertical derivative are the same number. The $|z|^2$ card below uses two paths, as $\\operatorname{Re} z$ did, and does not ask for the equations yet.',
       summit: 'A derivative exists only when every tiny step is the same turn and the same stretch.',
       read: [
         { pin: 'Equation (3.1), page 79', href: sectionHref(S31, 'Deriv_Def_1') },
@@ -266,7 +271,7 @@ export const CHAPTER_3 = deepFreeze({
       id: '3.2',
       title: 'The Cauchy-Riemann Equations',
       page: 85,
-      why: 'The Cauchy-Riemann equations test whether the horizontal derivative and the vertical derivative are the same number.',
+      why: 'The Cauchy-Riemann equations are $u_x = v_y$ and $u_y = -v_x$. They test whether the horizontal derivative and the vertical derivative are the same number. Theorem 3.3, page 86.',
       summit: 'A nonzero derivative turns and stretches a tiny square into a square with the marked corner still leading, and the Cauchy-Riemann equations are the test that the horizontal and vertical derivatives are that same number.',
       read: [
         { pin: 'Theorem 3.3, page 86', href: sectionHref(S32, 'CR_EQ_Thm') },
