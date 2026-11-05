@@ -208,7 +208,7 @@ export function mountRealIntegral(parent) {
     stage.dataset.phase = sentence.phase;
     if (sentence.near) latched = true;
     half.hidden = !latched;
-    if (latched && !half.childElementCount) appendRich(half, 'Half a turn: $2i$.');
+    if (latched && !half.childElementCount) appendRich(half, 'A half turn, the left side, integrates to $2i$.');
     if (sentence.text !== claimText) {
       claimText = sentence.text;
       claim.replaceChildren();

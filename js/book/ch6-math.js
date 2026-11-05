@@ -569,7 +569,7 @@ export function claim66(radius, every) {
       collapsed: false,
       every: true,
       radius: R,
-      text: 'The purple bound shrank to the origin, so the derivative is $0$.',
+      text: 'The purple mark is still $1/R$ on this circle. These circles do not send the derivative to $0$.',
     };
   }
   return {

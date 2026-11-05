@@ -1875,3 +1875,31 @@ The Book kicker and Back to the book, the words at the size they were, the hit a
 The summit, Go, and Stage complete under the blanks, with the reason on the disabled tick: "Bring the point all the way around", "Fill both lines", "Take all eight steps", "Subdivide the triangle", "Bend the path", "Bring the point inside", "Cross every circle". On 6.3 the pole label and the green circle share the screen with Go.
 
 Wrapped choices, the whole sentence, and Example 6.7 on one 44px line. The type, the paper, the 6px button, the 10px card.
+
+## reviewer (Ch6 batch 4)
+
+Branch `cursor/chapter-6`, draft PR #45, reviewed at `02da336` against Howell & Mathews, Complex Analysis, 202 Updated Edition (the 471-page PDF at complexanalysis.org). The HTML edition numbers the same statements differently. Each anchor used on the chapter was opened and is present. Preview `https://ch6-preview.complexanalysis.pages.dev` still serves `02da336`. The fixes below are on this branch, checked on a local page.
+
+Verdict: **ACCEPT WITH FIXES**.
+
+Checked against the printed pages, again, including the batch 4 cards. Section openers 163, 167, 181, 193, 197, and 203 match the contents. Definition 6.1 and Example 6.1 are page 163, and \(\int_0^1(t-i)^3\,dt=-5/4\). Definition 6.2 and Example 6.6 are page 170. The eight-step midpoint sum rounds to \(4.23+5.20i\), and the exact value is \(\exp(2+i\pi/4)-1\). Theorem 6.1 and Example 6.7 are page 172. Theorem 6.3 and Example 6.11 are page 177, and the book's bound is \(1/(2\sqrt{5})\). Exercise 3 of §6.2 is page 178, and the key on page 443 gives \(-2/3\). Exercise 5 is page 179, key \(-32i\) and \(-8\pi i\). Exercise 9 is page 180, key \(2\pi i\) and \(0\). Theorem 6.5 is page 183. Cauchy's proof and Equation (6.28) are page 184: the imaginary integrand is \(v\,dx+u\,dy\), and Green produces \(u_x-v_y\). Example 6.12 is page 186. Theorem 6.6 is page 187. Corollary 6.1 is page 188. Examples 6.14, 6.15, and 6.16 are pages 189, 190, and 190, values \(4\pi i\), \(2\pi i\), and \(-6\pi i\), with the figure-eight signs from page 191. §6.3 Exercise 1 is page 191. The key gives (a) \(\pi i\) and (c) \(0\). (b) has poles at \(-1\pm i\), both outside the unit circle, so the integral is \(0\). (d) \(\operatorname{Log}(z+5)\) is analytic inside and on that circle, so the integral is \(0\). Exercise 2 is \(2\pi i\). Exercise 3 is \(0\). Exercise 4(a) on \(|z-1|=2\) is \(0\), and 4(b) on \(|z-1|=1/2\) is \(2\pi i\). Theorem 6.8 is page 193. Theorem 6.9 is page 194, and the ends \(-1-i\) and \(3+i\) give \(4+2i\). Examples 6.17, 6.18, and 6.19 are page 195: \(1+i\), \(-\sin 1+i\sinh 1\), and \(\operatorname{Log}(z_2)-\operatorname{Log}(z_1)\). The statement of Example 6.18 is \(\sinh 1\). Theorem 6.10 is page 197. Example 6.21 is page 198, \(2\pi i\, e\). Theorem 6.12, equation (6.48), is page 199. Example 6.25 is page 200, \(-4\pi/(3e)\). Theorem 6.13 is page 203. Theorem 6.17 is page 205, \(|f^{(n)}(z_0)|\le n!M/R^n\). Theorems 6.18 and 6.19 are page 206. Liouville's proof sends \(R\) to infinity before \(f'(z_0)=0\).
+
+Seeds 1 through 80 of the circle, segment, and Cauchy-formula generators accept their own answers. Segment values match an 8000-step quadrature. Three thousand radii from 1 to 4 print a bound at least \(1/R\), including \(4/7\) at 1.75 and \(500/503\) at 1.006. `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` passed. `node kit/smoke.mjs` passed. Live code does not import `kit/`. `js/core/map-route.js` matches the kit copy.
+
+Local page, fresh storage, headless Chrome. 390×844 light, then dark. Then 1280×800 light, then dark. No console errors. No failed assets. `scrollWidth` was 390 and 1265. Play is 44px and ends at y = 834 in the 844 window and at y = 729 in the 800 window, both themes. The flag reads `6.1 · 0 of 6`. Forty choices are at least 44px and do not clip. A wrong half-turn blank stays covered, and `2i` locks. One step inside the green circle says the pole is inside. Go to 6.2 sets `#chapter-6-6-2` and leaves the filled blank mounted. Walk Chapter 6 is 163×44. The 6.1 section row is `#chapter-6-6-1`. From 6.4, The Book and then Back returns to the same scroll. The drawer marks Chapter 7 Later. Eighteen arrow steps reach a full turn, and the claim says the integral is back at 0.
+
+What was wrong, and the change:
+
+1. After the six pictured circles, at radius 3.5, the claim said the purple bound had shrunk to the origin and the derivative was 0. Theorem 6.17 on that circle is \(|f'|\le 1/3.5\). The book's proof needs every radius in the plane. The claim now says the mark is still \(1/R\), and these circles do not send the derivative to 0. The summit says the same until the blank is filled.
+2. The 6.4 sheet said an analytic integrand does not care which path joins the ends. Theorem 6.9 needs a simply connected domain. \(1/z\) from \(-i\) to \(i\) is the counterexample. The line now names that hypothesis.
+3. The 6.5 sheet quoted equation (6.48) and then said "Divide by \(n!\)". The formula multiplies by \(n!\). The extra sentence is gone. The integral recipe stays on the Example 6.25 card: divide by \(n!\), then multiply by \(2\pi i\).
+4. The half-turn line said "Half a turn: \(2i\)" as soon as the point was within 0.8 rad of the left side. There the integral is about \(-0.72+1.70i\). The line now says a half turn, the left side, integrates to \(2i\).
+
+Left as is:
+
+1. A full turn of \(e^{it}\) is 0, and the claim says so. That is the blank.
+2. Inside the unit circle, \(\frac{1}{2\pi i}\int z/(z-z_0)\,dz\) is the green point. Outside, that integral is 0. Both match Theorem 6.10 for \(f(z)=z\). The claim still ends on the green point.
+3. After the triangle is subdivided, the claim quotes Theorem 6.5 and says the integral is 0. That is the blank, and it is the theorem.
+4. The fundamental-theorem card stops when \(1/P\) is constant. The contradiction with degree at least 1 is the next sentence of the proof on page 206.
+
+Keep: the six pictures, the page cites above, the answer-key values, Example 6.1's \(-5/4\), the eight-step total beside \(\exp(2+i\pi/4)-1\), the semicircle \(-2/3\), Example 6.11's \(1/(2\sqrt{5})\), Cauchy's three proof blanks, Examples 6.14–6.19 and 6.21 and 6.25, Exercise 6.3.1 (a)–(d), the sharp \(1/R\) bounds, and the computed generators.

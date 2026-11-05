@@ -110,7 +110,7 @@ const STAGES = [
     worked: 'The ends stay at $-1-i$ and $3+i$. An antiderivative of $z$ is $z^{2}/2$.',
     sheet: [
       'Theorem 6.9, page 194: in a simply connected domain, $\\int_{z_0}^{z_1} f = F(z_1)-F(z_0)$.',
-      'An analytic integrand does not care which path you draw between the same ends.',
+      'In a simply connected domain, an analytic integrand does not care which path you draw between the same ends.',
     ],
     summit: 'For an analytic integrand, the integral is the antiderivative at the end minus the antiderivative at the start.',
   },
@@ -132,7 +132,7 @@ const STAGES = [
     worked: 'For $f(z)=z$ on the unit circle, the formula is $\\dfrac{1}{2\\pi i}\\int \\dfrac{z}{z-z_0}\\,dz$. It applies while the green point stays inside.',
     sheet: [
       'Theorem 6.10, page 197: $f(z_0)=\\dfrac{1}{2\\pi i}\\int_C \\dfrac{f(z)}{z-z_0}\\,dz$ when $z_0$ is inside $C$.',
-      'Theorem 6.12, page 199, equation (6.48): $f^{(n)}(z_0)=\\dfrac{n!}{2\\pi i}\\int_C \\dfrac{f(z)}{(z-z_0)^{n+1}}\\,dz$. The power in the denominator is $n+1$. Divide by $n!$.',
+      'Theorem 6.12, page 199, equation (6.48): $f^{(n)}(z_0)=\\dfrac{n!}{2\\pi i}\\int_C \\dfrac{f(z)}{(z-z_0)^{n+1}}\\,dz$. The power in the denominator is $n+1$.',
     ],
     summit: 'The value inside a contour is an integral on the boundary.',
   },
@@ -478,7 +478,7 @@ export function mount(section, ctx) {
     if (summit66) {
       const next = named
         ? 'An entire function that stays bounded is constant.'
-        : (every ? 'The bound on every circle sends the derivative to $0$.' : 'One circle is not every circle.');
+        : (every ? 'A bound on the circles in this picture does not send the derivative to $0$.' : 'One circle is not every circle.');
       if (summit66.dataset.line !== next) {
         summit66.dataset.line = next;
         summit66.replaceChildren();
