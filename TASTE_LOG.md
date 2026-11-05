@@ -1694,3 +1694,55 @@ The clock. Play, Pause, the hold, the continue, Step under reduced motion, and 6
 ## Add
 
 Nothing. No slider, no scrubber, no spring, no second clock, no third chip.
+
+## test-prep-coach (chapter-3 batch 3)
+
+Preview https://ch3-preview.complexanalysis.pages.dev/#chapter-3, tip `e18c094`. The served `js/book/chapter3.js`, `js/book/ch3-cards.js`, `js/book/ch3-grade.js`, `data/practice/ch3.json`, and both generators match that commit. Phone 390×844 first, then 1280×800, light and dark. No product code changed. No console errors. No sideways scroll (`scrollWidth` is 390 and 1280). The chapter is 13059px on the phone and 10837px on the laptop. In the dark the phone is rgb(13, 18, 28) with text rgb(233, 237, 245). At 1280 in the light the paper is rgb(246, 243, 236) with text rgb(26, 34, 48), and the dark frame uses the phone's colours. The why ends at y=759 on the phone and y=783 at 1280, in both themes.
+
+§3.1 Memory starts at y=3858 on the phone and y=3234 at 1280. The 3.1 flag is 44×44, its href is `#chapter-3-3-1`, and the list lands at y=72 under the header.
+
+### What the night before can use
+
+Eight lines on §3.1, five on §3.2, five on §3.3. The decks are 7, 5, and 4 cards. Theorem 3.4's back is the three hypotheses the exam asks you to state: f defined and continuous in a neighborhood of z_0, the four partials continuous at z_0, the Cauchy-Riemann equations at z_0, then f'(z_0) = u_x + i v_x. Cited Theorem 3.4, page 89, which is web Theorem 3.2.6. Missed on the §3.2 deck put that card on the front, left the count at Card 1 of 5, and hid the back. Next card brought the Cauchy-Riemann statement back as Card 2 of 5. Show and Next card are 141×44 once the back is open.
+
+Typed on the phone, and accepted: `(z^2-iz+9)^4*5`, `-(i-2z)`, `(2z-i)*5*(z^2-iz+9)^4`, `u=-y and v=x+4`, the two partial checks with the equations swapped, `i`, `C(x) - 3xy^2`, `C + x^3 - 3xy^2`, `both 0`, `4*z^3`, `4(-i)`, and `u_x + i*v_x`. A wrong proof step, "no idea", kept Next step hidden and the note stayed on the horizontal path. A wrong tap on Re z, the choice 0, stayed enabled, and the note said the quotient is 1.
+
+The Cauchy-Riemann generator, eight cards from the opening seed: two that hold everywhere, then u = x² + y² with v = 2xy, then u = x with v = 0, then u = x² + y² with v = 0, then three more that hold everywhere. Tapping "hold only on the real axis" on the third card was right. The note named §3.2 Exercise 1(g). Next step offered "2x, only on the real axis", "2z everywhere", "does not exist anywhere", and "0". The harmonic generator reached u = x³ + y³ on the fourth card and u = x² + y² on the eighth, each as "Is there a harmonic conjugate?"
+
+### What the chapter's exercises still ask
+
+§3.1 Exercise 1, page 83, is three derivatives. The blank is 1(a), the fifth power. 1(b) is h(z) = (2z+1)/(z+2). That quotient is absent from the prompts. The fourth memory line says polynomials, products, and quotients differentiate as in calculus, and a quotient fails where the denominator is 0. The rules card names the quotient rule. The formula is on neither.
+
+§3.1 Exercise 3 is the analytic question. f and g are entire. Which of [f(z)]³, f(z)g(z), f(z)/g(z), f(1/z), f(z−1), and f(g(z)) must be entire? The deck defines analytic, entire, and singular point. No prompt asks.
+
+§3.2 Exercise 1(a) is the iz + 4i blank, and it finishes at f' = i. Eight generated prompts are polynomials in x and y. Exercise 1(b), page 93, is (y + ix)/(x² + y²), which is i/z for z ≠ 0, with derivative −i/z². Exercise 3 on that page asks for the constants a and b so that (2x − y) + i(ax + by) is differentiable for every z. The book's solution is a = 1 and b = 2. The page has no a and no b.
+
+§3.3 Exercise 5(a), page 100, is the conjugate blank. The book's solution is v(x, y) = x³ − 3xy² + c. Typed `v = x^3 - 3xy^2 + C` was marked wrong, and Next step stayed hidden. `C + x^3 - 3xy^2` was marked right. Exercise 2 on that page asks whether any analytic f has imaginary part x³ + y³. The polynomial shows up as a real part, on the fourth generated card. The memory line builds v by integrating u_x. Exercise 5(c) hands you v = e^y sin x.
+
+Example 3.6, tapping "hold", printed "u_x = v_y = 1 and u_y = v_x = 0 at the origin." The values match the book, page 88 (web Example 3.2.5): u_x(0,0) = v_y(0,0) = 1 and u_y(0,0) = v_x(0,0) = 0. The written equation u_y = v_x is the sign the proof card's last choice is there to catch. The check is u_y = 0 = −v_x.
+
+On L'Hôpital's first step, `0, 0` was marked wrong and `both 0` was marked right. On the last step, the wrong value `4i` printed "4i³ = 4(−i) = −4i".
+
+### Verdict
+
+ANOTHER BATCH
+
+The sheet, the Theorem 3.4 card, the two-path cards, the proof of Theorem 3.3, the polynomial generator, and the conjugate of a given u will carry the first half of a Chapter 3 exam. Exercise 1(b), Exercise 3, the rational Cauchy-Riemann question, the constants a and b, and Exercise 2 in the book's wording are still open. One batch for those five, plus the line the book prints for the conjugate. Theorem 3.4 stays a statement. Theorem 3.5 stays a flash.
+
+### Ranked
+
+1. **Write the quotient, and drill §3.1 Exercise 1(b).** Evidence: the fourth §3.1 memory line says a quotient fails where the denominator is 0, and the rules card names the rule. The derivative blank is (z² − iz + 9)⁵, Exercise 1(a), page 83. Exercise 1(b), h(z) = (2z+1)/(z+2), is absent from the prompts. Change: put the quotient formula (g f' − f g')/g² on that memory line, beside the chain factor n[inside]^{n−1} times the inside derivative. Add one next-step-blank: the numerator is 3, h'(z) = 3/(z+2)², and z = −2 is the singular point.
+
+2. **One card for §3.1 Exercise 3.** Evidence: the §3.1 deck states analytic, entire, and singular point, and no item asks which expressions stay entire. Change: one next-step-mc. f and g are entire. [f]³, fg, f(z−1), and f(g(z)) must be entire. f/g need not be, because g may vanish, and f(1/z) need not be. The distractors swap those two with a composition that does stay entire.
+
+3. **One Cauchy-Riemann card outside the polynomials.** Evidence: the fixed blank is iz + 4i, and f' = i everywhere. Eight generated prompts, the opening seed through seven Anothers, are polynomials. §3.2 Exercise 1(b), page 93, is (y + ix)/(x² + y²) = i/z for z ≠ 0, with f' = −i/z², and the function is not analytic at 0. Change: one next-step on that function. The misses worth offering are "entire", "differentiable only at 0", and f' = i/z².
+
+4. **Pin §3.3 Exercise 2 as the imaginary part, and say what to do when the exam gives v.** Evidence: the fixed harmonic card is u = y³ − 3x²y, Exercise 5(a). u = x³ + y³ appears on the fourth generated card, after three Anothers, under "Is there a harmonic conjugate?", as the real part. Exercise 2, page 100, asks whether any analytic f has imaginary part x³ + y³. The memory line integrates u_x to build v. Exercise 5(c) gives v = e^y sin x. Change: a fixed two-step card in the book's words. The Laplacian is 6x + 6y, so no such f exists. Add one memory line: if the exam gives v, integrate −v_x in y, then fix C(x) from u_x = v_y.
+
+5. **Find the constants in §3.2 Exercise 3.** Evidence: the page never asks for a or b. The book's solution is a = 1 and b = 2 for f = (2x − y) + i(ax + by), page 93. The generator checks a finished pair of polynomials. Change: two blanks. u_x = 2 = v_y forces b = 2. u_y = −1 = −v_x forces a = 1. Offer the swapped pair, and a sign change, as the misses.
+
+6. **Take the line the book prints, and write the Example 3.6 check with the minus.** Evidence, typed on the phone: `v = x^3 - 3xy^2 + C` was marked wrong and Next step stayed hidden. `C + x^3 - 3xy^2` was marked right. The solution of Exercise 5(a) is v(x, y) = x³ − 3xy² + c. `0, 0` was marked wrong on the L'Hôpital opening, and `both 0` was marked right. Tapping "hold" on Example 3.6 printed "u_y = v_x = 0". The wrong last step on Exercise 7(a) printed "4i³ = 4(−i) = −4i". Change: accept a leading `v =`, and accept `0, 0` as the two zeros. The Example 3.6 note reads u_x = 1 = v_y and u_y = 0 = −v_x. A miss on the value stops before −4i. The right answer can show it.
+
+### What to keep
+
+The eight, five, and five memory lines, and the 44px flag that puts the §3.1 list at y=72. State Theorem 3.4 from the card. The fifth §3.2 recipe stays the computing rule: both equations, continuous partials, f' = u_x + i v_x. Missed, which puts the missed card next and leaves the intervals out. Theorem 3.3 as a blank and again as four choices, with u_y = −v_x against u_y = v_x. The chain-rule blank, factors in either order, including a star between the exponent and the next factor, and `-(i-2z)` for `2z - i`. The two paths for Re z, with "differentiable only at 0" as the |z|² trap, and the two paths for |z|²: horizontal 2x_0, vertical −2iy_0, agree only at 0, and f'(0) = 0. L'Hôpital through 4z³ and `4(-i)`. iz + 4i, partials in either order, f' = i. z + conjugate, with u and v equal to 2x and 0, failing at every point. The generator's four outcomes, Exercise 1(g) as a right answer, and "2z everywhere" beside "2x, only on the real axis". The conjugate built from u_x, with C(x) written first. The harmonic failure cards, once Another has been pressed, as extra drill beside the pinned Exercise 2. The statement cards for analytic, entire, singular point, the differentiation rules, Theorem 3.1, Theorem 3.2, Theorem 3.5, Theorem 3.6, Theorem 3.7, Laplace, the conjugate definition, Theorem 3.8, and Theorem 3.9. Theorem 3.5 remains a flash. The polar proof and the constant-modulus proof can wait until the five exercise holes above are cards.
