@@ -1715,3 +1715,65 @@ Memory is a closed sheet that appears with the summit, above the button, so Go t
 The Book keeps the chapter scroll. A later chapter row scrolls that card under the header: Chapter 1 and Chapter 6 no longer open on Walk Chapter 4. Heads for Chapters 4, 5, and 7 are links. Later heads stay cards. Theorem 7.15 is pinned on 7.5. Theorem 7.14 has a faded division step. Exercise 3(d), 3(e), 3(f), and 3(h) are cards, checked against the series. Practice is still the local card.
 
 `node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. No live `kit/` import. `map-route.js` matches the kit copy. Headless Chrome at 390×844 and 1280×800, light and dark: no sideways scroll, no console errors.
+
+## test-prep-coach (chapter-7 batch 4)
+
+Preview https://ch7-preview.complexanalysis.pages.dev/#chapter-7, branch `cursor/chapter-7` at `46fe648`. Phone 390×844 first, then 1280×800, light and dark. Walked the five camps as a student with the exam in a few days: the first screen, a drag, Play through n=44, a wrong blank, the memory sheet after a stage is marked, and the cards for the M-test, the radius, Exercise 10, Exercise 3, L'Hôpital, and Theorem 7.14. No product code changed. No console errors. No failed requests. `scrollWidth` matched the window at 390 and at 1280, light and dark.
+
+### Verdict
+
+ANOTHER BATCH
+
+The Laurent recipe and the singularity choices are the ones a test asks, and a student can blaze those. L'Hôpital, Exercise 3(a), and the division theorem are still the book's statements with the work already done. The memory sheet that should carry the recipes stays shut until the stage is marked, and then it stays collapsed. One batch can turn those three into drills and open the sheet.
+
+### What a timed pass can use
+
+**390×844, light, fresh storage.** The first screen is the move. The lede says drag toward 1 and press Play. The status is "Uniform convergence · Stage 1 of 5". The claim and Play are on the screen: Play is 70×44 and ends at y=835. The wait line, "Press Play until the curve comes back," starts at y=843. All 25 practice cards are hidden. All five memory sheets are hidden. The button, off this screen, says "4 cards left." A drag on the square set the claim to "has left the band" at n=4. Play ran to n=44, the button said Play again, and the claim became "A larger n has brought the curve back." The picture blank then opened. "terms" got "Not yet. Look at the readout under the picture." The same drag on the dark paper, `rgb(13, 18, 28)`, title `rgb(233, 237, 245)`, flipped the claim the same way.
+
+**7.5 on arrival.** Scrolled to the camp, the claim is "Away from 0, sin(z)/z is analytic," the readout is "x = 1.50," and the green point has a centre. The why names a bounded isolated singularity and says the value stays near 1.
+
+**1280×800, both themes.** The claim starts at y=650 and Play ends at y=789, so both sit in the 800px window. The square is 324×324. The same opening claim is on the screen.
+
+**After 7.1 is marked done.** The summit "One N works for the whole set." sits above a collapsed control whose label is MEMORY. The four lines stay inside until that control is opened: one N, the negation, the M-test bound, and Corollary 7.2's permission to integrate. The Log card above that control is an empty blank again, "Log(1−z) = ___". The deck on the same screen is "Card 1 of 2", with Show the back and Next card both up, and the stage button already says Go to 7.2.
+
+### Where the exam and the cards part
+
+**L'Hôpital.** The rendered step is "Numerator and denominator are both 0 at 1+i, and the derivative of the denominator is −8+8i≠0. The limit equals ___." `-(1+i)/16` and `1/(-8+8i)` both came back "Not yet. Look at the readout near 0." The readout on this camp is the sinc picture, x=1.50. `(-1-i)/16` was accepted, and the why then shows the quotient of the derivatives. Exercise 6 has three more limits. Part (b), at i, has a zero of order 2 in the numerator and the denominator, so one application is still 0/0, and the cancelled limit is −1/4. Part (d) is a series limit, 1/60.
+
+**Exercise 3.** The card on the page is sin(1/z), essential, and "removable" answers "Removable means no negative powers. The computed series still has some." Another function then shows z exp(1/z), then (exp z−1)/z, and the third new card is z^2/(z−sin z). The selected answer on page 448 calls that removable. z−sin z has a zero of order 3 and z^2 has a zero of order 2, so the quotient is a pole of order 1 and the principal part starts at 6/z. Parts (d), (e), (f), and (h) are their own cards. (d)'s choices are simple poles at (n+1/2)π, a removable singularity at 0, an essential singularity at 0, and poles of order 2 at nπ.
+
+**Theorem 7.14.** The rendered prompt is f(z)=1 and g(z)=1−z, with g(0)≠0 already stated, and the first blank is c0 with a0=1 and b0=1 already printed. Both answers are 1. Example 7.5.6 in the section is sec z = 1 + (1/2)z^2 + (5/24)z^4, and the fourth derivative at 0 is 5. Exercise 4 is the same division for tan z.
+
+**Theorem 7.15.** The memory line, once the sheet is opened, says a bounded isolated singularity is removable, and the flash back says the same. The picture blank asks for the value 1, with the word removable already in the sentence. The two tests that follow Riemann in §7.5 are absent from the sheet: |f|→∞ means a pole, and a limit of |f| that fails to exist means essential.
+
+**Miss lines.** "N may depend on z" on the M-test choice returned "Look at the readout under the picture." The readout was n=44. "A pole of order 1" on the isolated-zeros card returned "Look at the readout near 0." The vertical-asymptote choice returned "Look at the orange circle," which is the right place for that card. Exercise 10's swapped annulus returned "That swap puts the inner pole's series on the outside of the annulus."
+
+**The sheet and the deck.** On a fresh load the five sheets and the five decks are hidden. The 7.4 sheet, after the stage mark, is two lines: the principal-part trichotomy, and the pole form h(z)/(z−α)^k. It has no order arithmetic. The 7.1 sheet does not record −∑ z^n/n. The Log grader accepts `-sum z^n/n` and rejects `-sum_{n=1}^infty z^n/n`. One Show the back is the flash gate. Next card is on the screen before the back, so the second recipe can stay unturned. There is no second pass.
+
+### Ranked cuts
+
+1. **Make L'Hôpital the computation, and accept the form a student writes.** Evidence: the step states both functions are 0 and that the derivative is −8+8i≠0. `-(1+i)/16` and `1/(-8+8i)` were marked wrong and told to look at the sinc readout. `(-1-i)/16` passed. Exercise 6(b) is still 0/0 after one differentiation, and the limit is −1/4. Change: the first blank is the check, both zero and g'(1+i). The second blank is the limit. Accept `-(1+i)/16`, `(-1-i)/16`, and `1/(-8+8i)`. A miss says to divide the derivatives and simplify. The next card is 6(b): cancel (z−i)^2, limit −1/4.
+
+2. **Put Exercise 3(a) on the page, with the printed solution named as the trap.** Evidence: sin(1/z) is the card. z^2/(z−sin z) appears on the third Another function, still titled Exercise 3. Page 448 says removable. The series starts at z^{−1}. Change: (a) is its own card, answered "a pole of order 1", with a second blank for the principal part 6/z. The why quotes the page 448 line and the orders 3 and 2. "Removable" stays the distractor. (c) and (g) sit as the next two cards.
+
+3. **Drill Theorem 7.14 on sec z.** Evidence: the card is 1/(1−z), and both blanks are 1, with a0, b0, and g(0)≠0 printed in the prompt. Example 7.5.6 is sec z = 1 + (1/2)z^2 + (5/24)z^4, and f^{(4)}(0)=5. Change: three blanks on that example, constant term 1, coefficient of z^2 equal to 1/2, fourth derivative 5. The memory line keeps a_n = b_0 c_n + … + b_n c_0. One line on the card says a zero of g is where you stop dividing and switch to a Laurent series.
+
+4. **A computational miss names the move.** Evidence: the M-test choice "N may depend on z" and the isolated-zeros choice "a pole of order 1" both returned a picture hint, the readout. Exercise 10 and the essential card returned the reason for that choice. The isolated-zeros stem already says the function is analytic, so "a pole" and "essential" drop out before the accumulation-point choice is doing any work. On tan z, "a removable singularity at 0" names a point where tan z is analytic. Change: every choice carries its own why, and a blank that is not the picture card uses that step's why. The picture card keeps the readout hint. On the zeros card, the other two choices become "f has to be a polynomial" and "the zero has no finite order." On tan z, the removable-at-0 choice becomes "simple poles at nπ."
+
+5. **Open the sheet with the summit, and put the blaze lines on it.** Evidence: every sheet is hidden on arrival. After the stage mark, MEMORY is collapsed and the lines appear on a tap. The open 7.1 sheet is one N, the negation, the M-test bound, and "may be integrated." The Log series is not a line, and the Log blank is empty again on a return. The 7.4 sheet has no ord(f)−ord(g). The 7.5 sheet states 7.13, 7.15, 7.11, and 7.14, and stops before |f|→∞ and the missing limit of |f|. The deck stays hidden until the other cards are right, and one Show the back finishes it. Change: a collapsed Memory at the top of the stage, one tap, so the lines are available the night before and stay off the blank until then. When the summit appears, that sheet is open. Add −∑_{n≥1} z^n/n, the order subtraction, the derivative test for a zero of order k, and the two limit tests. The stage waits until each flash back has been shown. Spacing can arrive with the shared engine. This pass is the one full turn of the ten backs.
+
+6. **Ask for a comparison and for a series.** Evidence: the worked line already gives |z^k|≤(1/2)^k on |z|≤1/2, and the blanks under it are M_k, Cauchy, converges, uniform. The 7.2 worked line states both substitutions, and the blank asks for |z|<1. The Log card accepted `-sum z^n/n` and the grader rejects `-sum_{n=1}^infty z^n/n`. Change: one blank, M_k = (1/2)^k. One blank, 1/(1+z^2) = ∑ (−1)^n z^{2n} for |z|<1. The Log blank accepts the indexed sum and the first three terms, −z − z^2/2 − z^3/3.
+
+### What to keep
+
+The phone first screen, in both themes. The lede is the drag and Play, the status is "Uniform convergence · Stage 1 of 5", and the claim shares the window with Play. A drag leaves the band at n=4. Play to n=44 brings the sentence back. The dark paper keeps the four colours apart.
+
+The picture gate. The blank stays shut until the claim is the one it names, and the line under Play says what is still coming. "terms" points at the readout, which is the right hint for that card.
+
+The Laurent recipe, word for word. Partial fractions, then a geometric series in z inside a pole and in 1/z outside it. Exercise 10's three regions, and the swapped-annulus choice whose why names which region that series actually belongs to. The radius choice "a vertical asymptote at x=1", which is the real-calculus trap in Remark 7.1. The M-test proof skeleton, M_k then Cauchy then one N for the whole set.
+
+The classification line. No negative powers, lowest power −k, infinitely many. Exercise 2(a)'s orders, 4 at z=1 and 3 at z=i. Exercise 3(d), (e), (f), and (h), with the cancellation and the order subtraction written as the reason. The essential card's "this series does not stop."
+
+7.5's opening frame. x=1.50, the point on the axis, "Away from 0, sin(z)/z is analytic." Theorem 7.15's sentence on the sheet and on the flash back: a bounded isolated singularity is removable, and sin z/z is filled in by 1. The four summit sentences that match their pictures.
+
+The citations on the cards, page and all. Play, Check, and the choice buttons at 44px. One card at a time inside a stage, the next card waiting until this one is right. No sideways scroll, no console errors, light or dark.
