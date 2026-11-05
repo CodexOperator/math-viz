@@ -6,7 +6,7 @@ import { stationsForMap, stationForTopic, stationForProblem, stationById, thread
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
 import { BOOK_CHAPTERS, CHAPTER_3, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, chapter3StageIds, chapter4ExerciseIds, chapter5ExerciseIds } from '../js/data/book-path.js';
-import { derivativeScene, squareScene, levelScene, circleComparePoint, clampRect } from '../js/book/ch3-math.js';
+import { derivativeScene, squareScene, levelScene, circleComparePoint, clampRect, sharedGain, markScale, arcRadius, PLANE_SIZE } from '../js/book/ch3-math.js';
 import { answersMatch } from '../js/book/ch3-grade.js';
 import { selfCheck as crPolyChecks } from '../js/practice/gen/cr-poly.js';
 import { selfCheck as harmonicChecks } from '../js/practice/gen/harmonic-conjugate.js';
@@ -285,9 +285,55 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
   const hop = ch3Items.find((item) => item.id === 'ch3-3.1-lhopital-001');
   const cardIds = ['ch3-3.1-quot-001', 'ch3-3.1-entire-001', 'ch3-3.2-rat-001', 'ch3-3.2-const-001', 'ch3-3.3-im-001'];
   const choicesFit = ch3Items.every((item) => (item.steps || []).every((step) => !step.choices || step.choices.includes(step.answer)));
-  check('exercise 1(a) keeps the derivative and names the key trap',
+  check('exercise 1(a) keeps the derivative and leaves the answer key off the card',
     chain.steps[2].answer === '5(z^2 - iz + 9)^4(2z - i)'
-    && /15z/.test(chain.note) && /1\(c\)/.test(chain.note));
+    && chain.note == null
+    && !JSON.stringify(chain).includes('15z'));
+  const t34 = ch3Items.find((item) => item.id === 'ch3-3.2-flash-t34');
+  const polar = ch3Items.find((item) => item.id === 'ch3-3.2-polar-001');
+  const modulus = ch3Items.find((item) => item.id === 'ch3-3.2-mod-001');
+  const t35 = ch3Items.find((item) => item.id === 'ch3-3.2-flash-t35');
+  check('theorem 3.4 memory states the full hypothesis',
+    /neighborhood/.test(t34.memory)
+    && /partials continuous/.test(t34.memory)
+    && /equations/.test(t34.memory));
+  check('exercise 10 and theorem 3.6 are proof blanks, and theorem 3.5 stays a flash',
+    polar && polar.kind === 'proof-blank' && polar.cite.page === 94
+    && modulus && modulus.kind === 'proof-blank' && modulus.cite.page === 92
+    && t35 && t35.kind === 'flash'
+    && answersMatch(polar.steps[0].answer, polar.steps[0].accept, 'sin theta and cos theta')
+    && answersMatch(polar.steps[1].answer, polar.steps[1].accept, 'r cos theta and -r sin theta')
+    && answersMatch(polar.steps[2].answer, polar.steps[2].accept, 'V_θ')
+    && answersMatch(polar.steps[3].answer, polar.steps[3].accept, '-Uθ')
+    && answersMatch(modulus.steps[0].answer, modulus.steps[0].accept, 'u^2+v^2=K^2')
+    && answersMatch(modulus.steps[1].answer, modulus.steps[1].accept, 'v u_x + u u_y = 0 and u u_x - v u_y = 0')
+    && answersMatch(modulus.steps[1].answer, modulus.steps[1].accept, 'u u_x = v u_y and v u_x = -u u_y')
+    && answersMatch(modulus.steps[2].answer, modulus.steps[2].accept, 'both 0')
+    && answersMatch(modulus.steps[3].answer, modulus.steps[3].accept, 'a constant'));
+  const span = 2.4;
+  const pxPer = PLANE_SIZE / (2 * span);
+  const homeZ = { re: 1, im: 1 };
+  const homeScene = derivativeScene('sq', homeZ, 0);
+  const homeShared = sharedGain(homeZ, [homeScene.h, homeScene.image], span);
+  check('the opening arrows keep the shared scale',
+    Math.abs(markScale(homeZ, homeScene.h, span, homeShared, 11) - homeShared) < 1e-12);
+  for (const re of [1.99, 2.13, 2.28]) {
+    const z = { re, im: 1 };
+    const scene = derivativeScene('sq', z, 0);
+    const shared = sharedGain(z, [scene.h, scene.image], span);
+    const gs = markScale(z, scene.h, span, shared, 11);
+    const ps = markScale(z, scene.image, span, shared, 11);
+    const gLen = gs * Math.hypot(scene.h.re, scene.h.im) * pxPer;
+    const pLen = ps * Math.hypot(scene.image.re, scene.image.im) * pxPer;
+    const ox = ((z.re + span) / (2 * span)) * PLANE_SIZE;
+    const oy = ((span - z.im) / (2 * span)) * PLANE_SIZE;
+    const radius = arcRadius(ox, oy, 0, scene.turn);
+    const inside = (scale, v) => Math.abs(z.re + scale * v.re) <= span && Math.abs(z.im + scale * v.im) <= span;
+    check(`step, image, and turn stay marks at Re ${re}`,
+      gLen >= 8 && pLen >= 8 && radius >= 8 && inside(gs, scene.h) && inside(ps, scene.image));
+  }
+  const frame = clampRect(3, 1, span);
+  check('the drag still stops at the frame', near(frame.re, span) && near(frame.im, 1));
   check('a L Hopital miss does not print the value',
     hop.steps[0].accept.includes('0, 0')
     && hop.steps[2].why.includes('-4i')

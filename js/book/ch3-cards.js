@@ -47,6 +47,7 @@ const HREF = Object.freeze({
   '§3.2, Exercise 1': sectionHref(S32, 'x3_2_1'),
   '§3.2, Exercise 3': sectionHref(S32, 'x3_2_3'),
   '§3.2, Exercise 7(b)': sectionHref(S32, 'x3_2_7'),
+  '§3.2, Exercise 10': sectionHref(S32, 'x3_2_10'),
   '§3.3, Exercise 2': sectionHref(S33, 'x3_3_2'),
   '§3.3, Exercise 5(a)': sectionHref(S33, 'x3_3_5'),
   '§3.3, Exercise 5': sectionHref(S33, 'x3_3_5'),

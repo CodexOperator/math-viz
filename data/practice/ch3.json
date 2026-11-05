@@ -27,7 +27,6 @@
       }
     ],
     "generator": null,
-    "note": "The selected-answers key on page 435 prints \\(15z^{2}-8z+7\\) for this derivative. That quadratic is not \\(g'(z)\\). The same page lists the derivative of \\(h\\) under 1(c); \\(h\\) is Exercise 1(b).",
     "memory": "A power of a polynomial: n[inside]^{n-1} times the inside derivative."
   },
   {
@@ -542,6 +541,78 @@
     "memory": "A polynomial in z passes Cauchy-Riemann. f' is the calculus derivative."
   },
   {
+    "id": "ch3-3.2-polar-001",
+    "chapter": 3,
+    "section": "3.2",
+    "cite": {"ref": "§3.2, Exercise 10", "page": 94},
+    "kind": "proof-blank",
+    "prompt": "Prove the polar Cauchy-Riemann equations in Theorem 3.5. Use \\(x = r\\cos\\theta\\) and \\(y = r\\sin\\theta\\).",
+    "steps": [
+      {
+        "text": "The chain rule in \\(r\\) uses \\(\\partial x/\\partial r\\) and \\(\\partial y/\\partial r\\), which are",
+        "answer": "cos theta and sin theta",
+        "accept": ["\\cos\\theta and \\sin\\theta", "cos θ and sin θ"],
+        "why": "So \\(U_r = u_x\\cos\\theta + u_y\\sin\\theta\\), and the same for \\(V_r\\). §3.2 Exercise 10(a), page 94."
+      },
+      {
+        "text": "In \\(\\theta\\), \\(\\partial x/\\partial\\theta\\) and \\(\\partial y/\\partial\\theta\\) are",
+        "answer": "-r sin theta and r cos theta",
+        "accept": ["-r\\sin\\theta and r\\cos\\theta", "r cos theta and -r sin theta"],
+        "why": "So \\(U_\\theta = -u_x r\\sin\\theta + u_y r\\cos\\theta\\). Exercise 10(a), page 94."
+      },
+      {
+        "text": "Cauchy-Riemann, \\(u_x = v_y\\) and \\(u_y = -v_x\\), turns \\(r U_r\\) into",
+        "answer": "V_theta",
+        "accept": ["Vtheta", "V_θ", "Vθ"],
+        "why": "\\(r(u_x\\cos\\theta + u_y\\sin\\theta) = V_\\theta\\). Equation (3.22), page 91."
+      },
+      {
+        "text": "The same substitution turns \\(r V_r\\) into",
+        "answer": "-U_theta",
+        "accept": ["-Utheta", "-U_θ", "-Uθ"],
+        "why": "\\(r V_r = -U_\\theta\\). Together these are Equation (3.22). Exercise 10(b), page 94."
+      }
+    ],
+    "generator": null,
+    "memory": "Polar Cauchy-Riemann: r U_r = V_θ and r V_r = −U_θ, from the chain rule and u_x = v_y, u_y = −v_x."
+  },
+  {
+    "id": "ch3-3.2-mod-001",
+    "chapter": 3,
+    "section": "3.2",
+    "cite": {"ref": "Theorem 3.6", "page": 92},
+    "kind": "proof-blank",
+    "prompt": "\\(f = u + iv\\) is analytic on a domain \\(D\\), and \\(|f(z)| = K\\) for every \\(z\\) in \\(D\\). Show that \\(f\\) is constant.",
+    "steps": [
+      {
+        "text": "The constant modulus writes, for every \\((x, y)\\) in \\(D\\),",
+        "answer": "u^2 + v^2 = K^2",
+        "accept": ["u^{2}+v^{2}=K^{2}", "u^2+v^2=K^2"],
+        "why": "Equation (3.25), page 92. If \\(K = 0\\), then \\(u\\) and \\(v\\) are already 0, so \\(f\\) is the constant 0."
+      },
+      {
+        "text": "When \\(K\\) is not 0, Cauchy-Riemann turns the differentiated equations into",
+        "answer": "u u_x - v u_y = 0 and v u_x + u u_y = 0",
+        "accept": ["u u_x = v u_y and v u_x = -u u_y", "uu_x - vu_y = 0 and vu_x + uu_y = 0"],
+        "why": "Differentiate \\(u^2 + v^2 = K^2\\) in \\(x\\) and in \\(y\\), then replace \\(v_x\\) with \\(-u_y\\) and \\(v_y\\) with \\(u_x\\). Page 92."
+      },
+      {
+        "text": "So \\(u_x\\) and \\(u_y\\) are",
+        "answer": "0",
+        "accept": ["both 0", "0 and 0", "both zero"],
+        "why": "The determinant of the system is \\(u^2 + v^2 = K^2\\), which is not 0. Both partials of \\(u\\) are 0, and the same argument gives both partials of \\(v\\). Pages 92–93."
+      },
+      {
+        "text": "Therefore on \\(D\\), \\(f\\) is",
+        "answer": "constant",
+        "accept": ["a constant", "constant on D"],
+        "why": "A function with both partials 0 on a domain is constant. \\(f = c_1 + ic_2\\). Theorem 3.6, page 92."
+      }
+    ],
+    "generator": null,
+    "memory": "Analytic and constant modulus: u^2 + v^2 = K^2 forces every partial to vanish, so f is constant."
+  },
+  {
     "id": "ch3-3.2-flash-t33",
     "chapter": 3,
     "section": "3.2",
@@ -573,7 +644,7 @@
       }
     ],
     "generator": null,
-    "memory": "Cauchy-Riemann plus continuous partials implies differentiable."
+    "memory": "Defined and continuous in a neighborhood, four partials continuous at the point, and both Cauchy-Riemann equations at the point: then f' = u_x + i v_x."
   },
   {
     "id": "ch3-3.2-flash-t35",

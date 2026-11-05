@@ -1233,10 +1233,19 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 
 /* Phone: the opening square uses the column, the same width §3.2 already uses.
    The height cap is the 1280 size that keeps the why inside an 800px window.
-   On a phone the why sits under Play. */
+   The square shares the claim's left edge. On a phone that edge is the column. */
 #chapter-section-3-1-picture .exp-stage {
   width: min(100%, calc(100dvh - 31rem));
-  align-self: center;
+}
+
+/* Phone: the first screen ends on Play. The why, both sentences, starts on the next thumb. */
+@media (max-width: 40rem) {
+  #chapter-section-3-1-why-block { padding-top: 4.5rem; }
+}
+
+/* Laptop: the removed lede's slot stays empty, so the status does not rise into the 800px edge. */
+@media (min-width: 56.25rem) {
+  #chapter-section-3-1-why-block { margin-bottom: 2.75rem; }
 }
 
 .ch3-path { padding-bottom: 0; }
@@ -1303,11 +1312,23 @@ a.book-flag {
 }
 
 .ch3-choices .btn {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-start;
+  width: 100%;
+  max-width: 100%;
   height: auto;
   min-height: var(--tap);
   white-space: normal;
   text-align: left;
+  row-gap: 0.15rem;
+}
+
+.ch3-choices .btn > span {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .ch3-choices .btn[data-right="false"] { border-color: var(--danger); }

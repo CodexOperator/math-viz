@@ -1873,3 +1873,11 @@ The phone square at 324px, even with §3.2 and §3.3, and the 17px that is the c
 ## Add
 
 Nothing. No slider, no scrubber, no second clock, no third chip, no new hue.
+
+## Chapter 3 batch 5
+
+Branch `cursor/chapter-3`. Headless Chrome, 390×844 and 1280×800, light and dark. No console errors. No sideways scroll (`scrollWidth` 390 and 1265).
+
+The “Three stages…” lede is gone. On the phone Play ends at y=783 and the why, both sentences, starts at y=894. At 1280 the why ends at y=783 and the status starts at y=844. The stage line stays “3.1 · Differentiable and Analytic Functions” after 3.1 is marked; the count becomes 1 of 3, and the status says next is 3.2. The opening square is 324px on the phone and 304px at 1280, and its left edge matches the claim (x=321). At Re 1.99, 2.13, and 2.28 the green step, purple image, and orange turn stay visible inside the square. At the frame, Re 2.40, a step pointing out of the square has no interior left, so those marks hide and the claim still names the turn. Exercise 1(a) is the prompt, three steps, and the source line. Exercise 3’s formulas stay one piece inside the button at 390; the rational choices stay one line. The book lede says Chapters 1–7, the roadmap stops at 7, and Walk Chapter 4 is hidden until 3 of 3. Theorem 3.4’s memory line states the neighborhood, the continuous partials, and the equations at the point. Exercise 10 (page 94) and Theorem 3.6 (page 92) are proof blanks. Theorem 3.5 stays a flash.
+
+Deferred: the shared practice renderer is not on this branch, so a `next-step-blank` step that carries `choices` is still graded as a choice. Open Chapter 2 waits until that chapter’s page meets this one. Chapters 8–11 stay in the data and off the list.

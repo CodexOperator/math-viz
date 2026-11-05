@@ -39,15 +39,17 @@ export function mount(el, ctx, focus) {
   const path = h('ol', { class: 'chapter-path ch3-path', id: 'chapter-path' });
   const status = h('p', { class: 'book-status', id: 'chapter-status' });
   const stageLine = h('p', { id: 'chapter-stage-line' });
-  const lede = h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Three stages, from the derivative to a harmonic conjugate.');
   const statusWrap = h('div', { class: 'book-next', id: 'chapter-next-row' }, status);
   const buttons = [];
+  const opening = CHAPTER_3.sections[0];
 
   function paint() {
     const t = chapterTally(CHAPTER_3.sections, ticks);
     status.textContent = statusLine(t);
-    const shown = CHAPTER_3.sections.find((s) => s.id === t.nextId) || CHAPTER_3.sections[CHAPTER_3.sections.length - 1];
-    stageLine.textContent = `${shown.id} · ${shown.title} · ${t.sectionsFinished} of ${t.sectionTotal}`;
+    // The line under the title sits over the derivative square, so it keeps
+    // naming 3.1 after that stage is marked. The count updates. "Next is 3.2"
+    // stays on the status card.
+    stageLine.textContent = `${opening.id} · ${opening.title} · ${t.sectionsFinished} of ${t.sectionTotal}`;
     for (const node of path.querySelectorAll('.section-node')) {
       const id = node.getAttribute('data-section');
       const section = CHAPTER_3.sections.find((s) => s.id === id);
@@ -129,10 +131,9 @@ export function mount(el, ctx, focus) {
       h('h2', { id: `${scope}-title` }, section.title),
       h('p', { class: 'book-page' }, `Page ${section.page}`),
     ];
-    const whyBlock = [
+    const whyBlock = h('div', { id: `${scope}-why-block` },
       h('p', { class: 'book-label', id: `${scope}-why-label` }, "Why you'd care"),
-      why,
-    ];
+      why);
     const rest = [
       h('p', { class: 'book-label' }, 'In the book'),
       read,
@@ -150,8 +151,8 @@ export function mount(el, ctx, focus) {
       h('div', { class: 'problem-actions' }, mark),
     ];
     const openOnPicture = section.id === '3.1'
-      ? [picture, ...whyBlock, lede, statusWrap, ...heading, ...rest]
-      : [...heading, ...whyBlock, picture, ...rest];
+      ? [picture, whyBlock, statusWrap, ...heading, ...rest]
+      : [...heading, whyBlock, picture, ...rest];
     path.append(h('li', {
       class: 'section-node', id: scope, 'data-section': section.id, 'data-state': 'ahead',
     }, ...openOnPicture));

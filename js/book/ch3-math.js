@@ -169,3 +169,74 @@ export function clampRect(x, y, limit) {
   };
   return { re: cut(x), im: cut(y) };
 }
+
+// The derivative square is 480px on a side. One unit is 480 / (2 span) pixels.
+export const PLANE_SIZE = 480;
+
+// Shared scale for the step and its image when both tips fit with room to spare.
+// The opening picture at 1+i uses this and does not get a second scale.
+export function sharedGain(z, vectors, span) {
+  const limit = span - 0.28;
+  const re = Number(z && z.re) || 0;
+  const im = Number(z && z.im) || 0;
+  const fits = (scale) => vectors.every((v) => {
+    const x = re + scale * v.re;
+    const y = im + scale * v.im;
+    return Math.abs(x) <= limit && Math.abs(y) <= limit;
+  });
+  if (fits(0.72)) return 0.72;
+  let lo = 0;
+  let hi = 0.72;
+  for (let n = 0; n < 18; n += 1) {
+    const mid = (lo + hi) / 2;
+    if (fits(mid)) lo = mid;
+    else hi = mid;
+  }
+  return lo;
+}
+
+function scaleInside(z, v, span) {
+  const limit = span - 0.02;
+  const re = Number(z && z.re) || 0;
+  const im = Number(z && z.im) || 0;
+  const room = (comp, delta) => {
+    if (Math.abs(delta) < 1e-12) return Infinity;
+    const edge = delta > 0 ? limit : -limit;
+    return (edge - comp) / delta;
+  };
+  const fit = Math.min(room(re, v.re), room(im, v.im));
+  return fit > 0 ? fit : 0;
+}
+
+// Near the frame the shared scale shrinks the short step until it vanishes.
+// Top that arrow up to a readable mark, and stop the tip inside the square.
+export function markScale(z, vector, span, shared, minPx) {
+  const len = Math.hypot(Number(vector && vector.re) || 0, Number(vector && vector.im) || 0);
+  if (!(len > 1e-9)) return 0;
+  const pxPer = PLANE_SIZE / (2 * span);
+  const sharedLen = shared * len * pxPer;
+  if (sharedLen >= minPx) return shared;
+  const need = minPx / (len * pxPer);
+  const fit = scaleInside(z, vector, span);
+  const scale = Math.min(fit, Math.max(shared, need));
+  return scale > 0 ? scale : 0;
+}
+
+// Orange turn. Shrink the radius until the arc sits inside the square.
+export function arcRadius(ox, oy, a0, a1) {
+  const delta = a1 - a0;
+  const margin = 3;
+  const inside = (rad) => {
+    for (const t of [0, 0.25, 0.5, 0.75, 1]) {
+      const a = a0 + delta * t;
+      const x = ox + rad * Math.cos(a);
+      const y = oy - rad * Math.sin(a);
+      if (x < margin || x > PLANE_SIZE - margin || y < margin || y > PLANE_SIZE - margin) return false;
+    }
+    return true;
+  };
+  for (let r = 72; r >= 8; r -= 4) {
+    if (inside(r)) return r;
+  }
+  return 0;
+}

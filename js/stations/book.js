@@ -57,6 +57,7 @@ function mountRoadmap(el, ctx, spec) {
     const t = tally();
     const t3 = tally3();
     open3.hidden = t3.complete;
+    walk.hidden = !t3.complete;
     if (!t3.complete) {
       const section = CHAPTER_3.sections.find((s) => s.id === t3.nextId);
       const name = section ? `${section.id} ${section.title}` : t3.nextId;
@@ -80,13 +81,13 @@ function mountRoadmap(el, ctx, spec) {
     for (const node of list.querySelectorAll('.book-node')) {
       const n = Number(node.getAttribute('data-chapter'));
       let state = 'later';
-      if (n === 4) state = t.complete ? 'done' : 'next';
+      if (n === 4) state = t.complete ? 'done' : (t3.complete ? 'next' : 'later');
       else if (n === 5) state = 'open';
       else if (n === 3) state = t3.complete ? 'done' : 'open';
       node.setAttribute('data-state', state);
       const flag = node.querySelector('.book-flag');
       if (!flag) continue;
-      if (n === 4) flag.textContent = t.complete ? 'Done' : 'Next';
+      if (n === 4) flag.textContent = t.complete ? 'Done' : (t3.complete ? 'Next' : 'Later');
       else if (n === 5) flag.textContent = 'Open';
       else if (n === 3) flag.textContent = t3.complete ? 'Done' : 'Open';
       else flag.textContent = 'Later';
@@ -111,6 +112,7 @@ function mountRoadmap(el, ctx, spec) {
   }
 
   for (const ch of BOOK_CHAPTERS) {
+    if (ch.n > 7) continue;
     const head = h('div', { class: 'book-node-head' },
       h('p', { class: 'book-flag', id: `book-flag-${ch.n}` }, 'Later'),
       h('h2', { id: `book-title-${ch.n}` },
@@ -149,7 +151,7 @@ function mountRoadmap(el, ctx, spec) {
   el.append(
     h('header', { class: 'station-header' },
       h('h1', { id: 'book-title' }, 'The Book'),
-      h('p', { class: 'station-lede', id: 'book-lede' }, 'Eleven chapters, in the order Howell and Mathews print them.'),
+      h('p', { class: 'station-lede', id: 'book-lede' }, 'Chapters 1–7, in the order Howell and Mathews print them.'),
       sourceTag({ pin: '202 Updated Edition, table of contents, pages i–ii', href: BOOK.html })),
     h('div', { class: 'book-next', id: 'book-next' }, open3, status, walk),
     list);

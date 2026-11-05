@@ -1,11 +1,11 @@
 // The three Chapter 3 pictures. Each has one gesture, at most three controls, and the site's clock.
 
 import { createFrame, createMotion, prefersReducedMotion } from '../core/anim.js';
-import { derivativeScene, squareScene, levelScene, clampRect, wrapPi, circleComparePoint } from './ch3-math.js';
+import { derivativeScene, squareScene, levelScene, clampRect, wrapPi, circleComparePoint, sharedGain, markScale, arcRadius, PLANE_SIZE } from './ch3-math.js';
 import { h, appendRich } from '../stations/test2-ui.js';
 
 const NS = 'http://www.w3.org/2000/svg';
-const SIZE = 480;
+const SIZE = PLANE_SIZE;
 
 function svgEl(name, attrs) {
   const node = document.createElementNS(NS, name);
@@ -74,7 +74,7 @@ function setArrow(line, head, x1, y1, x2, y2) {
   const dx = x2 - x1;
   const dy = y2 - y1;
   const len = Math.hypot(dx, dy);
-  const show = len >= 6;
+  const show = len >= 4;
   line.setAttribute('visibility', show ? 'visible' : 'hidden');
   head.setAttribute('visibility', show ? 'visible' : 'hidden');
   if (!show) return;
@@ -84,45 +84,11 @@ function setArrow(line, head, x1, y1, x2, y2) {
   line.setAttribute('y2', y2);
   const ux = dx / len;
   const uy = dy / len;
-  const tip = 13;
-  const wing = 6;
+  const tip = Math.min(13, Math.max(4, len * 0.55));
+  const wing = Math.min(6, tip * 0.46);
   const bx = x2 - ux * tip;
   const by = y2 - uy * tip;
   head.setAttribute('points', `${x2},${y2} ${bx - uy * wing},${by + ux * wing} ${bx + uy * wing},${by - ux * wing}`);
-}
-
-function gainFor(z, vectors, span) {
-  const limit = span - 0.28;
-  const fits = (scale) => vectors.every((v) => {
-    const x = z.re + scale * v.re;
-    const y = z.im + scale * v.im;
-    return Math.abs(x) <= limit && Math.abs(y) <= limit;
-  });
-  if (fits(0.72)) return 0.72;
-  let lo = 0;
-  let hi = 0.72;
-  for (let n = 0; n < 18; n += 1) {
-    const mid = (lo + hi) / 2;
-    if (fits(mid)) lo = mid;
-    else hi = mid;
-  }
-  return lo;
-}
-
-function arcRadiusPx(ox, oy, a0, a1) {
-  const delta = a1 - a0;
-  const inside = (rad) => {
-    for (const t of [0, 0.5, 1]) {
-      const a = a0 + delta * t;
-      const x = ox + rad * Math.cos(a);
-      const y = oy - rad * Math.sin(a);
-      if (x < 10 || x > SIZE - 10 || y < 10 || y > SIZE - 10) return false;
-    }
-    return true;
-  };
-  let r = 72;
-  while (r >= 18 && !inside(r)) r -= 6;
-  return inside(r) ? r : 0;
 }
 
 function setClaim(claim, scene) {
@@ -184,19 +150,21 @@ export function mountDerivativePicture(parent) {
 
   function paint() {
     const scene = derivativeScene(fn, z, phi);
-    const g = gainFor(z, [scene.h, scene.image], span);
+    const shared = sharedGain(z, [scene.h, scene.image], span);
+    const gs = markScale(z, scene.h, span, shared, 11);
+    const ps = markScale(z, scene.image, span, shared, 11);
     const ox = X(z.re);
     const oy = Y(z.im);
-    const gx = X(z.re + g * scene.h.re);
-    const gy = Y(z.im + g * scene.h.im);
-    const px = X(z.re + g * scene.image.re);
-    const py = Y(z.im + g * scene.image.im);
+    const gx = X(z.re + gs * scene.h.re);
+    const gy = Y(z.im + gs * scene.h.im);
+    const px = X(z.re + ps * scene.image.re);
+    const py = Y(z.im + ps * scene.image.im);
     setArrow(gLine, gHead, ox, oy, gx, gy);
     setArrow(pLine, pHead, ox, oy, px, py);
     handle.setAttribute('cx', ox);
     handle.setAttribute('cy', oy);
     const turn = scene.turn || 0;
-    const radius = Math.abs(turn) > 0.12 ? arcRadiusPx(ox, oy, phi, phi + turn) : 0;
+    const radius = Math.abs(turn) > 0.12 ? arcRadius(ox, oy, phi, phi + turn) : 0;
     if (radius) {
       const a0 = phi;
       const a1 = phi + turn;
