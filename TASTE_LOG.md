@@ -1997,3 +1997,19 @@ Chapter 4 starts on the first screen of the book, y = 618 on the phone and y = 5
 The Book link is the 44px station link. A section flag on an open camp sits 8px under it. A fresh Continue opens `#chapter-4` at the top. Browser Back and the practice button return the chapter to the scroll you left. The drawer is chapters 1–7, then Test prep, and at 1280 that list is the sidebar, with the chapter you are on marked. The Chapters button is 118×44 and reads Chapters.
 
 The type is Iowan Old Style, 25.85px on the phone and 36px at 1280. The axes are blue rgb(11, 99, 173), the dashed circle and the ray are orange rgb(168, 67, 0), the ring is green rgb(0, 110, 83), and the point is purple rgb(157, 58, 138). The where-line, the white card, and the 44px up control stay.
+
+## Chapter 4 and 5, batch 6
+
+Started from `1abe4ea` on `cursor/chapter-4-5-2649`. The merged list from the batch-5 council. Product code was at that commit; the two notes after it are the unslop and ux-veteran passes.
+
+`#chapter-5-5-1` scrolls to the square. On a phone the square is 358px at y = 109, 8px under the Book link. The §5.1 title is a heading. The idea under it is gone. The recipe card is the three numbered lines, with no pin heading and no edition line. §5.2 and §5.3 are 44px Later lines between §5.1 and §5.4. §5.5 is a 44px Later line after §5.4. An opened Later row keeps the card border and sits under the Book link. The second outline is gone.
+
+Practice headings are the question. Theorem 4.1, pages 103–104, opens on “Assume \(x_n\to u\)…”. The source line keeps the cite. A fresh flash deck says “42 new.” A wrong check on the Theorem 4.1 blank is stored as a Leitner miss, the same record a flash grade uses.
+
+On `#julia` the colour sentence sits under the title, then the plane. At 390 the disk is 322px from y = 263 to 585, with Zoom on that screen. The flat-paper sentence is under the disk. The sentence wraps to two lines on the phone and is one line at 1280.
+
+`node tools/check_vectors.mjs` 234/234. `node tools/fractal-smoke.mjs` passed. `node kit/smoke.mjs` passed. No live `kit/` import. `js/core/map-route.js` matches the kit template. Walked 390×844 and 1280×800, light and dark. No console errors. `scrollWidth` stayed inside the window.
+
+Theorem 4.9 stays page 113, connectedness. Theorem 4.11 stays page 116, the main cardioid and an attracting fixed point. Howell & Mathews, 202 Updated Edition.
+
+Still open: §§5.2, 5.3, and 5.5 have no picture. Chapters 1–3, 6, and 7 are roadmap lines for their own loops. The circuit stations stay off the §5.4 stage. The shared practice engine was not rebuilt; only the due count and the stored attempt changed. A new card is counted as new until it is graded, and it is due on a later day.

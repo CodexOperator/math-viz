@@ -3,6 +3,7 @@
 
 import { h, appendRich, sourceTag } from '../stations/test2-ui.js';
 import { recipeSteps } from './recipe.js';
+import { questionHeading } from './heading.js';
 
 function rich(text, attrs) {
   const node = h('p', attrs || null);
@@ -55,7 +56,10 @@ export function renderCard(host, vm, act) {
     h('p', { class: 'book-page', id: 'practice-count' }, vm.count),
   ];
   const prompt = h('h2', { id: 'practice-prompt' });
-  appendRich(prompt, item.prompt || '');
+  const heading = item.cite && item.cite.href
+    ? questionHeading(item.prompt, item.cite)
+    : (item.prompt || '');
+  appendRich(prompt, heading);
   kids.push(prompt);
   if (item.cite && item.cite.href) {
     kids.push(sourceTag({
@@ -229,7 +233,10 @@ export function renderFlash(host, vm, act) {
     h('p', { class: 'book-page', id: 'practice-count' }, vm.count),
   ];
   const prompt = h('h2', { id: 'practice-prompt' });
-  appendRich(prompt, item.prompt || '');
+  const heading = item.cite && item.cite.href
+    ? questionHeading(item.prompt, item.cite)
+    : (item.prompt || '');
+  appendRich(prompt, heading);
   kids.push(prompt);
   if (item.cite && item.cite.href) {
     kids.push(sourceTag({ href: item.cite.href, pin: `${item.cite.ref}, page ${item.cite.page}` }));

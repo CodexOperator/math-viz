@@ -15,7 +15,8 @@ import { generate as geometricGenerate } from '../js/practice/gen/geometric-seri
 import { generate as expGenerate, principalQuarters } from '../js/practice/gen/exp-mod-arg.js';
 import { catalogIssues, PRACTICE } from '../js/practice/catalog.js';
 import { interleave, sectionWalk } from '../js/practice/queue.js';
-import { mergeLeitner, reviewCard, emptyDeck } from '../js/practice/leitner.js';
+import { mergeLeitner, reviewCard, emptyDeck, dueOrder, isDue } from '../js/practice/leitner.js';
+import { questionHeading } from '../js/practice/heading.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
 import { parsePath, evalPath } from '../js/core/path-expr.js';
 import { smoothLoop, presetById, compileFormula } from '../js/core/path-geom.js';
@@ -150,9 +151,11 @@ check('One Newton Step keeps Example 4.7', /Example 4\.7, page 110/.test(readFil
     && book.includes('Chapter 5. The exponential')
     && !book.includes('not drawn yet')
     && !book.includes('lesson-progress'));
-  check('the 5.1 title scrolls to the picture instead of leaving the chapter',
+  check('the 5.1 row lands on the picture and the title is a heading',
     parseRoute('#chapter-exp').station == null && parseRoute('#chapter-exp').book == null
-    && book.includes("querySelector('#chapter-exp')") && book.includes('ev.preventDefault()'));
+    && book.includes("? 'chapter-exp'")
+    && book.includes("h('h2', { id: `${scope}-title` }, section.title)")
+    && book.includes('later52,\n    later53,\n    stage54,\n    later55'));
 }
 {
   const card1 = CHAPTER_5.cards['5.1.1'];
@@ -1278,5 +1281,31 @@ check('a fraction, a power, and a complex number match their equivalents',
   const kept = mergeLeitner(miss, second);
   check('a Leitner merge keeps the card that was practiced more',
     kept.cards.card.reviews === 2 && kept.cards.card.box === 2 && first.cards.card.due === '2026-11-05');
+  const flashes = [
+    { id: 'a', kind: 'flash' },
+    { id: 'b', kind: 'flash', lead: true },
+  ];
+  const unseen = dueOrder(flashes, emptyDeck(), '2026-11-05');
+  const seen = reviewCard(emptyDeck(), 'a', 'good', '2026-11-04', 1);
+  const nextDay = dueOrder(flashes, seen, '2026-11-05');
+  check('an unseen card is not due',
+    isDue(null, '2026-11-05') === false && unseen.due.length === 0 && unseen.fresh.length === 2);
+  check('a graded card is due on its day',
+    nextDay.due.length === 1 && nextDay.due[0].item.id === 'a' && nextDay.fresh.length === 1);
+  const thm41 = PRACTICE.find((it) => it.id === 'ch4-4.1-thm-4.1-blank');
+  const ex1a = PRACTICE.find((it) => it.id === 'ch4-4.1-ex-1a');
+  const thmHead = questionHeading(thm41.prompt, thm41.cite);
+  const exHead = questionHeading(ex1a.prompt, ex1a.cite);
+  check('a practice heading is the question',
+    thmHead.startsWith('Assume') && !/pages/.test(thmHead)
+    && /lim/.test(exHead) && !/page/.test(exHead));
+  let headingsOk = true;
+  for (const it of PRACTICE) {
+    if (!it.cite || !it.cite.href) continue;
+    const head = questionHeading(it.prompt, it.cite);
+    if (!head) headingsOk = false;
+    if (/^\s*(?:Theorem|Exercise)\b[^?]{0,80}\bpages?\b/.test(head) && !/[?]/.test(head) && !/___/.test(head)) headingsOk = false;
+  }
+  check('practice headings keep a question', headingsOk);
 }
 }

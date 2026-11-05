@@ -79,19 +79,23 @@ export function reviewCard(deck, id, grade, today, nowMs = Date.now()) {
   return { v: 1, cards };
 }
 
+// A card is due only after it has been graded. An unseen card is new.
 export function isDue(rec, today) {
-  if (!rec) return true;
+  if (!rec || !rec.reviews) return false;
   return String(rec.due || '') <= today;
 }
 
-// Due cards first (lower box, then id). Unseen cards count as due.
+// Due cards first (lower box, then id). Unseen cards stay in fresh.
 export function dueOrder(items, deck, today) {
   const cards = items.filter((it) => it.kind === 'flash');
   const due = [];
+  const fresh = [];
   const later = [];
   for (const it of cards) {
     const rec = deck.cards[it.id];
-    (isDue(rec, today) ? due : later).push({ item: it, rec });
+    if (!rec || !rec.reviews) fresh.push({ item: it, rec: rec || null });
+    else if (isDue(rec, today)) due.push({ item: it, rec });
+    else later.push({ item: it, rec });
   }
   const byBox = (a, b) => {
     const la = a.item && a.item.lead ? 0 : 1;
@@ -103,6 +107,7 @@ export function dueOrder(items, deck, today) {
     return a.item.id < b.item.id ? -1 : a.item.id > b.item.id ? 1 : 0;
   };
   due.sort(byBox);
+  fresh.sort(byBox);
   later.sort((a, b) => String(a.rec.due).localeCompare(String(b.rec.due)) || byBox(a, b));
-  return { due, later };
+  return { due, fresh, later };
 }

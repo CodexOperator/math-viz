@@ -1176,8 +1176,6 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   border-bottom-color: transparent;
 }
 
-.exp-later { margin: 0; }
-
 .section-node.exp-walk { scroll-margin-top: calc(var(--header-h) + var(--space-3)); }
 
 .book-node,
@@ -1358,14 +1356,39 @@ a.station-link.chapter-up {
 .book-sections [data-state="done"] .book-section-mark { color: var(--ok); }
 .book-sections [data-state="later"] .book-section-mark { color: var(--text-muted); }
 
-/* A later row opened from the book uses the stage clearance, about 8px under the sticky Book link. */
-#chapter-later-sections > .book-node {
+/* A later section is one line: Later, the number, and the title. The card's own
+   border is the mark. The row sits about 8px under the sticky Book link. */
+a.chapter-later-line {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--tap);
+  min-height: var(--tap);
+  padding: 0 0.75rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: inherit;
+  text-decoration: none;
   scroll-margin-top: 2.25rem;
 }
 
-#chapter-later-sections > .book-node.is-target {
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
+a.chapter-later-line .book-flag {
+  margin: 0;
+  flex: none;
+}
+
+a.chapter-later-line .chapter-later-title {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Room under the last camp, so that row can sit under the Book link instead of at the page end. */

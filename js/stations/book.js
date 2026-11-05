@@ -6,7 +6,7 @@
 import { BOOK, sectionHref } from '../data/book.js';
 import {
   shellChapters, CHAPTER_4, CHAPTER_5, bookChapter, chapter4ExerciseIds, chapter5ExerciseIds,
-  CHAPTER_PICTURE, pictureHref, SECTION_DOOR, stageNext, activeWalk, OPEN_CHAPTERS,
+  CHAPTER_PICTURE, pictureHref, stageNext, activeWalk, OPEN_CHAPTERS,
 } from '../data/book-path.js';
 import { test2ProblemById } from '../data/test2-problems.js';
 import {
@@ -180,13 +180,9 @@ function stageMemory(sectionId) {
     host.hidden = true;
     return host;
   }
-  host.append(
-    h('h3', null, `${flash.cite.ref}, page ${flash.cite.page}`),
-    h('p', { class: 'book-page' }, 'Howell & Mathews, Complex Analysis, 202 Updated Edition.'),
-  );
   const lines = recipeLines(flash.memory);
-  // The §5.4 formula is step 4 of the recipe. Printing it again duplicates sin(x+iy).
-  const formulaText = sectionId === '5.4' ? '' : (flash.formula || '');
+  // Step 1 of §5.1 already writes the identity. Step 4 of §5.4 already writes sin(x+iy).
+  const formulaText = sectionId === '5.1' || sectionId === '5.4' ? '' : (flash.formula || '');
   if (formulaText) {
     const formula = h('p', { id: `chapter-formula-${slug(sectionId)}` });
     appendRich(formula, formulaText);
@@ -673,33 +669,18 @@ function mountChapter5(el, ctx, focus) {
   }
 
   const scope = 'chapter-section-5-1';
-  const idea = h('p', { class: 'section-idea', id: `${scope}-idea` });
-  appendRich(idea, section.idea);
   const read = h('ul', { class: 'book-read', id: `${scope}-read` });
   section.read.forEach((item, i) => {
     read.append(h('li', null, h('a', {
       href: item.href, target: '_blank', rel: 'noopener noreferrer', id: `${scope}-read-${i + 1}`,
     }, item.pin)));
   });
-  const titleAttrs = linkAttrs(SECTION_DOOR['5.1'], `${scope}-door`);
-  titleAttrs.class = 'chapter-door';
-  // #chapter-exp is the picture on this page, not a route. Following the hash
-  // would leave the chapter for "No such place".
-  const titleDoor = h('a', titleAttrs, section.title);
-  titleDoor.addEventListener('click', (ev) => {
-    if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey || ev.button) return;
-    const frame = el.querySelector('#chapter-exp');
-    if (!frame) return;
-    ev.preventDefault();
-    frame.scrollIntoView({ block: 'start' });
-  });
   const walk = h('section', {
     class: 'section-node chapter-stage exp-walk', id: scope, 'data-section': '5.1',
   },
     h('p', { class: 'book-flag', id: `${scope}-flag` }, '5.1'),
-    h('h2', { id: `${scope}-title` }, titleDoor),
+    h('h2', { id: `${scope}-title` }, section.title),
     h('p', { class: 'book-page' }, `Page ${section.page}`),
-    idea,
     read,
     h('p', { class: 'book-door', id: 'chapter-section-5-1-practice-row' },
       h('a', { href: `#${prepHash(5, '5.1')}`, id: 'chapter-section-5-1-practice' }, 'Practice 5.1')),
@@ -734,18 +715,21 @@ function mountChapter5(el, ctx, focus) {
       h('a', { href: `#${prepHash(5, '5.4')}`, id: 'chapter-section-5-4-practice' }, 'Practice 5.4')),
     stageMemory('5.4'));
 
-  const later = h('ol', { class: 'book-path exp-later', id: 'chapter-later-sections' });
-  for (const s of bookChapter(5).sections) {
-    if (s.id === '5.1' || s.id === '5.4') continue;
-    const href = `#chapter-5-${slug(s.id)}`;
-    later.append(h('li', {
-      class: 'book-node', id: `chapter-later-${slug(s.id)}`, 'data-section': s.id, 'data-state': 'later',
+  function laterLine(s) {
+    return h('a', {
+      class: 'chapter-later-line',
+      id: `chapter-later-${slug(s.id)}`,
+      href: `#chapter-5-${slug(s.id)}`,
+      'data-section': s.id,
+      'data-state': 'later',
     },
-      h('a', { class: 'book-row', id: `chapter-later-link-${slug(s.id)}`, href },
-        h('p', { class: 'book-flag' }, 'Later'),
-        h('h2', null, `${s.id} ${s.title}`),
-        h('p', { class: 'book-page' }, `Page ${s.page}`))));
+      h('span', { class: 'book-flag' }, 'Later'),
+      h('span', { class: 'chapter-later-title' }, `${s.id} ${s.title}`),
+      h('span', { class: 'sr-only' }, `Page ${s.page}`));
   }
+  const later52 = laterLine(bookChapter(5).sections.find((s) => s.id === '5.2'));
+  const later53 = laterLine(bookChapter(5).sections.find((s) => s.id === '5.3'));
+  const later55 = laterLine(bookChapter(5).sections.find((s) => s.id === '5.5'));
 
   function paintStatus() {
     const t = chapterTally(CHAPTER_5.sections, ticks);
@@ -795,19 +779,25 @@ function mountChapter5(el, ctx, focus) {
     off,
     h('div', { class: 'book-next', id: 'chapter-next-row' }, status),
     walk,
+    later52,
+    later53,
     stage54,
-    later,
+    later55,
     upLink('chapter-back-end', '#book', 'The Book'),
     h('div', { class: 'chapter-end-pad', 'aria-hidden': 'true' }));
 
   paint();
 
   const laterId = focus && focus !== '5.1' && focus !== '5.4' && !CHAPTER_5.cards[focus] ? `chapter-later-${slug(focus)}` : '';
-  const targetId = focus === '5.1' || CHAPTER_5.cards[focus]
-    ? scope
-    : focus === '5.4'
-      ? 'chapter-section-5-4'
-      : laterId;
+  // The book row and #chapter-5-5-1 land on the square, the same place a press
+  // on the section title used. The title itself is a heading.
+  const targetId = focus === '5.1'
+    ? 'chapter-exp'
+    : CHAPTER_5.cards[focus]
+      ? scope
+      : focus === '5.4'
+        ? 'chapter-section-5-4'
+        : laterId;
   const target = targetId ? el.querySelector(`#${targetId}`) : null;
   if (target) {
     target.classList.add('is-target');

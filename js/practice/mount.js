@@ -172,6 +172,11 @@ export function mountPrep(el, ctx, spec) {
     toldWhy = right ? s.why : told.why;
     slip = !right && told.matched;
     phase = 'told';
+    // A practice check is stored the same way a flash grade is stored.
+    if (item.kind !== 'flash' && item.id) {
+      deck = reviewCard(deck, item.id, right ? 'good' : 'again', today);
+      saveDeck(ctx.store, deck);
+    }
     paint();
   }
 
@@ -224,23 +229,26 @@ export function mountPrep(el, ctx, spec) {
 
   function flashList() {
     const order = dueOrder(pool, deck, today);
-    if (order.due.length) return { rows: order.due, early: false };
-    return { rows: order.later, early: order.later.length > 0 };
+    if (order.due.length) return { rows: order.due, early: false, status: `${order.due.length} due.` };
+    if (order.fresh.length) return { rows: order.fresh, early: false, status: `${order.fresh.length} new.` };
+    return {
+      rows: order.later,
+      early: order.later.length > 0,
+      status: order.later.length ? 'Nothing is due. This card is early.' : 'No flashcards in this set.',
+    };
   }
 
   function paintCards() {
-    const { rows, early } = flashList();
+    const { rows, early, status: flashStatus } = flashList();
     if (!rows.length) {
-      status.textContent = 'No flashcards in this set.';
+      status.textContent = flashStatus;
       renderFlash(stage, { item: null }, {});
       return;
     }
     if (flashCursor >= rows.length) flashCursor = 0;
     const row = rows[flashCursor];
     const rec = deck.cards[row.item.id];
-    status.textContent = early
-      ? 'Nothing is due. This card is early.'
-      : `${rows.length} due.`;
+    status.textContent = flashStatus;
     renderFlash(stage, {
       item: row.item,
       show: flashShow,
