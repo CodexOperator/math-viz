@@ -239,7 +239,7 @@ export function start() {
     list.append(el('li', {}, el('a', {
       class: 'nav-link', id: 'nav-test-prep', href: '#test-prep', 'aria-label': 'Test prep',
     }, [
-      el('span', { class: 'nav-num', 'aria-hidden': 'true' }, '·'),
+      el('span', { class: 'nav-num', 'aria-hidden': 'true' }, ''),
       el('span', { class: 'nav-title' }, 'Test prep'),
     ])));
     nav.append(list);

@@ -1757,3 +1757,21 @@ ANOTHER BATCH. The status card, the Book link, the Mandelbrot still, and the coa
 The Chapter 5 status card and Play are inside the window at 390 and at 1280, light and dark. The square stays 256px so that card and that button both fit. The walk still opens on the bottom of the circle, and the claim names that frame. The green ring is 44px. The Book link is the 44px station link, stuck under the header, with the section flag 8px below it. Continue opens `#chapter-4` at the top, and Back puts the book back where it was scrolled.
 
 The Mandelbrot and Julia stills are drawn at the size they are shown, 161px on the phone and 174px at 1280, and both are on the §4.2 screen. Julia's + and − are 44×44 under a coarse pointer, and a press on the edge of the button zooms. The mouse buttons stay the plane's 32px. §§5.2, 5.3, and 5.5 are Later cards that open those rows, and the flag is clear of the Book link. Practice 5.4 lands at the top of Test prep, with a 44px way back to Chapter 5. The drawer is chapters 1–7, then Test prep, and at 1280 that list is the sidebar, with the chapter you are on marked. The type, the paper, the white card, and the blue Continue button are the station pages' own.
+
+## Chapter 4 and 5, batch 4
+
+Started from `55aa73b` on `cursor/chapter-4-5-2649`, which already has the reviewer fix at `fef9ced`. The merged list from the closed batch-3 council.
+
+The §5.4 recipe splits only after a sentence, so "page 150." and "page 149." stay on the line. The stage card and the print sheet are five rows. The formula line that repeated \(\sin(x+iy)\) is gone. The flash question is not on that card. The deck still has the card.
+
+On the book, §5.4 reads Open and opens the stage. §§5.2, 5.3, and 5.5 read Later and still open their cards. "An orbit is a sequence" is the Chapter 4 lede only. The line above the §4.2 stills is gone. Later chapters are one line, the number and the title. Chapter 4, flagged Next, starts on the first screen at 390×844 (top 590) and at 1280×800 (top 525), light and dark. Continue stays 111×44 and opens `#chapter-4`. The drawer row reads Test prep, with no middot.
+
+The open stage card is the numbered recipe. Practice headlines for the new drills stop at the question. The exercise and the page stay on the source line. The §5.4 method sentence is the hint. Endless sits on the generator card. The three mode chips stay one row.
+
+The status card sits under Play. The square is the phone column, 358px, and about 355px on the laptop, which is the room left above Play. The claim and Play stay on the first screen in both themes. The status card starts just under that screen.
+
+The §4.2 recipe says disconnected. Example 4.10 prints `0 → i → −1+i → −i`. Exercise 6, page 129, answers No.
+
+`node tools/check_vectors.mjs` 234/234. `node tools/fractal-smoke.mjs` passed. `node kit/smoke.mjs` passed. No live `kit/` import.
+
+Still open: §§5.2, 5.3, and 5.5 have no picture. Chapters 1–3, 6, and 7 are roadmap lines. The circuit stations stay off the §5.4 stage. A few older practice prompts, outside the drills this batch opened, still put an exercise citation in the headline. The laptop square does not fill the column. The height of the first screen is the limit.

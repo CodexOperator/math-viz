@@ -21,6 +21,7 @@ import { mountPrep } from '../practice/mount.js';
 import { paintSetStill } from '../book/stills.js';
 import { PRACTICE } from '../practice/catalog.js';
 import { answersMatch, explainMiss } from '../practice/check.js';
+import { recipeLines } from '../practice/recipe.js';
 
 function slug(id) {
   return String(id).replace(/\./g, '-');
@@ -104,6 +105,27 @@ function fmtPair(re, im) {
   return `${n(re)} ${im < 0 ? '−' : '+'} ${n(Math.abs(im))}i`;
 }
 
+// Example 4.10 prints i, −1+i, and −i, not the two-decimal address.
+function textbookTerm(re, im) {
+  const snap = (v) => {
+    const n = Math.round(v);
+    return Math.abs(v - n) < 0.005 ? n : null;
+  };
+  const r = snap(re);
+  const i = snap(im);
+  if (r === null || i === null) return fmtPair(re, im);
+  const minus = '−';
+  const imag = (n) => {
+    if (n === 1) return 'i';
+    if (n === -1) return `${minus}i`;
+    return n < 0 ? `${minus}${Math.abs(n)}i` : `${n}i`;
+  };
+  if (i === 0) return r < 0 ? `${minus}${Math.abs(r)}` : String(r);
+  if (r === 0) return imag(i);
+  const real = r < 0 ? `${minus}${Math.abs(r)}` : String(r);
+  return i < 0 ? `${real}${imag(i)}` : `${real}+${imag(i)}`;
+}
+
 function sequenceTerms(re, im, count) {
   const lines = [];
   let p = { re, im };
@@ -122,7 +144,7 @@ function orbitFromZero(cRe, cIm, count) {
       re: z.re * z.re - z.im * z.im + cRe,
       im: 2 * z.re * z.im + cIm,
     };
-    lines.push(fmtPair(z.re, z.im));
+    lines.push(textbookTerm(z.re, z.im));
   }
   return lines;
 }
@@ -162,27 +184,21 @@ function stageMemory(sectionId) {
     h('h3', null, `${flash.cite.ref}, page ${flash.cite.page}`),
     h('p', { class: 'book-page' }, 'Howell & Mathews, Complex Analysis, 202 Updated Edition.'),
   );
-  if (flash.formula) {
+  const lines = recipeLines(flash.memory);
+  // The §5.4 formula is step 4 of the recipe. Printing it again duplicates sin(x+iy).
+  const formulaText = sectionId === '5.4' ? '' : (flash.formula || '');
+  if (formulaText) {
     const formula = h('p', { id: `chapter-formula-${slug(sectionId)}` });
-    appendRich(formula, flash.formula);
+    appendRich(formula, formulaText);
     host.append(formula);
   }
   const ol = h('ol');
-  for (const step of String(flash.memory || '').split(/\s(?=\d+\.\s)/)) {
+  for (const step of lines) {
     const li = h('li');
-    appendRich(li, step.replace(/^\d+\.\s*/, ''));
+    appendRich(li, step);
     ol.append(li);
   }
-  const back = h('p', { id: `chapter-flash-back-${slug(sectionId)}`, hidden: '' });
-  appendRich(back, flash.steps[0].answer);
-  const show = h('button', { type: 'button', class: 'btn', id: `chapter-flash-${slug(sectionId)}` }, 'Show the card');
-  show.addEventListener('click', () => {
-    back.hidden = false;
-    show.hidden = true;
-  });
-  const front = h('p');
-  appendRich(front, flash.prompt);
-  host.append(ol, front, h('div', { class: 'problem-actions' }, show), back);
+  host.append(ol);
   return host;
 }
 
@@ -274,8 +290,13 @@ export function mountBookHome(el, ctx, spec) {
     const section = walkSections().find((s) => s.id === id);
     const mark = row.querySelector('.book-section-mark');
     if (!section) {
-      row.setAttribute('data-state', 'later');
-      if (mark) mark.textContent = '';
+      if (id === '5.4') {
+        row.setAttribute('data-state', 'open');
+        if (mark) mark.textContent = 'Open';
+      } else {
+        row.setAttribute('data-state', 'later');
+        if (mark) mark.textContent = 'Later';
+      }
       continue;
     }
     const finished = sectionFinished(section, ticks);
@@ -507,9 +528,7 @@ function mountChapter4(el, ctx, focus) {
       themeObs.disconnect();
       if (box) box.disconnect();
     };
-    return h('div', null,
-      h('p', { id: 'chapter-4-2-orbit-line' }, 'The orbit is the sequence from §4.1.'),
-      sets);
+    return sets;
   }
 
   function beatNewton() {
@@ -773,9 +792,9 @@ function mountChapter5(el, ctx, focus) {
       h('p', { class: 'where-line', id: 'where-line' }, 'Chapter 5 · The exponential'),
       h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Drag the green dot. Play turns the angle. A blank fills when the picture makes it true.'),
       sourceTag({ pin: 'Chapter 5, Elementary Functions, page 130', href: sectionHref('sec_exponential-function.html') })),
-    h('div', { class: 'book-next', id: 'chapter-next-row' }, status),
     picture,
     off,
+    h('div', { class: 'book-next', id: 'chapter-next-row' }, status),
     walk,
     stage54,
     later,

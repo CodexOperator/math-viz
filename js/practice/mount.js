@@ -79,9 +79,6 @@ export function mountPrep(el, ctx, spec) {
 
   const status = h('p', { class: 'book-status', id: 'practice-status' });
   const back = h('a', { class: 'btn', id: 'practice-back', href: chapter ? `#chapter-${chapter}` : '#book' }, chapter ? `Chapter ${chapter}` : 'The Book');
-  const endlessBtn = h('button', {
-    type: 'button', class: 'chip', id: 'practice-endless', 'aria-pressed': 'false',
-  }, 'Endless');
   const modeRow = h('div', { class: 'chips', id: 'practice-modes', role: 'group', 'aria-label': 'Test prep' });
   for (const [id, label] of [['practice', 'Practice'], ['memory', 'Memory sheet'], ['cards', 'Flashcards']]) {
     const btn = h('button', { type: 'button', class: 'chip', id: `practice-mode-${id}`, 'aria-pressed': id === mode ? 'true' : 'false' }, label);
@@ -90,14 +87,6 @@ export function mountPrep(el, ctx, spec) {
       paint();
     });
     modeRow.append(btn);
-  }
-  const hasGenerator = pool.some((it) => it.generator);
-  if (hasGenerator) {
-    endlessBtn.addEventListener('click', () => {
-      endless = !endless;
-      endlessBtn.setAttribute('aria-pressed', String(endless));
-      paint();
-    });
   }
   const stage = h('div', { class: 'practice-stage', id: 'practice-stage' });
   const doors = h('div', { class: 'practice-doors', id: 'practice-doors' },
@@ -216,12 +205,14 @@ export function mountPrep(el, ctx, spec) {
       kindLabel: KIND_LABEL[item.kind] || 'Practice',
       count: `Step ${Math.min(step + 1, item.steps.length)} of ${item.steps.length}`,
       showGenerate: !!(item.generator && phase === 'told' && step >= item.steps.length - 1 && !endless),
+      showEndless: !!item.generator,
       endless,
     }, {
       answer: onAnswer,
       hint: () => { hint += 1; paint(); },
       next: advance,
       generate: generateAnother,
+      endless: () => { endless = !endless; paint(); },
       memory: () => { mode = 'memory'; paint(); },
     });
   }
@@ -273,7 +264,6 @@ export function mountPrep(el, ctx, spec) {
       const btn = modeRow.querySelector(`#practice-mode-${id}`);
       if (btn) btn.setAttribute('aria-pressed', String(id === mode));
     }
-    endlessBtn.hidden = !hasGenerator || mode !== 'practice';
     if (mode === 'memory') paintMemory();
     else if (mode === 'cards') paintCards();
     else paintPractice();
@@ -291,7 +281,7 @@ export function mountPrep(el, ctx, spec) {
       h('h1', { id: 'practice-title' }, 'Test prep'),
       h('p', { class: 'station-lede', id: 'practice-lede' }, lede)),
     h('div', { class: 'book-next', id: 'practice-next-row' }, status, back),
-    h('div', { class: 'practice-toolbar', id: 'practice-toolbar' }, modeRow, hasGenerator ? endlessBtn : null),
+    h('div', { class: 'practice-toolbar', id: 'practice-toolbar' }, modeRow),
     stage,
     doors);
   paint();

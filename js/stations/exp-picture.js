@@ -104,6 +104,7 @@ export function mountExpPicture(parent, pose) {
         claimText = scene.claim.text;
         claim.replaceChildren();
         appendRich(claim, claimText);
+        fitSquare();
       }
       claim.dataset.holds = scene.claim.holds ? 'true' : 'false';
       stage.dataset.probeRe = String(scene.x);
@@ -116,13 +117,36 @@ export function mountExpPicture(parent, pose) {
 
   play.addEventListener('click', () => player.toggle());
 
+  // The square uses the column, unless the claim and Play need that room
+  // to stay on the first screen. Status sits under Play, so it is not reserved.
+  function fitSquare() {
+    if (!frame.isConnected) return;
+    const parent = frame.parentElement;
+    const top = frame.getBoundingClientRect().top;
+    const gap = parent ? (parseFloat(getComputedStyle(parent).rowGap) || 0) : 0;
+    const below = claim.offsetHeight + play.offsetHeight + gap * 2 + 12;
+    const room = window.innerHeight - top - below;
+    const column = parent ? parent.clientWidth : room;
+    const next = Math.floor(Math.min(column, Math.max(room, 0)));
+    if (next < 96) return;
+    const current = parseFloat(frame.style.width);
+    if (Number.isFinite(current) && Math.abs(current - next) < 2) return;
+    frame.style.width = `${next}px`;
+  }
+
   let handleObserver = null;
   if (typeof ResizeObserver === 'function') {
     handleObserver = new ResizeObserver(() => {
       handleW = 0;
       placeHandle();
+      fitSquare();
     });
     handleObserver.observe(frame);
+  }
+  window.addEventListener('resize', fitSquare);
+  requestAnimationFrame(fitSquare);
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => { fitSquare(); }).catch(() => {});
   }
 
   function dotClient() {
@@ -199,6 +223,7 @@ export function mountExpPicture(parent, pose) {
   }
 
   return function unmount() {
+    window.removeEventListener('resize', fitSquare);
     if (handleObserver) handleObserver.disconnect();
     player.destroy();
     stage.removeEventListener('pointerdown', onDown);

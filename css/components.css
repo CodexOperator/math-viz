@@ -1111,20 +1111,18 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 }
 
 .exp-stage {
-  /* The status card sits above the square. 16rem leaves that card, the claim,
-     and Play inside a 844px phone. */
-  width: min(100%, 16rem);
+  /* Status sits under Play. The square takes the column on a phone, about
+     358px, unless the claim and Play need the leftover room instead.
+     The picture measures that room once it is on the page. */
+  width: min(100%, calc(100dvh - 30rem));
   max-width: 100%;
   aspect-ratio: 1;
   touch-action: none;
 }
 
-/* A wide window has room beside the column. Size the square from the space
-   above Play, about 440px, and do not inherit the phone's height cap. */
 @media (min-width: 52rem) {
   .exp-stage {
-    /* 18rem keeps the status card, the claim, and Play inside an 800px window. */
-    width: min(100%, 16.5rem, calc(100dvh - 34rem));
+    width: min(100%, calc(100dvh - 23rem));
     max-height: none;
   }
 }
@@ -1352,8 +1350,50 @@ a.station-link.chapter-up {
 .book-section-page { margin-left: auto; font-variant-numeric: tabular-nums; }
 .book-section-mark { font-size: 0.82rem; font-weight: 700; }
 .book-section-mark:empty { display: none; }
-.book-sections [data-state="next"] .book-section-mark { color: var(--text); }
+.book-sections [data-state="next"] .book-section-mark,
+.book-sections [data-state="open"] .book-section-mark { color: var(--text); }
 .book-sections [data-state="done"] .book-section-mark { color: var(--ok); }
+.book-sections [data-state="later"] .book-section-mark { color: var(--text-muted); }
+
+/* A later chapter on the roadmap is one line: the number and the title.
+   The Next card stays a card, so it can sit under the status on the first screen. */
+#book-path > .book-node[data-state="later"] {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#book-path > .book-node[data-state="later"] > a.book-row {
+  position: relative;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  min-height: var(--tap);
+  gap: 0.5rem;
+}
+
+#book-path > .book-node[data-state="later"] .book-flag,
+#book-path > .book-node[data-state="later"] .book-page {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+#book-path > .book-node[data-state="later"] h2 {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 1.02rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
 
 .book-read { margin: 0; padding-left: 1.2rem; }
 .book-read li { margin: 0.15rem 0; }
@@ -1383,6 +1423,10 @@ a.station-link.chapter-up {
   min-width: 0;
 }
 .practice-toolbar .chips { min-width: 0; }
+#practice-endless[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
 .practice-stage,
 .practice-card,
 .practice-sheet,

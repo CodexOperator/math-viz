@@ -2,6 +2,7 @@
 // Prose with $...$ goes through appendRich. Nothing here uses innerHTML.
 
 import { h, appendRich, sourceTag } from '../stations/test2-ui.js';
+import { recipeSteps } from './recipe.js';
 
 function rich(text, attrs) {
   const node = h('p', attrs || null);
@@ -9,9 +10,16 @@ function rich(text, attrs) {
   return node;
 }
 
-function recipeSteps(memory) {
-  const parts = String(memory || '').split(/\s(?=\d+\.\s)/).map((s) => s.replace(/^\d+\.\s*/, '').trim()).filter(Boolean);
-  return parts.length > 1 ? parts : null;
+function endlessButton(vm, act) {
+  if (!vm.showEndless || !act || !act.endless) return null;
+  const btn = h('button', {
+    type: 'button',
+    class: 'btn',
+    id: 'practice-endless',
+    'aria-pressed': vm.endless ? 'true' : 'false',
+  }, 'Endless');
+  btn.addEventListener('click', act.endless);
+  return btn;
 }
 
 function fillStep(parent, text, answer) {
@@ -104,6 +112,8 @@ export function renderCard(host, vm, act) {
       check.addEventListener('click', () => act.answer(input.value));
       kids.push(field, h('div', { class: 'problem-actions' }, check));
     }
+    const endless = endlessButton(vm, act);
+    if (endless) actions.push(endless);
     if (step.hints && step.hints.length) {
       const hintBtn = h('button', {
         type: 'button', class: 'btn', id: 'practice-hint',
@@ -138,6 +148,8 @@ export function renderCard(host, vm, act) {
     if (vm.showGenerate) {
       actions.push(h('button', { type: 'button', class: 'btn', id: 'practice-generate' }, 'Generate another'));
     }
+    const endless = endlessButton(vm, act);
+    if (endless) actions.push(endless);
     const last = vm.step >= item.steps.length - 1;
     const nextLabel = !last ? 'Next step' : (vm.endless && item.generator ? 'Generate another' : 'Next');
     actions.push(h('button', { type: 'button', class: 'btn btn-primary', id: 'practice-next' }, nextLabel));

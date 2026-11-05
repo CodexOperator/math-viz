@@ -167,7 +167,7 @@ export const CHAPTER_4 = deepFreeze({
       id: '4.1',
       title: 'Sequences and Series',
       page: 102,
-      idea: 'An orbit is a sequence. The next landing is the same rule, applied to where you just were.',
+      idea: 'The next landing is the same rule, applied to where you just were.',
       summit: 'A sequence settles when its terms eventually sit in every disk around the limit.',
       read: [
         { pin: 'Definition 4.1, page 103', href: sectionHref(S41, 'Seq_Lim_Def') },
@@ -179,7 +179,7 @@ export const CHAPTER_4 = deepFreeze({
       id: '4.2',
       title: 'Julia and Mandelbrot Sets',
       page: 109,
-      idea: 'An orbit is the sequence from §4.1. The picture records every start, not one list.',
+      idea: 'The picture records every start, not one list.',
       summit: 'The Julia set of $z^2+c$ is one piece exactly when the orbit of $0$ stays bounded.',
       read: [
         { pin: 'Theorem 4.9, page 113', href: sectionHref(S42, 'Kc_Connected') },

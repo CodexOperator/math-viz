@@ -75,13 +75,14 @@
       "href": "https://complexanalysis.org/web/sec_exponential-function.html#x5_1_2"
     },
     "kind": "next-step-mc",
-    "prompt": "Precisely where do the images of the points $\\pm i\\pi$ land under $w=e^z$? Exercise 2(c), page 135. Figure 5.2 is on page 133.",
+    "prompt": "Precisely where do the images of the points $\\pm i\\pi$ land under $w=e^z$?",
     "steps": [
       {
         "text": "Both points land at ___.",
         "answer": "$-1$",
         "why": "$e^{i\\pi}=-1$ and $e^{-i\\pi}=-1$ by Theorem 5.1(iii), page 131. They meet at the left-hand point of the unit circle.",
         "hints": [
+          "Figure 5.2 is on page 133.",
           "Use $e^{i\\theta}=\\cos\\theta+i\\sin\\theta$.",
           "Both angles $\\pi$ and $-\\pi$ have cosine $-1$ and sine $0$."
         ],
@@ -158,8 +159,7 @@
       }
     ],
     "generator": null,
-    "memory": "1. $\\sin z=(e^{iz}-e^{-iz})/(2i)$. Identity (5.34), page 150. 2. $\\cos z=(e^{iz}+e^{-iz})/2$. Identity (5.36), page 150. 3. $\\frac{d}{dz}\\sin z=\\cos z$ and $\\frac{d}{dz}\\cos z=-\\sin z$. Theorem 5.4, page 149. 4. $\\sin(x+iy)=\\sin x\\cosh y+i\\cos x\\sinh y$. Identity (5.35), page 150. 5. Vertical segments map to hyperbolas. Figure 5.7, page 152.",
-    "formula": "$\\sin(x+iy)=\\sin x\\cosh y+i\\cos x\\sinh y$."
+    "memory": "1. $\\sin z=(e^{iz}-e^{-iz})/(2i)$. Identity (5.34), page 150. 2. $\\cos z=(e^{iz}+e^{-iz})/2$. Identity (5.36), page 150. 3. $\\frac{d}{dz}\\sin z=\\cos z$ and $\\frac{d}{dz}\\cos z=-\\sin z$. Theorem 5.4, page 149. 4. $\\sin(x+iy)=\\sin x\\cosh y+i\\cos x\\sinh y$. Identity (5.35), page 150. 5. Vertical segments map to hyperbolas. Figure 5.7, page 152."
   },
   {
     "id": "ch5-5.4-cos-derivative",
@@ -171,12 +171,15 @@
       "href": "https://complexanalysis.org/web/sec_trig-hyperbolics.html"
     },
     "kind": "proof-mc",
-    "prompt": "Establish $\\frac{d}{dz}\\cos z=-\\sin z$. Exercise 1, page 156. The method is the one in the proof of Theorem 5.4, page 149.",
+    "prompt": "Establish $\\frac{d}{dz}\\cos z=-\\sin z$.",
     "steps": [
       {
         "text": "For $n\\ge 1$, the derivative of $(-1)^n z^{2n}/(2n)!$ is ___.",
         "answer": "$(-1)^n z^{2n-1}/(2n-1)!$",
         "why": "The constant term, $n=0$, has derivative $0$, so the sum starts at $n=1$. Bring down $2n$ and cancel it against $(2n)!$. The book's solution of Exercise 1, page 156, starts the sum there.",
+        "hints": [
+          "The method is the one in the proof of Theorem 5.4, page 149."
+        ],
         "choices": [
           "$(-1)^n z^{2n-1}/(2n-1)!$",
           "$(-1)^n z^{2n-1}/(2n)!$",
@@ -238,7 +241,7 @@
       "href": "https://complexanalysis.org/web/sec_trig-hyperbolics.html"
     },
     "kind": "next-step-blank",
-    "prompt": "Express $\\sin(2i)$ in the form $u+iv$. Exercise 6(c), page 157. Identity (5.35), page 150.",
+    "prompt": "Express $\\sin(2i)$ in the form $u+iv$.",
     "steps": [
       {
         "text": "The real part is ___.",
@@ -248,6 +251,7 @@
         ],
         "why": "$\\sin(2i)=\\sin 0\\cosh 2+i\\cos 0\\sinh 2$. The real part is $0$. Identity (5.35), page 150.",
         "hints": [
+          "Identity (5.35), page 150.",
           "$2i$ has real part $0$.",
           "$\\sin 0=0$."
         ]

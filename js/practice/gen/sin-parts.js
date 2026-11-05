@@ -56,7 +56,7 @@ export function generate(seed) {
   const y = pickInt(rand, -2, 2);
   const { real, imag } = parts(x, y);
   return {
-    prompt: `Write $\\sin(${zTex(x, y)})$ as $u+iv$. Identity (5.35), page 150.`,
+    prompt: `Write $\\sin(${zTex(x, y)})$ as $u+iv$.`,
     steps: [
       {
         text: 'The real part is ___.',

@@ -59,7 +59,7 @@ function termStep(centre) {
 
 function evenFactorial(cx, cy) {
   return {
-    prompt: 'Use the ratio test on $\\sum_{n=0}^{\\infty} z^n/(2n)!$. Theorem 4.16, page 125.',
+    prompt: 'Use the ratio test on $\\sum_{n=0}^{\\infty} z^n/(2n)!$.',
     steps: [
       {
         text: '$(2n)!/(2n+2)!$ simplifies to ___.',
@@ -85,7 +85,7 @@ function evenFactorial(cx, cy) {
 function shiftedFactorial(cx, cy) {
   const centre = texComplex(cx, cy);
   return {
-    prompt: `Use the ratio test on $\\sum_{n=0}^{\\infty} (z-(${centre}))^n/(n+1)!$. Theorem 4.16, page 125.`,
+    prompt: `Use the ratio test on $\\sum_{n=0}^{\\infty} (z-(${centre}))^n/(n+1)!$.`,
     steps: [
       {
         text: '$(n+1)!/(n+2)!$ simplifies to ___.',

@@ -1262,7 +1262,7 @@
       }
     ],
     "generator": null,
-    "memory": "1. Start at $0$ and iterate $z^2+c$. 2. If that orbit stays bounded, the Julia set is one piece. 3. If it leaves, the Julia set is dust.",
+    "memory": "1. Start at $0$ and iterate $z^2+c$. 2. If that orbit stays bounded, the Julia set is one piece. 3. If it leaves, the Julia set is disconnected.",
     "formula": "The Julia set is connected iff the orbit of $0$ is bounded.",
     "lead": true
   },
@@ -1276,7 +1276,7 @@
       "href": "https://complexanalysis.org/web/sec_julia-mandelbrot.html#x4_2_4"
     },
     "kind": "mc",
-    "prompt": "On the unit circle, $z_0$ is a $2^n$-th root of unity. Its argument is ___. Exercise 4(c), page 117.",
+    "prompt": "On the unit circle, $z_0$ is a $2^n$-th root of unity. Its argument is ___.",
     "steps": [
       {
         "text": "The argument is ___.",
@@ -1529,7 +1529,7 @@
       "href": "https://complexanalysis.org/web/sec_julia-mandelbrot.html#x4_2_4"
     },
     "kind": "next-step-mc",
-    "prompt": "For $f_0(z)=z^2$, if $|z_0|<1$, the iterates ___. Exercise 4(a), page 117.",
+    "prompt": "For $f_0(z)=z^2$, if $|z_0|<1$, the iterates ___.",
     "steps": [
       {
         "text": "The sequence ___.",
@@ -1571,7 +1571,7 @@
       "href": "https://complexanalysis.org/web/sec_julia-mandelbrot.html#x4_2_4"
     },
     "kind": "next-step-mc",
-    "prompt": "For $f_0(z)=z^2$, if $|z_0|>1$, the iterates ___. Exercise 4(b), page 117.",
+    "prompt": "For $f_0(z)=z^2$, if $|z_0|>1$, the iterates ___.",
     "steps": [
       {
         "text": "The sequence ___.",
@@ -1613,7 +1613,7 @@
       "href": "https://complexanalysis.org/web/sec_julia-mandelbrot.html#x4_2_4"
     },
     "kind": "next-step-mc",
-    "prompt": "For $f_0(z)=z^2$, if $|z_0|=1$, the argument ___. Exercise 4(c), page 117.",
+    "prompt": "For $f_0(z)=z^2$, if $|z_0|=1$, the argument ___.",
     "steps": [
       {
         "text": "On the unit circle the orbit ___.",
@@ -1655,7 +1655,7 @@
       "href": "https://complexanalysis.org/web/sec_julia-mandelbrot.html#Kc_Connected"
     },
     "kind": "next-step-mc",
-    "prompt": "The orbit of $0$ at $c=i$ is $0,\\, i,\\, -1+i,\\, -i$, and then it repeats. Theorem 4.9, page 113.",
+    "prompt": "The orbit of $0$ at $c=i$ is $0,\\, i,\\, -1+i,\\, -i$, and then it repeats.",
     "steps": [
       {
         "text": "The Julia set is ___.",
@@ -1799,7 +1799,7 @@
       "href": "https://complexanalysis.org/web/sec_power-series.html#x4_4_6"
     },
     "kind": "next-step-mc",
-    "prompt": "Does there exist $\\sum c_n z^n$ that converges at $4-i$ and diverges at $2+3i$? Exercise 6, page 129. Theorem 4.15, page 124.",
+    "prompt": "Does there exist $\\sum c_n z^n$ that converges at $4-i$ and diverges at $2+3i$?",
     "steps": [
       {
         "text": "$|4-i|$ equals ___.",
@@ -1852,27 +1852,27 @@
         ]
       },
       {
-        "text": "Theorem 4.15 says the series ___.",
-        "answer": "converges at both",
-        "why": "$\\sqrt{13}<\\sqrt{17}$, so $2+3i$ is closer to the centre. Convergence at $4-i$ spreads to it. Theorem 4.15, page 124. There is no series that converges at $4-i$ and diverges at $2+3i$.",
+        "text": "Does such a series exist?",
+        "answer": "No",
+        "why": "$\\sqrt{13}<\\sqrt{17}$, so $2+3i$ is closer to the centre. Theorem 4.15, page 124, spreads convergence inward. Any series that converges at $4-i$ also converges at $2+3i$, so no such series exists.",
         "choices": [
-          "converges at both",
+          "No",
+          "Yes",
           "diverges at $2+3i$",
-          "$R$ goes to $\\infty$",
-          "converges only at $4-i$"
+          "$R$ goes to $\\infty$"
         ],
         "misses": [
           {
+            "choice": "Yes",
+            "why": "$2+3i$ is closer to the centre than $4-i$. Theorem 4.15, page 124, spreads convergence inward, so a series cannot converge at $4-i$ and diverge at $2+3i$."
+          },
+          {
             "choice": "diverges at $2+3i$",
-            "why": "$2+3i$ is closer to the centre than $4-i$. Theorem 4.15, page 124, spreads convergence inward, so the series converges at both."
+            "why": "$2+3i$ is closer to the centre than $4-i$. Theorem 4.15, page 124, spreads convergence inward, so the series converges at both. The answer is no."
           },
           {
             "choice": "$R$ goes to $\\infty$",
-            "why": "The radius does not go to $\\infty$. Theorem 4.15 compares the two distances to the centre."
-          },
-          {
-            "choice": "converges only at $4-i$",
-            "why": "Convergence at one point forces every closer point. $2+3i$ is closer, so both points converge. Theorem 4.15, page 124."
+            "why": "The radius does not go to $\\infty$. Theorem 4.15 compares the two distances to the centre, and the closer point is pulled in."
           }
         ]
       },
