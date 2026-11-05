@@ -1636,3 +1636,59 @@ The worked card prints every step and every reason before the attempt, and the c
 ### What to keep
 
 The fade after a shown proof is the right shape. §4.1 goes worked example, then the same proof, one blank, later lines hidden, "Your answer", Check on the screen at both widths. A first miss is "Not that one." plus one hint, in view, in both themes, and the box is empty for a second try. A second miss fills the line and gives one sentence with a page. A hit fills the line and "Yes." is the green token, light and dark. The choices are the real mistakes, and the reason names them. The memory sheet is the formulas, the one-line takeaways, the pages, and Print. Flashcards are one card, front then back, Again and Got it, no flip, and the count stays "1 of 17" then "2 of 17". Chapter 4's first screen has the idea sentence and a 44px "Test prep · 4.1". The book says which chapters are closed. The paper, the type, and the dark theme are the station pages' own. Test 1 and Test 2 stay two rows under the card.
+
+## ux-veteran (practice batch 5)
+
+Branch `cursor/practice-engine`, tip `87c474d`. Preview https://practice-preview.complexanalysis.pages.dev. The practice files on that preview match this tip (`js/practice/mount.js`, `js/practice/render.js`, `css/components.css`). Walked as a student. Headless Chrome, touch, fresh storage. Phone first: 390×844, light, then the same doors in the dark. Then 1280×800, light and dark. The book, the drawer, Chapter 4, Test prep (worked step, proof blank, a miss, the next hint), flashcards, the memory sheet, and §5.1's four choices. No product code was changed. No console errors. No failed requests. `scrollWidth` matched the window on the book, on Test prep, and on the flashcards, at 390 and at 1280, in both themes.
+
+### Verdict
+
+ANOTHER BATCH. The shell is the site's own, and the worked step, the box, and Check now fit. What a thumb still misses is the hint control on the proof, the way back to the chapter, and a count that moves while the card stays put.
+
+### First screen, 390×844
+
+Light, scroll 0. The document title is "The Map · One Point, Two Addresses". The heading is The Book. The name wraps, 180×37. Theme is 44×44. Chapters is 118×44. The where-line is "The book · Chapters 1–7". Continue is 111×44 at y = 291, and it opens `#chapter-4`. The status is "Chapters 1, 2, 3, 6, and 7 are closed. Next is §4.1, Exercise 3. 0 of 10 exercises." Chapter 4, flagged Next, is on the screen. Chapter 3's name is whole on its row. The same screen in the dark is the station paper, rgb(13, 18, 28), with the sentence rgb(233, 237, 245) and the accent button dark on the off-white. At 1280 the eight rows are the sidebar, the Chapters button is gone, and Continue sits with the status.
+
+The drawer is eight rows, each 358×44. Chapters 1, 2, 3, 6, and 7 are text. Chapters 4 and 5 and Test prep are links. Test prep is on that first drawer screen, at y = 382. Tapping a closed row leaves the hash on `#book`.
+
+Chapter 4 opens at the top. The Book is 134×44. "Test prep · 4.1" is 150×44 at y = 544, on the screen, above the idea sentence.
+
+### Test prep, the mixed deck, the blank
+
+`#test-prep` opens at scroll 0. Focus stays on the page. The up control is The Book, 134×44. The line under the title is "Next." The status is "Chapters 4 and 5. 1 of 18." The chips are 44px: Practice, Memory sheet, and Flashcards, then New set and Endless. The card is Worked example, Step 1 of 2, Theorem 4.1. The step, the reason, and Next are on the phone: Next is 324×44, bottom 825 in an 844px window. At 1280, Next is at y = 495 and the five chips share one row. The same card in the dark matches, including "Next." and Endless.
+
+The next press is Step 2 of 2, and the button reads "Try these steps", bottom 696. The blank that follows is "2 of 18.", "Your answer", an input 324×44 at 17px, and Check, bottom 808. Hint is 324×44 with its bottom at 858, 14px past the window. At 1280 that Hint is at y = 583, inside the 800px window. A 390×480 viewport, with the box focused, leaves the input bottom at 413 and Check's bottom at 471.
+
+Typing `idk` and pressing Check scrolls to 85. The status becomes "Chapters 4 and 5. 2 of 19." on that same step. "Not that one." is at y = 729, rgb(179, 38, 30), contrast 6.5 on the white card and 5.9 on the paper. In the dark it is rgb(255, 129, 120), contrast 7.7 on rgb(13, 18, 28). The hint, "Split the one modulus into the two coordinates.", ends at y = 836. Next hint is at y = 841, bottom 885, so 3px of the 44px button shows. The dark phone does the same. At 1280, Next hint is at y = 669, inside the window, and the status is still "2 of 19." Pressing Endless on that proof sets the chip pressed and leaves the status, the line, and the card as they were. After Next hint, the hint button is gone. §4.1's own door does not show Endless. §5.1 opens on a worked card, "Try these steps" at bottom 692, then four choices in two columns, each 44px tall, all inside 390×844 and inside 1280×800.
+
+### Flashcards, the sheet, Back
+
+Flashcards, first visit, scroll 0. The line is "Show the back." The card says New and "1 of 36". The front is "limit of a sequence". The source line is "Definition 4.1, page 103", 36px tall. Show the back is 324×44. The back is the ε-N sentence. The line becomes "Again, or got it." Again and Got it are 158×44, side by side. The page is 844px, so the card and the two test rows fill the phone. The same card in the dark matches. No flip.
+
+The memory sheet's line, "The formulas and the one-line versions.", is said once. The status is "The sheet for this set. It prints without the menu." Print is 358×44. The headings run 4.1, 4.2, 4.3, 4.4, 5.1. The first screen fits. Lower down, the partial-sum identity is a 386px KaTeX line whose right edge is at 438. The sheet's client width is 390 and its scroll width is 438, so the phone pans sideways. At 1280 the sheet's scroll width is 1280.
+
+Browser Back agrees with the scroll you left. The book at 640, then §4.1, then Back, returns to `#book` at 640. Chapter 4 at 500, then Test prep · 4.1, then Back, returns to `#chapter-4` at 500. The arrow on that section page is a different control: "The Book", 134×44, href `#book`. From the book, Test prep, then Flashcards, then Back, returns to `#book`. The Practice chip is what returns to the deck.
+
+### Ranked
+
+1. **Next hint is off the phone, and Hint is already short of the window.** On the Theorem 4.1 blank at 390×844, light and dark, Hint's bottom is 858. After `idk`, the hint sentence ends at 836 and Next hint's bottom is 885, with 3px of the button in the window. At 1280 both buttons sit inside 800. Change: Hint shares the screen with Check. A miss scrolls until Next hint's bottom is above the window.
+
+2. **The section arrow skips the chapter.** "Test prep · 4.1" is 150×44 on Chapter 4's first screen. The page it opens has one up control, "The Book", and that control opens `#book`. Browser Back returns to `#chapter-4` at the scroll the chapter had (500, and 640 on a second pass). Change: a section set's up control reads Chapter 4 and links to `#chapter-4`. The mixed set keeps The Book.
+
+3. **A miss changes the count on the card that is still open.** "2 of 18" becomes "2 of 19" on the same proof step, on the phone and at 1280, in both themes. The card does not say the step comes back. Change: the count waits until the next card. One line under the hint says this step comes back once.
+
+4. **The first line is "Next.", and Endless is on a proof.** At scroll 0, 390 and 1280, light and dark, the line under Test prep is the word "Next." The card is a worked example and the button says Next too. Endless is 83×44 on that card. Pressing it marks the chip and leaves the proof as it was. §4.1 does not show the chip. Change: a worked step's line says to read the step. Endless shows on a generated card only.
+
+5. **One formula widens the memory sheet.** At 390 the sheet's client width is 390 and its scroll width is 438, light and dark. The partial-sum identity is 386px wide, right edge 438, at y = 4192. The book, the practice card, and the flashcards stay at 390. At 1280 the sheet matches the window. Change: that formula wraps, or it scrolls inside the sheet. The page width stays 390.
+
+6. **The landing is titled The Map.** The first screen's heading is The Book. The document title is "The Map · One Point, Two Addresses", and the route status announces that station name. Change: when the landing draws the book, the document title and the route status say The Book.
+
+### What to keep
+
+The book is one status sentence, one Continue at 44px, and Chapter 4 on the phone, in both themes. A closed chapter is text, in the drawer and on the page, and Chapter 3's name is whole. At 1280 the same eight rows are the sidebar, with Test prep marked on its page. The name wraps. The where-line on the book and on the chapter is the small-caps line, contrast 6.2 on the light paper and 8.6 in the dark.
+
+Test prep lands at scroll 0, and the answer box does not take focus. The worked step, its reason, and Next fit in 390×844 and in 1280×800, light and dark. The blank is one line, "Your answer", a 44px box at 17px, and Check on the screen. A short viewport keeps the box and Check on screen. "Not that one." uses the danger token, and the hint sentence is one line. The extra hint removes the button once it is the last one. §5.1's four choices are 44px, in two columns, on the screen at both widths. Test 1 and Test 2 are 44px rows under the card.
+
+Flashcards are one card. The front is the gloss, the count is "1 of 36" on the card, the back is the sentence, and Again and Got it are 44px. The line matches the buttons. The memory sheet starts at 4.1, says its line once, and Print is 44px. Browser Back restores the book at 640 and the chapter at 500.
+
+The paper, the serif title, the sans text, the accent button, and the dark off-white primary are the station pages. The source line stays the small textbook link the book already uses. No emoji, no gradient, no glow. The four teaching colours stay on the pictures.
