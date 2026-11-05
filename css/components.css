@@ -1425,12 +1425,19 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .practice-verdict[data-right="true"] { color: var(--ok); }
 .practice-verdict[data-right="false"] { color: var(--danger); }
 .practice-filled { font-weight: 700; }
-.practice-sheet { display: flex; flex-direction: column; gap: var(--space-3); }
+.practice-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 100%;
+  min-width: 0;
+}
+.practice-sheet-section { max-width: 100%; min-width: 0; }
 .practice-sheet-section h3 { margin-bottom: var(--space-2); }
 .practice-memories,
-.practice-formulas { margin: 0; padding-left: 1.2rem; }
+.practice-formulas { margin: 0; padding-left: 1.2rem; min-width: 0; max-width: 100%; }
 .practice-memories li,
-.practice-formulas li { margin: 0.35rem 0; }
+.practice-formulas li { margin: 0.35rem 0; max-width: 100%; overflow-x: auto; }
 .practice-doors { margin-top: var(--space-3); }
 .practice-doors h2 { margin-bottom: var(--space-2); }
 .practice-hint-line { margin: 0.2rem 0; }

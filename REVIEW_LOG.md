@@ -5983,7 +5983,7 @@ Headless Chrome, 390×844 and 1280×800. `#test-prep` opens at scroll 0 on the w
 
 ## Practice engine, batch 5 — review
 
-Verdict: **ACCEPT**. Pull request 43, branch `cursor/practice-engine`, reviewed from `87c474de9a6b50a3741790eb428b4071fa02fc4e`. Not merged. Nothing was deployed, and `gh-pages` was not touched. No practice line was rewritten on this pass.
+Verdict: **ACCEPT WITH FIXES**. Pull request 43, branch `cursor/practice-engine`, reviewed from `87c474de9a6b50a3741790eb428b4071fa02fc4e`. Not merged. Nothing was deployed, and `gh-pages` was not touched. No practice line was rewritten. One layout fix landed after the walk: a sheet formula wider than the phone now scrolls inside its line, and the page stays 390 wide.
 
 The preview at https://practice-preview.complexanalysis.pages.dev serves this tip: `js/practice/catalog.js` fetches only the chapter files on disk, and the Definition 4.13 card names a sequence of positive real numbers.
 
@@ -6017,8 +6017,12 @@ Section 4.1 flashcards open on “limit of a sequence”, cite Definition 4.1, p
 
 The multiply film’s way up is The Book, linking `#book`. The note does not say Story Map.
 
+### The sheet
+
+At `87c474d` the mixed sheet on a 390px phone had `scrollWidth` 438. The Corollary 4.3 identity is one KaTeX line about 386px wide, and the page panned sideways. The practice cards and the book stayed inside the window. The formula now scrolls inside its own line. After the change, the page `scrollWidth` is 390 in light and dark, and 1280 at the wide window. The line is still the printed identity.
+
 ### Smoke
 
-`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the open-chapter mix, the positive-sequence card, book-order flashcards, Again due today, and the pending miss. `node kit/smoke.mjs` exits 0. `js/core/map-route.js` is byte-identical to `kit/template/js/core/map-route.js`. No file under `js/` imports `kit/`.
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the open-chapter mix, the positive-sequence card, book-order flashcards, Again due today, and the pending miss. `node kit/smoke.mjs` exits 0. `js/core/map-route.js` is byte-identical to `kit/template/js/core/map-route.js`. No file under `js/` imports `kit/`. The same three checks were run again after the sheet change.
 
-**ACCEPT**
+**ACCEPT WITH FIXES**
