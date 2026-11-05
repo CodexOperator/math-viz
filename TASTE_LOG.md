@@ -1695,3 +1695,47 @@ Example 1.6 named \(\sqrt{3}+2i\). The book’s second number is \(3+2i\). The w
 4. The shared practice engine is not on this branch. Chapter 1 still renders the schema with the local card. Progress is still localStorage.
 5. Stages 1.3 through 1.6 still keep the summit at the foot. On a 1280×800 window the colour key ends at y = 855, under the fold. Times i is on that screen.
 6. Chapters 8–11 stay on the book page. They are not in the drawer.
+
+## taste-skill (chapter-1 batch 4)
+
+Preview https://ch1-preview.complexanalysis.pages.dev at `7eb34f9`. Headless Chrome, 390×844 then 1280×800, light and dark. Fresh profile. No product code was changed. No console errors. No failed requests. No sideways scroll (`scrollWidth` 390 at 390; in the 1280 window the document’s scroll width matched its client width, 1265). The footer colour key is `display: none` on this route. The page is 23186px on the phone and 18526px on the laptop. Judged with taste-skill @ `12af471f`. Kit rules win where they meet that skill: the four colours, the one gesture, the source tag, and the square that keeps Times i on the screen all stay.
+
+### Verdict
+
+ANOTHER BATCH. The turn is the page. Two presses land the purple point on −1, and the fourth press says “Back at 1.” The type, the paper, and the four colours are already the site’s. What is left is noise: a caption that names a dot the opening frame never draws, forty-two tracked labels, a cite printed three times, a period on its own line, a blank screen after The Book, and four empty chapters.
+
+### What the first screen holds
+
+**390×844, light and dark.** The header icons are 44×44. The Book is a 44px link. The title is Iowan Old Style, one line, 25.85px, weight 600, `rgb(26, 34, 48)` in the light and `rgb(233, 237, 245)` in the dark. The lede is 16.8px, “Press Times i. The purple point turns.”, `rgb(81, 91, 108)` in the light and `rgb(166, 176, 195)` in the dark. Paper is `rgb(246, 243, 236)` and `rgb(13, 18, 28)`. The plane is 324×324 and starts at y = 314. The claim is one line: “This point is 1. It has not been turned.” Times i runs from y = 680 to 724, 94×44. Under it, a 17px muted paragraph, 324×79, from y = 732 to 811: “Purple is the point. Green is where it was. Orange is the quarter turn. Blue is the axes.” The only mark on that frame is the purple point at 1. The stage title “The Origin of Complex Numbers” starts at y = 860. The gap from the caption to that title is 48px, the phone rule `margin-bottom: 3rem` on the 1.1 picture. Two presses change the claim to “Two turns. i² landed on −1,” and the green point appears on i with the orange quarter between them. A fourth press says “Back at 1.” The caption keeps the same sentence, green included, on every frame. Dark uses the same heights.
+
+**1280×800, light and dark.** The sidebar is The Book and chapters 1–7, Chapter 1 marked. The title is 36px, one line. The stage card is 937px wide. The square is 398×398, set at the left of that card, and the rest of the card is empty paper. Times i runs from y = 750 to 794, so the button is on the screen. The same caption starts at y = 802, 53px tall, in the muted colour, and the 800px edge cuts it. The stage title starts at y = 855, one line, 22.4px. Dark uses the same heights. The square stays this size so the button can stay on the screen. A second column would be a restyle.
+
+### What the stages repeat
+
+Each of the six stages carries the same seven labels, 42 in all. A label is 12.48px, weight 700, letter-spacing 0.06em, uppercase, muted (`rgb(81, 91, 108)` light, `rgb(166, 176, 195)` dark): Why you’d care, Worked example, Practice, Cards, Summit, Memory, Pinned. On 1.2 the claim “1 · i is i. One more turn lands on −1.” shares the screen with a second caption, “Blue is the address.”, and with Why you’d care. On 1.3 the claim is 53px tall and its second line’s only glyph is a period: “The length is the distance to 0. It is not 5” and then “.”. On 1.6 the claim is 53px and the second line is the period after \(D_1(0)\). The 1.3 memory line breaks the same way, before “. Page 18.”
+
+The first practice card prints the cite three times. The heading is “Equation (1.6)”. The source line is “Howell & Mathews, Complex Analysis, Equation (1.6), page 3. CC BY 4.0.” The prompt opens “Equation (1.6), page 3. Simplify…”. The 1.3 deck repeats a definition number over a one-word face: heading “Definition 1.8”, the source line “Definition 1.8, page 17”, and the card says “Modulus.”
+
+From the picture to the summit is 1213px on 1.1, 1067px on 1.2, 3300px on 1.3, 1855px on 1.4, 1597px on 1.5, and 2065px on 1.6. Stage 1.2 already places the summit and Mark stage complete under the first two cards. The summit sentence there is body text, weight 600: “i is the point (0, 1), and the product rule sends i · i to −1.”
+
+The Book at the end of 1.6 is 109×44 at y = 22196. The footer starts 828px later. That screen is empty paper down to “The book path for MAT 412. Chapters 1, 4, and 5 are open. The other chapters are later.”
+
+The book lede is “Eleven chapters, in the order Howell and Mathews print them.” Chapters 8–11 are four Later cards: Residue Theory, page 244; Conformal Mapping, page 280; Applications of Harmonic Functions, page 305; Fourier Series and the Laplace Transform, page 376. Each card is the word Later, the title, and the page. The drawer stops at chapter 7.
+
+### Ranked cut or fix
+
+1. **Cut the six colour captions and the 48px spacer under the first one.** At 390, light and dark, the opening caption names green and orange while the frame shows a purple point on the blue axes. It occupies y = 732 to 811, and the stage title starts at y = 860. At 1280×800 the same caption starts at y = 802 and the window cuts it. Times i has already ended at y = 794. Stages 1.2 through 1.6 each insert another muted paragraph between the claim and the why. Change: delete the six `.ch1-key` lines and the phone `margin-bottom: 3rem` on `#chapter-section-1-1-picture`. The claim stays the sentence that changes. The lede stays “Press Times i. The purple point turns.” Those two cuts move the 1.1 title up by 127px, onto the phone under the button. The square stays the size that keeps Times i on the 800px screen.
+
+2. **Keep the period with the quantity.** At 390 the 1.3 claim is 53px tall and the second line is only “.”. The 1.6 claim is 53px and the second line is the period after \(D_1(0)\). The memory line “The distance from \(z_1\) to \(z_2\) is \(|z_1-z_2|\). Page 18.” breaks before that period. The period sits outside the math, so it wraps on its own. Change: the period goes inside the math, `$5.$`, `$D_1(0).$`, and `$|z_1-z_2|.$`, and the same pass covers the boundary sentence that ends `$|z|=1$.`. “Page 18.” stays a phrase of its own when the line wraps.
+
+3. **Delete the forty-two tracked labels.** They are 12.48px, weight 700, tracking 0.06em, uppercase. The heading under Worked example already says “Check the root the imaginaries produced” and “Multiply (0, 1) by itself”. The summit sentence is already the summit. Change: remove the `.book-label` elements. The section number, the page line, the h2, the h3, and the summit sentence stay. The Book link stays a 44px control.
+
+4. **Print the cite once.** The first card’s visible text is the heading “Equation (1.6)”, the source line with “Equation (1.6), page 3”, and a prompt that starts “Equation (1.6), page 3.” The Definition 1.8 card repeats the definition number in the heading and the source line, and the face is the word “Modulus.” Change: the source tag is the cite, once, at the size it already is. The heading is the task (“Simplify the sum”, “Modulus”). The prompt starts at “Simplify”.
+
+5. **End the chapter on The Book.** The link is 109×44 at y = 22196. The next 828px are empty, from `.ch1-path + .book-footer-link { margin-bottom: calc(100dvh - var(--header-h)); }`. The footer line about chapters 1, 4, and 5 sits at the bottom of that blank. Change: that margin goes. The Book is the last control, and the footer line sits under it at the normal footer padding. Stage 1.6 is long enough that its title still scrolls clear of the header.
+
+6. **Stop the book at chapter 7.** The lede says “Eleven chapters, in the order Howell and Mathews print them.” Chapters 8, 9, 10, and 11 are Later cards with a title and a page. The drawer already ends at 7. Change: those four cards go. The lede counts seven chapters, in the order the book prints them. Chapters 2, 3, 6, and 7 stay on the page as Later.
+
+### What to keep
+
+The four colours, the Iowan title, the muted lede, the paper, and the button, in light and in dark. Times i on the first screen, ending at y = 724 on the phone and y = 794 on the laptop. The claim that waits for the second press, and “Back at 1.” on the fourth. The plane at the size that keeps that button on the screen, including the open field to the right of the 398px square at 1280. One gesture. The 1.2 fold, with the summit and Mark stage complete under the two cards that open the stage. The summit sentence in the body, weight 600. One source tag on a card. The section number and the page line. The Book at 109×44. The drawer that ends at chapter 7. Practice in the stage, with a single border. The same stack in the dark.
