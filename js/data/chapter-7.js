@@ -158,7 +158,7 @@ export const CHAPTER_7 = deepFreeze({
         'A bounded isolated singularity is removable (Theorem 7.15, page 240). $\\sin z/z$ at 0 is filled in by the value 1.',
         'L\'Hôpital: if $f(\\alpha)=g(\\alpha)=0$ and $g\'(\\alpha)\\neq 0$, then $\\lim f/g = f\'(\\alpha)/g\'(\\alpha)$ (Corollary 7.11, page 240).',
         'Divide the series when $g(\\alpha)\\neq 0$. The coefficients satisfy $a_n=b_0 c_n+\\cdots+b_n c_0$ (Theorem 7.14, page 240). A zero of $g$ is where you stop dividing and switch to a Laurent series.',
-        '$|f(z)|\\to\\infty$ means a pole (Theorem 7.16, page 241). A limit of $|f|$ that does not exist means essential (Theorem 7.17, page 241).',
+        '$|f(z)|\\to\\infty$ means a pole (Theorem 7.16, page 241). A limit of $|f|$ that does not exist means essential (Theorem 7.17, page 242).',
       ],
       read: [
         { pin: 'Theorem 7.13, page 239', href: sectionHref(S75, 'Isolated_Zeros_Thm') },
