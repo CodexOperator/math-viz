@@ -1785,3 +1785,45 @@ Walk Chapter 6 is a 163×44 button. Section rows link to `#chapter-6-6-1` and th
 ## Still open
 
 A missed flash stays at the front. There is no longer schedule than that. The shared practice engine is not in the tree. Chapter 7 is named, marked Later, and is not a page. Chapters 8–11 stay Later on the book. The 6.5 claim still ends on the green point. The full-turn claim still says the integral is back at 0.
+
+## unslop (chapter-6 batch 4)
+
+Branch `cursor/chapter-6`, tip `02da336`. Preview https://ch6-preview.complexanalysis.pages.dev. The served `version.json` is that commit. Headless Chrome, fresh storage. 390×844 light, then the theme control into the dark. Then 1280×800 light, and the theme control into the dark. No console errors. No failed assets. `scrollWidth` was 390 and 1280. No product code was changed.
+
+Light slop. The chrome is already this product: cream paper `rgb(246, 243, 236)`, dark paper `rgb(13, 18, 28)`, Iowan titles, one accent, the four teaching colours only on the marks. No emoji, no glow, no hue gradient, no exclamation mark. The same positions in both themes. The miss is words said twice, and a button stretched into a bar.
+
+Direction, taken from the page that is already here. Product: a MAT 412 student drags one point and watches a complex integral change. Character: ink, exact, warm paper. World: a notebook page and a pencil on the plane. Moments: the six planes. Signature: the green point, the same green on every stage.
+
+At 390, both themes, the square is 284×284 at y = 437. The claim is at y = 729. Play is 70×44 at y = 790 and ends at 834 in the 844 window. Above the square, two lines meet with no gap: the why at y = 332, 53px, "Purple is the total so far, while green walks the circle.", and the gesture at y = 385, 53px, "Drag the green point around the orange circle. Purple is the integral." At 1280 those two lines are 26px each, the square is 272×272 at x = 321 inside a card at x = 304 that is 952px wide, and Play ends at 729 in the 800 window. The phone page is 26423px. The laptop page is 20729px. A stage is 2092, 5471, 8677, 3154, 2908, and 3465px, with 2, 9, 12, 5, 4, and 4 cards.
+
+A drag of the green point to the left side sets the phase to half. The claim stays "The total has left 0." The latched line "Half a turn: 2i." is a second paragraph at y = 842, 53px, under Play. On the unscrolled phone it starts 2px above the fold. The two read links move down to y = 897, under that line. Play says Pause while it runs, and the next press says Play.
+
+A drag of the 6.5 point to the centre sets `data-where` to inside. The claim becomes "Inside, \(\dfrac{1}{2\pi i}\int \dfrac{z}{z-z_0}\,dz\) is the green point." The blank under the picture is "The formula returns". The worked paragraph already prints that formula.
+
+Forty choices. None clip. Six wrap past 44px, and the shortest of those is 54. At 1280 each Check under a picture blank is 918×44, and the input beside it is 266×44.
+
+## Verdict
+
+ANOTHER BATCH. One batch, and it is the six cuts below. When the sentence above the square is one line, the half-turn line sits with the claim, and the citation list is off the picture, this lens rests.
+
+## Ranked cuts
+
+1. **The half-turn line sits with the claim, above Play.** After the drag, phase is `half`, the claim still reads "The total has left 0.", and "Half a turn: \(2i\)." is at y = 842, under the button that ends at 834. The read links follow it. Change: `#ch6-real-half` is inserted after the claim and before Play. The words stay, and the line still latches and still stays after the point moves on. The 53px comes off the top of the stack by cut 2, so Play's bottom stays inside 844 and inside 800.
+
+2. **One sentence above the square, and it is the hand.** At 390 the why and the gesture are 53px each and both name purple. At 1280 they are one line each and they still name purple twice. On 6.2 the why says "Orange dots are pieces of the path" and the gesture says "Orange points are the eight samples." On 6.3 the why, the gesture, and the claim each say the integrand is analytic. On 6.6 the why and the gesture both say purple is the bound. On 6.4 the why opens with "6.3 gives \(0\)." The label "A pole is the next beat" sits over a gesture that already starts that picture. Change: 6.1 keeps "Drag the green point around the orange circle." 6.2 keeps "Drag the green point along the segment." 6.3 keeps the bridge from 6.2, and the gesture is "Play subdivides the triangle." 6.4's bridge is "Two ends use an antiderivative." 6.5 keeps both lines; they say different things. 6.6 is "Drag the green radius. Purple is the bound \(1/R\)." The pole label goes. The gesture under it stays.
+
+3. **Between Play and the blank, one worked sentence.** At 390 the read list starts at y = 836, so the first screen ends on "Definition 6.1, page 163". Under it: the label Worked example, a source tag that repeats Definition 6.1, page 163, then "From \(0\) to \(\pi\), integrate \(e^{it}\).", which is the blank. On 6.3 five links, 141px, sit between Play and "The integral over the triangle is". At 1280, both themes, the first screen ends on those two 6.1 links, beside the empty right of the card. Change: the read list under the picture goes. Each For the exam line is already that citation, and the pin on the line is the link. The 6.1 worked paragraph goes; the two blanks are that example. On 6.2 through 6.6 the worked sentence stays when it is not the blank's prompt. One source tag remains, on the sheet.
+
+4. **Check is the button Play already is.** At 1280 the half-turn Check, the full-turn Check, and the 6.2 Check are each 918×44, under an input that is 266×44. The same flex fills the phone column, so two blanks are four bars. Change: `.ch6-student .problem-actions .btn` keeps the 44px height and takes its content width. It does not grow to the row.
+
+5. **The button says the next camp, and the 6.3 summit is not the sheet.** The go row is "Next camp is 6.2, contours." and "Go to 6.2", 112px on the phone and one card on the laptop. The same pair sits on 6.3, 6.4, and 6.5. The 6.3 summit is "Analytic inside and on a simple closed curve: Theorem 6.5, page 183, says the integral is \(0\)." The first sheet line is that sentence. Change: the next-camp paragraph goes on 6.1 through 6.5. The button stays. On 6.6 the paragraph stays, because it names Chapter 7 and the button says "Back to the book". The 6.3 summit drops "says the integral is \(0\)". The sheet keeps the statement.
+
+6. **The inside claim stops before the blank.** With the point at the centre the claim is "Inside, \(\dfrac{1}{2\pi i}\int \dfrac{z}{z-z_0}\,dz\) is the green point." The worked paragraph prints that formula. The blank asks what the formula returns. Change: the inside claim is "Inside, the formula applies." The formula stays in the worked sentence. "The green point" stays the words the student writes. The edge claim and the outside claim stay as they are.
+
+## What to keep
+
+The six planes, the four colours on the marks, and the one clock. Play on the first screen in both themes and at both widths. Play says Pause while it runs, and the next press says Play and leaves the point where it stopped. The square stays 284px on the phone and 272px on the laptop, the size that keeps Play inside 844 and inside 800. The blank paper to the right of that square is the chapter card.
+
+The claim that flips: "The total has left \(0\)." and, at the full turn, "A full turn brings the integral back to \(0\)." The blanks arrive empty. Stage complete stays disabled, and the line under it names the missing piece. The half-turn sentence stays on the page after the point moves on. The eight-step claim leaves the exact value in the blank. The bent claim says the integral matches the straight segment. The finished radius claim says the purple bound shrank to the origin.
+
+The kicker, the flag, and For the exam. They are the book path: uppercase, tracked, the same on chapter 4 and chapter 5. The drawer, chapters 1 through 7, Later on the rows that open a Later card, including Chapter 7. Walk Chapter 6 at 163×44. Choices that wrap, with none cut off. The cards. This lens does not cut a drill. The source tag on a card stays. No new type, no new colour, no new chrome.
