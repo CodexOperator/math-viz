@@ -1,0 +1,174 @@
+/* The draw-and-map prototype. Colours are the site tokens. Nothing here scrolls sideways. */
+
+main.draw-map { grid-area: main; min-width: 0; }
+
+.site-header .site-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#theme-toggle { margin-left: auto; flex: none; }
+
+.draw-map {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--space-3) var(--gutter) var(--space-5);
+}
+
+.draw-map figure { margin: 0; }
+
+.draw-map h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.7rem, 4vw, 2.4rem);
+  font-weight: 600;
+  line-height: 1.15;
+  margin: 0 0 var(--space-2);
+}
+
+.draw-map .observe {
+  margin: 0 0 var(--space-3);
+  max-width: 42rem;
+}
+
+.draw-map .claim {
+  margin: var(--space-3) 0;
+  padding: var(--space-2) var(--space-3);
+  border-left: 4px solid var(--border-strong);
+  background: var(--surface);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  line-height: 1.35;
+}
+
+.draw-map .claim[data-claim="true"] { border-left-color: var(--ok); }
+.draw-map .claim[data-claim="false"] { border-left-color: var(--polar); }
+
+.draw-map .controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-3);
+}
+
+.draw-map fieldset {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin: 0;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  min-width: 0;
+}
+
+.draw-map legend {
+  padding: 0 var(--space-2);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.draw-map .fn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.draw-map .formula {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1 1 12rem;
+}
+
+.draw-map .formula input {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  min-height: var(--tap);
+  padding: 0 var(--space-2);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  width: 100%;
+  max-width: 16rem;
+}
+
+.draw-map .formula-tex { min-height: 1.4rem; color: var(--text-muted); }
+.draw-map .formula-hint { margin: 0; color: var(--danger); max-width: 22rem; }
+
+.draw-map .stage {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+}
+
+.draw-map .pane { min-width: 0; }
+
+.draw-map .pane h2 {
+  font-size: 1rem;
+  font-weight: 650;
+  margin: 0 0 var(--space-1);
+}
+
+.draw-map canvas {
+  width: 100%;
+  aspect-ratio: 1;
+  display: block;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.draw-map canvas.ink { touch-action: none; cursor: crosshair; }
+
+.draw-map .readout {
+  margin: var(--space-3) 0 0;
+  font-variant-numeric: tabular-nums;
+  max-width: 48rem;
+}
+
+.draw-map .orange-note { margin: var(--space-1) 0 0; }
+
+.draw-map .key {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.draw-map .key li {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.draw-map .swatch {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 3px;
+  margin-top: 0.2rem;
+  flex: none;
+}
+
+.draw-map .swatch[data-key="cart"] { background: var(--cart); }
+.draw-map .swatch[data-key="polar"] { background: var(--polar); }
+.draw-map .swatch[data-key="input"] { background: var(--input); }
+.draw-map .swatch[data-key="output"] { background: var(--output); }
+
+.draw-map .back {
+  display: inline-block;
+  margin-top: var(--space-4);
+}
+
+@media (min-width: 52rem) {
+  .draw-map .stage { grid-template-columns: 1fr 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .draw-map .claim { transition: none; }
+}

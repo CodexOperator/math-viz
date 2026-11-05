@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Draw it, watch it land</title>
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('mv:theme');
+        if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="vendor/katex/katex.min.css">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/draw-map.css">
+  <script src="vendor/katex/katex.min.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#claim">Skip to the sentence</a>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="site-title" href="index.html">One Point, Two Addresses</a>
+      <button type="button" class="btn" id="theme-toggle" aria-pressed="false" aria-label="Dark theme">Dark</button>
+    </div>
+  </header>
+  <main class="draw-map" id="picture">
+    <p class="source-tag">Howell &amp; Mathews, <cite>Complex Analysis</cite>, 202 Updated Edition, Chapter 5, §5.1 and §5.2. The sector is also §2.2. The little square is §3.1, Equation (3.1).</p>
+    <h1>Draw it. Watch it land.</h1>
+    <p class="observe" id="observe">Draw on the left. A loop shades the inside. Cross an orange line and the sentence changes.</p>
+    <p class="claim" id="claim" data-claim="true" aria-live="polite"></p>
+    <div class="controls">
+      <fieldset>
+        <legend>Function</legend>
+        <div class="fn-row">
+          <div class="chips" role="group" aria-label="Function">
+            <button type="button" class="chip" id="chip-sq" data-src="z^2" aria-pressed="true">z&#178;</button>
+            <button type="button" class="chip" id="chip-exp" data-src="e^z" aria-pressed="false">e^z</button>
+            <button type="button" class="chip" id="chip-log" data-src="log(z)" aria-pressed="false">Log z</button>
+          </div>
+          <label class="formula">
+            <span class="muted">or type f(z)</span>
+            <input id="formula" value="z^2" autocomplete="off" spellcheck="false" aria-describedby="formula-hint">
+            <span class="formula-tex" id="formula-tex"></span>
+            <span class="formula-hint" id="formula-hint" hidden></span>
+          </label>
+        </div>
+      </fieldset>
+      <button type="button" class="btn btn-primary" id="play">Play</button>
+    </div>
+    <div class="stage">
+      <figure class="pane">
+        <h2>z plane, the ink</h2>
+        <canvas id="z-plane" class="ink" width="640" height="640" aria-hidden="true"></canvas>
+      </figure>
+      <figure class="pane">
+        <h2>w plane, the image</h2>
+        <canvas id="w-plane" width="640" height="640" aria-hidden="true"></canvas>
+      </figure>
+    </div>
+    <p class="orange-note muted" id="orange-note"></p>
+    <p class="readout" id="readout"></p>
+    <ul class="key">
+      <li><span class="swatch" data-key="cart"></span><span>Blue is the axes and the grid, and the dashed copy of the little square that the derivative predicts.</span></li>
+      <li><span class="swatch" data-key="polar"></span><span>Orange is where this function turns back: the rays, the strip, or the cut. An orange ring is the point one period lower.</span></li>
+      <li><span class="swatch" data-key="input"></span><span>Green is the ink. Dark to bright is the order you painted it.</span></li>
+      <li><span class="swatch" data-key="output"></span><span>Purple is the image of that ink, in the same order. Each purple corner is f of a green corner.</span></li>
+    </ul>
+    <p class="back"><a href="index.html">Back to the map</a></p>
+  </main>
+  <script type="module" src="js/draw-map/page.js"></script>
+</body>
+</html>
