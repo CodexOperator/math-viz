@@ -1886,3 +1886,47 @@ Chapter 4's picture chip is 205×44 and ends at y = 822, inside the 844 window, 
 Playground doors say The Book and open `#book`. Theorem 4.9 stays connectedness on page 113. Theorem 4.11's flash stays the inequality on page 116. The sheet keeps the cardioid.
 
 Deferred: Chapters 1, 3, 6, and 7 still have no practice file, and `#chapter-2` is still the stub. Those pages belong to the chapter loops. This track does not register them. `ch2.json` stays the generator the mixed set can use once that chapter is open.
+
+## taste-skill (practice batch 7)
+
+Branch `cursor/practice-engine`, tip `3234354`. Preview https://practice-preview.complexanalysis.pages.dev. `js/practice/render.js`, `js/practice/mount.js`, and `js/stations/book.js` on that preview match this tip. Walked as a student. Headless Chrome, touch, fresh storage. Phone first: 390×844, light, then the same doors in the dark. Then 1280×800, light and dark. Chapter 4, Chapter 5, the worked proof, the blank, a miss, a reveal, Newton through Set complete, the radius card, and the §4.3 memory sheet. No product code was changed. `scrollWidth` matched the window at 390 and at 1280, both themes, on those pages. No console errors.
+
+The page is a working screen: one question, the line that answers it, one accent button. The shell stays the paper, the serif title, the sans text, and the four teaching colours on the picture. Grey is the secondary note. The accent is the one next action.
+
+### Verdict
+
+ANOTHER BATCH. Five of the six things this batch named read in the right order, at both widths, in both themes. The sixth is the right sentence in the right colour, and on the phone's first proof it sits under the window. One scroll, then these surfaces can rest.
+
+### What the hand meets
+
+390×844, light, scroll 0. Chapter 4. "Proof · 4.1" is 118×44 at y = 494. The disk sentence sits under it, y = 538–617. Exercise 3's question is on that screen, and "The disk in Definition 4.1" is 205×44, bottom 822, inside the 844 window. "Proof · 4.3" is the same 118×44 further down. "Test prep · 4.2" and "Test prep · 4.4" stay 150×44. The same boxes in the dark. At 1280 the proof button is at y = 413 and the disk chip ends at 678, inside the 800 window.
+
+`#test-prep-4-4-1`, scroll 0. The lede is "Read this filled line.", muted, 16.8px, light rgb(81, 91, 108) contrast 6.2 and dark rgb(166, 176, 195) contrast 8.6. Step 1 of 2: the button is "Next", 324×44, bottom 840 on the phone and bottom 534 at 1280. Step 2 of 2: the lede is still "Read this filled line." The button is "Try these steps", bottom 712 on the phone and 508 at 1280. The radius card is Step 1 of 1. The lede is "Read this filled line." The button is "Try these steps", bottom 636 on the phone and 531 at 1280. Newton's first card shows the iteration count, lede "Read this filled line.", button "Next". The next worked card shows the simplification, lede "Read this filled line.", button "Try these steps".
+
+The blank puts Hint beside Check. Hint is 71×44, one line, at 390 and at 1280. Check keeps the accent and the rest of the row. Typing `idk` on Theorem 4.1 leaves the count at "Section 4.1. 2 of 6." "Not that one." is weight 700, light rgb(179, 38, 30) contrast 6.5 and dark rgb(255, 129, 120) contrast 7.0, bottom 814. Next hint is 114×44, bottom 785. "This step comes back." is muted, 14.72px, contrast 6.9 on the light card and 7.8 on the dark card. On the phone its top is y = 898 and its bottom is 918. The window is 844. The hint's first line is the last ink on that screen, cut off. The same miss on the radius card puts the line at y = 742, bottom 762, under the hint, inside 844, light and dark. At 1280 the proof line is at y = 641, bottom 661, inside the 800 window. A second miss clears the line. The card is the filled answer, the reason, and Next. "Generate another" on the revealed radius card is 185×44, one line, beside Next.
+
+Set complete, after §4.2. The lede is the Newton sentence, once: 358×105 on the phone, 595×52 at 1280, muted, light rgb(81, 91, 108) and dark rgb(166, 176, 195). The status is "Section 4.2." The card is the heading "Set complete" and "Open the memory sheet", 324×44, bottom 484 on the phone and bottom 392 at 1280. The sentence is not in the card. The same screen in the dark: the button is dark type on the off-white accent.
+
+The §4.3 sheet stays 390 wide on the phone and 1280 wide on the laptop. No row overflows. Corollary 4.3 breaks at a plus. The last term is its own piece, `+z^n/(1-z)`, 108px in a 305px line on the phone. The cite is the parenthesis once: "(Corollary 4.3, page 119)". Theorem 4.12, Exercise 1(b), and Exercise 2 are named once the same way. The formula row fits the card: the partial sum is 237px and the last term is 67px, in that 305px line. At 1280 the takeaway fits, 899/899, and the cite is still there once.
+
+Chapter 5, scroll 0, both themes. The square is 358×358 on the phone, y = 213–571, and 384×384 at 1280, y = 225–609. The claim is full ink, two lines on the phone (bottom 632) and one line at 1280 (bottom 644): "The point sits on the left of the unit circle, on the real axis." Play is 70×44, bottom 684 on the phone and 696 at 1280. The status and "Test prep · 5.1" (150×44) end at 830 on the phone and at 781 in the 800 window. The lede starts at y = 871 on the phone and y = 822 at 1280.
+
+### Ranked cuts
+
+1. **On the phone, the proof's return line is under the window.** At 390×844, light and dark, scroll 0, a first miss on Theorem 4.1 keeps "Section 4.1. 2 of 6." "Not that one." ends at 814. Next hint ends at 785. "This step comes back." is the muted line, 14.72px, contrast 6.9 in the light and 7.8 in the dark, and its bottom is 918. The 844 window shows the top of the hint and cuts it. The radius miss on that same phone shows the line whole, at y = 742, under the hint. At 1280 the proof line ends at 661, inside the 800 window. A second miss removes the line. Change: the first-miss scroll brings "This step comes back." inside the 844 window. The line stays muted, under the hint, on the first miss only. The revealed card stays the filled answer, the reason, and Next.
+
+### Keep
+
+"Proof · 4.1" and "Proof · 4.3" are 118×44, and the section number is the difference. On Chapter 4's first screen the disk sentence, Exercise 3's question, and the 44px disk chip sit with that button: the chip ends at 822 on the phone and at 678 at 1280, light and dark. "Test prep · 4.2" and "Test prep · 4.4" stay their own labels.
+
+Every worked step's lede is "Read this filled line." The button is "Next" until the last worked step, and that last button is the only "Try these steps". Theorem 4.1, the radius card, and Newton all do this, at both widths, in both themes. Newton's first filled line is still the answer the title asks, "1, or 0 if the guess is already the root.", and that card's button is Next.
+
+Set complete puts the Newton sentence in the lede, once. The status is "Section 4.2." The card heading is "Set complete". The button is "Open the memory sheet", on the screen in both windows, both themes. The sentence is not repeated in the card.
+
+Hint, Next hint, and Generate another stay on the row, one line, as wide as their words, at least 44px. Check and Next keep the accent. A second miss drops the return line. Endless stays hidden on the worked card and shows on the generated blank.
+
+The §4.3 sheet names Corollary 4.3, Theorem 4.12, Exercise 1(b), and Exercise 2 once, in the parenthesis. The identity breaks at a plus, the last term is on the page, and the formula row fits the card. The page width is the window.
+
+Chapter 5's first screen is the square, the claim, Play, the status, and "Test prep · 5.1", in both windows, both themes. The square stays 358px on the phone and 384px at 1280. The claim is the sentence in full ink. Play is the gesture. The practice door is the button in the status row.
+
+The paper, the serif title, the sans text, the accent button, and the dark off-white primary are the station pages. The small-caps line stays with the shell. No emoji, no gradient, no glow. The four teaching colours stay on the picture. Nothing here asks for a new type, a second clock, or a second accent.
