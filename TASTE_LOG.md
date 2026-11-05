@@ -1951,3 +1951,49 @@ The where-line stays, tracked small caps under the title. Light paper is rgb(246
 The chapter-end pad stays, so an opened row can sit under The Book. The §§5.2, 5.3, and 5.5 pictures stay off this pass. No new chrome, no second clock, no slider.
 
 Test prep’s flash status says "42 due." The card under it says New, and "New card." That count treats every unseen definition as due. It is the line after these six.
+
+## ux-veteran (chapters-4-5 batch 5)
+
+Preview https://book-preview.complexanalysis.pages.dev at tip `1abe4ea`. `js/stations/book.js`, `js/stations/exp-picture.js`, `js/book/continue.js`, `js/data/book-path.js`, and `css/components.css` on that preview are the same bytes as this tip. Fresh storage. Phone first, 390×844, light, coarse pointer, then the same walk in the dark, then 1280×800, light and dark, with a mouse. Section hashes were opened again from a fresh load so a saved scroll could not pretend to be the landing. No product code was changed. No console errors. No failed requests. No sideways scroll (`scrollWidth` was 390 and 1280).
+
+Read `## ux-veteran (mobile audit)` on `cursor/ux-veteran-audit` and `## ux-veteran (chapter-4-5 batch 4)`. The bar is the same: a 44px target, one up control, and a first screen that names the next action.
+
+### Verdict
+
+ANOTHER BATCH. The five cuts from batch 4 are on the page, and a press on the §5.1 title clears The Book. The row the book uses for §5.1 scrolls that picture off the screen, and the camps under it are not in the book's order. One batch, the three cuts below. After that, this walk can rest.
+
+### What the checks did
+
+**The book, both themes.** At 390 the status says "Next is §4.1, Exercise 3, in Chapters 4 and 5. 0 of 10 exercises." Continue is 111×44 at y = 353. Chapters 1, 2, and 3 are one line each, 358×44. Chapter 4, flagged Next, starts at y = 618. At 1280 the same card starts at y = 524, the status is one line, and the sidebar is the list: chapters 1–7, then Test prep, each row at least 44×263, and the chapter you are on is marked. §5.4 reads Open. §§5.2, 5.3, and 5.5 read Later. The book lists them in print order: 5.1, 5.2, 5.3, 5.4, 5.5. Dark paper is rgb(13, 18, 28). The title is rgb(233, 237, 245) on that paper, contrast 16. The lede is rgb(166, 176, 195), contrast 8.6. Light paper is rgb(246, 243, 236), the title rgb(26, 34, 48), contrast 14.4, the lede rgb(81, 91, 108), contrast 6.2.
+
+**Chapter 4.** `#chapter-4` opens at scroll 0. The Book link is 358×44 on the phone and 952×44 at 1280. The status says "Next is §4.1, Exercise 3. 0 of 8 exercises." The camp titles are headings, decoration none. On the phone the two chips are 44px at y = 599, Definition 4.1 and Theorem 4.1 are 44px, and Practice 4.1 is 91×44, all on the first screen. At 1280 the chips are 44px at y = 536 and Practice 4.1 ends at 719, inside the 800px window. `#chapter-4-4-2` puts the 4.2 flag at y = 109, and the Book link ends at 101, on the phone and at 1280. The stills are on that screen: 161×161 on the phone (bottom 378) and 174×174 at 1280. The idea is one sentence, then the pictures.
+
+**Chapter 5.** At 390 the square is 358×358, from y = 350 to 708. The claim is two lines, y = 716 to 769: "$e^{z}$ sits on the bottom of the unit circle." Play is 70×44 and ends at 821. The status card starts at y = 862. At 1280 the square is 357×357 at x = 304, the claim is one line, and Play ends at 788. The green ring is 44×44 on the right. The lede says "Drag the green ring." A press on the §5.1 title scrolls the square to y = 109, and the Book link ends at 101, on the phone and at 1280. The same square in the dark, 358px, Play ending at 823, claim contrast 16. A resize to 844×390 while that picture was scrolled left the square at 358.
+
+**§5.4 and the later rows.** A fresh `#chapter-5-5-4` puts the 5.4 flag at y = 109, Book link ending at 101, on the phone and at 1280. The recipe card is five numbered lines. Each line keeps its page: 150, 150, 149, 150, 152. Practice 5.4 is 91×44. A fresh `#chapter-5-5-2` puts the Later card at y = 109 with a 2px solid outline. `#chapter-5-5-5` does the same for 5.5. On the chapter page those three cards come after §5.4. Their document tops, phone, scroll 0: §5.1 at 955, §5.4 at 2127, §5.2 at 3028, §5.3 at 3163, §5.5 at 3297.
+
+**Back and the drawer.** A fresh Continue opens `#chapter-4` at scroll 0. After that chapter has been scrolled to 700, Continue opens it again at 700. The chips for the exercise the status names sit at y = 599, so that resume is past them. Leave the resume. Browser Back from practice returns the chapter to the scroll you left (800). The Chapter 4 button on practice does the same. The Book link opens `#book` at the scroll the book last had. The drawer is eight rows, each 358×44: chapters 1–7, then Test prep. Chapter 4 is marked while that chapter is open. A wheel on the open drawer leaves the page where it is. At 1280 the Chapters button is not shown.
+
+**The §5.1 row.** A fresh `#chapter-5-5-1` is the hash on the book's 5.1 line. At 390 the page is scrolled to 846. The square is 358px at y = −496, and Play is at y = −69. The 5.1 flag is at y = 109, and the Book link ends at 101, so the heading is what landed, not the picture. At 1280 the scroll is 845, the square is at y = −500, and the flag is at y = 51, above the Book link, which ends at 102.
+
+**The still.** The Julia still on §4.2 opens `#julia` at scroll 0. The lede is 130px tall and ends at 275. It says to open the flat paper, and that c is a hollow square. The canvas is 322×322 from y = 665 to 987, so an 844px window shows the top 179px. Zoom + and − are 44×44, and Reset is 57×44.
+
+### Ranked
+
+1. **The book's §5.1 row hides the picture.** `#chapter-5-5-1`, both widths. At 390 the square is at y = −496 and Play is at y = −69. The flag sits at y = 109, 8px under the Book link, which is the heading, not the circle. At 1280 the square is at y = −500 and the flag is at y = 51, above the Book link. A press on the section title, from scroll 0, already lands the square at y = 109. That title is an anchor, 44px, with no underline. The §5.4 title and the Chapter 4 titles are headings. Change: the row and the hash land the square 8px under The Book, the place that press already uses. The title is a heading.
+
+2. **The chapter climbs in a different order from the book.** On `#chapter-5`, both widths, the camps run §5.1, then §5.4, then Later §5.2, Later §5.3, Later §5.5. On `#book` the same sections run 5.1, 5.2 Later, 5.3 Later, 5.4 Open, 5.5 Later. A student who finishes the picture meets trigonometry next, and the logarithm is a card under that. Change: the chapter uses the book's order. §5.2 and §5.3 are one line each, the number and the title, between §5.1 and §5.4. §5.5 is one line after §5.4. Each line stays 44px and still says Later. The outline and the 8px clearance stay.
+
+3. **The still opens a page whose set starts below the lede.** At 390 the Julia still is 161px and on the §4.2 screen. The press opens "Julia Sets: Square, then Slide" at scroll 0. The canvas starts at y = 665. The lede above it is five lines and names a hollow square this picture does not draw. Change: one line under the title, the colour sentence. The plane follows it, so the disk and the three buttons sit on the first screen. The flat-paper sentence moves under the disk.
+
+### What to keep
+
+The five batch-4 cuts are in. The resting claim names $e^{z}$ on the bottom of the unit circle, and the lede says drag the green ring. The green ring is 44px on the right. The book line names the span, "in Chapters 4 and 5," and the chapter pages keep their own counts, 0 of 8 and 0 of 2. Chapter 4 camp titles are headings. The chips and the stills are the doors. Definition 4.1, Theorem 4.1, and the four §5.4 pins are 44px. An opened Later row sits 8px under the Book link and carries a 2px outline, on the phone and at 1280. The §5.1 title scrolls the square to that same clearance.
+
+Play stays inside the window: it ends at 821 on the phone and at 788 at 1280. The status card starts just under that window. The square is 358px on the phone and 357px at 1280. Leave that size. The paper beside the laptop square is the room Play is using. A resize while the picture is scrolled keeps the 358px square.
+
+Chapter 4 starts on the first screen of the book, y = 618 on the phone and y = 524 at 1280, flagged Next, with Continue on the screen. Closed chapters are one line and 44px. §5.4 reads Open. The §4.2 idea is one sentence, and the stills follow it, drawn at the size they are shown. The §5.4 recipe is five lines, and each line keeps its page. The first screen of Chapter 4 shows the 4.1 flag, the two chips, the pins, and Practice.
+
+The Book link is the 44px station link. A section flag on an open camp sits 8px under it. A fresh Continue opens `#chapter-4` at the top. Browser Back and the practice button return the chapter to the scroll you left. The drawer is chapters 1–7, then Test prep, and at 1280 that list is the sidebar, with the chapter you are on marked. The Chapters button is 118×44 and reads Chapters.
+
+The type is Iowan Old Style, 25.85px on the phone and 36px at 1280. The axes are blue rgb(11, 99, 173), the dashed circle and the ray are orange rgb(168, 67, 0), the ring is green rgb(0, 110, 83), and the point is purple rgb(157, 58, 138). The where-line, the white card, and the 44px up control stay.
