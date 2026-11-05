@@ -1827,3 +1827,51 @@ The six planes, the four colours on the marks, and the one clock. Play on the fi
 The claim that flips: "The total has left \(0\)." and, at the full turn, "A full turn brings the integral back to \(0\)." The blanks arrive empty. Stage complete stays disabled, and the line under it names the missing piece. The half-turn sentence stays on the page after the point moves on. The eight-step claim leaves the exact value in the blank. The bent claim says the integral matches the straight segment. The finished radius claim says the purple bound shrank to the origin.
 
 The kicker, the flag, and For the exam. They are the book path: uppercase, tracked, the same on chapter 4 and chapter 5. The drawer, chapters 1 through 7, Later on the rows that open a Later card, including Chapter 7. Walk Chapter 6 at 163×44. Choices that wrap, with none cut off. The cards. This lens does not cut a drill. The source tag on a card stays. No new type, no new colour, no new chrome.
+
+## ux-veteran (chapter-6 batch 4)
+
+Branch `cursor/chapter-6`, tip `02da336`. Preview https://ch6-preview.complexanalysis.pages.dev. The served `js/stations/chapter-6.js`, `js/stations/ch6-pictures.js`, `js/stations/ch6-cards.js`, `js/stations/book.js`, `js/app.js`, `js/book/ch6-math.js`, `css/components.css`, `css/theme.css`, and `index.html` match that commit. Headless Chrome, touch, fresh storage. 390×844 light, then the theme control into the dark. Then 1280×800, light and dark. No console errors. No failed assets. `scrollWidth` was 390 and 1280. The phone page is 26423px. The laptop page is 20729px.
+
+### Verdict
+
+ANOTHER BATCH. The five cuts from batch 3 are on the page. A student on a phone sees the camp, the picture, and Play, opens a 44px list of chapters 1–7, and comes back to the camp they left. The half-turn line that batch asked to keep is under Play, and 2px of it is inside the 844 window. One batch is the three cuts below. When that line sits with the claim and Play is still on the first screen, this lens rests.
+
+### What the walk showed
+
+First screen, 390, light and dark. The header is 56px. The kicker is The Book. The title is Iowan Old Style, 25.85px, weight 600. The lede is the six stages. The flag reads `6.1 · 0 OF 6`. The why and the gesture are both on the screen. The square is 284×284 at y = 437. The claim is "The total has left 0." Play is 70×44 at y = 790 and ends at 834 in the 844 window. Dark paper is `rgb(13, 18, 28)`. The title and the claim are `rgb(233, 237, 245)`. Play sits at the same place. At 1280 the square is 272×272 and Play ends at 729 in the 800 window, in both themes. The sidebar is that same chapter list, the menu button is hidden, and Chapter 6 is the current row, on screen.
+
+Play says Pause. A second press says Play. The run finishes on "A full turn brings the integral back to 0." The claim for that sentence ends at y = 782. Play ends at 834. The half-turn line latches during the run and is still up at the end, at y = 842, 53px tall, so the 844 window shows 2px of "Half a turn: \(2i\)."
+
+The drawer, light and dark. Places is 44×44. The list is The Book and chapters 1–7, each row 44px, and the whole list fits. Chapters 1, 2, 3, and 7 say Later. Chapters 8–11 stay off this list. Chapter 6 is the marked row. The page behind the drawer stays put (`overflow: hidden`, and `#view` is inert). Chapter 7 opens the book on the Later card. The flag is at y = 73 and the title is at y = 97, under the 56px header.
+
+Back. From `#chapter-6` at scroll 1200, Go to 6.2 sets `#chapter-6-6-2`, leaves the 6.1 blank mounted, and puts the 6.2 flag at y = 73. Back returns to `#chapter-6` at scroll 1200. From 6.4, flag at y = 73 and scroll 16466, The Book in the drawer opens `#book` at scroll 0. Back returns to `#chapter-6-6-4` at scroll 16466, with the flag at y = 73.
+
+The Book kicker draws at 69×19. The hit around those words runs from y = 68 to y = 108, and the title takes the point at y = 112. The same kicker on chapter 4, sampled in the dark, is 69×19 and takes 10 of 12 probes across a 44px band. Back to the book at the bottom draws at 134×26 and takes a 44px band. Walk Chapter 6 is 163×44. The six section rows go to `#chapter-6-6-1` through `#chapter-6-6-6`, and each link is at least 44px tall.
+
+Choices. "Theorem 6.1, so parametrize both curves" is the whole sentence, 54px tall. "Corollary 6.1, so the value is always \(2\pi i\)" wraps the formula onto a second line, 88px, and the formula is on the button. The four Example 6.7 lines stay one 44px row. The longest is 289px in a 288px box.
+
+Stage complete on 6.1 is 44px and disabled. The line under it says "Bring the point all the way around" before the full turn, and "Fill both lines" after it. On each camp the flag carries the count, and the summit, Go, and Stage complete sit under that camp's blanks. The sheet and the cards follow. On 6.3, Go to 6.4 and "Subdivide the triangle" share the screen with "A pole is the next beat" and the start of the green circle.
+
+Style. Light paper `rgb(246, 243, 236)`, ink `rgb(26, 34, 48)`, muted `rgb(81, 91, 108)`. Dark paper `rgb(13, 18, 28)`, ink `rgb(233, 237, 245)`, muted `rgb(166, 176, 195)`. The button radius is 6px and the card radius is 10px. Chapter 4 and chapter 5, sampled in the dark after the same theme control, use that Iowan title at 25.85px, that lede at 16.8px, that kicker, and that 10px card.
+
+### Ranked cuts
+
+1. **The half-turn line sits with the claim, and one sentence stays above the square.** After Play the claim ends at y = 782, Play ends at 834, and "Half a turn: \(2i\)." starts at y = 842. The why and the gesture are 53px each above the square, and both name purple. Moving the half-turn line above Play without freeing a line would push Play past 844. Change: 6.1 keeps "Drag the green point around the orange circle. Purple is the integral." The why line goes. `#ch6-real-half` is inserted after the claim and before Play. It still latches, and it still stays after the point moves on. Play's bottom stays inside 844 and inside 800.
+
+2. **The page number stays on the section's row.** At 390 the Chapter 6 doors are the right hashes and at least 44px, and four of them drop the page onto a line by itself. The 6.2 link is 283px wide, so "p. 167" wraps to y = 1636 under a link that ended at 1630, and the row grows from 44 to 76. 6.3 does the same with "p. 181". 6.4 and 6.6 wrap the title, then put "p. 193" and "p. 203" on their own right-aligned line. "p. 203" sits in the gap above Walk Chapter 6. 6.1 and 6.5 keep the page beside the title. Change: the row does not wrap. The title flexes and may wrap inside the link. The page stays on the right of that row.
+
+3. **A flashcard says which card it is.** Section 6.1 opens one deck of two flashes. Show the back opened the definition. Missed, 44×141, closed the back and left the same front. The full-turn card stayed behind it, and the card gave no sign that the press landed. Change: the heading reads "Flashcard · 1 of 2", and Missed adds one line, "Still this card." Recalled can keep moving to the next card.
+
+### What to keep
+
+The first screen, both themes, both widths. The lede, `6.1 · 0 of 6`, the square, "The total has left 0.", and Play. The four colours on the marks. Play, Pause, Play. The half-turn sentence stays after the point moves on.
+
+The drawer. Chapters 1–7, Later on the chapters that are still cards, Chapter 6 marked, every row 44px, the page behind it held still. Chapter 7 landing with LATER at y = 73.
+
+Back. Go writes the camp hash and returns to the scroll you left. The Book from the drawer, then Back, returns to that camp with the flag under the header.
+
+The Book kicker and Back to the book, the words at the size they were, the hit at 44px. Walk Chapter 6 at 163×44. The section names as the doors.
+
+The summit, Go, and Stage complete under the blanks, with the reason on the disabled tick: "Bring the point all the way around", "Fill both lines", "Take all eight steps", "Subdivide the triangle", "Bend the path", "Bring the point inside", "Cross every circle". On 6.3 the pole label and the green circle share the screen with Go.
+
+Wrapped choices, the whole sentence, and Example 6.7 on one 44px line. The type, the paper, the 6px button, the 10px card.
