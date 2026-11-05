@@ -67,16 +67,28 @@ export function sameSiteWrite(request) {
   return !!origin && origin === originOf(request);
 }
 
+function blockedReturnPath(path) {
+  if (typeof path !== 'string' || !path.startsWith('/') || path.startsWith('//') || path.startsWith('/\\')) return true;
+  if (path.includes('\\') || path.includes('://')) return true;
+  let decoded = path;
+  try { decoded = decodeURIComponent(path); } catch { return true; }
+  if (!decoded.startsWith('/') || decoded.startsWith('//') || decoded.includes('\\') || decoded.includes('://')) return true;
+  const folded = decoded.toLowerCase();
+  return folded.startsWith('/auth/') || folded.startsWith('/api/');
+}
+
 export function safeReturn(raw, origin) {
   const home = '/#book';
   if (typeof raw !== 'string' || !raw || raw.length > 400) return home;
   if (!raw.startsWith('/') || raw.startsWith('//') || raw.startsWith('/\\')) return home;
-  if (raw.includes('\\') || raw.includes('://')) return home;
+  if (raw.includes('\\') || raw.includes('://') || /[\u0000-\u001f\u007f]/.test(raw)) return home;
   try {
     const url = new URL(raw, origin);
     if (url.origin !== origin) return home;
-    if (url.pathname.startsWith('/auth/') || url.pathname.startsWith('/api/')) return home;
-    return `${url.pathname}${url.search}${url.hash}` || home;
+    if (blockedReturnPath(url.pathname)) return home;
+    const path = `${url.pathname}${url.search}${url.hash}` || home;
+    if (blockedReturnPath(path)) return home;
+    return path;
   } catch {
     return home;
   }

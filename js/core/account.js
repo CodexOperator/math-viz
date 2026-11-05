@@ -492,6 +492,8 @@ export function mountAccount({ store, slot, fetch: fetchImpl, location: loc, ses
   let queued = false;
   let watching = false;
   let me = null;
+  let interrupt = false;
+  let syncEpoch = 0;
   const unsubs = [];
   const ac = typeof AbortController === 'function' ? new AbortController() : null;
   const landing = takeAuthLanding(storage);
@@ -546,15 +548,17 @@ export function mountAccount({ store, slot, fetch: fetchImpl, location: loc, ses
   }
 
   async function pushMerged(remote) {
+    const epoch = syncEpoch;
     let current = remote;
     for (let attempt = 0; attempt < 4; attempt += 1) {
-      if (stopped) return;
+      if (stopped || epoch !== syncEpoch) return;
       if (!current) current = await readProgress();
-      if (!current) return;
+      if (!current || epoch !== syncEpoch) return;
       const plan = syncPlan(collectProgress(store), current);
       if (plan.apply) applyQuiet(plan.merged);
-      if (!plan.upload) return;
+      if (!plan.upload || epoch !== syncEpoch) return;
       const wrote = await writeProgress(plan.merged, current.rev || 0);
+      if (stopped || epoch !== syncEpoch) return;
       if (wrote.status === 'conflict') {
         current = wrote.remote;
         continue;
@@ -617,6 +621,7 @@ export function mountAccount({ store, slot, fetch: fetchImpl, location: loc, ses
   }
 
   async function signOut() {
+    interrupt = true;
     let ok = false;
     try {
       const res = await fetchFn('/auth/logout', {
@@ -640,6 +645,19 @@ export function mountAccount({ store, slot, fetch: fetchImpl, location: loc, ses
   }
 
   async function deleteCopy() {
+    interrupt = true;
+    syncEpoch += 1;
+    const epoch = syncEpoch;
+    clearTimeout(timer);
+    queued = false;
+    let spins = 0;
+    while (busy && !stopped && epoch === syncEpoch && spins < 150) {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      spins += 1;
+    }
+    if (stopped || epoch !== syncEpoch) return;
+    clearTimeout(timer);
+    queued = false;
     let ok = false;
     try {
       const res = await fetchFn('/api/progress', {
@@ -684,11 +702,11 @@ export function mountAccount({ store, slot, fetch: fetchImpl, location: loc, ses
       let already = false;
       try { already = !!(storage && storage.getItem('mv:account-synced')); } catch { already = false; }
       const line = already ? '' : mergeNotice(plan, local);
-      if (line) {
+      if (line && !interrupt) {
         try { if (storage) storage.setItem('mv:account-synced', '1'); } catch { /* one line is enough */ }
       }
-      if (plan.apply) await refreshOpenPage();
-      if (line) announce(line);
+      if (plan.apply && !interrupt) await refreshOpenPage();
+      if (line && !interrupt) announce(line);
     } catch { /* signed in, local ticks still on the page */ }
     finally {
       busy = false;

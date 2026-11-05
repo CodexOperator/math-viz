@@ -223,8 +223,10 @@ async function googleUser({ env, code, verifier, nonce, redirectUri }) {
   if (!payload) return null;
   const id = cleanId(payload.sub);
   if (!id) return null;
-  const handle = payload.email_verified && payload.email ? payload.email : (payload.name || payload.email || id);
-  return { provider: 'google', id, handle: cleanHandle(handle) };
+  // The header shows a verified email, or the name. An unverified address is not a handle.
+  const email = payload.email_verified === true && typeof payload.email === 'string' ? payload.email : '';
+  const name = typeof payload.name === 'string' ? payload.name : '';
+  return { provider: 'google', id, handle: cleanHandle(email || name || id) };
 }
 
 function xBasic(id, secret) {

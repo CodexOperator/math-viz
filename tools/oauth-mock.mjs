@@ -114,6 +114,23 @@ globalThis.fetch = async (url, init) => {
       const idToken = await signJwt(other.privateKey, { iss: 'https://accounts.google.com', ...base });
       return jsonResponse({ id_token: idToken });
     }
+    if (code === 'unverified') {
+      const idToken = await signJwt(pair.privateKey, {
+        iss: 'https://accounts.google.com',
+        ...base,
+        email_verified: false,
+        name: 'Ada Lovelace',
+      });
+      return jsonResponse({ id_token: idToken });
+    }
+    if (code === 'unverified-noname') {
+      const idToken = await signJwt(pair.privateKey, {
+        iss: 'https://accounts.google.com',
+        ...base,
+        email_verified: false,
+      });
+      return jsonResponse({ id_token: idToken });
+    }
     return jsonResponse({ error: 'code' }, 400);
   }
   if (u === 'https://api.x.com/2/oauth2/token') {
@@ -219,6 +236,18 @@ check('google sign-in sets a session cookie and returns to the book',
   && !signedText.includes(CANCEL_NOTICE)
   && /HttpOnly/.test(session) && /Secure/.test(session) && /SameSite=Lax/.test(session)
   && calls.includes('https://oauth2.googleapis.com/token'));
+
+function sessionHandle(cookie) {
+  const raw = cookie.split(';')[0].slice('mv_session='.length);
+  return payloadOf(decodeURIComponent(raw)).handle;
+}
+
+const unverified = await finish('google', google.cookie, `code=unverified&state=${encodeURIComponent(google.payload.state)}`);
+check('an unverified email is not the handle when a name is present',
+  sessionCookie(unverified) && sessionHandle(sessionCookie(unverified)) === 'Ada Lovelace');
+const unnamed = await finish('google', google.cookie, `code=unverified-noname&state=${encodeURIComponent(google.payload.state)}`);
+check('an unverified email with no name falls back to the account id',
+  sessionCookie(unnamed) && sessionHandle(sessionCookie(unnamed)) === '1001');
 
 const x = await start('x');
 const xDone = await finish('x', x.cookie, `code=good&state=${encodeURIComponent(x.payload.state)}`);

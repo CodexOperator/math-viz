@@ -287,9 +287,27 @@ body {
   .header-actions:has(#account-more[open]) { flex-wrap: wrap; }
   .header-actions:has(#account-more[open]) .account-slot {
     flex: 1 0 100%;
+    flex-wrap: nowrap;
+    align-items: flex-start;
     justify-content: flex-end;
+    max-width: 100%;
   }
-  .account-more[open] .account-handle { max-width: 12rem; flex-shrink: 0; }
+  .account-more[open] {
+    display: inline-grid;
+    justify-items: end;
+    width: max-content;
+    max-width: calc(100% - 6.5rem);
+    min-width: 0;
+  }
+  .account-more[open] .account-handle {
+    max-width: 100%;
+    min-width: 0;
+  }
+  .account-more[open] .account-delete {
+    width: max-content;
+    max-width: 100%;
+    justify-self: end;
+  }
 }
 @media (min-width: 56.25rem) {
   .account-handle { max-width: 10rem; cursor: default; }

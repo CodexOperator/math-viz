@@ -15,7 +15,7 @@ import {
 } from '../js/core/account.js';
 import { recordMiss } from '../js/practice/misses.js';
 import {
-  SESSION_TTL_SEC, signSession, readSession, verifyToken, signToken,
+  SESSION_TTL_SEC, b64urlToBytes, signSession, readSession, verifyToken, signToken,
 } from '../functions/_lib/session.js';
 import { sessionCookie, safeReturn, cookiePair, readBodyLimited } from '../functions/_lib/http.js';
 import { validateProgress, MAX_PROGRESS_BYTES } from '../functions/_lib/progress.js';
@@ -225,6 +225,12 @@ check('a protocol-relative return is dropped', safeReturn('//evil.example/auth',
 check('a backslash return is dropped', safeReturn('/\\evil.example', home) === '/#book' && safeReturn('///evil.example', home) === '/#book');
 check('a callback return is dropped', safeReturn('/auth/google/callback', home) === '/#book' && safeReturn('/api/auth/google/callback?code=1', home) === '/#book');
 check('a return with a newline stays one path', !safeReturn('/foo\r\nSet-Cookie: a=b', home).includes('\n') && !safeReturn('/foo\r\nSet-Cookie: a=b', home).includes('\r'));
+check('a dot-segment does not become a protocol-relative return',
+  safeReturn('/.//evil.example/phish', home) === '/#book'
+  && safeReturn('/foo/..//evil.example', home) === '/#book'
+  && safeReturn('/%2e//evil.example', home) === '/#book'
+  && safeReturn('/%2f%2fevil.example', home) === '/#book'
+  && safeReturn('/#chapter-5', home) === '/#chapter-5');
 
 const env = {
   SESSION_SECRET: secret,
@@ -259,6 +265,25 @@ check('google start redirects to the origin callback with PKCE',
 const setCookie = started.headers.get('set-cookie') || '';
 check('the state cookie is HttpOnly Secure SameSite=Lax on /api/auth',
   /HttpOnly/.test(setCookie) && /Secure/.test(setCookie) && /SameSite=Lax/.test(setCookie) && /Path=\/api\/auth/.test(setCookie));
+
+const sneaky = await beginAuth({
+  request: new Request(`https://complexanalysis.pages.dev/auth/google/start?return=${encodeURIComponent('/.//evil.example/phish')}`),
+  env,
+}, 'google');
+const sneakyPair = (sneaky.headers.get('set-cookie') || '').split(';')[0];
+const sneakyToken = decodeURIComponent(sneakyPair.slice('mv_oauth='.length));
+const sneakyPayload = JSON.parse(new TextDecoder().decode(b64urlToBytes(sneakyToken.slice(0, sneakyToken.lastIndexOf('.')))));
+const sneakyBack = await googleCallback({
+  request: new Request(`https://complexanalysis.pages.dev/api/auth/google/callback?error=access_denied&state=${encodeURIComponent(sneakyPayload.state)}`, {
+    headers: { cookie: `mv_oauth=${encodeURIComponent(sneakyToken)}` },
+  }),
+  env,
+});
+const sneakyHtml = await sneakyBack.text();
+check('a dot-segment return is stored and rendered on this site',
+  sneakyPayload.returnTo === '/#book'
+  && sneakyHtml.includes('/#book')
+  && !sneakyHtml.includes('evil.example'));
 
 const xStart = await beginAuth({
   request: new Request('https://complexanalysis.pages.dev/auth/x/start?return=%2F%23book'),
