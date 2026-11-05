@@ -1681,3 +1681,63 @@ The chapter uses the station type. At 390 the title is Iowan Old Style, 25.85px,
 ### Keep
 
 The first screen of the chapter. Both planes, the shaded half-plane, the claim that names w = iz+i, and the four colours, at 390 and at 1280, in the light and in the dark. The drag on §2.1, §2.2, §2.3, and §2.5 flips the sentence and the purple point agrees. The green mark stays inside the square, 13.7px on the phone and 23.3px on the laptop, and a press within 20px of it moves. Open Chapter 2 is a real 44px primary button. After a mark, the book status says how many of the five stages are marked. Stage complete stays 44px and stays disabled until the claim has been both ways and one card is finished, and the Summit heading stays hidden until then. The practice blanks and the choice buttons are 44px, the formulas match the paragraph, and the four roots sit in one row at 51×44. Show the back stays closed. A deep link to §2.4 puts the title clear of the header. The sidebar at 1280 highlights Chapter 2. The paper, the Iowan title, and the lede match Addresses and Chapter 4. No sideways scroll, and the console stayed quiet.
+
+## taste-skill (Ch2 batch 3)
+
+Read Leonxlnx/taste-skill at `12af471f`. Judged the preview through it. `kit/SKILL.md` wins where they disagree, and the site style stays: four teaching colours, one gesture, no second clock, the book-path kickers, the system serif and the system sans, the paper. Polish only. No product code changed.
+
+Preview https://ch2-preview.complexanalysis.pages.dev, branch `cursor/chapter-2`. The live `js/stations/ch2-picture.js` contains the batch-3 claim “On the blue line or to its right.” Walked `#book` and `#chapter-2` in headless Chrome, 390×844 then 1280×800, light then dark. Dragged the green point on §2.1. Ran `inspect.mjs` on `#chapter-2` at those two widths. No console errors. `scrollWidth` was 390 and 1280.
+
+### Verdict
+
+ANOTHER BATCH
+
+The phone chapter is the page. Both planes and the sentence that flips are on the first screen, in both themes. What is left is one empty card on the way in, and a wide screen whose picture does not use the card.
+
+### What the first screens actually hold
+
+The book, 390, light and dark. Open Chapter 2 is 324×44 at y = 265. Under it the status is 324×256, and the only words in that box are “Next is §4.1, Exercise 3. 0 of 8 exercises.” Walk Chapter 4 is the next control, 324×44 at y = 581. The Chapter 2 card starts at y = 849, under the fold. The 256px is the status flex basis of 16rem, which on the phone column becomes a blank band. At 1280 those three sit on one line and the status is 26px, so the hole is the phone. Dark paper is `rgb(13, 18, 28)`. The band is the same in both themes.
+
+Chapter 2, 390, light and dark. The title is one line, 25.85px. The lede is the colour key, muted, and it passes contrast (6.2:1 on the light paper, 8.6:1 on the dark). Both squares are 158×158 from y = 448. The claim ends at y = 694. A drag left flips it from “on or above Im w = 2” to “below,” and the purple point crosses the orange line. The green and purple marks are 13.7px. The orange quarter-turn arc is 17.2×17.2. The why on that card is “Multiplication by i is a quarter turn.”
+
+Chapter 2, 1280, light and dark. The squares are 268×268. The pair runs from x = 321 to x = 865. The card runs from x = 304 to x = 1256. The claim ends at y = 718, inside the 800px window. `inspect.mjs` calls the empty region to the right of that pair a void of 373×640 at (907, 107), 23% of the first screen, and fails the first screen for having no dominant element: the title is 36px, 2.8vw, and no picture holds a third of the viewport. The same left edge repeats down the page. On §2.2 the four choices are 158×44 at x = 338, inside a practice card 918px wide.
+
+On every stage, both widths, both themes, the Memory sheet button starts on the claim’s last line. At 390 the §2.1 claim ends at y = 694 and the button is 44px from there. Worked starts at y = 754. Stage complete is on the page from the start, at opacity 0.45, full width, disabled. The summit heading stays hidden until the stage is earned. Back to the book, at the bottom of 10717px, is 134×23.
+
+The §2.2 parabola, the §2.3 disks, the §2.4 dashed cut, and the §2.5 circle read in both themes. The four root choices are one row, each 44px tall and about 51px wide. Nothing scrolls sideways.
+
+### Critique
+
+```
+ROUND 1
+Seen in one second: on the phone, two shaded squares and a green dot; on the laptop, a small pair in the left of a wide card; on the book, a tall empty card between two buttons.
+Idea (one sentence): one drag moves a green point, and the purple point and the sentence change with it.
+Live thing: the drag on each stage.
+Layout words by section: book=card / 2.1=split / 2.2=split / 2.3=split / 2.4=split / 2.5=split
+Scores: design 6 · usability 7 · creativity 8 · content 8 → arithmetic 7.0, capped at 6.0
+Caps applied: focal-point FAIL at 1280 (no dominant element on the first screen). Overall cannot exceed 6.0 while that FAIL stands.
+Top three problems:
+1. The book card at 390 is a 256px blank between Open Chapter 2 and Walk Chapter 4, and the sentence names §4.1. 390-dark-book, 390-light-book.
+2. The 1280 first screen leaves a 373×640 void to the right of the planes. inspect voidBox, both themes.
+3. The quarter turn the why names is a 17px arc. 390 fold, light and dark.
+```
+
+House rules the inspector also failed, and this pass leaves, because the kit and the site style win: the uppercase kickers (20 of them: “2.1”, “Worked”, “Practice”, “Further reading”), the 1px card and plane outlines (32), the header and footer hairlines, KaTeX’s math faces on top of the two text faces, the cream paper `#f6f3ec`, the muted lede at 6.2:1, SVG planes that are not photographs, and a still page. The drag is the motion. A scroll fade would be a second clock. Five stages of one shape is the mountain, not a card grid to restyle.
+
+### Ranked
+
+1. **Close the hole in the book’s first card, and make the sentence the button.** Evidence: at 390, light and dark, Open Chapter 2 is 324×44 at y = 265, the status is 324×256, and Walk Chapter 4 is at y = 581. The words in the blank are “Next is §4.1, Exercise 3. 0 of 8 exercises.” The Chapter 2 card is at y = 849. At 1280 the status is 26px on one line with the buttons, so this is the phone. Change: in the phone column, the status basis is the line, not 16rem. With no stage marked, the sentence is “Chapter 2 is open. 0 of 5 stages marked.” Walk Chapter 4 leaves this card.
+
+2. **Give the wide screen one picture that uses the card.** Evidence: at 1280, light and dark, the planes are 268×268 and end at x = 865 in a card that ends at x = 1256. The claim ends at y = 718. The inspector’s void is 373×640 at (907, 107). It fails the first screen: title 36px, no picture a third of the viewport. Change: on the wide layout only, the claim sits in that right half, level with the planes, and the pair grows until that row still ends inside the 800px window. The phone stack stays. Planes 158×158 from y = 448, claim ending at y = 694.
+
+3. **Draw the quarter turn at a size the why can point at.** Evidence: at 390, light and dark, the orange arc’s box is 17.2×17.2 on a 158px square. The green mark beside it is 13.7px. The line above the squares says multiplication by i is a quarter turn. Change: the arc’s radius is about a third of the square, still on the unshaded side of the blue line. One drag. No second control.
+
+4. **Let the choices use the card they sit in.** Evidence: §2.2 at 390, the four formulas are 158×44 at x = 50, stacked, in a card at x = 33 that is 324px wide, so about 150px of the card is empty beside each one. At 1280 the same buttons are 158×44 at x = 338 in a card 918px wide. The step aligns to the start, so the buttons stay as wide as the longest formula. Change: the choices stretch to the card. On the wide layout they sit in one row, each at least 44px. The phone keeps the stack, at the card’s width.
+
+5. **Put Worked against the claim, and open the sheet under the button.** Evidence: every stage, both widths, both themes. At 390 the §2.1 claim ends at y = 694, the Memory sheet button is 156×44 from there, and Worked starts at y = 754. Tapping it does not open the line under the button. The heading and “Apply Az+B to each vertex. Page 54.” appear at y = 2224, after Further reading, 1500px down the stage. At 1280 the claim ends at y = 718 and the button starts on that line. The same order on §2.2 through §2.5. Change: claim, then Worked, with nothing between them. The button and the list it opens move together, under Practice.
+
+6. **Hide Stage complete until the stage is earned.** Evidence: the button is on every stage from arrival, full width, disabled, opacity 0.45. The summit heading on the same block is already hidden until the claim has been true and false and one item is right. Five faded bars read as controls that failed to load. Change: hide the button with the heading. When the stage is earned, show them together, and the button stays 44px.
+
+### Keep
+
+The paper, the serif title, and the four teaching colours. Light paper `#f6f3ec`, dark paper `#0d121c`, the same blue, orange, green, and purple on the planes in both themes. The phone chapter’s first screen: both squares, the captions “z plane” and “w plane,” and a claim that ends at y = 694 and flips when the green point crosses the line. The 544px cap can stay only until the claim moves beside the pair. Until then it is what keeps that sentence inside 800px. The kickers stay. They are the book path, and the kit beats the inspector’s ban on them. Show the back stays full width, and the back stays closed. The four root choices stay one row of 44px targets. The parabola, the disks, the dashed cut, and the circle stay the pictures. One drag, no chips, no clock. The lede stays muted: 6.2:1 and 8.6:1 are readable, and it is the colour key once. No sideways scroll, no console errors, light and dark, 390 and 1280.
