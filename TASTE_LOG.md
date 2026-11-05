@@ -1692,3 +1692,67 @@ Test prep lands at scroll 0, and the answer box does not take focus. The worked 
 Flashcards are one card. The front is the gloss, the count is "1 of 36" on the card, the back is the sentence, and Again and Got it are 44px. The line matches the buttons. The memory sheet starts at 4.1, says its line once, and Print is 44px. Browser Back restores the book at 640 and the chapter at 500.
 
 The paper, the serif title, the sans text, the accent button, and the dark off-white primary are the station pages. The source line stays the small textbook link the book already uses. No emoji, no gradient, no glow. The four teaching colours stay on the pictures.
+
+## skeptical-student (practice batch 5)
+
+Branch `cursor/practice-engine`, tip `87c474d`. Preview https://practice-preview.complexanalysis.pages.dev. Fresh storage. Headless Chrome, touch, 390×844 light, then the same doors in the dark, then 1280×800 light and dark. No product code was changed. No console errors. No failed requests. `scrollWidth` matched the window at 390 and at 1280, both themes, on the book, the chapter, and the practice cards. The mixed memory sheet is the exception: 438 on the phone, both themes.
+
+I have never seen this course. I opened the link tired, on a phone, and tried to answer three things: what am I being asked, what do I do, and what did I just learn?
+
+### Verdict
+
+ANOTHER BATCH. I can press Continue, I can press Check, and one sentence on Chapter 4 actually teaches. The practice card then asks me to finish a line of symbols, and the only instruction on that card is "Next."
+
+### Cold open
+
+390×844, light, scroll 0. The name wraps. The title is The Book. Continue is 111×44 at y = 291 and goes to `#chapter-4`. The status says "Chapters 1, 2, 3, 6, and 7 are closed. Next is §4.1, Exercise 3. 0 of 10 exercises." Chapter 4, flagged Next, is on that screen. The same words in the dark: paper rgb(13, 18, 28), title rgb(233, 237, 245). At 1280 the eight rows are the sidebar, Continue is at y = 259, and Chapter 3's name is whole. A closed row is a span. Tapping "1 Complex Numbers" leaves the hash empty.
+
+The drawer row is "Test prep", 358×44 at y = 382, on the first phone screen. I know this is a book, I know some chapters are closed, and I know the next exercise number. I do not know what a complex number is. Continue is the thing to press.
+
+Continue opens Chapter 4 at scroll 0. The Book is 134×44. The lede says to tick an exercise when I have worked it. "Test prep · 4.1" is 150×44 at y = 542. Under it, at y = 612, the one sentence I understood: "A sequence settles when its terms eventually sit in every disk around the limit." The status still says the next thing is §4.1, Exercise 3. That title is at y = 768. The citation under it runs y = 814–851, past an 844px window, and the question ("Suppose that the limit is z_0…") is below the citation. The disk chip is at y = 920. The button on the screen opens the proof.
+
+### The card
+
+`#test-prep-4-4-1`, scroll 0, light and dark, and the same card at 1280. Status "Section 4.1. 1 of 6." The lede is "Next." The flag is WORKED EXAMPLE, Step 1 of 2. The line is already filled: given ε > 0, choose N and M, and the modulus is at most |x_n − u| + |y_n − v|. Each formula is one piece. The long modulus sits on one line, y = 628 on the phone and y = 396 at 1280. Next is 44px, bottom 825 on the phone and bottom 539 at 1280, inside both windows, both themes. Step 2 says the sum is strictly less than ε, and the lede becomes "Try these steps."
+
+I still do not know what ε, N, or ζ are. The disk sentence from the chapter is not on this card. "Next." does not tell me to read the filled line.
+
+The blank is "2 of 6.", one box labelled "Your answer", Check at y = 764 (bottom 808). Hint is 44px at y = 814, bottom 858, so the last 14px is past the phone, light and dark. At 1280 Hint is at y = 583, inside the 800px window. I typed `idk`. The count became "2 of 7." "Not that one." is rgb(179, 38, 30), contrast 6.5 on the white card. The hint "Split the one modulus into the two coordinates." ends at y = 836, on the phone. In the dark the same words end at y = 836, and "Not that one." is rgb(255, 129, 120) on the card rgb(21, 28, 43), contrast 7.0. Next hint adds "Bound |A+B| by |A|+|B|." and the button is gone. A second miss fills the blank and the reason names the triangle inequality, page 104. A right answer, `|x_n-u|+|y_n-v|`, fills the same blank, says "Yes." in rgb(38, 112, 42), contrast 6.1, and Next step ends at y = 835.
+
+I can tell I was wrong. I cannot tell what the line was asking, beyond "finish the formula."
+
+### The other doors
+
+§4.2 opens "1 of 2.", lede "Next.", Newton's method, and the filled line N(z) simplifies to −b/a. The title asks how many iterations reach the root. That answer is step 2: "1, or 0 if the guess is already the root." Step 1 is the algebra. Typing `idk` on the blank changes "2 of 2" to "2 of 3." Reload keeps the miss (`pending: true`) and opens "1 of 3." on the worked card, lede "Next.", the −b/a line already filled. The blank I missed is not the card on screen.
+
+Giving up through the reasks ends on a real sentence. The lede is "These lines were shown. For f(z) = az + b, Newton's method reaches −b/a in one step, or in zero steps if the guess is already the root. Exercise 3, page 117." The card says "These lines were shown." and then the same sentence. Open the memory sheet is 44px at y = 536. That sentence is the thing I learned. It is said twice, and the worked card never led with it.
+
+§4.4, light and dark, both widths. Lede "Try these steps." The filled line is "The radius is 5." The reason says dividing by (−4 − 3i)^n makes the radius |−4 − 3i|, and the centre does not change it. A second seed's reason names |−2i| and still does not say the number. Endless is on this card. On the mixed set, Endless is on the Theorem 4.1 worked card. Pressing it sets `aria-pressed` to true. The card stays "1 of 18.", lede "Next."
+
+§5.1 is the door I could do. The worked line says both points land at −1, and they meet at the left-hand point of the unit circle. The blank is four choices, 44px, two rows: on the phone y = 526 and y = 578, at 1280 y = 426 and y = 478, light and dark. Hint is on the screen. I could tap −1 because the card before said −1.
+
+The mixed set, fresh storage, is "Chapters 4 and 5. 1 of 18." Chapter 2 is not in that line. The lede is "Next." The first card is the same Theorem 4.1 worked step.
+
+Flashcards, first visit to the mixed set: "1 of 36", flag NEW, front "limit of a sequence", source "Definition 4.1, page 103." Show the back is 44px. The back is the ε sentence. Got it. The next front is "real and imaginary parts", then "bounded sequence", then "convergent sequences are bounded", and the count is "2 of 36", "3 of 36", "4 of 36". The lede is "Show the back." I know the name of the card. The back is the sentence I cannot use yet.
+
+The memory sheet's lede is "The formulas and the one-line versions." Print is 44px. While the Theorem 4.1 blank is empty, the triangle-inequality formula is off the §4.1 sheet. The mixed sheet, the one under Test prep, is 438px wide on a 390px phone, light and dark. The wide line is 1/(1 − z) = 1 + z + ⋯ + z^{n−1} + z^n/(1 − z), a 386px formula from x = 52 to x = 438. At 1280 that sheet's `scrollWidth` is 1280.
+
+### What to keep
+
+The book is one status sentence, one Continue at 44px, and Chapter 4 on the phone screen, light and dark. A closed chapter is text. Test prep is a 44px row on the first drawer screen, and at 1280 it is in the sidebar. Continue opens Chapter 4 at the top. The idea sentence is on that screen, and "Test prep · 4.1" is 44px.
+
+The practice card is one step. The formula stays one piece, in the question and in the filled answer, at both widths. Check is on the screen. A miss paints "Not that one." and one hint on the screen, light and dark, and the next hint adds a line. A hit fills the blank and "Yes." is the green token. §4.2, §4.4, and §5.1 open on a filled line. The §5.1 choices sit in two rows, on the screen, both widths, both themes. The mixed status names chapters 4 and 5. Flashcards are one card, the plain name then the sentence, in book order, "1 of 36" then "2 of 36". The live answer stays off the section sheet. Set complete does say the fact. The paper, the type, and the dark theme are the station pages.
+
+### Ranked fixes
+
+1. **Say what the line is, in the words from the chapter.** On the phone and at 1280, light and dark, the worked card's lede is "Next." and the step is the ε line. Chapter 4 already has the sentence, at y = 612: the terms sit in every disk around the limit. The hint after `idk` is "Split the one modulus into the two coordinates." Change: the lede is "Read this filled line." Under the title, that disk sentence. The symbols stay the step.
+
+2. **A miss adds a question, and a reload starts over.** On §4.2, `idk` turns "2 of 2" into "2 of 3." Reload opens "1 of 3.", lede "Next.", on the filled −b/a line. The missed blank is still pending and is not the card on screen. The theorem does the same thing: "2 of 6" becomes "2 of 7." Change: the count stays "2 of 2", with one line that this step comes back at the end. Reload opens on that blank.
+
+3. **The status names Exercise 3, and the button opens the proof.** The status is "Next is §4.1, Exercise 3." "Test prep · 4.1" is at y = 542. The exercise title is at y = 768, and the question is below the citation that ends at y = 851. The button opens "Given ε > 0…". Change: the exercise the status names is on the screen, question included. The practice button says it is the proof.
+
+4. **The radius card gives two answers, and Endless does nothing there.** §4.4 says "The radius is 5." The reason says the radius is |−4 − 3i|. A second seed's reason says the radius is |−2i| and still omits the number. Endless is on that card and on the mixed worked proof. Pressing it leaves "1 of 18." and "Next." Change: the reason ends "|−4 − 3i| = 5." Endless shows on a generated blank.
+
+5. **The mixed sheet is wider than the phone.** Memory sheet at 390, light and dark, `scrollWidth` 438. The geometric line runs to x = 438. At 1280 the sheet fits. Change: that formula wraps inside the card. The phone stays 390 wide.
+
+6. **The end says the one sentence twice.** After giving up on §4.2, the lede is the Newton sentence, and the card repeats "These lines were shown" and the same sentence. The worked card's title asks how many iterations, and that answer is step 2, under a lede that says "Next." Change: the sentence is the lede, once. The card is the heading and "Open the memory sheet." The filled line that answers the title is the first line of the worked card.
