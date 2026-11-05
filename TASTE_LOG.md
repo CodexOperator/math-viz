@@ -1330,3 +1330,473 @@ Nothing. No slider, no scrubber, no spring, no second clock.
 Yes. One batch, then stop. It is the one cut above.
 
 The hold, the button, and the frame clock are the lesson, and they hold. Something real is left, and it is the frame a mouse drag draws around the square. A touch does not draw it. After that frame is gone, nothing real is left of this walk's touch.
+
+# Practice engine — batch 1
+
+Branch `cursor/practice-engine`. The practice page uses the book cards, the same buttons, and the same type. No new palette. Checked in headless Chrome at 390px and at a wide window: test prep, a worked proof then a wrong step and its reason, the hint ladder, a right choice on §5.1 exercise 2(c), Generate another on a radius, the memory sheet, one Leitner promotion, Chapter 4, Chapter 5, the roadmap, Test 1 `#problems`, and Test 2 `#index`. No console errors. No horizontal scroll at 390px.
+
+## What is on the page
+
+Test prep is a book route, so it does not switch the remembered test. The roadmap, Chapter 4, and Chapter 5 each link to it. A section link walks that section: the proof is filled in, then the same proof is blank, then the choices, then the exercises. The chapter-level Test prep mixes sections. Check is immediate. The reason shows after the attempt. A generator item can draw another seed, and Endless keeps drawing when the fixed list ends. The memory sheet is the `memory` lines plus the formulas, and it prints. Flashcards use five Leitner boxes in `mv:practice.leitner`. `mergeLeitner` keeps the card with more reviews so a later sign-in can merge two devices. Test 1 and Test 2 stay their own maps, linked from the bottom of the prep page.
+
+## What is still thin
+
+The mix does not change from visit to visit. The seed is the chapter number. A student can learn the order. Choices stay in the order they were written. A hint clears whatever was already typed, because the card is drawn again. Practice attempts other than flashcards are not stored. Chapters other than 4 and §5.1 have no items yet. The print sheet was not held up on paper, only opened in the page.
+
+## Next
+
+Vary the interleave by day. Keep the typed answer when a hint opens. Shuffle choices. Store a short record of which steps were missed, in the same mergeable shape as the boxes. Leave chapter files to the chapter loops.
+
+# Practice engine — batch 2, the shell
+
+The drawer is one list on every page: Chapters 1–7, then Test prep. The menu button says Chapters. `#home` opens the status card and one Continue button, and the count is the exercises in Chapters 4 and 5 together (10), not Chapter 4 alone. Chapter and section rows are links. Chapters 8–11 stay in the data and off the list. The line under a title is the part-label type. The way up is the 44px station link. A chapter hash is a history entry, and Back puts the book back where it was scrolled. The site name wraps instead of truncating at 360px. Test prep is the one door: the practice set, then Test 1, then Test 2. `#problems` and `#index` still open, and their ticks stay in `progress` and `progress.test2`. Chapter loops add one line to `js/book/registry.js`.
+
+Checked in headless Chrome at 360×780: the full site name, the seven chapters, Continue, the labelled drawer, the Chapter 5 up control, scroll restored after Back, both indexes inside Test prep, and the 2 of 10 count after a Chapter 4 tick and a Chapter 5 tick. No console errors.
+
+## Next
+
+The home map and the Test 2 map still exist behind a thread hash. Pictures for Chapters 1–3 and 6–7 are not inside those chapter pages yet; those loops register the pages. The interleave seed, choice order, and unsaved practice attempts are unchanged from batch 1.
+
+# Practice engine — batch 3
+
+Pulled the reviewer tip `4030750` first. Test prep is the practice card only. Test 1 and Test 2 are 44px rows to `#problems` and `#index`. A closed chapter is one line, and Chapter 4 sits under the status card at 390, 360, and 1280, light and dark. Continue opens `#chapter-4` at the top. The first miss on a blank shows the hint, and the answer waits for the second miss. The mixed set opens on a worked proof. Flashcards on a first visit say “1 of N”, front the name, back the sentence. Julia’s two way-up links read The Book (`#book`) and Chapter 4 (`#chapter-4`). The catalog loads whichever of `ch1.json`–`ch7.json` exist. A generator whose first argument is not `seed` throws. Continue can count a walk registered beside the module line. Chapter 2 is `2: './stations/chapter2.js'`, with `ch2-maps` and a page that reads `ctx.book.focus`.
+
+## Still open
+
+Chapter 2’s page is the shell the loop fills, not the five sections. Chapters 1, 3, 6, and 7 are still closed. Film panels still say Story Map. The mix after the worked proof uses a fixed seed. A miss is not stored past the card. Choices stay in written order.
+
+## skeptical-student (practice batch 2)
+
+Branch `cursor/practice-engine`, tip `e02fc859`. Preview https://practice-preview.complexanalysis.pages.dev. Fresh storage. Headless Chrome, touch, 390×844 light, then the same pages with the theme pinned dark, then 1280×800 light and dark, and the home at 360×780 in the OS dark theme. No product code was changed. No console errors. No failed requests. `scrollWidth` matched the window (390, 360, 1280).
+
+I have never seen this course. I opened the link the way I would on a phone, looking for where I am, where to go next, and how to get to test prep.
+
+### Verdict
+
+ANOTHER BATCH. The home answers the first question. The Chapters drawer answers the third, once I think to open a button that says Chapters. The page Continue opens, and Test prep itself on a phone, answer none of the three. I was asked to prove a theorem I had not been shown, and the old problem indexes start before I have finished the card.
+
+### Cold open, 390×844, light
+
+The first screen is the site name on two lines (the words "One Point, Two Addresses", 37px tall, 141px wide, the full name), a 44×44 theme button, and a 44×118 button that says Chapters. Under that: "THE BOOK · CHAPTERS 1–7", the title The Book, "Chapters 1 to 7, in the order Howell and Mathews print them.", and the source line naming Howell & Mathews, Complex Analysis, the 202 Updated Edition. Then a card: "Next is §4.1, Exercise 3. 0 of 10 exercises." and Continue, 44×111. Then three cards flagged LATER: 1 Complex Numbers (page 1), 2 Complex Functions (page 43), 3 Analytic and Harmonic Functions (page 79, the title wraps). Chapter 4 starts under the 844px edge. The footer that says MAT 412 is below that.
+
+I can tell this is a book of seven chapters of that textbook. I can tell the button wants exercise 3 of §4.1. I cannot tell why the first three chapters, the ones on the screen, say LATER, or what a complex number is. The count "0 of 10" sits next to a §4.1 exercise and the 10 is chapters 4 and 5 together.
+
+Continue goes to `#chapter-4-4-1-3`. The first screen there is the tail of a sentence about disks, two links (Definition 4.1, page 103; Theorem 4.1, page 103), a text link "Practice 4.1" at 91×23, then the card "§4.1, Exercise 3": "Suppose that lim z_n = z_0. Show that the limit of the conjugates is the conjugate of the limit." Then a chip "The disk in Definition 4.1", Show the hint, and Tick, both 44px and the width of the card. The chapter title and the where-line are above the window. Tick is live before I do anything. I still don't know what the bar over z means, and nothing on the screen says what I would have learned if I pressed Tick. Browser Back returned to the book at the top, Continue at y = 325, the same first screen.
+
+Tapping the Chapter 1 card, or "1 Complex Numbers" in the drawer, sets `#chapter-1` and scrolls to 353. "The Book" sits at y = −247. The screen is the same LATER card, "1 Complex Numbers, Page 1", and that card has no section links. I asked for a chapter and got a scrolled table of contents.
+
+Opening Chapter 4 from the drawer is the page that does say where I am: a 44×134 "The Book", the title, "CHAPTER 4 · SEQUENCES, SERIES, AND FRACTALS" (the same words again), and "Four sections. Tick an exercise when you have worked it. The hint stays closed until you ask." Practice 4.1 is on that first screen and it is still 91×23. The same link for 4.2, 4.3, and 4.4 is 91×23 further down (y = 1744, 3547, 4574).
+
+Chapter 5 from the drawer: "The Book", "Chapter 5. The exponential", the same line in small caps, a circle with a purple dot on the left and a green dot on the right, the sentence "The point sits on the left of the unit circle, on the real axis.", and Play (y = 640, 44px tall, on the screen). The lede under Play says a blank fills when the picture makes it true. The blank, and "Practice 5.1" (91×23), start at y = 1202 on a page 2818px tall. The only sentence that says "drag the green dot" is the picture's aria-label. The green dot is the one on the right. The sentence calls the left-hand dot "the point".
+
+### How I got to test prep
+
+The words "test prep" are absent from the home first screen. The Chapters drawer is one list, every row 44×358: chapters 1–7, then "· Test prep" at y = 382, on that same drawer screen. The dot is sitting where the chapter number sits on the other rows. One tap from there opens `#test-prep`. On the 1280 window the same row is in the sidebar at y = 388, so I don't have to open anything.
+
+That is the door. The section links are a second door, with a different first card, and they don't use the words Test prep.
+
+### What test prep did on the phone
+
+Opening it focuses the answer box and moves the page. Measured on arrival, light: "The Book" button at y = −279, the Practice / Memory sheet / Flashcards chips at y = −194, Endless at y = −142. The proof's heading starts at y = 9, under a header that ends at 58, so the screen shows the tail "then ∑ z^n = 1/(1−z)". Check and Hint are on the screen (both 44×324). Under the card, at y = 648, a second page has already started: "Test 1. Every problem and proof from the handout is a card. Read the question, say the place, the address and the aha out loud…" The whole document is 41567px. The Test 1 block starts at y = 1239, is 25558px tall, and holds 41 cards. Test 2 starts at y = 26845, is 14587px tall, and holds 30 cards. The same clip, and the same Test 1 lede, is what the dark phone shows on arrival.
+
+Scrolling back to 0 shows the page I was supposed to land on, in both themes. "THE BOOK" (a 69×17 link), the title Test prep, "TEST PREP", "Items from more than one section, mixed. Check, then read the reason.", "Chapters 4 and 5. 1 of 14.", a 44px The Book button, then the chips. The proof heading is then fully on screen: "Prove the sum half of Theorem 4.12, page 118." Step 1 of 3 is the current line, in rgb(26, 34, 48). Steps 2 and 3 are also blanks, in rgb(81, 91, 108). The box is labelled "Your answer". On the 1280 light window this heading is on screen at scroll 0, and Check starts at y = 819 in an 800px window, so the button is past the bottom edge. `scrollWidth` there is 1280.
+
+I typed `idk` and pressed Check. The card said "Not that one.", filled the first blank with 1 − z^n, and gave the reason: "The middle terms cancel. This is the first identity in the proof on page 118." There is no second try. Next step stays on "1 of 14" and asks for the next blank with the same box label. Hint, opened on a fresh load, says "Multiply the partial sum by z and subtract." and the button becomes Next hint. Test 1 is still directly under that hint.
+
+The chip Memory sheet is the page I would actually use. Status: "The sheet for this set. It prints without the menu." Five blocks: 4.1, 4.2, 4.3, 4.4, 5.1. The first formula is the ε-disk. The first takeaway is a sentence: the terms eventually sit in every disk around ζ, Definition 4.1, page 103. Print is 44×358. On arrival this chip is above the window, so I never saw the sheet until I scrolled up and hunted for it.
+
+Flashcards: the status says "36 due." The card says NEW and "New card", then "Corollary 4.1, absolute convergence implies convergence", which is already the fact. Show the back (44px) reveals "If ∑ |z_n| converges, then ∑ z_n converges." and "Corollary 4.1, page 107." Again and Got it are on the screen. Test 1 starts under this card too. I did not have to remember anything, and the count says I am already behind on 36 cards.
+
+`#test-prep-4-4-1`, which is what Practice 4.1 opens, is a different first screen, and it stays at the top because that card has no box to focus. Title Test prep, lede "A worked proof, then the same proof with the steps missing, then the exercises.", status "Section 4.1. 1 of 6.", back button "Chapter 4" at 44px. The card is flagged WORKED EXAMPLE, Theorem 4.1, pages 103–104, and the button says Try these steps. That is the only door that told me what I was about to do before it asked me to fill a blank. The mixed set, the one in the drawer, skips it and opens on the geometric-series proof.
+
+Dark, pinned, is the same layout. The page is rgb(13, 18, 28) and the text is rgb(233, 237, 245). Light paper is rgb(246, 243, 236) and the title is rgb(26, 34, 48). At 360 the name still wraps onto two lines, in the dark, and the same Continue card is the first screen.
+
+### What to keep
+
+The home is one book, one status line, and one Continue. I could read that I was in chapters 1–7 of Howell and Mathews. The drawer is that same list on every page, rows at 44px, and Test prep is on the first drawer screen. On a wide window it is in the sidebar. Back from the exercise returned to the book at the top. The name wraps. Open chapter pages put a 44px "The Book" over the title. Chapter 4's lede says to tick an exercise after working it. When Test prep is scrolled to the top, the lede says to check and then read the reason, and the reason on the geometric step was one sentence with a page. The memory sheet is five sections of a formula plus a one-line takeaway with a page, and Print is a real button. The section door (Practice 4.1) starts with a worked proof and says so in the lede.
+
+### Ranked fixes
+
+1. **Land Test prep at the top of the page.** On open, the title, the "1 of 14", and the three chips are above the window (The Book button at y = −279, chips at y = −194), the proof starts at y = 9 under a 58px header, and Test 1 is already at y = 648. The answer box took focus and moved the page. Same clip in the dark. Change: opening the page leaves the scroll at 0, which is the screen I got only after scrolling back — title, count, chips, then the question. The box sits under the question and does not pull itself up.
+
+2. **The practice card is the page.** The document is 41567px. Test 1 is 41 cards from y = 1239, and its lede ("say the place, the address and the aha") is on the arrival screen. Test 2 is 30 cards from y = 26845. I thought the handout cards were the next question. Change: under the card, two links, "Test 1" and "Test 2", to the indexes that already open on their own. The indexes stay off this scroll.
+
+3. **Show the worked proof before the blank, and point the box at one blank.** The drawer opens on "Prove the sum half of Theorem 4.12", three blanks, one box labelled "Your answer". Steps 2 and 3 are a quieter grey, rgb(81, 91, 108) against rgb(26, 34, 48), and they still look like blanks. Typing `idk` printed 1 − z^n on the first miss. Practice 4.1 already does the other thing: "A worked proof, then the same proof with the steps missing", card flagged WORKED EXAMPLE, button "Try these steps", status "Section 4.1. 1 of 6." Change: the mixed set leads with that worked card, then the blank. The box's label is the current line, and the other lines wait. The first miss shows the hint ("Multiply the partial sum by z and subtract."). The filled answer shows on the next miss.
+
+4. **Continue opens the chapter at the top, and a closed chapter says it is closed.** Continue is `#chapter-4-4-1-3`. The first screen has the exercise and a live Tick, and the title "Chapter 4" is above the window. The home screen I can see is three LATER chapters and a status line that names §4.1. Tapping chapter 1 sets `#chapter-1`, scrolls to 353, hides The Book (title at y = −247), and the card is still "LATER 1 Complex Numbers Page 1" with no sections. Change: Continue opens `#chapter-4` at the top, where the idea sentence already is. The status line says the first three chapters are closed and names §4.1 as the start. A closed row leaves the title on screen, and the line on the card says the chapter is closed.
+
+5. **Make the section door a button, and drop the dot.** Practice 4.1 and Practice 5.1 are 91×23. Practice 5.1 is at y = 1202, past an 844px screen, so from Chapter 5 the way to test prep is a short text link under a picture. The drawer row reads "· Test prep" because the number slot is a middot; the row itself is 44px and on the first screen at y = 382. Change: the section door is a 44px button, "Test prep · 4.1", beside the section title. The drawer row reads "Test prep", still last, still 44px.
+
+6. **A new flashcard is one new card.** The status says "36 due" on a first visit. The card says NEW and "New card", and the front is already the corollary ("absolute convergence implies convergence"). The back is that sentence in symbols. Test 1 starts under the card. Change: the count is "1 of 36" until a card has been graded. The front is the name, "Corollary 4.1". The back is the sentence. One card fills the screen.
+
+## ux-veteran (practice batch 2)
+
+Preview https://practice-preview.complexanalysis.pages.dev at `e02fc859`. Headless Chrome, touch, fresh storage. Phone first: 390×844 and 360×780, light and dark. Then 1280×800, light and dark. Re-checked fixes 1, 2, 3, and 8 from `## ux-veteran (mobile audit)` on `cursor/ux-veteran-audit`. No product code was changed. No console errors. No sideways scroll (`scrollWidth` matched the window at 360, 390, and 1280, both themes).
+
+The walk, the way a student would do it. Land on the preview. Read the first screen. Open Chapters. Tap a chapter row, a section row, Continue, Test prep, and Back. Then the same shell in the dark and at 1280, where the list is a sidebar and the Chapters button is gone.
+
+### Verdict
+
+ANOTHER BATCH. The drawer, the count, the chapter up control, the wrapped name, and Back are in. Two of the original phone failures are still the first thing a thumb hits: Test prep opens with the question under the header, and the landing still names §4.1 while the screen shows three Later chapters.
+
+### Ranked
+
+1. **Test prep opens on the answer box.** Fresh `#test-prep` at 390×844, scroll is already 559 and the focused control is the answer field. "Test prep", the up link, and the words "Prove the sum half of Theorem" sit above the window. The first line a student can read is "4.12, page 118", then the three blanks, then Your answer, Check, and Hint. The same page at 1280×800 shows the title and the whole prompt, because the card fits. Change: when the card is drawn, leave focus where it is. The first screen is the title, one up control, and the whole question. The field takes focus when the thumb taps it.
+
+2. **The landing names a chapter the phone does not show.** At 390×844 the status says "Next is §4.1, Exercise 3. 0 of 10 exercises." and the only button is Continue, 111×44, to `#chapter-4-4-1-3`. Chapter 4's card starts at y = 841, so the word Next is the sliver at the bottom edge. The cards on the screen are Later: Complex Numbers, Complex Functions, and Analytic and Harmonic Functions. At 360×780 Chapter 4 starts at y = 867, below a 780px window, and Chapter 3 is cut off mid-title. At 1280×800 the Next card just clears the fold. Change: a Later chapter is one line, the number and the title. Book order stays. Chapter 4, with the word Next, then sits under the status card at 390 and at 360.
+
+3. **5.2, 5.3, 5.4, and 5.5 open the exponential.** Each row is a link at least 44px tall. All four point at `#chapter-5`. Tapping "5.2 The Complex Logarithm" lands on "Chapter 5. The exponential", square and Play. The logarithm is a Later heading at y = 1971, and that heading has no link. Change: a section with no page is text, with the Later flag it already has. The row stops being a link. 5.1 keeps its link to `#chapter-5-5-1`.
+
+4. **Test 2 is a heading thirty-two screens down.** On the prep page, Test 1 starts at y = 1239 and Test 2 at y = 26845. The page is 41,567px. The practice set is the first block. The whole Test 1 index is the next block. Test 2 is past every one of those cards. Change: under the practice set, two rows, Test 1 and Test 2, each a 44px link to the index that already opens at `#problems` and `#index`. The indexes stay their own pages.
+
+5. **The Book on Test prep is 69×17.** That is the box the audit measured on Chapter 5. Chapter 4 and Chapter 5 now use the station link: 134×44, label "The Book", on the first screen, under the header. Test prep still has the 17px kicker, and a second control in the status card that also says The Book, this one 113×44. Change: one up control, the station link, 44px, "The Book". The kicker goes.
+
+6. **The Map opens the book.** On Julia, Story Map and The Map both go to `#home`. That page is The Book. The heading is The Book, and Which test is absent. The where-line on Julia already says Chapter 4, and the drawer marks Chapter 4, so the way back is the one the picture does not offer. Change: those two links read The Book and Chapter 4. Chapter 4 goes to `#chapter-4`.
+
+### What to keep
+
+The drawer is the same eight rows on the book, on Chapter 4, on Chapter 5, on Test prep, on both indexes, on Julia, and on the address plane. Chapters 1 through 7, then Test prep. Each row is 44px tall and the width of the phone. Chapters 8–11 are off the list and off the roadmap. The words Residue, Laplace, and "eleven chapters" are absent. `#chapter-8` opens the book. At 1280 the same eight rows are the sidebar, Chapter 5 is marked while you are on it, and Test prep is marked on its own page.
+
+The Chapters button is labeled and is 118×44. The site name wraps to two lines, "One Point, Two" and "Addresses", at 360 and at 390, light and dark. It is the whole name. The where-line is the part-label type, 12.5px, uppercase. On the book it reads "The book · Chapters 1–7". On the chapter it sits under the title and reads "Chapter 5 · The exponential" and "Chapter 4 · Sequences, Series, and Fractals". Contrast is 6.2 on the light paper and 8.6 in the dark. The type, the paper, and the blue Continue button are the ones the station pages already use.
+
+Chapter rows and the section rows that have a page are real doors. 4.1 opens with "Sequences and Series" under the header. Continue, after a Chapter 4 tick and a Chapter 5 tick, says "Next is §4.1, Exercise 13. 2 of 10 exercises" and opens that card with the title at 163px, below the 58px header. A lone 5.1.2 tick is "1 of 10", and Chapter 5 reads Open. Back puts the book back at the 900px it left, and puts a chapter back at the 1600px it left. On `#home-t1`, Test 2 pushes `#home-f2`, and Back returns with Test 1 pressed.
+
+Chapter 5's first screen is the 44px up link, the title, the where-line, the square, and Play, at 390 and at 1280. That screen can stay.
+
+## skeptical-student (sign-in batch 1)
+
+Branch `cursor/sign-in`, tip `112173e`. Draft preview https://cursor-sign-in.complexanalysis.pages.dev. No product code was changed. The preview's `/api/me` is the static "That page is not on the map" page, so the header slot stays empty there and a phone on that link never sees a sign-in control. I served this commit with `wrangler pages dev` (both providers stubbed, `PROGRESS` bound) and used it at 390×844, touch, light, then the same header in the dark and at 1280×800 light and dark. No console errors on that pass. `scrollWidth` was 390 and 1280.
+
+I studied signed out, then tried the button, then came back through the session the callback would have written, because the button itself never gets there.
+
+### The walk
+
+Fresh storage, 390×844, light. The header is three rows and 148px. Row one is the mark and "One Point, Two Addresses" on one line, 177×18. Row two is the theme button and Chapters, 118×44. Row three, right aligned, is "Sign in to keep your progress", 225×44, 13.12px, transparent border, on the paper. It looks like a caption. The Book starts at y = 172. The status card is "Chapters 1, 3, 6, and 7 are closed. Next is §4.1, Exercise 3. 0 of 10 exercises." Continue is on that screen. Chapter 4 is the sliver at the bottom. The footer, when I reach it, says "Chapters 1 to 7 for MAT 412. Chapters 4 and 5 are open. It runs in your browser and works offline."
+
+I opened Test prep and did the worked example (Theorem 4.1, pages 103–104). "Try these steps" is at y = 1283, so I had to scroll past an 844px screen to find it. The blank that follows is the same theorem with the formula broken onto a line per symbol, then a box, Check, and Hint. I typed `idk` and got "Not that one." and "Split the one modulus into the two coordinates." `localStorage` was still empty. That miss is gone if I leave. Flashcards were the page I understood: "1 of 36", front "Corollary 4.1", back the sentence, Got it. That wrote `mv:practice.leitner` for `ch4-4.1-corollary-4-1`, box 1, due 2026-11-06. On Chapter 4 I ticked §4.1 Exercise 3. The book then said "Next is §4.1, Exercise 13. 1 of 10 exercises." Chapter 5 still has the circle and Play. Play is at y = 730, 44px, so it just fits, and "Section 5.1. A blank fills when the picture makes it true" is the line the window cuts. The sign-in caption is on all of these screens, including after the tick is already on the phone.
+
+Tapping the caption opens it. The header grows to 199px. Under the sentence, right aligned: Google, 93×44, and X, 45×44, hard against the right edge. X reads as a close box. Nothing on the page says what either one receives, or that the phone already has the tick. I tapped Google. The phone landed on `/auth/google/start` and the unstyled page "That page is not on the map." The only link, "Back to One Point, Two Addresses", goes to `/auth/google/index.html`, which is the same page again. X does the same at `/auth/x/start`. The callback URL does the same. The dev log for each of those navigations is `Sec-Fetch-Mode: navigate` and the 404 page. A fetch of the same Google URL is a 302 to `accounts.google.com` with scope `openid email profile` and `prompt=select_account`. A fetch of the X URL is a 302 to `twitter.com` with scope `users.read tweet.read`. The button a thumb uses is the navigation, so I never saw Google or X. I saw our 404.
+
+I then reloaded with the session cookie the callback would set. The header became `study.phone@gmail.c…` and Sign out. The address is clipped: the box is 160px wide and the text is 167px, in light and in dark, and the same clip is in the 1280 header. The book still said 1 of 10. `GET /api/progress` was `{"rev":0,"updatedAt":0,"keys":{}}`. Signing in left the server empty. I ticked §4.1 Exercise 13. That PUT stored both ticks and the flashcard: `4.1.3`, `4.1.13`, and the Corollary 4.1 card. The book said "Next is §4.2, Exercise 3. 2 of 10 exercises."
+
+Sign out reloaded straight back to "Sign in to keep your progress". Both ticks were still Ticked. I left and opened the book again. Still 2 of 10, still signed out, still the caption. An expired session cookie does the same: `/api/me` says signed out, the caption is back, and `4.1.3` and `4.1.13` are still in `localStorage`. A fresh browser with only that session, opened after the PUT, loaded `#chapter-4` twice (`mv:account-synced` is `1` after the second load), showed the clipped address, and both ticks were Ticked, with the same flashcard in storage. Nothing on the page said the ticks had come from the other phone.
+
+Dark is the same three rows. Open, the header is 199px, the paper is `rgb(13, 18, 28)`, the caption is `rgb(233, 237, 245)`. At 1280 the header is one row, 59px, and the address and Sign out sit at the right of the name. The phone is the layout that grew.
+
+### Verdict
+
+ANOTHER BATCH. I can study signed out, and a tick I made stays on this phone through sign-out and a dead session. I would not sign in. The sentence says my progress is at risk, the button dumps me on a 404 I cannot leave, and the ticks I already earned stay off the server until I happen to tick something else.
+
+### Ranked cut or fix
+
+1. **The Google and X taps have to come back to the book, signed in.** At 390 I opened the caption and tapped Google. The page was "That page is not on the map" at `/auth/google/start?return=%2F%23book`, unstyled, because the 404's CSS is a relative `css/theme.css`. "Back to One Point, Two Addresses" is `index.html`, which from that URL is `/auth/google/index.html`, the same 404. X and `/auth/google/callback` do the same under `Sec-Fetch-Mode: navigate`. A fetch of the start URL is the 302. Change: a navigation to `/auth/*` and `/api/*` runs the function. With this repo's `compatibility_date` of `2026-10-20` and `not_found_handling: "404-page"`, that is `run_worker_first` for those paths. The 404 link goes to `/#book`.
+
+2. **The first signed-in load writes the ticks I already have.** I had Exercise 3 ticked and Corollary 4.1 in box 1. After the session reload, the book still said 1 of 10 and `GET /api/progress` was `rev: 0` and `keys: {}`. The PUT happened only when I ticked Exercise 13, and that body then included `4.1.3`, `4.1.13`, and the card. A second phone opened before that PUT would have an empty copy. Change: on the signed-in load, write the merged blob even when the merge leaves this phone unchanged, and show one line, "Saved", after that write. The second phone's extra reload can say "Ticks from your other phone" instead of flashing `#chapter-4` twice with no sentence.
+
+3. **Say what the button is, and take it off the picture.** The caption is on every screen, 13.12px, no border, and the header is 148px before I open it and 199px after. Chapter 5's Play sits at y = 730 and the lede under it is cut off. Google is a real button. X is 45×44 and reads as close. The function's Google URL asks for `openid email profile` with `prompt=select_account`. The X URL asks for `users.read tweet.read`. The footer says the site "works offline." Change: one line on the book only, "Ticks stay on this phone. Sign in copies them to another phone." Google is the button, with "email and name" in the line. Leave X off until the scope is the identity. The header goes back to the name and Chapters, so Play and the lede share the first screen again.
+
+4. **The thing I just failed is the progress I thought this kept.** The Theorem 4.1 blank took `idk`, said "Not that one.", and showed "Split the one modulus into the two coordinates." No `mv:` key was written. The flashcard and the exercise tick were. The caption says "your progress". Change: a miss is stored in the same mergeable record as the card, or the line names the two things it copies: exercise ticks and flashcards.
+
+5. **After sign-out, tell me the ticks stayed, and let me delete the copy.** Sign out reloaded into the caption. The book did say "2 of 10" and both buttons said Ticked when I came back, so the ticks survived, and the header argued that they had not. An expired session does the same: signed out, caption back, `{"4.1.3":true,"4.1.13":true}` still in `localStorage`. The address in the header is cut to `study.phone@gmail.c…` (160px box, 167px of text) at 390 and at 1280, light and dark. There is no delete. Change: Sign out leaves one sentence, "Still on this phone," and the caption stays off until I open the book. Signed in, the header says "Signed in" and Sign out. "Delete the copy" sits with Sign out and removes the server record. The phone keeps its ticks.
+
+6. **The phone header is one row again.** Before this slot, the name wrapped beside Chapters and the header was the height of that row. With the slot, the name is one short line with empty space beside it (177×18 at y = 12), Chapters drops to y = 45, and the caption is a third row. That is the 148px on the book, on the proof, and on the exponential, in light and in dark. At 1280 the header is already one row, 59px, with the account at the right. Change: on the phone, keep that wide arrangement's single row. The account control is a 44px "Sign in" that opens Google, and it shares the row with Chapters. The long sentence moves to the book, as in fix 3.
+
+### What to keep
+
+Signed-out study is the whole site. I ticked an exercise, the count moved from 0 of 10 to 1 of 10, Got it filed a flashcard, and Chapter 5 still showed the circle and Play. Sign out left `mv:progress.test2` and `mv:practice.leitner` on the phone. Coming back, both ticks still said Ticked. Once a later tick had been written, a fresh browser with the same session received both ticks and the card. The merge is the right shape: a tick on either side stays ticked, and the card with the review survives. Sign out is a real POST and it clears the cookie. The buttons that do show are the site's buttons, 44px, on the same paper, in light and in dark. At 1280 the account sits in the existing header row and the sidebar is still Chapters 1–7 and Test prep. Keep that wide header. Keep the rule that a missing provider draws nothing: the preview, with no `/api/me`, is a quiet book.
+
+## reviewer (sign-in batch 1)
+
+Reviewed `112173e` on `cursor/sign-in` (draft PR #49). The fixes below are in the commit that adds this note. Not merged. Nothing was deployed, and `gh-pages` was not touched.
+
+### Verdict
+
+**ACCEPT WITH FIXES.**
+
+### What was already solid
+
+PKCE S256, with the verifier only in the HttpOnly state cookie. The state in the query is compared with `safeEqual`. Cookies are HttpOnly, Secure, and SameSite=Lax. Lax is the setting that still sends the state cookie on the top-level redirect back from Google or X. The session expires eight hours after the last `/api/me` or `/api/progress` call. `safeReturn` drops an off-site return, a protocol-relative return, a backslash return, a newline used as a second header, and any return under `/auth/` or `/api/`. PUT and sign-out require the request Origin to be this host. A cross-site PUT is 403, and SameSite=Lax already withholds the cookie on that request. The KV key is `u:<provider>:<id>` from the signed session, not from the body. `u:google:abc` and `u:x:abc` are different rows. The handle is the email or the X username in the cookie. It is not written into KV. A PUT stops reading at 64 KiB, a `Content-Length` over that cap is refused before the read, and a fractional `rev` is refused. GET and a 409 drop any key that is not in `PROGRESS_KEYS`. With no secrets and no `PROGRESS` binding, `/api/me` reports no providers and the header slot stays empty. Sign-out does not clear `localStorage`. No file under `js/` or `functions/` imports `kit/`. `js/core/map-route.js` is byte-identical to `kit/template/js/core/map-route.js`.
+
+### Ranked fixes
+
+1. **A tap on Sign in opened the 404 page.** `not_found_handling` is `404-page`. A document navigation (`Accept: text/html`, `Sec-Fetch-Mode: navigate`) to `/auth/google/start` was 404 "That page is not on the map." The same URL with curl's default headers was the 302 to Google. The header control is an `<a>`, and the callback is a navigation too, so neither Google nor X could finish. The skeptical-student pass on `2078a4f` hit this. Change, now on the branch: `assets.run_worker_first` is `/api/*` and `/auth/*`. After that, the same navigation is the 302, `/api/me` is JSON, and `/` is still the site. The 404's CSS and its back link were relative, so from `/auth/google/start` "Back" went to `/auth/google/index.html`. They are now `/css/...` and `/#book`.
+
+2. **The callback Shael registered was not the callback the code sent.** The mobile audit tells him to register `https://complexanalysis.pages.dev/api/auth/google/callback` and `https://complexanalysis.pages.dev/api/auth/x/callback`. At `112173e` the start URL and `docs/SIGN_IN.md` used `/auth/google/callback` and `/auth/x/callback`. The state cookie Path was `/auth`, so a browser would not have sent it to `/api/auth/...` even after the path string changed. Change, now on the branch: the redirect URI is `/api/auth/<provider>/callback`. The state cookie Path is `/api/auth`. `/auth/google/callback` and `/auth/x/callback` only 302 to those paths and keep the query. They do not exchange the code. `docs/SIGN_IN.md` matches the registered URLs. Start stays `/auth/google/start` and `/auth/x/start`.
+
+3. **A first sign-in with only local ticks never uploaded them.** `boot` wrote the union back only when the union differed from this browser. An empty server and a phone that already had `progress.test2` produced no PUT, so the other phone never saw those ticks. Change: `syncPlan` sets `upload` when KV is behind and `apply` when this browser is behind. The same union a second time is a no-op, so a reload does not bump `rev` forever.
+
+4. **The miss book dropped the other device, and the flashcard rule disagreed with the practice engine.** `js/practice/leitner.js` keeps the card with more reviews, then the later `updated` stamp. The sign-in merge did the opposite: a later stamp replaced a card with more reviews. On `cursor/practice-engine`, `practice.misses` is `{ v, steps: { item: { step: { misses, updated } } } }`. The old merge treated `steps` as one value with no stamp and kept this device's book. Change: flashcards go through `mergeLeitner`. A miss book keeps the larger count per step, and the same count keeps the later stamp. A flat `{ id: { misses, updatedAt } }` record still keeps the later stamp.
+
+5. **The MAC compare was not the constant-time primitive, and the nonce was `!==`.** `safeEqual` returned as soon as the byte lengths differed, and it ran in JS. `verifyToken` now uses `crypto.subtle.verify` for HMAC-SHA256. The Google nonce goes through `safeEqual`. An oauth token is `kind: "oauth"` and is refused by `readSession`. A session is `kind: "session"`. The mock provider refuses a bad state before the token request, a bad nonce, a bad issuer, a bad audience, `alg: none`, and a signature from the wrong key.
+
+6. **There is still no way to delete the KV row.** The mobile audit asked for a control that removes the student's progress. Nothing in this batch deletes `u:<provider>:<id>`. Change, not done here: one same-origin POST or DELETE on `/api/progress` that deletes that key and leaves `localStorage` in place. Sign-out already leaves the phone copy.
+
+### Merge behaviour that should stay
+
+Ticks are a union. A `true` on either side stays, and a `false` does not clear it. That matches the sentence in `docs/SIGN_IN.md`: an untick on one device does not erase a tick stored on the other. A stale `rev` is 409, the stored document is unchanged, and the client merges the returned copy and retries. Legacy `book.progress` exercise ticks still fold into `progress.test2` and the legacy record is marked migrated.
+
+### practice-engine
+
+`cursor/practice-engine` at `7771658` is seven commits ahead of the merge base `dba0ac6`. This branch is that base plus the sign-in commit and these fixes. `git merge-tree --write-tree` exits 0. `css/components.css` and `js/app.js` changed on both sides and auto-merge. The merged `js/app.js` keeps `mountAccount` and `walkSections`. There are no conflict markers.
+
+### Checks
+
+`node tools/check_vectors.mjs` matched 234/234. `node tools/fractal-smoke.mjs` passed, including the check that the live router does not import `kit/`. `node kit/smoke.mjs` passed. `node tools/account-smoke.mjs` passed. `node tools/oauth-mock.mjs` passed.
+
+`wrangler pages dev` on `http://127.0.0.1:8788`, with a local `PROGRESS` binding and fake secrets. Before `run_worker_first`, a document navigation to `/auth/google/start` was the 404 page and a plain GET was the 302. After it, the same navigation is the 302 to Google, X start is the 302 to X, `/api/me` is JSON, the callback with no cookie redirects to `/#book`, and `/` is still the site. `redirect_uri` ends in `/api/auth/.../callback`, `code_challenge_method=S256`, and `Set-Cookie` is HttpOnly, Secure, SameSite=Lax, Path=/api/auth. The old callback keeps `code` and `state`. `/api/progress` with no cookie was 401. A PUT from `https://evil.example` was 403. The body of `/api/me` had no secret. The dev log lines are the method and the path. They do not include the code, the state, or the cookie.
+
+### Header
+
+The Book, headless Chrome. 390×844 and 1280×800, light and dark. With no provider the slot is empty: the header is the name, the theme button, and Chapters, on the paper `rgb(246, 243, 236)` in the light and `rgb(13, 18, 28)` in the dark. The title is Iowan Old Style. With Google only, "Sign in to keep your progress" is the existing quiet button, 44px, on its own row under Chapters at 390 and on the right of the same row at 1280. With both providers open, Google and X are the existing buttons, each at least 44px, and the page does not scroll sideways. Signed in, the handle ellipsizes and Sign out is 44px. At 1280 the Chapters button is gone because the sidebar is the list, which is the shell that is already there. No new colour and no new type.
+
+### What to keep
+
+The signed-out site. PKCE plus the signed state cookie. SameSite=Lax. The union of ticks. The `rev` check. The handle in the cookie and not in the KV value. The header using the quiet button, the 44px target, and the type and paper the station pages already use.
+
+## ux-veteran (sign-in batch 1)
+
+Branch `cursor/sign-in` at `112173e`. Local `wrangler pages dev` with the provider variables and `PROGRESS` stubbed, so `/api/me` returns both providers and the header paints the control. Phone first: 390×844, light and dark, touch. Then 1280×800, light and dark. A 360×780 check for sideways scroll. No product code was changed. The book pages logged no console errors. `scrollWidth` matched the window at 360, 390, and 1280, both themes.
+
+The unmodified tap is the first finding. The cancel, merge, and Back notes below are the same buttons after a navigation is allowed to reach the function, which is what the tap does not do today.
+
+### The walk
+
+**Where it sits.** On The Book at 390×844, light, the header is 148px. The name is one line. Under it, the theme button (44×44) and Chapters (118×44). Under those, right-aligned, "Sign in to keep your progress", 225×44, at y = 97, type 13px, border transparent. The same stack in the dark, paper `rgb(13, 18, 28)`, text `rgb(233, 237, 245)`. The branch preview, where `/api/me` is the 404 page, leaves the slot empty and the header at 96px, and The Book still shows the status and a 44px Continue. The sign-in row is the extra 52px. Continue sits at y = 442 with the row, and at y = 390 on the preview. It stays on the first screen.
+
+Opening it at 390 grows the header to 199px. Google is 93×44 and X is 45×44, both bordered like Chapters, on the row under the sentence. Continue moves to y = 492 and stays on the screen. The drawer opens with its top at the real header (the page sets `--header-h` to 147px). "1 Complex Numbers" is 358×44 at y = 164, clear of the sign-in row. Scrolling Chapter 4's card to the anchor puts it at y = 163, under a header that ends at 148. At 360 the name is still one line, the control is still 225×44, and nothing scrolls sideways.
+
+At 1280×800 the header is one row, 59px, light and dark. The sidebar is Chapters 1–7 and Test prep. The sentence sits at the right, 225×44, beside the theme button. Google and X open on that same row. The first sidebar row is at y = 75, under the 59px header. Focus on the sentence is the site's ring, 3px `rgb(26, 34, 48)`, offset 2px.
+
+**The tap.** From `#chapter-5`, scrolled, the Google control goes to `/auth/google/start?return=%2F%23chapter-5`. The page that loads is titled "Not found · One Point, Two Addresses". The words are "That page is not on the map." The only link is 223×17, "Back to One Point, Two Addresses", and its href is `/auth/google/index.html`. The stylesheets 404, so the type is the browser's, black on white, with no header and no paper. The dev log for that request is `Sec-Fetch-Mode: navigate` and `not_found_handling`. `wrangler.jsonc` sets the compatibility date to 2026-10-20 and `not_found_handling` to `404-page`, which is the switch that serves `404.html` for a browser navigation and never runs the function. Browser Back from that 404 returns to `#chapter-5` and restores the scroll (y = 551).
+
+**Wording.** The sentence is the whole control. It does not say optional. "Keep your progress" is the promise. The phone already keeps the ticks: after Sign out, `mv:progress.test2` was still `{"5.1.2":true}` and the status read "Next is §4.1, Exercise 3. 1 of 10 exercises." The preview, with an empty slot, shows the same card at "0 of 10".
+
+**Signed in.** A Google session with `shael.student@university.edu` paints the handle at 160×16 and clips it to "shael.student@unive…". The element has no `title`. Sign out is 104×44, the same borderless type, on the right of that third row. An X session paints `@mat412notes` in full, 101×16, and the same Sign out, in the dark at 1280 on the one header row. Sign out reloads `#book` at scroll 0 and puts the sign-in sentence back. The tick stays.
+
+**First sign-in.** The phone had `4.1.3` and `5.1.2` ticked. The book said "2 of 10". Nothing was written to the account until a later edit, and the write that did happen was the store after that edit (`5.1.2` only). A different account that already held `4.1.3` reloaded the chapter on its own (`mv:account-synced` set, two loads) at scroll 0. Chapter 5's status stayed "0 of 2". The tick was in `localStorage`. No sentence said a tick had moved.
+
+**Cancel and Back.** With the function actually running, cancelling at the provider (`error=access_denied`, state matched) returns to `#chapter-5` at scroll 0. The button still says "Sign in to keep your progress". The live region says "Chapter 5". The same cancel on X returns to `#book` in the dark and the live region says "The Book". A callback whose state does not match is a 302 to `/#book` with an empty body. Back from the returned chapter loads the provider authorize URL again. Back from the provider itself, before cancel, returns to `#chapter-5` at the old scroll (y = 531).
+
+### Verdict
+
+ANOTHER BATCH. The control is on The Book, the targets are 44px, and a signed-out phone still has the book. The tap a student makes opens an unstyled 404, and the flows behind that tap never say what happened to the ticks.
+
+### Ranked fixes
+
+1. **The sign-in tap opens "That page is not on the map."** From `#chapter-5` the Google control loads `/auth/google/start?return=%2F%23chapter-5`. The page is the site's 404, unstyled, because `theme.css` and `components.css` 404 under `/auth/google/`. The only link is 223×17 and points at `/auth/google/index.html`. The log names `Sec-Fetch-Mode: navigate` and `not_found_handling`. Change: a navigation to `/auth/*` and `/api/*` runs the function. In `wrangler.jsonc`, run the worker first on those paths, or set the compatibility flag that stops a navigation from being answered with `404.html`. The 404's own link, for a page that is actually missing, goes to `#book`, and its CSS is root-relative.
+
+2. **Cancel looks like the tap never happened.** A matched `access_denied` returns to `#chapter-5` at scroll 0, the sentence unchanged, the live region saying "Chapter 5". X returns to `#book` the same way. A callback with a bad state is a 302 to `/#book` and an empty body. Change: the return lands on the chapter the student left, and `#route-status` says "Sign-in cancelled. Your ticks are still on this phone." A failed exchange uses that same line with "Sign-in didn't finish."
+
+3. **Back after cancel opens the provider again.** From the chapter the cancel returned to, Back's address is the provider authorize URL. Back from the provider, before cancel, already does the right thing: `#chapter-5` at the scroll the student left (y = 531). Change: the callback redirect drops the provider entry. After a cancel or a success, Back is the page from before the tap, at the scroll it had.
+
+4. **The ticks already on the phone are not copied, and a tick that arrives reloads the chapter in silence.** Two local ticks, `4.1.3` and `5.1.2`, produced no save until a later edit, and that save was the store after the edit. An account that already had `4.1.3` reloaded `#chapter-5` at scroll 0. The status stayed "0 of 2". The tick was in `localStorage`, and nothing on the page said so. Change: the first signed-in load writes the merged record, including when the account is empty. Apply the result on the page that is open. One line on the status the book already has: "Kept 2 ticks from this phone." or "Brought 1 tick from your other device." Leave the scroll.
+
+5. **The sentence takes a third row and over-claims.** At 390 the header is 148px with the control and 96px on the preview without it. The control is 225×44 of 13px type, right-aligned, with no border, under Chapters. "Keep your progress" reads as the way the ticks survive. They already survive on the phone, including after Sign out ("1 of 10", `5.1.2` still stored). Change: one bordered 44px button on the Chapters row, two lines at the 13px size, "Sign in" and "for another device". The header stays the preview's height. Google and X stay the second tap, on the bordered buttons they already are.
+
+6. **The signed-in address is cut off, and Sign out jumps to the top.** `shael.student@university.edu` renders as "shael.student@unive…" in a 160×16 line with no `title`. `@mat412notes` fits. Sign out is 104×44 and reloads `#book` at scroll 0. The tick is still there when the page comes back. Change: the header shows `@name` or the part before `@`, and the full address is the control's accessible name. Sign out clears the session and leaves the page where it is.
+
+### What to keep
+
+The slot stays empty when `/api/me` does not answer, and The Book is unchanged: status, 44px Continue, the eight drawer rows. Sign-in is that one header control on The Book, not a second block in the page. Google and X are the site's bordered buttons, on the paper and the type the book already uses (`rgb(246, 243, 236)` and `rgb(13, 18, 28)`, Iowan title, the accent Continue). The sentence, Google, X, and Sign out are all at least 44px tall. The focus ring is the site's. The drawer and the chapter anchor follow the real header height, so the extra row does not cover "1 Complex Numbers" or the Chapter 4 title. When the function runs, the return hash is the chapter the student left, Back from the provider restores that chapter's scroll, Sign out leaves the ticks on the phone, and a tick held on the account does come down into `localStorage`. Dark matches light.
+
+## sign-in (batch 2)
+
+Branch `cursor/sign-in`. The header control is a bordered Sign in, 44px, on the Chapters row (96px header at 390, one row at 1280). The line under it is "for another device". The Book says, once, that ticks stay on this phone and sign-in copies them to another phone. A long local-part ellipsizes; the full address is the title and the accessible name. Sign out does not reload and does not move the scroll. The live region says the ticks stayed.
+
+Cancel (`access_denied`, `denied`, or `cancelled`, with the state cookie) and a failed exchange return an HTML page, not a 302. The page steps `history.go` back over the provider using the history length saved at the tap, then `location.replace` if that does not leave. The chapter's scroll is restored, and the live region says the ticks are still on this phone.
+
+The first signed-in load writes the union and says "Kept N ticks from this phone." or "Ticks from your other phone." It does not reload. A wrong answer on Test prep now writes `practice.misses` as `{ v, steps }`, which the existing merge already kept. The sync copy is ticks, the flashcard schedule, and those misses.
+
+`DELETE /api/progress` removes `u:<provider>:<id>` and does not touch `localStorage`. On a wide window the button is on the header row. On a phone it sits under the name, so the Chapters row stays one line.
+
+X stays off the header. The start URL still asks for `users.read tweet.read`, and that is not an identity-only scope. The routes remain. No client secret was added. Nothing was merged and `gh-pages` was not touched.
+
+## unslop (sign-in batch 2)
+
+Branch `cursor/sign-in`, tip `0df1e50`. No product code was changed. The public preview https://signin-preview.complexanalysis.pages.dev serves this tip: `js/core/account.js`, `js/stations/book.js`, and `css/components.css` match the commit. Its `/api/me` is the static "Not found" page, so the header slot stays empty there, and the console's one error is that 404. I then served this commit with `wrangler pages dev` (Google stubbed, X unset, `PROGRESS` bound) and used the account chrome a student would actually see. Phone first: 390×844, light, then dark. Then 1280×800, light, then dark. The Book, and Chapter 5. Signed out, then signed in as `ada@example.com`, `shael.student@university.edu`, and `alexanderthegreat.student@university.edu`. Opened delete, armed it, deleted, and signed out from a scrolled chapter. Local walks logged no console errors. `scrollWidth` was 390 and 1280 in every state, both themes.
+
+The picture stays the one bright thing. The header is supposed to be a name and one action, on the paper the book already uses. This pass only cuts what the account chrome added on top of that.
+
+### The walk
+
+**The preview, with no button.** 390×844, light. Header 96px: the mark, the name, the theme button (44×44), Chapters (118×44). The slot is 0×0. The Book still prints "Ticks stay on this phone. Sign in copies them to another phone." It is 358×47 at y = 246, 15.2px, muted `rgb(81, 91, 108)` on `rgb(246, 243, 236)`. The same sentence in the dark, and the same one line (539×24) at 1280 in both themes. Continue is on the first screen. There is nothing to sign in with.
+
+**Signed out, with the button.** The control is on the Chapters row. Header stays 96px at 390 and 46px at 1280, light and dark. The button is 134×44, bordered like Chapters, white on the light paper and `rgb(21, 28, 43)` in the dark. Inside it, "Sign in" is 13.12px, weight 600, and "for another device" is 100×11 at 10.88px, weight 600, muted. The accessible name is already "Sign in for another device". The book sentence is still under the lede, so the fact is said twice, and the smaller line is the one that sizes the button. On Chapter 5 the square, the sentence, and Play share the first screen: Play is 70×44 and ends at y = 722 of 844, and at y = 780 of 800. Both themes.
+
+**Signed in.** `shael.student@university.edu` paints "shael.student" in a 72×44 box on the phone. The text is 90px wide, so the screen reads the start of the name and cuts the end. The full address is the title and the accessible name. `ada` fits, 24×44. `alexanderthegreat.student` is 178px of text in a 77px box. Sign out is 44px tall and sits on that same row. The book sentence is still there, telling you to sign in. The first load with two local ticks said "Kept 2 ticks from this phone." and the card moved to 2 of 10, with no reload. A later load of the same account, once the copy was already up, stayed quiet and left the count.
+
+**Delete.** At 1280 the disclosure is forced open. "Delete the copy" is 166×44, the same bordered button as Sign out, on the book and on the exponential, light and dark. The name, that button, and Sign out are three things in the header. On the phone the delete button is 0×0 until the name is tapped, and the name has no marker. Opening it grows the header from 96px to 148px. With `shael.student` the second row holds the name, "Delete the copy" (166×44), and Sign out, and the page does not scroll sideways. With `alexanderthegreat.student`, dark, the name's box starts at x = −72 and the visible text is "hegreat.student", flush to the left edge. The first tap renames the button to "Delete it" (106×44). The accessible name stays "Delete the copy saved for another device". The second tap deletes. The live region says "The saved copy is deleted. Your ticks are still on this phone." The button stays "Delete it", still armed, on the phone and at 1280. The chapter still said 1 of 2.
+
+**Sign out.** From Chapter 5, scrolled to 500 at 390 and to 420 at 1280 dark, Sign out left the scroll where it was and put the Sign in button back. The live region said "Signed out. Your ticks are still on this phone."
+
+### Verdict
+
+ANOTHER BATCH. The header is already the site's row, the picture still owns Chapter 5, and nothing here asks for a new colour or a new type. What is left is the sentence in the wrong states, the 10.88px line inside the button, the name that leaves its box, and a delete control that is either always on or slid off the screen. One batch of those cuts, then this chrome can rest.
+
+### Ranked cut or fix
+
+1. **The book sentence is on the page when it is not true.** On the preview, 390 and 1280, light and dark, there is no Sign in control and the book still says "Ticks stay on this phone. Sign in copies them to another phone." Signed in, the header is already the name and Sign out, and the same sentence is still under the lede, 47px tall on the phone. It is painted by the book page, not by the account slot, so an empty slot does not remove it. Change: render it only while the header is offering Sign in. Empty slot, and signed in, the line is gone.
+
+2. **The button's second line repeats that sentence at 10.88px.** "for another device" is 100×11, weight 600, muted, inside the 134×44 control, at 390 and at 1280, light and dark. "Sign in" above it is 13.12px. Sign out, on the same row once you are in, is 17px. The accessible name is already "Sign in for another device", and the book sentence, while the button is offered, is the one place the longer fact belongs. Change: the control is one line, "Sign in", at the 17px Sign out already uses. Keep the accessible name.
+
+3. **The phone name is cut off, and opening delete shoves a long name off the left edge.** `shael.student` is 90px of text in a 72px box (the cap is 104px, and the row shrinks it further). The screen shows the start of the name and cuts the end. `alexanderthegreat.student` is 178px in a 77px box. On the phone, dark, opening the name puts that box at x = −72, so the visible text is "hegreat.student" with no ellipsis, and the header grows from 96px to 148px. `scrollWidth` stays 390. The text is clipped, not scrolled. At 1280, `shael.student` fits (90 of 90) and the long local-part is still cut (160 of 178). Change: the name ellipsizes inside the row and never draws past the left edge. Sign out stays one width. The full address stays the title and the accessible name. The opened handle does not use `flex-shrink: 0` at 12rem.
+
+4. **Delete is a second full button on the laptop, a hidden one on the phone, and the confirm label drops the noun.** At 1280 the details element is forced open, so "Delete the copy" is 166×44 beside Sign out on every page, including the exponential. On the phone it is absent until the name is tapped, and the name does not look like a control. The first tap changes the label to "Delete it". After the delete succeeds the button stays "Delete it" and armed, at both widths, while the live region has already said the copy is gone. Change: the resting row at both widths is the name and Sign out. Do not force the disclosure open at 56.25rem. The confirm label stays "Delete saved copy". After it succeeds, the row closes and the label resets. The notice is the confirmation.
+
+5. **On the wide book the remaining sentence still says "this phone".** At 1280 the line is one row, 539×24, next to the sidebar. The window is not a phone. Change, for the one place item 1 still shows the sentence: "Ticks stay in this browser. Sign in copies them to another one."
+
+### What to keep
+
+The empty slot. On the preview the header is the mark, the theme button, and Chapters, 96px at 390 and 46px at 1280, and the book underneath is the book. Sign in, when it is offered, is that same bordered 44px button on the Chapters row, not a new block in the page. X stays off the header. Chapter 5 keeps the square, the sentence, and Play on the first screen at both widths, in both themes. The paper is `rgb(246, 243, 236)` and `rgb(13, 18, 28)`. No new hue, no new type, no icon on the account. `ada` shows in full, and the full address is the title and the accessible name. Sign out leaves the scroll (500 stayed 500, 420 stayed 420) and says the ticks stayed. The delete notice is the right sentence, and the tick stayed on the chapter. The first signed-in load with two local ticks said "Kept 2 ticks from this phone." and the card moved to 2 of 10, without a reload. The where-line, the flags, and Continue stay as they are.
+
+## ux-veteran (sign-in batch 2)
+
+Branch `cursor/sign-in` at `0df1e50`. Preview https://signin-preview.complexanalysis.pages.dev. This walk is that tip. It does not re-test `d3c5030`, which landed on the branch while this pass was running.
+
+Headless Chrome, touch, fresh storage. Phone first: 390×844, light and dark, then 1280×800, light and dark. A 360×780 check for sideways scroll. No product code was changed. The preview's `/api/me` is still the static 404, so the header slot stays empty there. The same commit served with the functions running (`/api/me` JSON, Google and X both configured) is what the signed-in walk used. No console errors on the book or on Chapter 5. The preview's only console error is that 404. `scrollWidth` matched the window at 360, 390, and 1280, both themes.
+
+### The walk
+
+**Header.** On the preview at 390×844 the header is 96px (`--header-h` 95px), light and dark. The name is one line, 177×18, the whole "One Point, Two Addresses", Iowan. Under it, the theme button 44×44 and Chapters 118×44 at y = 45. With the functions running, Sign in sits on that same row: 134×44 at x = 194, y = 45, and the header is still 96px. The label is "Sign in" at 13.12px. The line under it is "for another device" at 10.88px. Contrast of that line is 6.86 on the light button (`rgb(81, 91, 108)` on white) and 7.8 in the dark (`rgb(166, 176, 195)` on `rgb(21, 28, 43)`). The border, the 6px radius, and the paper match Chapters. The accessible name is "Sign in for another device". Focus is the site's ring, 3px `rgb(26, 34, 48)`, offset 2px. There is no X control. `providers.x` is true and the header still has one button.
+
+At 1280 the header is 46px with or without the button, light and dark. Sign in is 134×44 at the right of that row. Chapters is gone because the sidebar is the list. The first sidebar row is at y = 62. Two wrapped titles are 47px. The others are 44. At 360 the header is 96px, Sign in is still 134×44, and the name is still the full line.
+
+Chapter 5's Play is 70×44 at y = 678 on the preview and with Sign in on the row. It stays on the 844px screen. The drawer opens under the 96px header. "1 Complex Numbers" is 358×44 at y = 112. Eight rows, Chapters 1–7 and Test prep.
+
+**The book line.** The preview has no Sign in button, and The Book still says "Ticks stay on this phone. Sign in copies them to another phone." The line is 358×47 at y = 246, 15.2px muted. Contrast is 6.19 on the light paper and 8.59 in the dark. The same sentence is on the 1280 book while signed in, beside Delete the copy and Sign out, and it still says "phone".
+
+**Signed in.** Closed, at 390, the header stays 96px. `shael.student` is a 72×44 label at x = 194 with 90px of text, so the eye gets "shael.stude". Sign out is 91×44 at y = 45. Delete the copy is `display: none` until the name is tapped. The name has no border. It reads as a clipped label between Chapters and Sign out. A long local-part is 77×44 closed, 247px of text. `@mat412notes` is 75px wide with 97px of text. The full address is the `title` and the aria-label. A thumb does not get a tooltip.
+
+Opening the row grows the header to 147px. `shael.student` then fits, 90×44 at x = 2. Delete the copy is 166×44 and Sign out is 100×44, both at y = 96. The long local-part does not fit. The name is 192×44 at x = -85, and the visible piece is "t.withaverylongl" cut off the left edge. `scrollWidth` stays 390, so there is nothing to scroll sideways to. `@mat412notes` opens at x = -4. In the dark the same row is the site's bordered buttons on `rgb(13, 18, 28)`.
+
+At 1280 the row stays one line, 46px. Delete the copy is 166×44 and Sign out is 104×44, always visible. `shael.student` fits (90×44). The long local-part is a 160×44 ellipsis, "shael.student.withavery", and the title carries the rest. Hover works there. The phone has no hover.
+
+**Sign out and delete.** From Chapter 5 at scroll 700, Sign out stays on `#chapter-5` at 700. The button becomes Sign in. `mv:progress.test2` is still `{"5.1.2":true,"4.1.3":true}`. The live region says "Signed out. Your ticks are still on this phone." No visible line says it. Delete is two taps. The first changes the label to "Delete it", 106×44, and leaves the aria-label as "Delete the copy saved for another device". The live region does not change on that tap. The second tap leaves the button saying "Delete it", leaves the session signed in, leaves the ticks in `localStorage`, and sets the live region to "The saved copy is deleted. Your ticks are still on this phone." That sentence is not on the screen. Scroll stays in the chapter.
+
+**The first load.** Two local ticks and an empty account: the live region says "Kept 2 ticks from this phone." The book status says "2 of 10". An account that already held `4.1.3` produced "Ticks from your other phone." and both ticks were in `localStorage` on `#chapter-4` at scroll 0. Neither sentence is a visible line. The count is, when the ticks were already on the page.
+
+**Cancel and Back.** Book at scroll 480, then Chapter 5 at 620, then Sign in. The start navigation is the Google URL, scope `openid email profile`, not the 404. Cancelling (`access_denied`, state matched) returns to `#chapter-5` at 620. The live region says "Sign-in cancelled. Your ticks are still on this phone." The screen looks like the tap never happened. Browser Back from there is `#book` at 480, and the live region says "The Book". It does not open Google. Back from the provider page itself, before cancel, returns to `#chapter-5` at the scroll the student left (y = 531). The page the script shows when it does not run is the word "Back", 33×17, Times New Roman, blue on white, no site CSS. On this pass its href was `/#chapter-5`.
+
+### Verdict
+
+ANOTHER BATCH. The header stayed 96px, Sign in, Sign out, and Delete the copy are at least 44px, and cancel puts the chapter back where it was. The signed-in name still does not fit on the phone, and the sentences that say what happened are not on the screen.
+
+### Ranked
+
+1. **The signed-in name leaves the phone.** At 390, closed, `shael.student` is 72×44 with 90px of text, so it reads "shael.stude". Opening a long local-part places the name at x = -85, 192px wide, and the visible fragment is "t.withaverylongl" off the left edge. `scrollWidth` is 390. `@mat412notes` is clipped closed (75px box, 97px of text). The full address is the title and the aria-label, which a thumb does not see. Delete the copy (166×44) and Sign out (100×44) on that row are fine. Change: the closed control is a bordered 44px "Signed in". The opened row stacks inside the screen: the full address on its own line, then Delete the copy and Sign out. The name never sits at a negative x.
+
+2. **The book tells you to sign in when you can't, and says "phone" on the laptop.** The preview slot is empty and the line is still there, 358×47, "Ticks stay on this phone. Sign in copies them to another phone." The same line sits under the title at 1280 while Delete the copy and Sign out are in the header. Change: show the line only while the header shows Sign in. The words are "Ticks stay in this browser. Sign in copies them to another device."
+
+3. **Cancel, sign-out, and delete speak only to the live region.** Cancel returns to `#chapter-5` at 620 and the only change is `#route-status`: "Sign-in cancelled. Your ticks are still on this phone." Sign out keeps scroll 700 and the ticks, swaps in Sign in, and hides "Signed out. Your ticks are still on this phone." The first Delete tap changes the visible label to "Delete it" and does not change the aria-label or the live region. The second tap leaves the button on "Delete it" and puts "The saved copy is deleted. Your ticks are still on this phone." only in the live region. "Kept 2 ticks from this phone." and "Ticks from your other phone." are the same kind of line. Change: one visible line, the sentence the live region already says, until the next navigation. The first Delete tap sets the button and that line to "Delete it. This removes the saved copy." After it finishes, the button reads "Delete the copy" again.
+
+4. **The fallback Back is 33×17.** When the return script does not run, the page is the word "Back", 33×17, Times New Roman, blue on white, no stylesheet. The path that does run never shows it: Back after cancel is the book at 480, not Google, and Back from the provider is the chapter at 531. Change: that link is inline, at least 44×44, and the page shows the same sentence ("Sign-in cancelled. Your ticks are still on this phone.").
+
+### What to keep
+
+The phone header is 96px with Sign in on the Chapters row, and 46px at 1280, light and dark, the same heights as the preview with an empty slot. Sign in is 134×44, Sign out is 91×44 on the phone and 104×44 at 1280, Delete the copy is 166×44. All three use the Chapters border, the 6px radius, and the paper (`rgb(246, 243, 236)`, `rgb(13, 18, 28)`). The focus ring is the site's. X stays off the header. The Google start asks for `openid email profile`. Chapter 5's Play stays at y = 678. The drawer is the same eight rows, 44px, clear of the header. Nothing scrolls sideways at 360, 390, or 1280.
+
+Cancel returns to the chapter at the scroll the student left, and Back from there is the book at the scroll it left. Back from the provider, before cancel, does the same. Sign out does not reload and does not move the scroll, and the ticks stay in `localStorage`. The first signed-in load writes the union. The live-region sentences are the right sentences. The slot stays empty when `/api/me` does not answer. Dark matches light.
+
+## sign-in (batch 3)
+
+Branch `cursor/sign-in`, on top of `d3c5030`. The book line is painted only while the header is offering Sign in. An empty slot and a signed-in session leave it hidden. On a phone it says "Ticks stay on this phone. Sign in copies them to another device." From 56.25rem it says "Ticks stay in this browser. Sign in copies them to another device."
+
+Sign in is one line, "Sign in", at 17px. The accessible name stays "Sign in for another device". The closed signed-in control is a bordered 44px "Signed in". The full address is the title and the accessible name, and it is on its own line only after the control is opened, then Delete the copy, then Sign out. A long address breaks at @. The disclosure stays closed at 1280 until it is opened. The first Delete tap sets the button to "Delete saved copy" and the visible line to "Delete it. This removes the saved copy." After a successful delete the row closes and the button reads "Delete the copy" again. Cancel, sign-out, delete, and the first merge use that same visible line until the next navigation. The bare callback page, if its script does not run, shows "Sign-in cancelled. Your ticks are still on this phone." and a Back link of at least 44×44.
+
+On a phone the closed pair is 15px, not 17px. Two 17px labels do not fit beside Chapters on a 390px row, and 17px crushed "Chapters" to "Chapt". At 15px, Chapters, Signed in, and Sign out are whole, the header stays 96px, and nothing scrolls sideways at 360 or 390. At 1280 they are 17px and the header stays 46px. Chapter 5's Play still ends at y = 722 of 844.
+
+Deferred. OAuth client secrets and the Functions env stay with Shael. Nothing in the repo is a secret. X stays off the header until the start URL is identity-only. It still asks for `users.read tweet.read`. Production and `gh-pages` were not touched. The preview alias can still 404 `/api/*` until its worker env is present. This was not merged.
+
+## taste-skill (sign-in batch 3)
+
+Branch `cursor/sign-in`, tip `4ab8d5e`. No product code was changed. The preview https://signin-preview.complexanalysis.pages.dev serves this tip. Its `/api/me` is the static 404, so the header slot stays empty there, and the console's one error is that 404. The signed-out, signed-in, delete, and sign-out walks are this commit with `/api/me` answered (Google configured; X configured too, and still not drawn). The callback page is the fallback in `functions/_lib/oauth.js` with its script not run, which is the page a student sees only when that script does not leave. Phone first: 390×844, light, then dark. Then 1280×800, light, then dark. `scrollWidth` was 390 and 1280 in every state, both themes.
+
+Judged as the header the book already has. One ground, the existing ink, the existing bordered controls. Nothing here asks for a new colour or a new type. What is left is noise in that header: a sentence that slides the chapter list under itself, an opened account that reflows the name, and two words for the same device.
+
+### The walk
+
+**The gate.** On the preview, 390 and 1280, light and dark, the book line is not on the page. `#book-signin-note` is hidden, empty, and `display: none`. The header is 96px at 390 and 46px at 1280. Continue is at y = 390 on the phone and y = 247 at 1280. Signed in, the same line stays hidden, and Continue is back at those heights. Signed out, with Google offered, the line is there and only there. At 390 it is 358×47, two lines, "Ticks stay on this phone. Sign in copies them to another device." At 1280 it is one line, 539×24, "Ticks stay in this browser. Sign in copies them to another device." It is 15.2px, muted `rgb(81, 91, 108)` on `rgb(246, 243, 236)`, contrast 6.19. In the dark it is `rgb(166, 176, 195)` on `rgb(13, 18, 28)`, contrast 8.59. It sits under the lede, and it is not on Chapter 5.
+
+**Sign in, one line.** The control is "Sign in", one line, 17px, 91×44, at 390 and at 1280, light and dark. The accessible name is "Sign in for another device". On the phone it shares the Chapters row. Chapters stays "Chapters", 118×44 at 15.2px. The header stays 96px. There is no X control. `providers.x` was true and the header still had one button.
+
+**The closed pair.** Signed in, the phone row is "Signed in" at 15px, 86×44, and "Sign out" at 15px, 86×44, both one line, bordered like Chapters. A long address (`alexanderthegreat.student@university.example.edu`) does not change that row. The full address is the title and the accessible name. The header stays 96px at 390 and 46px at 1280, where both labels are 17px (Signed in 112×44, Sign out 104×44). Dark matches. Nothing draws past the screen.
+
+**Opened.** The address, then Delete, then Sign out, and the long address stays inside the screen. At 390 it breaks at @: "alexanderthegreat.student" ends at x = 373, "@university.example.edu" ends at x = 373, and neither line starts left of x = 169. `shael.student@university.edu` fits on one line. At 1280 the long address is one line ending at x = 1255. The disclosure stays closed at 1280 until it is opened. Opening is what moves the header. At 390 Chapters slides from x = 68 to x = 256, and the theme button slides with it to the right edge. At 1280 the name drops from y = 21 to y = 99, the theme button stays in the corner, and the header grows to 258px. The address itself is plain text: the summary's border is transparent and its background is transparent, which is the right weight for an identity line. The row around it is what reflows.
+
+**The sentence and the sidebar.** A visible line lives in the header, under the row. After Sign out on Chapter 5, scroll stayed 500, and the line was "Signed out. Your ticks are still on this phone." At 1280 dark the header is 102px and `--header-h` is 73px. The sidebar's sticky top is that 73px. Scrolled, "1 Complex Numbers" starts at y = 89 and the header ends at y = 102, so the sentence covers the top of the first chapter. The same gap is on the book: "Kept 2 ticks from this phone." makes the header 102px against a 73px variable, and "Delete it. This removes the saved copy." makes an opened header 258px against 229px. The status is the sibling under `.site-header-inner`, and both the header and the inner take `min-height: var(--header-h)`. Measuring the header and writing that height back grows the inner by the sentence that was already counted. On the phone the same step makes a 96px header 151px once the line appears.
+
+**Delete.** The resting button is "Delete the copy", 17px, 166×44. The first tap sets it to "Delete saved copy", 187×44, and the visible line to "Delete it. This removes the saved copy." Those two phrases are on the screen together. The second tap closes the row, puts "Delete the copy" back, and the line becomes "The saved copy is deleted. Your ticks are still on this phone." On the phone the opened Sign out is 15px and Delete, on the row above it, is 17px. At 1280 both are 17px.
+
+**The device word.** The book line switches, and the notices do not. At 1280 the sign-out line, the delete result, the first merge ("Kept 2 ticks from this phone."), and the callback ("Sign-in cancelled. Your ticks are still on this phone.") all say phone. The window is not a phone. At 390 those same sentences are the right word.
+
+**The callback, script not run.** Light, 390: the sentence is 17px, black on white, two lines, and Back is 64×44. Dark, 1280, with the browser in a dark scheme: the canvas is `rgb(18, 18, 18)` and the sentence samples at `rgb(9, 11, 11)`, contrast 1.05. Back is the same 64×44. The page sets a font and no paper, so a dark browser paints the canvas and the ink does not follow.
+
+**Chapter 5.** With Sign in on the row, Play is 70×44 at y = 678 and ends at y = 722 of 844. The square, the sentence, and Play share the first screen. At 1280 dark, Play ends at y = 780 of 800. Both themes. The header is the preview's height.
+
+### Verdict
+
+ANOTHER BATCH. The closed header is the site's row, and it can rest. The sentence, once it is actually on the page, covers the first chapter in the sidebar, and opening Signed in moves the name and Chapters. One batch of the cuts below, then stop.
+
+### Ranked cut or fix
+
+1. **The visible sentence and the header height fight.** After Sign out on Chapter 5, scroll 500, 1280 dark, the header is 102px and `--header-h` is 73px. The sidebar sticks at 73. "1 Complex Numbers" starts at y = 89, under a sentence that ends at y = 102. "Kept 2 ticks from this phone." does the same on the book (102 against 73). An opened delete does it at 258 against 229. On the phone the line turns a 96px header into 151px. The status is the sibling under `.site-header-inner`, and the measured height is written back into the min-height both of them use, so the inner grows by a sentence that was already in the measure. Change: `--header-h` is the header's height after the sentence is in it, and that number is not also the inner's min-height. Scrolled, the first chapter starts below the sentence.
+
+2. **Opening Signed in reflows the row that was already right.** At 390 Chapters moves from x = 68 to x = 256, and the theme button moves with it. At 1280 the name drops from y = 21 to y = 99 and the header becomes 258px, with the theme button left in the corner. The address, Delete, and Sign out are already the right stack, and the long address stays on screen (phone breaks at @, both lines end at x = 373; wide ends at x = 1255). Change: that stack is a row under the header row the student already had. The name, the theme button, and Chapters do not move. The open slot does not take `flex: 1 0 100%` inside a wrapping header.
+
+3. **The wide window is still called a phone.** The book line is the one that switches: at 390, "Ticks stay on this phone. Sign in copies them to another device." At 1280, "Ticks stay in this browser. Sign in copies them to another device." Sign out at 1280 dark says "Signed out. Your ticks are still on this phone." The delete result, "Kept 2 ticks from this phone.", and "Sign-in cancelled. Your ticks are still on this phone." do the same. Change: those notices use the book's split at 56.25rem. Wide says "this browser". The phone says "this phone". One sentence on the screen, not two device words.
+
+4. **Delete has three names, and on the phone the two actions are two sizes.** The button reads "Delete the copy", then "Delete saved copy", while the line reads "Delete it. This removes the saved copy." After it succeeds the row closes and the label resets, which is the right ending. On the opened phone row Delete is 17px and Sign out, under it, is 15px. The 15px size was for the closed pair beside Chapters. Change: while armed, the button stays "Delete saved copy" and the line is "This removes the saved copy. Ticks stay on this phone." with "this browser" on the wide window, as in item 3. Opened, Delete and Sign out are both 17px. The 15px rule stays on the closed pair only.
+
+5. **The callback fallback is black on black in the dark.** With the script not run, 1280, dark scheme, the canvas is `rgb(18, 18, 18)` and the sentence is `rgb(9, 11, 11)`, contrast 1.05. Light is black on white, and Back is 64×44 at both widths. The page sets a font and no background. Change: the inline style sets the paper and the ink, light `rgb(246, 243, 236)` / `rgb(26, 34, 48)` and dark `rgb(13, 18, 28)` / `rgb(233, 237, 245)`. Back stays at least 44×44. The sentence says "this browser", as in item 3, because this page has one string.
+
+### What to keep
+
+The empty slot. On the preview the header is the mark, the theme button, and Chapters, 96px at 390 and 46px at 1280, and the book line is gone, in light and in dark. Sign in, when it is offered, is one line, "Sign in", 17px, 91×44, on the Chapters row, with the accessible name "Sign in for another device". The book sentence is the one place the longer fact is said, and only while that button is offered. It is 15.2px muted, contrast 6.19 and 8.59, under the lede, and it is not on Chapter 5. The phone says phone and the wide window says browser. That split is the right one. Keep it, and make the notices follow it.
+
+The closed signed-in row. "Signed in" and "Sign out" are 15px on the phone and 17px at 1280, both 44px, both one line, bordered like Chapters, on the paper `rgb(246, 243, 236)` and `rgb(13, 18, 28)`. Chapters stays the whole word. The header stays 96px and 46px. A long address does not change the closed row. The full address is the title and the accessible name. Do not put this pair back to 17px on the phone. That is the size that cut Chapters.
+
+The opened address. It breaks at @ on the phone and stays one line when it fits, and it never draws past the left edge. Plain text is the right weight next to Delete and Sign out. X stays off the header. Chapter 5 keeps the square, the sentence, and Play on the first screen (Play ends at y = 722 of 844, and at y = 780 of 800). Sign out leaves the scroll at 500. A finished delete closes the row and puts "Delete the copy" back. No new hue, no new type, no icon on the account.
+
+## ux-veteran (sign-in batch 3)
+
+Branch `cursor/sign-in` at `4ab8d5e`. Preview https://signin-preview.complexanalysis.pages.dev. `js/core/account.js`, `css/components.css`, `js/stations/book.js`, and `index.html` on that preview match this commit. Headless Chrome, touch, fresh storage. Phone first: 390×844, light, then dark. Then 1280×800, light, then dark. A 360×780 check of the closed pair. No product code was changed.
+
+The preview's `GET /api/me` is still the static not-found page, so the public book has an empty slot. The signed-in walk is this same commit with `/api/me` answered in the page (Google on, X on, the header still offers only Google). The book logged no page exception. `scrollWidth` matched the window at 360, 390, and 1280, both themes.
+
+### The walk
+
+**Empty slot.** 390×844, light. Header 96px (`--header-h` 95px). The name is one line. Theme is 44×44, Chapters is 118×44, and the word Chapters is whole (68px of text in a 68px label). The slot is empty. The book line is hidden. Continue is 111×44 at y = 447. Chapter 4's title ends at y = 741, on the screen. The same empty header is 46px at 1280, and the line is hidden there too. The only failed request is `GET /api/me`.
+
+**Sign in offered.** The control is on the Chapters row. Header stays 96px at 390 and 46px at 1280, light and dark. Sign in is 91×44, 17px, weight 600, 6px radius, border `rgb(117, 125, 141)` on white, the same border and radius as Chapters. In the dark the border is `rgb(116, 128, 160)` on `rgb(21, 28, 43)`. The accessible name is "Sign in for another device". There is no X control. The book line is on only in this state. At 390 it is "Ticks stay on this phone. Sign in copies them to another device.", 358×47, 15.2px, muted `rgb(81, 91, 108)` on `rgb(246, 243, 236)`, contrast 6.19. At 1280 it is one line, "Ticks stay in this browser. Sign in copies them to another device.", contrast 6.19 in the light and 8.59 in the dark (`rgb(166, 176, 195)` on `rgb(13, 18, 28)`). Widening the window from 390 to 1280 swaps phone for browser without a reload. Signed in, the line is hidden again.
+
+**Closed pair.** At 390, light and dark, Signed in is 86×44 and Sign out is 86×44, both 15px, both bordered, both on the Chapters row at y = 45. The words are whole (69px in the 86px box, 62px in the 86px box). Chapters stays 118×44 and the word is whole. Header stays 96px. Sign out's right edge is x = 374, inside the 16px gutter. At 1280 the same pair is 17px: Signed in 112×44, Sign out 104×44, header 46px. The address is the title and the accessible name. It is not on the closed row.
+
+**Opened stack.** The address, Delete the copy (166×44, 17px), and Sign out stack inside the screen, right aligned. On the opened phone row Sign out is 96×44 at 15px, one size under Delete. `alexanderthegreat.student@university.edu` is 324px of text at x = 49 on the phone and 368px at x = 872 at 1280. Nothing sits at a negative x. The markup breaks at @ (`alexanderthegreat.student<wbr>@university.edu`); this address fits on one line, so the break stays unused. Opening is what moves the row that was already there. At 390 Chapters goes from x = 68 to x = 256, and the theme button goes from x = 16 to x = 204. At 1280 the name drops from y = 7 to y = 85 and the header grows from 46px to 202px. The disclosure stays closed at 1280 until it is opened. Delete the copy is absent until then.
+
+**The sentence.** The first Delete tap sets the button to "Delete saved copy" (187×44) and paints "Delete it. This removes the saved copy." under the buttons, inside the sticky header. At 390 the line is y = 278, 15.2px, contrast 14.41 on the light paper and 15.97 in the dark. The second tap closes the stack, puts the button back to "Delete the copy", and the line becomes "The saved copy is deleted. Your ticks are still on this phone." Sign out from Chapter 5, scrolled, puts Sign in back and paints "Signed out. Your ticks are still on this phone." The picture stays where it was: Play's viewport position does not jump. A first sign-in with two local ticks paints "Kept 2 ticks from this phone." The book line stays hidden while those sentences are up.
+
+**Where the sentence meets the list.** With the delete sentence up, the header box is 307px and `--header-h` is 278px. The drawer is pinned at 278. "1 Complex Numbers" is 358×44 at y = 295, so the header covers its top 12px and the tappable remainder is 32px. Rows 2 through 8, including Test prep at y = 603, are clear 44px rows. The same short token shows up at 1280 after sign-out: the header box is 102px, `--header-h` is 73px, and "1 Complex Numbers" starts at y = 89. The sentence is full width, so it sits across the sidebar column as well as the page. Without a sentence, the drawer is clear: header 96, first row y = 112, all eight rows 44px, Test prep on that first screen.
+
+**Play, Book, Back.** Chapter 5 with Sign in offered: The Book is 134×44 at y = 120, the claim is on the screen, and Play is 70×44 at y = 678, ending at 722 of 844. Dark is the same. At 1280 Play ends at 780 of 800, and the claim is on the screen above it. From the book at scroll 480, Chapter 4 opens at the top with The Book at 134×44, and Back returns to `#book` at 480 with the sign-in line still showing. The callback page, with its script not run, shows "Sign-in cancelled. Your ticks are still on this phone." and a Back link of 64×44 at 390 and at 1280. The missing-page link on `/no-such-sign-in-page` is a different Back: "Back to One Point, Two Addresses", 271×23, on the site paper, href `/#book`.
+
+**360.** Header 96px. Chapters is whole. Signed in is 67×44 around 69px of text, so the word sits on the inside of the right border. Sign out is 74×44 and the word is whole. Nothing scrolls sideways. Chapter 5's Play still ends on the 780px screen (y = 648, bottom 692).
+
+### Verdict
+
+ANOTHER BATCH. The closed pair, the opened stack, the book line, and Play are the screen this batch described. The sentence is on the page, and the chapter list starts inside it.
+
+### Ranked
+
+1. **The first chapter row loses the top of its target while the sentence is up.** At 390, dark, with "Delete it. This removes the saved copy." showing, the header box is 307px and `--header-h` is 278px. The drawer starts at 278. "1 Complex Numbers" is y = 295, h = 44, and the sticky header covers it through y = 307. The rest of the row is 32px. At 1280, after sign-out, the header box is 102px, the token is 73px, and "1 Complex Numbers" starts at y = 89 under "Signed out. Your ticks are still on this phone." The same gap is 258 against 229 while delete is armed. `#account-status` is the sibling under `.site-header-inner`, and both the header and the inner use `min-height: var(--header-h)`. The measure is written back onto the inner, so the inner grows by the sentence that was already in the measure, and the token stays short of the box. Change: the inner stops taking `--header-h` as its min-height. The token is the header's border box after the sentence is in it. The drawer and the sidebar start below that box, and the first row is 44px again.
+
+2. **Opening Signed in moves the row the student was using.** At 390 Chapters goes from x = 68 to x = 256, and the theme button goes from x = 16 to x = 204. At 1280 the name drops from y = 7 to y = 85 and the header grows from 46px to 202px. The address, Delete, and Sign out are already the stack, and the long address stays inside the screen. Change: that stack is a row under the header row that is already on screen. The name, the theme button, and Chapters stay where they were. The open slot does not take `flex: 1 0 100%` inside the wrapping header.
+
+3. **The sentences that just became visible still say "phone" on the laptop.** The book line switches: at 390, "this phone"; at 1280, "this browser". Sign out on that 1280 window says "Signed out. Your ticks are still on this phone." The delete result, "Kept 2 ticks from this phone.", and the callback page ("Sign-in cancelled. Your ticks are still on this phone.") do the same. Change: those four sentences use the book's split at 56.25rem. Wide says "this browser". The phone says "this phone".
+
+4. **The control's visible words and its name disagree, and the opened phone row is two sizes.** Closed, the control reads "Signed in" and its accessible name is `shael.student@university.edu`. Armed, the button reads "Delete saved copy", the line reads "Delete it. This removes the saved copy.", and the accessible name stays "Delete the copy saved for another device". On that opened phone row Delete is 17px and Sign out, under it, is 15px. The 15px size is what keeps the closed pair beside Chapters. Change: the closed name is "Signed in, " plus the address. While armed, the name is "Delete saved copy". Opened, Delete and Sign out are both 17px. The 15px rule stays on the closed pair.
+
+5. **The missing page's Back is 271×23.** At 390 the page is the site's paper and type, the href is `/#book`, and the link is 23px tall. The callback's own Back is 64×44, black on white, including with a dark color scheme. Change: the missing-page anchor uses the same 44px control as The Book.
+
+### What to keep
+
+The empty slot. On the preview the header is the mark, the theme button, and Chapters, 96px at 390 and 46px at 1280, and the book line is hidden. Sign in, when it is offered, is one 17px line on the Chapters row, 91×44, the Chapters border and the 6px radius, on the paper the book already uses (`rgb(246, 243, 236)`, `rgb(13, 18, 28)`). The phone pair is 15px so Chapters, Signed in, and Sign out are whole inside a 96px header. At 1280 the pair is 17px inside a 46px header. X stays off the header. The opened row stays inside the screen: address, Delete the copy, Sign out, in that order, and a long address does not draw past the left edge. The book line shows only while Sign in is offered, says "phone" at 390 and "browser" at 1280, and hides again once you are signed in. Chapter 5 keeps the claim and Play on the first screen with Sign in offered, at both widths, in both themes. The Book is 134×44. Back from Chapter 4 returns the book to the scroll it left. Sign out leaves the picture where it was. The delete row closes after the copy is removed, and the button reads "Delete the copy" again. Dark matches light.

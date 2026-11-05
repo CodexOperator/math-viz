@@ -4,12 +4,21 @@
 import { readFileSync } from 'node:fs';
 import { stationsForMap, stationForTopic, stationForProblem, stationById, threadsOn, stationPart, STATIONS } from '../js/registry.js';
 import { stationNeighbours } from '../js/stations/problems.js';
-import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
+import { parseRoute, groupStations, mapForcedByRoute, bookModuleFor } from '../js/app.js';
 import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, chapter4ExerciseIds, chapter5ExerciseIds } from '../js/data/book-path.js';
 import { chapterTally, sectionFinished, foldLegacyExercises, saveSharedTicks, toggleTick } from '../js/book/progress.js';
 import { EXP_DURATION, expFrame, finishedStops } from '../js/core/live-film.js';
 import { compile } from '../js/core/parse.js';
 import { parseBookRoute } from '../js/book/route.js';
+import { answersMatch, parseComplex } from '../js/practice/check.js';
+import { generate as geometricGenerate } from '../js/practice/gen/geometric-series.js';
+import { generate as expGenerate, principalQuarters } from '../js/practice/gen/exp-mod-arg.js';
+import { catalogIssues, loadCatalog, assertGeneratorSignatures } from '../js/practice/catalog.js';
+import { seedFirst } from '../js/practice/gen/index.js';
+import { generate as mapGenerate } from '../js/practice/gen/ch2-maps.js';
+import { testPrepEntries, sectionWalk } from '../js/practice/queue.js';
+import { walkSections, continueTarget } from '../js/book/continue.js';
+import { mergeLeitner, reviewCard, emptyDeck } from '../js/practice/leitner.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
 import { parsePath, evalPath } from '../js/core/path-expr.js';
 import { smoothLoop, presetById, compileFormula } from '../js/core/path-geom.js';
@@ -114,11 +123,17 @@ check('#home-t2 is the Test 1 thread, not Test 2', mapForcedByRoute(stationById(
 check('#home-f2 is the Test 2 thread', mapForcedByRoute(stationById('home'), parseRoute('#home-f2')) === 'test2');
 check('an unknown hash forces no map', mapForcedByRoute(null, parseRoute('#nope')) === null);
 check('the book is its own route', parseRoute('#book').station == null && parseRoute('#book').book.kind === 'roadmap' && mapForcedByRoute(null, parseRoute('#book')) == null);
+check('a chapter page is the module named in the book registry',
+  bookModuleFor(parseRoute('#chapter-4').book) === './stations/book.js'
+  && bookModuleFor(parseRoute('#chapter-5').book) === './stations/book.js'
+  && bookModuleFor(parseRoute('#book').book) === './stations/book.js'
+  && bookModuleFor(parseRoute('#test-prep').book) === './stations/book.js'
+  && bookModuleFor(parseRoute('#chapter-2').book) === './stations/chapter2.js');
 check('#chapter-4 opens chapter 4', parseRoute('#chapter-4').book.kind === 'chapter' && parseRoute('#chapter-4').book.chapter === 4 && parseRoute('#chapter-4').book.focus == null);
 check('#chapter-4-4-1-3 focuses exercise 4.1.3', parseRoute('#chapter-4-4-1-3').book.focus === '4.1.3');
 check('#chapter-1 stays on the roadmap', parseRoute('#chapter-1').book.kind === 'roadmap' && parseRoute('#chapter-1').book.chapter === 1);
 check('a junk token on a later chapter is not a page', parseRoute('#chapter-1-extra').station == null && parseRoute('#chapter-1-extra').book == null);
-check('eleven chapters, 4 and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_CHAPTERS.join() === '4,5' && BOOK_CHAPTERS.filter((ch) => ch.open).map((ch) => ch.n).join() === '4,5');
+check('eleven chapters, registry opens 2, 4, and 5', BOOK_CHAPTERS.length === 11 && OPEN_CHAPTERS.join() === '2,4,5' && BOOK_CHAPTERS.filter((ch) => ch.open).map((ch) => ch.n).join() === '4,5');
 check('chapter 4 sections follow the contents', CHAPTER_4.sections.map((s) => `${s.id} ${s.page}`).join() === '4.1 102,4.2 109,4.3 118,4.4 123');
 check('chapter 4 exercises are the homework set plus 4.4.6', chapter4ExerciseIds().join() === '4.1.3,4.1.13,4.2.3,4.2.4,4.2.5,4.3.1,4.3.2,4.4.6');
 {
@@ -868,6 +883,7 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
 }
 
 await runViewChecks();
+await runPracticeChecks();
 
 if (failed) {
   console.error(`${failed} failed`);
@@ -1113,4 +1129,144 @@ async function runViewChecks() {
   replayAt(5616);
   replay.cancel();
   check('a drive after a pause gap does not spend the idle time', driveDt.length >= 2 && driveDt[0] < 1 && driveDt[1] > 10 && driveDt[1] < 30);
+}
+
+async function runPracticeChecks() {
+const PRACTICE = await loadCatalog();
+check('test prep is a book route and does not force a map',
+  parseRoute('#test-prep').book.kind === 'prep'
+  && parseRoute('#test-prep').book.chapter == null
+  && parseRoute('#test-prep-4-4-1').book.chapter === 4
+  && parseRoute('#test-prep-4-4-1').book.focus === '4.1'
+  && parseRoute('#test-prep-5').book.chapter === 5
+  && mapForcedByRoute(null, parseRoute('#test-prep')) == null
+  && parseBookRoute('test-prep-5-5-1').focus === '5.1');
+check('a fraction, a power, and a complex number match their equivalents',
+  answersMatch('  1 / 2 ', '\\frac{1}{2}')
+  && answersMatch('0.5', '\\frac{1}{2}')
+  && answersMatch('e^{x}', '\\exp(x)')
+  && answersMatch('1 + i', '1+i')
+  && answersMatch('\\frac{3-i}{2}', '1.5-0.5i')
+  && answersMatch('\\frac{\\pi}{4}', 'pi/4')
+  && !answersMatch('1+i', '1-i')
+  && !answersMatch('e^{2}', '7.389'));
+{
+  const issues = catalogIssues(PRACTICE);
+  check('practice catalog matches the schema', issues.length === 0);
+  check('a missing why and a repeated id are flagged',
+    catalogIssues([
+      { id: 'a', kind: 'blank', cite: { ref: 'X', page: 1 }, memory: 'm', steps: [{ text: 't', answer: '1', why: '' }] },
+      { id: 'a', kind: 'blank', cite: { ref: 'X', page: 1 }, memory: 'm', steps: [{ text: 't', answer: '1', why: 'because' }] },
+    ]).some((line) => line.includes('why'))
+    && catalogIssues([
+      { id: 'a', kind: 'blank', cite: { ref: 'X', page: 1 }, memory: 'm', steps: [{ text: 't', answer: '1', why: 'because' }] },
+      { id: 'a', kind: 'blank', cite: { ref: 'X', page: 1 }, memory: 'm', steps: [{ text: 't', answer: '1', why: 'because' }] },
+    ]).some((line) => line.startsWith('id ')));
+  let swapped = false;
+  try { assertGeneratorSignatures({ bad: { generate(params, seed) { return { params, seed }; } } }); }
+  catch (err) { swapped = /seed/.test(err.message); }
+  check('a swapped generator signature is rejected', swapped && seedFirst(function generate(seed) { return seed; }));
+  const kinds = new Set(PRACTICE.map((it) => it.kind));
+  check('every practice kind is in the pilot set',
+    ['proof-blank', 'proof-mc', 'next-step-blank', 'next-step-mc', 'blank', 'mc', 'flash'].every((k) => kinds.has(k)));
+  const proofs = ['Theorem 4.1', 'Theorem 4.12'];
+  check('each pilot proof is both a blank and a multiple choice',
+    proofs.every((ref) => PRACTICE.some((it) => it.kind === 'proof-blank' && it.cite.ref === ref)
+      && PRACTICE.some((it) => it.kind === 'proof-mc' && it.cite.ref === ref)));
+  check('at least four next-step items and both generators',
+    PRACTICE.filter((it) => it.kind === 'next-step-blank' || it.kind === 'next-step-mc').length >= 4
+    && PRACTICE.some((it) => it.generator && it.generator.template === 'geometric-series' && it.generator.params.kind === 'sum')
+    && PRACTICE.some((it) => it.generator && it.generator.template === 'geometric-series' && it.generator.params.kind === 'radius')
+    && PRACTICE.some((it) => it.generator && it.generator.template === 'exp-mod-arg')
+    && PRACTICE.some((it) => it.generator && it.generator.template === 'ch2-maps' && it.chapter === 2));
+  const refs = new Set(PRACTICE.filter((it) => it.kind === 'flash').map((it) => it.cite.ref));
+  const needed = [
+    'Definition 4.1', 'Theorem 4.1', 'Definition 4.2', 'Theorem 4.2', 'Definition 4.3', 'Theorem 4.3',
+    'Definition 4.4', 'Definition 4.5', 'Definition 4.6', 'Definition 4.7', 'Theorem 4.4', 'Theorem 4.5',
+    'Theorem 4.6', 'Definition 4.8', 'Theorem 4.7', 'Theorem 4.8', 'Corollary 4.1',
+    'Theorem 4.9', 'Definition 4.9', 'Definition 4.10', 'Theorem 4.10', 'Theorem 4.11', 'Definition 4.11', 'Definition 4.12',
+    'Theorem 4.12', 'Corollary 4.2', 'Corollary 4.3', 'Theorem 4.13', 'Definition 4.13', 'Theorem 4.14',
+    'Theorem 4.15', 'Theorem 4.16', 'Theorem 4.17',
+    'Definition 5.1', 'Theorem 5.1', 'Identity (5.1)',
+  ];
+  check('a flashcard for every definition and theorem on these pages', needed.every((ref) => refs.has(ref)));
+  check('multiple choice items have one matching choice', PRACTICE.every((it) => {
+    if (!String(it.kind).endsWith('mc') || it.generator) return true;
+    return it.steps.every((step) => step.choices.filter((c) => answersMatch(c, step.answer, step.accept)).length === 1);
+  }));
+  const walk = sectionWalk(PRACTICE.filter((it) => it.id === 'ch4-4.1-thm-4.1-blank'));
+  check('a proof blank opens as a worked example', walk[0] && walk[0].view === 'worked' && walk[1] && walk[1].view === 'faded');
+  const mix = testPrepEntries(PRACTICE, 3);
+  check('test prep opens on a worked proof, then the blank',
+    mix[0] && mix[0].view === 'worked' && mix[0].source.kind === 'proof-blank'
+    && mix[1] && mix[1].view === 'faded' && mix[1].source.id === mix[0].source.id);
+  check('test prep then mixes sections', new Set(mix.slice(2, 6).map((e) => e.source.section)).size >= 2);
+  const counted = walkSections().reduce((n, s) => n + s.exercises.length, 0);
+  const withChapter = walkSections({ 2: [{ id: '2.1', exercises: ['2.1.1'] }] });
+  check('continue counts a registered chapter',
+    counted === 10
+    && withChapter.some((s) => s.id === '2.1')
+    && withChapter.reduce((n, s) => n + s.exercises.length, 0) === 11
+    && continueTarget({}).href === '#chapter-4');
+  const mapped = mapGenerate(1);
+  check('a linear map answer is computed from the seed',
+    mapped.witness.re === mapped.witness.a * mapped.witness.x + mapped.witness.b
+    && mapped.witness.im === mapped.witness.a * mapped.witness.y);
+}
+{
+  let sumsOk = true;
+  let sawIn = false;
+  let sawOut = false;
+  for (let seed = 1; seed <= 20; seed++) {
+    const built = geometricGenerate(seed, { kind: 'sum' });
+    const again = geometricGenerate(seed, { kind: 'sum' });
+    if (JSON.stringify(built.steps) !== JSON.stringify(again.steps)) sumsOk = false;
+    const w = built.witness;
+    const inside = w.a * w.a + w.b * w.b < w.den * w.den;
+    if (inside !== w.converges) sumsOk = false;
+    if (inside) {
+      sawIn = true;
+      const zre = w.a / w.den;
+      const zim = w.b / w.den;
+      const den = (1 - zre) * (1 - zre) + zim * zim;
+      const got = parseComplex(built.steps[1].answer);
+      if (!got || Math.abs(got.re - (1 - zre) / den) > 1e-6 || Math.abs(got.im - zim / den) > 1e-6) sumsOk = false;
+    } else {
+      sawOut = true;
+      if (!answersMatch(built.steps[1].answer, 'diverges')) sumsOk = false;
+    }
+  }
+  check('geometric sums are computed and stable', sumsOk && sawIn && sawOut);
+  let radiiOk = true;
+  for (let seed = 1; seed <= 16; seed++) {
+    const built = geometricGenerate(seed, { kind: 'radius' });
+    const w = built.witness;
+    if (Math.abs(Math.hypot(w.p, w.q) - w.rho) > 1e-9) radiiOk = false;
+    if (!answersMatch(built.steps[0].answer, String(w.rho))) radiiOk = false;
+  }
+  check('radii of convergence are the moduli', radiiOk);
+  let expOk = true;
+  for (let seed = 1; seed <= 24; seed++) {
+    const built = expGenerate(seed);
+    const w = built.witness;
+    let y = w.k * Math.PI / 4;
+    while (y > Math.PI + 1e-12) y -= 2 * Math.PI;
+    while (y <= -Math.PI + 1e-12) y += 2 * Math.PI;
+    if (principalQuarters(w.k) !== w.quarters) expOk = false;
+    if (Math.abs(y - w.quarters * Math.PI / 4) > 1e-9) expOk = false;
+    const arg = parseComplex(built.steps[1].answer);
+    if (!arg || Math.abs(arg.re - y) > 1e-6 || Math.abs(arg.im) > 1e-6) expOk = false;
+    if (w.x === 0 && built.steps[0].answer !== '1') expOk = false;
+    if (w.x === 1 && built.steps[0].answer !== 'e') expOk = false;
+    if (w.x > 1 && !answersMatch(built.steps[0].answer, `e^{${w.x}}`)) expOk = false;
+    if (w.x < 0 && !answersMatch(built.steps[0].answer, `e^{${w.x}}`)) expOk = false;
+  }
+  check('modulus and argument of e^z are computed', expOk);
+  const first = reviewCard(emptyDeck(), 'card', 'good', '2026-11-04', 10);
+  const second = reviewCard(first, 'card', 'good', '2026-11-05', 30);
+  const miss = reviewCard(emptyDeck(), 'card', 'again', '2026-11-04', 99);
+  const kept = mergeLeitner(miss, second);
+  check('a Leitner merge keeps the card that was practiced more',
+    kept.cards.card.reviews === 2 && kept.cards.card.box === 2 && first.cards.card.due === '2026-11-05');
+}
 }

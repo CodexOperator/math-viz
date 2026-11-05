@@ -420,6 +420,8 @@ function proseEl(tag, attrs, text) {
 // ---------------------------------------------------------------- mount
 
 export function mount(el, ctx) {
+  const token = ctx && ctx.preset && ctx.preset.kind === 'token';
+  if (!token) return import('./book.js').then((mod) => mod.mountBookHome(el, ctx, { kind: 'roadmap', chapter: null, focus: null }));
   if (ctx && ctx.map === 'test2') return mountTest2Home(el, ctx);
   const mapStations = stationsForMap('test1');
   const t0 = performance.now();
