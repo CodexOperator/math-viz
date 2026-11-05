@@ -1762,3 +1762,59 @@ The practice card is one step. The formula stays one piece, in the question and 
 Branch `cursor/practice-engine`. Headless Chrome, touch, fresh storage, 390×844 and 1280×800, light and dark. The landing title and the route status say The Book. Chapter 4 puts Exercise 3's question on the phone (y 772–826) and the section button reads "Test prep · the proof". A worked proof's line is "Read this filled line." and the disk sentence sits under the title. Next on that card ends at 840 in the 844px window. Hint sits beside Check (both bottom 785). After `idk`, the count stays "2 of 18." and "This step comes back." is under the hint. Next hint ends at 835. A reload of §4.2 opens the missed blank as "1 of 3.", not the worked card. Endless is hidden on the worked proof and on the radius card. The radius reason ends with the modulus equal to the number. The memory sheet's page width is 390. The Corollary 4.3 identity and its takeaway scroll inside the line. Set complete says the Newton sentence once, in the lede. The card is the heading and "Open the memory sheet." Theorem 4.9 stays the connectedness statement on page 113. Theorem 4.11's flash stays the inequality on page 116. The sheet keeps the cardioid reading.
 
 Left for a later batch: `#chapter-2` is still the stub, Chapters 1, 3, 6, and 7 still have no practice file, and the playground doors still say Story Map. A section set's up control still says The Book.
+
+## unslop (practice batch 6)
+
+Branch `cursor/practice-engine`, tip `35d7f53`. Preview https://practice-preview.complexanalysis.pages.dev. `js/practice/mount.js` and `js/practice/render.js` on that preview match this tip. Walked as a student. Headless Chrome, touch, fresh storage. Phone first: 390×844, light, then the same doors in the dark. Then 1280×800, light and dark. The book, Chapter 4, the worked proof, the blank, a miss, Newton through Set complete, the radius card, the §4.3 memory sheet, and the mixed set. No product code was changed. `scrollWidth` matched the window at 390 and at 1280, both themes, on the book, the practice cards, and the memory sheet. No console errors.
+
+The page is a textbook: calm, exact, paper. The chrome stays the paper, the serif title, and one accent button. The moment is the filled line. The small-caps kicker and the four teaching colours stay with the shell.
+
+### Verdict
+
+ANOTHER BATCH. The seven things this batch named are on the screen, and the shell is already this site. What is left is six cuts of copy and hierarchy. One batch, then these surfaces can rest.
+
+### What the hand meets
+
+390×844, light, scroll 0. The document title is "The Book · One Point, Two Addresses". The name wraps. Continue is 111×44 at y = 291. The status names §4.1, Exercise 3. Chapter 4 is on the screen. The same screen in the dark is the station paper, the sentence rgb(233, 237, 245), and Continue dark on the off-white accent rgb(207, 216, 234). At 1280 the eight rows are the sidebar, and Continue sits with the status.
+
+Chapter 4, scroll 0. "Test prep · the proof" is 204×44 at y = 542 on the phone and y = 413 at 1280. The disk sentence sits under it. Exercise 3's question ends at y = 826 on the phone, inside the 844px window, and at y = 626 at 1280. Further down, §4.3's button reads "Test prep · the proof" again (y = 3430 on the phone, y = 2518 at 1280). §4.2 and §4.4 read "Test prep · 4.2" and "Test prep · 4.4", both 150×44.
+
+`#test-prep-4-4-1`, scroll 0, both themes. The lede is "Read this filled line.", muted, 16.8px, light rgb(81, 91, 108) and dark rgb(166, 176, 195). The status is "Section 4.1. 1 of 6." The card is Worked example, Step 1 of 2. The disk sentence sits under the theorem in that same muted colour. The modulus is one piece, 283×25. The filled bound is one piece, 162×23, weight 700. Next is 324×44, bottom 840 on the phone. At 1280 Next is at y = 464. Endless is hidden. Step 2 of 2 keeps the line filled, and the lede and the button both say "Try these steps".
+
+The blank is "2 of 6.", the label "Your answer", and Check beside Hint. On the phone both are 158×44, bottom 785. Check is the accent, rgb(47, 62, 92) in the light and rgb(207, 216, 234) in the dark. Hint is the quiet button. At 1280 each is 455×44.
+
+Typing `idk` leaves the count at "Section 4.1. 2 of 6." "Not that one." is weight 700, rgb(179, 38, 30) in the light and rgb(255, 129, 120) in the dark. The hint and "This step comes back." share the note, the same 17px, and "This step comes back." uses the primary text colour. Next hint is 324×44, bottom 835 on the phone and y = 668 at 1280. A reload of §4.2 after the same miss opens that missed blank: "Section 4.2. 1 of 3.", the box on the screen, the worked card gone.
+
+Newton's first card says "Read this filled line." The filled line is "1, or 0 if the guess is already the root." The next worked step is still filled, and the lede and the button both say "Try these steps". Set complete puts the Newton sentence in the lede once: 358×105 on the phone, 595×52 at 1280, muted. The status is "Set complete." The card heading is "Set complete". The button is "Open the memory sheet", on the screen in both windows, both themes.
+
+The radius card is Step 1 of 1. The lede is "Try these steps." The button is "Try these steps". The reason ends "|−20 + 21i| = 29." Endless is hidden on that worked card. On the blank it is 83×44 beside New set, y = 283 on the phone and y = 243 at 1280, on the chip row. After the answer is filled, "This step comes back." sits under the reason, and "Generate another" wraps onto two lines in a 158×44 button beside Next.
+
+The §4.3 sheet keeps the page at 390. The corollary formula row is 313px in a 305px line. The takeaway is 386px in a 305px line, both themes. The visible words cut the last term and then print the page twice: "… + z" and, under it, ". Corollary 4.3, page 119. (Corollary 4.3, page 119)". At 1280 that takeaway fits, 899/899, and the cite is still there twice. The same parenthesis follows Theorem 4.12, Exercise 1(b), and Exercise 2.
+
+The mixed set opens "Chapters 4 and 5. 1 of 22.", lede "Read this filled line.", Endless hidden, Next bottom 840.
+
+### Ranked cuts
+
+1. **The corollary line reads as a shorter formula, and the page is named twice.** On the phone, light and dark, the takeaway's row is 305px wide and 386px long. What shows is `1/(1−z) = 1 + z + ··· + z^{n−1} + z`, then a new line ". Corollary 4.3, page 119. (Corollary 4.3, page 119)". The fraction `z^n/(1−z)` is off the edge, and the period sits under the cut as if the identity had ended. The formula row above it is 313px in that same 305px line. At 1280 the takeaway fits on one line and still ends "Corollary 4.3, page 119. (Corollary 4.3, page 119)". Theorem 4.12, Exercise 1(b), and Exercise 2 on that sheet do the same doubled cite. The page itself stays 390 wide. Change: the cite is the parenthesis, once. The identity stays whole on the line you can read. The words after a formula do not wrap under a cut term. The formula row fits in the card.
+
+2. **A filled line says "Try these steps." twice.** On Theorem 4.1 step 2, on Newton's second worked step, and on the radius card (Step 1 of 1), the lede is "Try these steps." and the button is "Try these steps", at 390 and at 1280, light and dark. The line is still filled. The radius card never says "Read this filled line." Step 1 of the proof does: the lede is that sentence, and the button says Next. Change: every worked step's lede is "Read this filled line." The button is the only "Try these steps", and only on the last worked step.
+
+3. **"Set complete" is the status and the heading.** After §4.2, the Newton sentence is the lede, once, muted, in both themes. On the phone it is three lines, 105px. At 1280 it is two lines, 52px. Under it the status says "Set complete." The card heading says "Set complete" again, then "Open the memory sheet". Change: the status stays "Section 4.2." The card heading is the one "Set complete". The lede stays the sentence. The button stays.
+
+4. **"This step comes back." sits in the hint's voice.** On the Theorem 4.1 miss the count stays "2 of 6.", and the line is in the hint note at 17px in the primary text colour, under "Split the one modulus into the two coordinates." Next hint ends at 835 on the phone and at 712 at 1280. On the revealed radius card the answer is already "29", the reason already ends with the modulus equal to 29, and "This step comes back." is under that reason, both widths, both themes. Change: the line is muted, under the hint, on the first miss only. The revealed card is the filled answer, the reason, and Next.
+
+5. **Hint grows to half the card.** On the phone, Check and Hint are a fair pair, 158×44, bottom 785, and the accent is on Check. At 1280 each is 455×44, so Hint is a second slab. After the miss, Check becomes the full card (324px on the phone, 918px at 1280) and Next hint is a second full-width button. On the revealed radius card, "Generate another" wraps onto two lines inside 158×44 beside Next. Change: Hint, Next hint, and Generate another stay on the row, one line, as wide as their words, at least 44px tall. Check and Next keep the accent and the rest of the row.
+
+6. **Two sections share one button name.** §4.1 and §4.3 both say "Test prep · the proof", 204×44. §4.2 and §4.4 say "Test prep · 4.2" and "Test prep · 4.4", 150×44. The §4.1 button is on Chapter 4's first screen. The §4.3 button is the same words again, at y = 3430 on the phone and y = 2518 at 1280. Change: "Proof · 4.1" and "Proof · 4.3".
+
+### Keep
+
+The book is one status sentence, one Continue at 44px, and Chapter 4 on the phone, in both themes. The document title says The Book. A closed chapter is text. At 1280 the same rows are the sidebar.
+
+The worked proof opens on one filled step. "Read this filled line." is the lede on that first step. The disk sentence sits under the theorem, muted. The modulus and the filled bound are each one piece. Next fits, bottom 840 in the 844px window and at y = 464 at 1280. Newton's first filled line is the answer the title asks, "1, or 0 if the guess is already the root."
+
+The blank is one line, "Your answer", a box, and Check on the screen. Hint is beside Check on the phone, 44px, inside the window. A miss leaves the count where it was and paints "Not that one." in the danger token, light and dark. Next hint stays inside 844 and inside 800. A reload of §4.2 opens the missed blank.
+
+Endless is hidden on the worked proof, on the mixed proof, and on the radius worked card. It shows on the generated blank, 83×44, beside New set. The radius reason ends with the modulus equal to the number. The sheet's page width is the window, 390 and 1280. Set complete says the Newton sentence once, in the lede, and "Open the memory sheet" is on the screen. Exercise 3's question is on Chapter 4's first screen, ending at y = 826 on the phone and y = 626 at 1280.
+
+The paper, the serif title, the sans text, the accent button, and the dark off-white primary are the station pages. No emoji, no gradient, no glow. The four teaching colours stay on the pictures. Nothing here asks for a new type, a second clock, or a hero.
