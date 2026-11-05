@@ -6026,3 +6026,35 @@ At `87c474d` the mixed sheet on a 390px phone had `scrollWidth` 438. The Corolla
 `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the open-chapter mix, the positive-sequence card, book-order flashcards, Again due today, and the pending miss. `node kit/smoke.mjs` exits 0. `js/core/map-route.js` is byte-identical to `kit/template/js/core/map-route.js`. No file under `js/` imports `kit/`. The same three checks were run again after the sheet change.
 
 **ACCEPT WITH FIXES**
+
+## Practice engine, batch 6 — review
+
+Verdict: **ACCEPT**. Pull request 43, branch `cursor/practice-engine`, reviewed at `35d7f53`. Not merged. `gh-pages` was not touched. No practice line was rewritten on this pass.
+
+The preview at https://practice-preview.complexanalysis.pages.dev serves this tip: `js/practice/mount.js`, `js/practice/render.js`, `js/practice/gen/geometric-series.js`, `js/app.js`, `js/stations/book.js`, and `css/components.css` match the commit byte for byte.
+
+### The two pins, against the 202 Updated Edition
+
+Printed page P is PDF page P+9. The title page is the 202 Updated Edition (PDF page 3). Theorem 4.9 is printed on page 113: the boundary of \(K_c\) is connected if and only if \(0\in K_c\), and the Julia set of \(f_c\) is connected if and only if the orbit of 0 is bounded. The flash back is the second sentence. The sheet line is the first. The live card cites Theorem 4.9, page 113.
+
+Theorem 4.11 is printed on page 116: \(f_c(z)=z^2+c\) has attracting fixed points if and only if \(|1+\sqrt{1-4c}|<1\) or \(|1-\sqrt{1-4c}|<1\), principal square root. The flash back is that inequality and does not say cardioid. The sheet line keeps the cardioid, which is the paragraph before the theorem and Exercise 10 on page 118. The two cards are not swapped.
+
+The batch 6 edit does not move any other cite. The statements checked in the batch 5 review still sit on those printed pages, including the triangle-inequality step on page 104, Corollary 4.3’s identity on page 119, Exercise 3’s selected answer on page 438, and Identity (5.1) on page 132. A fresh radius reason ends with the modulus equal to the number. Seeds on the preview gave \(|-20-21i|=29\), \(|-6+8i|=10\), and \(|1|=1\), each a Pythagorean modulus from Theorem 4.16, page 125.
+
+### Walked
+
+Headless Chrome, touch, fresh storage, the preview. 390×844 then 1280×800, light and dark. No console errors. No failed requests. Nothing under `kit/` was requested. Document `scrollWidth` matched the window on the book, on Chapter 4, on Test prep, and on the memory sheet.
+
+The landing and `#book` title the document and the route status “The Book”. Chapter 4’s §4.1 and §4.3 buttons read “Test prep · the proof” (204×44). §4.2 and §4.4 keep their section numbers. Exercise 3’s question sits at y 772–826 on the phone, in both themes, inside the 844px window. The button is above it.
+
+Test prep opens on the Theorem 4.1 worked step. The line is “Read this filled line.” The disk sentence sits under the title. Next ends at 840 on the phone and at 534 at 1280, in both themes. Endless is hidden on that proof and on the faded proof blank. Hint sits beside Check, both 44px, both bottom 785 on the phone and 554 at 1280. Typing `idk` leaves the count at “2 of 18.” and adds “This step comes back.” Next hint ends at 771 on the phone and at 711 at 1280.
+
+A fresh §4.2 opens on the filled iteration count, then the algebra. A miss on the blank stays “2 of 2.” Reload opens that blank as “1 of 3.”, not the worked card. `-b/a` and then `1` are accepted. Set complete puts the Newton sentence in the lede once. The card is the heading and “Open the memory sheet.”
+
+The radius card hides Endless while the example is filled, and shows it on the generated blank. The memory sheet’s page width is 390. The Corollary 4.3 identity and its takeaway scroll inside the line (the takeaway’s own scroll width is 386 against a 305px line). At 1280 the same lines fit. §4.2 flashcards open on Theorem 4.9, page 113, and the fifth card is Theorem 4.11, page 116.
+
+### Smoke
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the two theorem pins and the radius sentence. `node kit/smoke.mjs` exits 0. `js/core/map-route.js` is byte-identical to `kit/template/js/core/map-route.js`. No live file imports `kit/`.
+
+**ACCEPT**
