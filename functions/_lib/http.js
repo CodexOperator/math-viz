@@ -46,7 +46,11 @@ export function json(data, status = 200, extra) {
 }
 
 export function redirect(location, cookies = []) {
-  const headers = new Headers({ location, 'cache-control': 'no-store' });
+  const headers = new Headers({
+    location,
+    'cache-control': 'no-store',
+    'referrer-policy': 'no-referrer',
+  });
   for (const cookie of cookies) headers.append('Set-Cookie', cookie);
   return new Response(null, { status: 302, headers });
 }
@@ -102,8 +106,55 @@ export function providerFlags(env) {
   return { google: googleReady(env), x: xReady(env) };
 }
 
+// The callback lives under /api/auth. The state cookie has to use that path
+// or the browser will not send it when Google or X redirects back.
+export const OAUTH_COOKIE_PATH = '/api/auth';
+
+export function callbackPath(provider) {
+  if (provider !== 'google' && provider !== 'x') return '/#book';
+  return `/api/auth/${provider}/callback`;
+}
+
+export function legacyCallbackRedirect(request, provider) {
+  const url = new URL(request.url);
+  return redirect(`${callbackPath(provider)}${url.search}`);
+}
+
+export async function readBodyLimited(request, max) {
+  const declared = request.headers.get('content-length');
+  if (declared != null) {
+    const n = declared.trim();
+    if (!/^\d+$/.test(n) || Number(n) > max) return { error: 'size' };
+  }
+  if (!request.body) return { text: '' };
+  const reader = request.body.getReader();
+  const chunks = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > max) {
+        try { await reader.cancel(); } catch { /* the cap already failed the read */ }
+        return { error: 'size' };
+      }
+      chunks.push(value);
+    }
+  } catch {
+    return { error: 'read' };
+  }
+  const buf = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    buf.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return { text: new TextDecoder().decode(buf) };
+}
+
 export function oauthCookie(token) {
-  return cookiePair(OAUTH_COOKIE, token, { maxAge: 600, path: '/auth' });
+  return cookiePair(OAUTH_COOKIE, token, { maxAge: 600, path: OAUTH_COOKIE_PATH });
 }
 
 export { OAUTH_COOKIE, SESSION_COOKIE, SESSION_TTL_SEC };

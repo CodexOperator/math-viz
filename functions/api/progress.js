@@ -1,5 +1,5 @@
-import { json, kvReady, readCookie, sameSiteWrite, secretReady, sessionCookie } from '../_lib/http.js';
-import { MAX_PROGRESS_BYTES, validateProgress } from '../_lib/progress.js';
+import { json, kvReady, readBodyLimited, readCookie, sameSiteWrite, secretReady, sessionCookie } from '../_lib/http.js';
+import { MAX_PROGRESS_BYTES, storedView, validateProgress } from '../_lib/progress.js';
 import { SESSION_COOKIE, readSession, signSession } from '../_lib/session.js';
 
 function userKey(session) {
@@ -37,16 +37,7 @@ async function onGet(context) {
   const raw = await context.env.PROGRESS.get(userKey(auth.session));
   let doc = { rev: 0, updatedAt: 0, keys: {} };
   if (raw) {
-    try {
-      const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed === 'object' && parsed.keys && typeof parsed.keys === 'object') {
-        doc = {
-          rev: Number.isInteger(parsed.rev) ? parsed.rev : 0,
-          updatedAt: Number(parsed.updatedAt) || 0,
-          keys: parsed.keys,
-        };
-      }
-    } catch { /* a broken value is read as empty; the next save replaces it */ }
+    try { doc = storedView(JSON.parse(raw)); } catch { /* a broken value is read as empty; the next save replaces it */ }
   }
   return withCookie(json(doc), auth.cookie);
 }
@@ -56,8 +47,10 @@ async function onPut(context) {
   if (!sameSiteWrite(request)) return json({ error: 'origin' }, 403);
   const auth = await authed(context);
   if (auth.error) return auth.error;
-  const text = await request.text();
-  if (text.length > MAX_PROGRESS_BYTES) return withCookie(json({ error: 'size' }, 413), auth.cookie);
+  const limited = await readBodyLimited(request, MAX_PROGRESS_BYTES);
+  if (limited.error === 'size') return withCookie(json({ error: 'size' }, 413), auth.cookie);
+  if (limited.error) return withCookie(json({ error: 'read' }, 400), auth.cookie);
+  const text = limited.text;
   let body;
   try { body = JSON.parse(text); } catch { return withCookie(json({ error: 'json' }, 400), auth.cookie); }
   const checked = validateProgress(body);
@@ -66,15 +59,15 @@ async function onPut(context) {
   let existing = null;
   const existingRaw = await env.PROGRESS.get(key);
   if (existingRaw) {
-    try { existing = JSON.parse(existingRaw); } catch { existing = null; }
+    try { existing = storedView(JSON.parse(existingRaw)); } catch { existing = null; }
   }
-  const have = existing && Number.isInteger(existing.rev) ? existing.rev : 0;
+  const have = existing ? existing.rev : 0;
   if (have !== checked.doc.rev) {
     return withCookie(json({
       error: 'conflict',
       rev: have,
-      updatedAt: existing && Number(existing.updatedAt) || 0,
-      keys: existing && existing.keys || {},
+      updatedAt: existing ? existing.updatedAt : 0,
+      keys: existing ? existing.keys : {},
     }, 409), auth.cookie);
   }
   const stored = { rev: have + 1, updatedAt: Date.now(), keys: checked.doc.keys };

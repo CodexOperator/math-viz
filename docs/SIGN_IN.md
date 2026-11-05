@@ -34,23 +34,25 @@ If a provider's two variables are missing, or `SESSION_SECRET` is missing, or `P
 
 ## Callback URLs
 
-The Functions build the redirect URI from the request origin.
+The Functions build the redirect URI from the request origin. Register these paths. No trailing slash.
 
 Production:
 
-- `https://complexanalysis.pages.dev/auth/google/callback`
-- `https://complexanalysis.pages.dev/auth/x/callback`
+- `https://complexanalysis.pages.dev/api/auth/google/callback`
+- `https://complexanalysis.pages.dev/api/auth/x/callback`
 
 Preview deployments use the same paths on a `*.complexanalysis.pages.dev` host. Cloudflare serves branch and deployment previews on hosts such as:
 
-- `https://<branch>.complexanalysis.pages.dev/auth/google/callback`
-- `https://<branch>.complexanalysis.pages.dev/auth/x/callback`
-- `https://<deployment>.complexanalysis.pages.dev/auth/google/callback`
-- `https://<deployment>.complexanalysis.pages.dev/auth/x/callback`
+- `https://<branch>.complexanalysis.pages.dev/api/auth/google/callback`
+- `https://<branch>.complexanalysis.pages.dev/api/auth/x/callback`
+- `https://<deployment>.complexanalysis.pages.dev/api/auth/google/callback`
+- `https://<deployment>.complexanalysis.pages.dev/api/auth/x/callback`
 
 A branch name with a slash is flattened. `cursor/sign-in` is served at `https://cursor-sign-in.complexanalysis.pages.dev`.
 
 Google's client form and the X app form both refuse a `*` in a callback URL. Add the production URLs, then add each preview host you actually sign in from, spelled out. The code does not send a different path than the two above.
+
+`/auth/google/callback` and `/auth/x/callback` only redirect to the `/api/auth/...` paths. They do not exchange the code. The start URLs stay `/auth/google/start` and `/auth/x/start`.
 
 Authorized JavaScript origins, if Google asks:
 
@@ -107,6 +109,8 @@ The stored key is `u:google:<sub>` or `u:x:<id>`. The value is JSON: `rev`, `upd
 
 Open the production site. The header, including on The Book, shows "Sign in to keep your progress" only when that provider is fully configured. Google, X, or both, depending on which secrets are set. Signed in, the header shows the handle and Sign out.
 
-Sign out is `POST /auth/logout`. The session cookie is `mv_session`, HttpOnly, Secure, SameSite=Lax, and it expires after 8 hours without a request. A signed-in call to `/api/me` or `/api/progress` replaces it, so a study session stays signed in.
+Sign out is `POST /auth/logout`. The session cookie is `mv_session`, HttpOnly, Secure, SameSite=Lax, and it expires after 8 hours without a request. A signed-in call to `/api/me` or `/api/progress` replaces it, so a study session stays signed in. The value is an HMAC of the account id and the handle, not the ticks.
 
-Ticks on either device stay ticked. A flashcard or a practice record with `updatedAt` (the Leitner deck uses `updated`) keeps the later one.
+The state cookie is `mv_oauth`. It is HttpOnly, Secure, SameSite=Lax, Path=`/api/auth`, and it lasts 10 minutes. SameSite=Lax is what lets the browser send it on the top-level redirect back from Google or X. The path is what limits it to the callback.
+
+Ticks on either device stay ticked. An untick on one device does not clear a tick stored on the other. A flashcard keeps the copy with more reviews, and the same review count keeps the later `updated` stamp. A practice-miss book (`v`, then `steps`) keeps the larger miss count, and the same count keeps the later stamp. The first sign-in writes that union to KV and to this browser. Signing out leaves the browser copy where it is.

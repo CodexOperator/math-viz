@@ -46,15 +46,18 @@ function jsonFromUrl(text) {
   }
 }
 
-async function hmac(secret, data) {
-  const key = await crypto.subtle.importKey(
+async function hmacKey(secret) {
+  return crypto.subtle.importKey(
     'raw',
     enc.encode(secret),
     { name: 'HMAC', hash: 'SHA-256' },
     false,
-    ['sign'],
+    ['sign', 'verify'],
   );
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(data));
+}
+
+async function hmac(secret, data) {
+  const sig = await crypto.subtle.sign('HMAC', await hmacKey(secret), enc.encode(data));
   return bytesToB64url(sig);
 }
 
@@ -72,13 +75,17 @@ export async function verifyToken(secret, token, nowMs = Date.now()) {
   const data = token.slice(0, dot);
   const sig = token.slice(dot + 1);
   if (!data || !sig) return null;
-  let expect = '';
+  let sigBytes;
+  try { sigBytes = b64urlToBytes(sig); } catch { return null; }
+  let ok = false;
   try {
-    expect = await hmac(secret, data);
+    // subtle.verify is the constant-time compare. A JS xor loop returns early
+    // on a different length and is not a stand-in for that.
+    ok = await crypto.subtle.verify('HMAC', await hmacKey(secret), sigBytes, enc.encode(data));
   } catch {
     return null;
   }
-  if (!safeEqual(sig, expect)) return null;
+  if (!ok) return null;
   const payload = jsonFromUrl(data);
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
   if (typeof payload.exp !== 'number' || payload.exp * 1000 <= nowMs) return null;
@@ -103,6 +110,7 @@ export async function signSession(secret, fields, nowMs = Date.now()) {
   const iat = Math.floor(nowMs / 1000);
   return signToken(secret, {
     v: 1,
+    kind: 'session',
     provider,
     id,
     handle: cleanHandle(fields.handle),
@@ -113,7 +121,7 @@ export async function signSession(secret, fields, nowMs = Date.now()) {
 
 export async function readSession(secret, token, nowMs = Date.now()) {
   const payload = await verifyToken(secret, token, nowMs);
-  if (!payload || payload.v !== 1) return null;
+  if (!payload || payload.v !== 1 || payload.kind !== 'session') return null;
   if (payload.provider !== 'google' && payload.provider !== 'x') return null;
   if (!cleanId(payload.id)) return null;
   return payload;

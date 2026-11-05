@@ -1504,3 +1504,51 @@ ANOTHER BATCH. I can study signed out, and a tick I made stays on this phone thr
 ### What to keep
 
 Signed-out study is the whole site. I ticked an exercise, the count moved from 0 of 10 to 1 of 10, Got it filed a flashcard, and Chapter 5 still showed the circle and Play. Sign out left `mv:progress.test2` and `mv:practice.leitner` on the phone. Coming back, both ticks still said Ticked. Once a later tick had been written, a fresh browser with the same session received both ticks and the card. The merge is the right shape: a tick on either side stays ticked, and the card with the review survives. Sign out is a real POST and it clears the cookie. The buttons that do show are the site's buttons, 44px, on the same paper, in light and in dark. At 1280 the account sits in the existing header row and the sidebar is still Chapters 1–7 and Test prep. Keep that wide header. Keep the rule that a missing provider draws nothing: the preview, with no `/api/me`, is a quiet book.
+
+## reviewer (sign-in batch 1)
+
+Reviewed `112173e` on `cursor/sign-in` (draft PR #49). The fixes below are in the commit that adds this note. Not merged. Nothing was deployed, and `gh-pages` was not touched.
+
+### Verdict
+
+**ACCEPT WITH FIXES.**
+
+### What was already solid
+
+PKCE S256, with the verifier only in the HttpOnly state cookie. The state in the query is compared with `safeEqual`. Cookies are HttpOnly, Secure, and SameSite=Lax. Lax is the setting that still sends the state cookie on the top-level redirect back from Google or X. The session expires eight hours after the last `/api/me` or `/api/progress` call. `safeReturn` drops an off-site return, a protocol-relative return, a backslash return, a newline used as a second header, and any return under `/auth/` or `/api/`. PUT and sign-out require the request Origin to be this host. A cross-site PUT is 403, and SameSite=Lax already withholds the cookie on that request. The KV key is `u:<provider>:<id>` from the signed session, not from the body. `u:google:abc` and `u:x:abc` are different rows. The handle is the email or the X username in the cookie. It is not written into KV. With no secrets and no `PROGRESS` binding, `/api/me` reports no providers and the header slot stays empty. Sign-out does not clear `localStorage`. No file under `js/` or `functions/` imports `kit/`. `js/core/map-route.js` is byte-identical to `kit/template/js/core/map-route.js`.
+
+### Ranked fixes
+
+1. **The callback Shael registered was not the callback the code sent.** The mobile audit tells him to register `https://complexanalysis.pages.dev/api/auth/google/callback` and `https://complexanalysis.pages.dev/api/auth/x/callback`. At `112173e` the start URL and `docs/SIGN_IN.md` used `/auth/google/callback` and `/auth/x/callback`. The state cookie Path was `/auth`, so a browser would not have sent it to `/api/auth/...` even after the path string changed. Change, now on the branch: the redirect URI is `/api/auth/<provider>/callback`. The state cookie Path is `/api/auth`. `/auth/google/callback` and `/auth/x/callback` only 302 to those paths and keep the query. They do not exchange the code. `docs/SIGN_IN.md` matches the registered URLs. Start stays `/auth/google/start` and `/auth/x/start`.
+
+2. **A first sign-in with only local ticks never uploaded them.** `boot` wrote the union back only when the union differed from this browser. An empty server and a phone that already had `progress.test2` produced no PUT, so the other phone never saw those ticks. Change: `syncPlan` sets `upload` when KV is behind and `apply` when this browser is behind. The same union a second time is a no-op, so a reload does not bump `rev` forever.
+
+3. **The miss book dropped the other device, and the flashcard rule disagreed with the practice engine.** `js/practice/leitner.js` keeps the card with more reviews, then the later `updated` stamp. The sign-in merge did the opposite: a later stamp replaced a card with more reviews. On `cursor/practice-engine`, `practice.misses` is `{ v, steps: { item: { step: { misses, updated } } } }`. The old merge treated `steps` as one value with no stamp and kept this device's book. Change: flashcards go through `mergeLeitner`. A miss book keeps the larger count per step, and the same count keeps the later stamp. A flat `{ id: { misses, updatedAt } }` record still keeps the later stamp.
+
+4. **The MAC compare was not the constant-time primitive, and the nonce was `!==`.** `safeEqual` returned as soon as the byte lengths differed, and it ran in JS. `verifyToken` now uses `crypto.subtle.verify` for HMAC-SHA256. The Google nonce goes through `safeEqual`. An oauth token is `kind: "oauth"` and is refused by `readSession`. A session is `kind: "session"`. The mock provider refuses a bad state before the token request, a bad nonce, a bad issuer, a bad audience, `alg: none`, and a signature from the wrong key.
+
+5. **The size cap ran after the whole body was buffered, and a stored extra key was echoed back.** A PUT now stops at 64 KiB while it reads, and a `Content-Length` over that cap never starts the read. A fractional `rev` is refused. GET and the 409 body drop any key that is not in `PROGRESS_KEYS`, so a `map` value sitting in that row does not come back to the client.
+
+6. **There is still no way to delete the KV row.** The mobile audit asked for a control that removes the student's progress. Nothing in this batch deletes `u:<provider>:<id>`. Change, not done here: one same-origin POST or DELETE on `/api/progress` that deletes that key and leaves `localStorage` in place. Sign-out already leaves the phone copy.
+
+### Merge behaviour that should stay
+
+Ticks are a union. A `true` on either side stays, and a `false` does not clear it. That matches the sentence in `docs/SIGN_IN.md`: an untick on one device does not erase a tick stored on the other. A stale `rev` is 409, the stored document is unchanged, and the client merges the returned copy and retries. Legacy `book.progress` exercise ticks still fold into `progress.test2` and the legacy record is marked migrated.
+
+### practice-engine
+
+`cursor/practice-engine` at `7771658` is seven commits ahead of the merge base `dba0ac6`. This branch is that base plus the sign-in commit and these fixes. `git merge-tree --write-tree` exits 0. `css/components.css` and `js/app.js` changed on both sides and auto-merge. The merged `js/app.js` keeps `mountAccount` and `walkSections`. There are no conflict markers.
+
+### Checks
+
+`node tools/check_vectors.mjs` matched 234/234. `node tools/fractal-smoke.mjs` passed, including the check that the live router does not import `kit/`. `node kit/smoke.mjs` passed. `node tools/account-smoke.mjs` passed. `node tools/oauth-mock.mjs` passed.
+
+`wrangler pages dev` on `http://127.0.0.1:8788`, with a local `PROGRESS` binding and fake secrets. `/api/me` was 200, both providers true, and the body had no secret. Google and X start were 302s to the provider, `redirect_uri` ending in `/api/auth/.../callback`, `code_challenge_method=S256`, and `Set-Cookie` HttpOnly, Secure, SameSite=Lax, Path=/api/auth. The old callback redirected to the new path and kept `code` and `state`. The new callback with no cookie redirected to `/#book` and did not set `mv_session`. `/api/progress` with no cookie was 401. A PUT from `https://evil.example` was 403. Home was 200. The dev log lines are the method and the path. They do not include the code, the state, or the cookie.
+
+### Header
+
+The Book, headless Chrome. 390×844 and 1280×800, light and dark. With no provider the slot is empty: the header is the name, the theme button, and Chapters, on the paper `rgb(246, 243, 236)` in the light and `rgb(13, 18, 28)` in the dark. The title is Iowan Old Style. With Google only, "Sign in to keep your progress" is the existing quiet button, 44px, on its own row under Chapters at 390 and on the right of the same row at 1280. With both providers open, Google and X are the existing buttons, each at least 44px, and the page does not scroll sideways. Signed in, the handle ellipsizes and Sign out is 44px. At 1280 the Chapters button is gone because the sidebar is the list, which is the shell that is already there. No new colour and no new type.
+
+### What to keep
+
+The signed-out site. PKCE plus the signed state cookie. SameSite=Lax. The union of ticks. The `rev` check. The handle in the cookie and not in the KV value. The header using the quiet button, the 44px target, and the type and paper the station pages already use.

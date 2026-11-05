@@ -1,12 +1,13 @@
 // Google OIDC and X OAuth 2.0, both with PKCE and a signed state cookie.
-// Redirect URIs are the request origin plus /auth/<provider>/callback, so a
-// preview host works once that host is listed on the OAuth app.
+// Redirect URIs are the request origin plus /api/auth/<provider>/callback.
+// Those are the URLs registered with Google and X. A preview host works once
+// that host is listed on the OAuth app.
 
 import {
   b64urlToBytes, bytesToB64url, cleanHandle, cleanId, randomB64url, readSession, safeEqual, signSession, signToken, verifyToken,
 } from './session.js';
 import {
-  OAUTH_COOKIE, clearCookie, googleReady, oauthCookie, originOf, plain, readCookie, redirect, safeReturn, sessionCookie, xReady,
+  OAUTH_COOKIE, OAUTH_COOKIE_PATH, callbackPath, clearCookie, googleReady, oauthCookie, originOf, plain, readCookie, redirect, safeReturn, sessionCookie, xReady,
 } from './http.js';
 
 const OAUTH_TTL_SEC = 600;
@@ -79,7 +80,7 @@ export async function beginAuth(context, provider) {
     exp: now + OAUTH_TTL_SEC,
   });
   const challenge = await sha256B64url(verifier);
-  const redirectUri = `${origin}/auth/${provider}/callback`;
+  const redirectUri = `${origin}${callbackPath(provider)}`;
   const dest = provider === 'google'
     ? googleAuthUrl({ clientId: env.GOOGLE_CLIENT_ID, redirectUri, state, nonce, challenge })
     : xAuthUrl({ clientId: env.X_CLIENT_ID, redirectUri, state, challenge });
@@ -87,7 +88,10 @@ export async function beginAuth(context, provider) {
 }
 
 function fail(returnTo) {
-  return redirect(returnTo || '/#book', [clearCookie(OAUTH_COOKIE, '/auth')]);
+  return redirect(returnTo || '/#book', [
+    clearCookie(OAUTH_COOKIE, OAUTH_COOKIE_PATH),
+    clearCookie(OAUTH_COOKIE, '/auth'),
+  ]);
 }
 
 let googleCerts = { at: 0, keys: [] };
@@ -137,7 +141,7 @@ async function verifyGoogleIdToken(idToken, { clientId, nonce }) {
   const audOk = payload.aud === clientId || (Array.isArray(payload.aud) && payload.aud.includes(clientId));
   if (!audOk) return null;
   if (typeof payload.exp !== 'number' || payload.exp * 1000 <= Date.now()) return null;
-  if (!nonce || payload.nonce !== nonce) return null;
+  if (typeof payload.nonce !== 'string' || typeof nonce !== 'string' || !safeEqual(payload.nonce, nonce)) return null;
   if (!payload.sub) return null;
   return payload;
 }
@@ -166,8 +170,14 @@ async function googleUser({ env, code, verifier, nonce, redirectUri }) {
   return { provider: 'google', id, handle: cleanHandle(handle) };
 }
 
+function xBasic(id, secret) {
+  // RFC 6749 §2.3.1. encodeURIComponent matches the form encoding for the
+  // characters that show up in a client secret (`+`, `/`, `=`).
+  return btoa(`${encodeURIComponent(id)}:${encodeURIComponent(secret)}`);
+}
+
 async function xUser({ env, code, verifier, redirectUri }) {
-  const basic = btoa(`${env.X_CLIENT_ID}:${env.X_CLIENT_SECRET}`);
+  const basic = xBasic(env.X_CLIENT_ID, env.X_CLIENT_SECRET);
   const body = new URLSearchParams({
     grant_type: 'authorization_code',
     code,
@@ -211,7 +221,7 @@ export async function finishAuth(context, provider) {
     return fail(back);
   }
   try {
-    const redirectUri = `${origin}/auth/${provider}/callback`;
+    const redirectUri = `${origin}${callbackPath(provider)}`;
     const user = provider === 'google'
       ? await googleUser({ env, code, verifier: sent.verifier, nonce: sent.nonce, redirectUri })
       : await xUser({ env, code, verifier: sent.verifier, redirectUri });
@@ -219,7 +229,11 @@ export async function finishAuth(context, provider) {
     const session = await signSession(env.SESSION_SECRET, user);
     const check = await readSession(env.SESSION_SECRET, session);
     if (!check) return fail(back);
-    return redirect(back, [sessionCookie(session), clearCookie(OAUTH_COOKIE, '/auth')]);
+    return redirect(back, [
+      sessionCookie(session),
+      clearCookie(OAUTH_COOKIE, OAUTH_COOKIE_PATH),
+      clearCookie(OAUTH_COOKIE, '/auth'),
+    ]);
   } catch {
     console.error(`[mv] ${provider} sign-in failed`);
     return fail(back);

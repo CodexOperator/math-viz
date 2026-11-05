@@ -54,11 +54,32 @@ export function validateProgress(body) {
     if (value === BAD || !value || typeof value !== 'object' || Array.isArray(value)) return { ok: false, error: 'value' };
     keys[name] = value;
   }
-  const rev = Number(body.rev);
+  if (!Number.isInteger(body.rev) || body.rev < 0 || body.rev > Number.MAX_SAFE_INTEGER) {
+    return { ok: false, error: 'rev' };
+  }
   const doc = {
-    rev: Number.isInteger(rev) && rev >= 0 ? rev : 0,
+    rev: body.rev,
     keys,
   };
   if (JSON.stringify(doc).length > MAX_PROGRESS_BYTES) return { ok: false, error: 'size' };
   return { ok: true, doc };
+}
+
+export function storedView(parsed) {
+  const raw = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  const source = raw.keys && typeof raw.keys === 'object' && !Array.isArray(raw.keys) ? raw.keys : {};
+  const keys = {};
+  for (const name of Object.keys(source)) {
+    if (!isProgressKey(name)) continue;
+    const value = source[name];
+    if (!value || typeof value !== 'object' || Array.isArray(value)) continue;
+    keys[name] = value;
+  }
+  const rev = raw.rev;
+  const updatedAt = Number(raw.updatedAt);
+  return {
+    rev: Number.isInteger(rev) && rev >= 0 ? rev : 0,
+    updatedAt: Number.isFinite(updatedAt) ? updatedAt : 0,
+    keys,
+  };
 }

@@ -1,5 +1,5 @@
-import { finishAuth } from '../../_lib/oauth.js';
+import { legacyCallbackRedirect } from '../../_lib/http.js';
 
-export function onRequestGet(context) {
-  return finishAuth(context, 'google');
+export function onRequestGet({ request }) {
+  return legacyCallbackRedirect(request, 'google');
 }

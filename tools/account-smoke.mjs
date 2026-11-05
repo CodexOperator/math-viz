@@ -10,16 +10,19 @@ import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createStore } from '../js/core/store.js';
 import {
-  SIGN_IN_LABEL, PROGRESS_KEYS, isProgressKey, mergeProgress, collectProgress, accountView, displayHandle,
+  SIGN_IN_LABEL, PROGRESS_KEYS, isProgressKey, mergeProgress, collectProgress, accountView, displayHandle, syncPlan,
 } from '../js/core/account.js';
 import {
-  SESSION_TTL_SEC, signSession, readSession, verifyToken,
+  SESSION_TTL_SEC, signSession, readSession, verifyToken, signToken,
 } from '../functions/_lib/session.js';
-import { sessionCookie, safeReturn, cookiePair } from '../functions/_lib/http.js';
+import { sessionCookie, safeReturn, cookiePair, readBodyLimited } from '../functions/_lib/http.js';
 import { validateProgress, MAX_PROGRESS_BYTES } from '../functions/_lib/progress.js';
 import { beginAuth } from '../functions/_lib/oauth.js';
 import { onRequest as progressRequest } from '../functions/api/progress.js';
 import { onRequestGet as meRequest } from '../functions/api/me.js';
+import { onRequestGet as legacyGoogleCallback } from '../functions/auth/google/callback.js';
+import { onRequestGet as legacyXCallback } from '../functions/auth/x/callback.js';
+import { onRequestGet as googleCallback } from '../functions/api/auth/google/callback.js';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 let failed = 0;
@@ -86,6 +89,37 @@ check('a flashcard tie keeps the card with more reviews, and a later stamp wins'
   && cards.keys['practice.leitner'].cards.b.box === 1
   && cards.keys['practice.leitner'].cards.c.box === 3);
 
+const reviewed = mergeProgress(
+  { keys: { 'practice.leitner': { v: 1, cards: { a: { box: 5, reviews: 10, updated: 10 } } } } },
+  { keys: { 'practice.leitner': { v: 1, cards: { a: { box: 1, reviews: 2, updated: 50 } } } } },
+);
+check('more reviews beat a later flashcard stamp', reviewed.keys['practice.leitner'].cards.a.box === 5 && reviewed.keys['practice.leitner'].cards.a.reviews === 10);
+
+const missBook = mergeProgress(
+  { keys: { 'practice.misses': { v: 1, steps: { thm: { '0': { misses: 1, updated: 10 } } } } } },
+  { keys: { 'practice.misses': { v: 1, steps: { thm: { '0': { misses: 2, updated: 5 }, '1': { misses: 1, updated: 4 } }, other: { '0': { misses: 1, updated: 3 } } } } } },
+);
+check('a miss book keeps the larger count and the other device\'s steps',
+  missBook.keys['practice.misses'].steps.thm['0'].misses === 2
+  && missBook.keys['practice.misses'].steps.thm['1'].misses === 1
+  && missBook.keys['practice.misses'].steps.other['0'].misses === 1);
+
+const localOnly = { updatedAt: 1, keys: { progress: { '1.3.1': true } } };
+const emptyRemote = { rev: 0, updatedAt: 0, keys: {} };
+const first = syncPlan(localOnly, emptyRemote);
+check('first sign-in uploads local ticks without rewriting the browser',
+  first.upload === true && first.apply === false && first.merged.keys.progress['1.3.1'] === true);
+const both = syncPlan(
+  { keys: { progress: { a: true }, 'progress.test2': { '4.1.3': true } } },
+  { keys: { progress: { b: true }, 'progress.test2': { '4.1.3': true, '4.2.5': true } } },
+);
+check('the union keeps every tick',
+  both.merged.keys.progress.a === true && both.merged.keys.progress.b === true
+  && both.merged.keys['progress.test2']['4.1.3'] === true && both.merged.keys['progress.test2']['4.2.5'] === true
+  && both.upload === true && both.apply === true);
+const again = syncPlan(both.merged, { keys: both.merged.keys, updatedAt: both.merged.updatedAt });
+check('a second merge of the same union is a no-op', again.upload === false && again.apply === false);
+
 const folded = mergeProgress(
   { keys: { 'book.progress': { exercises: { '4.1.3': true }, sections: { '4.1': true } } } },
   { keys: { 'progress.test2': { '5.1.1': true } } },
@@ -132,7 +166,8 @@ check('the sign-in label is the header sentence', accountView({ signedIn: false,
 check('a signed-in view names the handle', accountView({ signedIn: true, provider: 'google', handle: 'ada@example.com', providers: {} }).handle === 'ada@example.com');
 
 const good = validateProgress({ rev: 0, keys: { 'progress.test2': { '4.1.3': true } } });
-check('a tick document is accepted', good.ok && good.doc.keys['progress.test2']['4.1.3'] === true);
+check('a tick document is accepted', good.ok && good.doc.keys['progress.test2']['4.1.3'] === true && good.doc.rev === 0);
+check('a fractional rev is refused', validateProgress({ rev: 1.5, keys: { progress: { '1.3.1': true } } }).ok === false);
 check('an unknown key is refused', validateProgress({ rev: 0, keys: { map: { test2: true } } }).ok === false);
 check('a prototype key is refused', validateProgress(JSON.parse('{"rev":0,"keys":{"progress":{"__proto__":{"admin":true},"1.3.1":true}}}')).ok === false);
 const bulky = {};
@@ -141,9 +176,13 @@ check('a document over the size cap is refused',
   validateProgress({ rev: 0, keys: { 'practice.misses': bulky } }).ok === false
   && MAX_PROGRESS_BYTES === 64 * 1024);
 
-check('a return path stays on this origin', safeReturn('/#book', 'https://complexanalysis.pages.dev') === '/#book');
-check('an off-site return is dropped', safeReturn('https://evil.example/#book', 'https://complexanalysis.pages.dev') === '/#book');
-check('a protocol-relative return is dropped', safeReturn('//evil.example/auth', 'https://complexanalysis.pages.dev') === '/#book');
+const home = 'https://complexanalysis.pages.dev';
+check('a return path stays on this origin', safeReturn('/#book', home) === '/#book');
+check('an off-site return is dropped', safeReturn('https://evil.example/#book', home) === '/#book');
+check('a protocol-relative return is dropped', safeReturn('//evil.example/auth', home) === '/#book');
+check('a backslash return is dropped', safeReturn('/\\evil.example', home) === '/#book' && safeReturn('///evil.example', home) === '/#book');
+check('a callback return is dropped', safeReturn('/auth/google/callback', home) === '/#book' && safeReturn('/api/auth/google/callback?code=1', home) === '/#book');
+check('a return with a newline stays one path', !safeReturn('/foo\r\nSet-Cookie: a=b', home).includes('\n') && !safeReturn('/foo\r\nSet-Cookie: a=b', home).includes('\r'));
 
 const env = {
   SESSION_SECRET: secret,
@@ -171,11 +210,12 @@ const location = started.headers.get('location') || '';
 check('google start redirects to the origin callback with PKCE',
   started.status === 302
   && location.startsWith('https://accounts.google.com/o/oauth2/v2/auth?')
-  && location.includes('redirect_uri=https%3A%2F%2Fpreview.complexanalysis.pages.dev%2Fauth%2Fgoogle%2Fcallback')
+  && location.includes('redirect_uri=https%3A%2F%2Fpreview.complexanalysis.pages.dev%2Fapi%2Fauth%2Fgoogle%2Fcallback')
   && location.includes('code_challenge_method=S256')
   && location.includes('code_challenge='));
 const setCookie = started.headers.get('set-cookie') || '';
-check('the state cookie is HttpOnly Secure SameSite=Lax', /HttpOnly/.test(setCookie) && /Secure/.test(setCookie) && /SameSite=Lax/.test(setCookie));
+check('the state cookie is HttpOnly Secure SameSite=Lax on /api/auth',
+  /HttpOnly/.test(setCookie) && /Secure/.test(setCookie) && /SameSite=Lax/.test(setCookie) && /Path=\/api\/auth/.test(setCookie));
 
 const xStart = await beginAuth({
   request: new Request('https://complexanalysis.pages.dev/auth/x/start?return=%2F%23book'),
@@ -185,7 +225,7 @@ const xLocation = xStart.headers.get('location') || '';
 check('x start asks for users.read and tweet.read and the origin callback',
   xLocation.startsWith('https://twitter.com/i/oauth2/authorize?')
   && xLocation.includes('scope=users.read+tweet.read')
-  && xLocation.includes('redirect_uri=https%3A%2F%2Fcomplexanalysis.pages.dev%2Fauth%2Fx%2Fcallback'));
+  && xLocation.includes('redirect_uri=https%3A%2F%2Fcomplexanalysis.pages.dev%2Fapi%2Fauth%2Fx%2Fcallback'));
 
 const meOff = await meRequest({ request: new Request('https://complexanalysis.pages.dev/api/me'), env: {} });
 const meBody = await meOff.json();
@@ -228,6 +268,58 @@ check('a cross-site PUT is refused', cross.status === 403);
 const rolled = saved.headers.get('set-cookie') || '';
 check('a signed-in progress call rolls the session cookie', /mv_session=/.test(rolled) && /HttpOnly/.test(rolled) && /SameSite=Lax/.test(rolled));
 check('cookiePair keeps the attributes', /HttpOnly/.test(cookiePair('mv_session', 'v', { maxAge: 10, path: '/' })) && /Secure/.test(cookiePair('mv_session', 'v', { maxAge: 10, path: '/' })));
+
+const xSameId = await signSession(secret, { provider: 'x', id: 'abc', handle: 'ada' });
+const xRow = await progressCall('GET', null, xSameId);
+const xRowBody = await xRow.json();
+check('google and x with the same id do not share a KV row',
+  xRow.status === 200 && xRowBody.rev === 0 && kv.has('u:google:abc') && !kv.has('u:x:abc'));
+
+kv.set('u:google:abc', JSON.stringify({ rev: 3, updatedAt: 9, keys: { map: { test2: true }, 'progress.test2': { '4.1.3': true } } }));
+const cleaned = await progressCall('GET', null, sessionCookieValue);
+const cleanedBody = await cleaned.json();
+check('progress GET drops a key that is not progress',
+  cleaned.status === 200 && cleanedBody.keys.map == null && cleanedBody.keys['progress.test2']['4.1.3'] === true && cleanedBody.rev === 3);
+
+const huge = await progressRequest({
+  request: new Request('https://complexanalysis.pages.dev/api/progress', {
+    method: 'PUT',
+    headers: { origin: 'https://complexanalysis.pages.dev', cookie: `mv_session=${encodeURIComponent(sessionCookieValue)}`, 'content-type': 'application/json' },
+    body: 'x'.repeat(MAX_PROGRESS_BYTES + 1),
+  }),
+  env,
+});
+check('a body over 64 KiB is refused', huge.status === 413 && JSON.parse(kv.get('u:google:abc')).rev === 3);
+const declared = await readBodyLimited({
+  headers: new Headers({ 'content-length': '999999' }),
+  body: { getReader() { throw new Error('should not read'); } },
+}, 1024);
+check('a declared body over the cap is refused before it is read', declared.error === 'size');
+
+const legacy = await legacyGoogleCallback({
+  request: new Request('https://complexanalysis.pages.dev/auth/google/callback?code=abc&state=xyz'),
+});
+check('the old google callback redirects to /api/auth and keeps the query',
+  legacy.status === 302 && legacy.headers.get('location') === '/api/auth/google/callback?code=abc&state=xyz');
+const legacyX = await legacyXCallback({
+  request: new Request('https://complexanalysis.pages.dev/auth/x/callback?code=abc&state=xyz'),
+});
+check('the old x callback redirects to /api/auth',
+  legacyX.status === 302 && legacyX.headers.get('location') === '/api/auth/x/callback?code=abc&state=xyz');
+const missed = await googleCallback({
+  request: new Request('https://complexanalysis.pages.dev/api/auth/google/callback?code=abc&state=xyz'),
+  env,
+});
+const missedCookies = missed.headers.getSetCookie ? missed.headers.getSetCookie() : [missed.headers.get('set-cookie') || ''];
+check('a callback without the state cookie does not sign in',
+  missed.status === 302
+  && missed.headers.get('location') === '/#book'
+  && missedCookies.every((cookie) => !String(cookie).startsWith('mv_session=')));
+
+const oauthish = await signToken(secret, {
+  v: 1, kind: 'oauth', provider: 'google', id: '1001', handle: 'ada', verifier: 'secret-verifier', iat: 1, exp: Math.floor(now / 1000) + 600,
+});
+check('an oauth cookie is not a session', await readSession(secret, oauthish, now) == null);
 
 const TYPES = {
   '.html': 'text/html; charset=utf-8',
