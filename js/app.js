@@ -510,7 +510,9 @@ export function start() {
     }
 
     view.dataset.state = 'loading';
-    document.title = documentTitle(st.title);
+    const bookLanding = st.id === 'home' && !(route.preset && route.preset.kind === 'token');
+    const pageLabel = bookLanding ? 'The Book' : st.title;
+    document.title = documentTitle(pageLabel);
     const section = el('section', { class: 'station', id: `station-${st.id}`, 'data-station': st.id });
     view.append(section);
     state.stopIds = watchIds(section, st.id);          // every link and tab stop the station builds gets a stable id (js/core/ids.js)
@@ -557,7 +559,7 @@ export function start() {
       placeWhere(section, whereText(route, st));
       view.dataset.state = 'ready';
       if (pendingScroll != null) window.scrollTo(0, pendingScroll);
-      finish(first, st.title);
+      finish(first, pageLabel);
     } catch (err) {
       // A superseded navigation must not touch the timer: it now belongs to the newer one.
       if (seq !== state.seq) return;
@@ -565,7 +567,7 @@ export function start() {
       console.error(`[mv] station "${st.id}" failed to load: ${err && err.message ? err.message : err}`, err);
       section.replaceChildren(buildUnderConstruction(st, err));
       view.dataset.state = 'error';
-      finish(first, `${st.title}: under construction`);
+      finish(first, `${pageLabel}: under construction`);
     }
   }
 

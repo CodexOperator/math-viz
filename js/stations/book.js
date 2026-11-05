@@ -39,6 +39,11 @@ function nextSentence(ticks) {
   return continueSentence(ticks);
 }
 
+function prepLabel(sectionId) {
+  if (sectionId === '4.1' || sectionId === '4.3') return 'Test prep · the proof';
+  return `Test prep · ${sectionId}`;
+}
+
 export function mount(section, ctx) {
   const spec = ctx.book;
   if (!spec || spec.kind === 'roadmap') return mountRoadmap(section, ctx, spec);
@@ -228,11 +233,11 @@ function mountChapter4(el, ctx, focus) {
       h('div', { class: 'section-head', id: `${scope}-head` },
         h('p', { class: 'book-flag', id: `${scope}-flag` }, section.id),
         h('h2', { id: `${scope}-title` }, section.title),
-        h('a', { class: 'btn', href: `#${prepHash(4, section.id)}`, id: `${scope}-practice` }, `Test prep · ${section.id}`)),
-      h('p', { class: 'book-page' }, `Page ${section.page}`),
+        h('span', { class: 'book-page', id: `${scope}-page` }, `Page ${section.page}`),
+        h('a', { class: 'btn', href: `#${prepHash(4, section.id)}`, id: `${scope}-practice` }, prepLabel(section.id))),
       idea,
-      read,
-      exerciseHost));
+      exerciseHost,
+      read));
   }
 
   function exerciseCard(section, problem, onTick) {

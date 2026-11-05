@@ -1281,8 +1281,19 @@ check('a fraction, a power, and a complex number match their equivalents',
     const w = built.witness;
     if (Math.abs(Math.hypot(w.p, w.q) - w.rho) > 1e-9) radiiOk = false;
     if (!answersMatch(built.steps[0].answer, String(w.rho))) radiiOk = false;
+    if (!String(built.steps[0].why).trim().endsWith(`= ${w.rho}$.`)) radiiOk = false;
   }
   check('radii of convergence are the moduli', radiiOk);
+  const thm49 = PRACTICE.find((it) => it.cite && it.cite.ref === 'Theorem 4.9');
+  const thm411 = PRACTICE.find((it) => it.cite && it.cite.ref === 'Theorem 4.11');
+  check('theorem 4.9 is connectedness on page 113',
+    !!thm49 && thm49.cite.page === 113 && thm49.kind === 'flash'
+    && /connected/.test(thm49.steps[0].answer) && /orbit of \$0\$/.test(thm49.steps[0].answer));
+  check('theorem 4.11 flash is the inequality and the sheet keeps the cardioid',
+    !!thm411 && thm411.cite.page === 116 && thm411.kind === 'flash'
+    && /\|1\+\\sqrt\{1-4c\}\|/.test(thm411.steps[0].answer)
+    && !/cardioid/.test(thm411.steps[0].answer)
+    && /cardioid/.test(thm411.memory));
   let expOk = true;
   for (let seed = 1; seed <= 24; seed++) {
     const built = expGenerate(seed);

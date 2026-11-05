@@ -2,7 +2,7 @@
 // and Leitner flashcards. The two existing test maps stay behind their own links.
 
 import { h, appendRich } from '../stations/test2-ui.js';
-import { BOOK_CHAPTERS } from '../data/book-path.js';
+import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5 } from '../data/book-path.js';
 import { closedChapters } from '../book/continue.js';
 import { loadCatalog, realize } from './catalog.js';
 import { selectItems, sectionOfFocus, practiceEntries, choiceSeed, mixedItems } from './queue.js';
@@ -35,6 +35,12 @@ function sectionTitle(chapter, section) {
   const ch = BOOK_CHAPTERS.find((c) => c.n === chapter);
   const row = ch && ch.sections.find((s) => s.id === section);
   return row ? `${row.id} ${row.title}` : `Section ${section}`;
+}
+
+function sectionIdea(chapter, section) {
+  const sections = chapter === 4 ? CHAPTER_4.sections : chapter === 5 ? CHAPTER_5.sections : null;
+  const row = sections && sections.find((s) => s.id === section);
+  return row && row.idea ? row.idea : '';
 }
 
 function practiceFacts(items) {
@@ -102,6 +108,7 @@ export async function mountPrep(el, ctx, spec) {
   let done = false;
   let shown = false;
   let stickTop = true;
+  let listed = 0;
   let deck = loadDeck(ctx.store);
   let missesBook = loadMisses(ctx.store);
   let flashShow = false;
@@ -176,7 +183,23 @@ export async function mountPrep(el, ctx, spec) {
     resetStep();
     const entry = currentEntry();
     if (entry && entry.reask && Number.isInteger(entry.step)) step = entry.step;
+    listed = queue.length;
     stickTop = true;
+  }
+
+  function stepReturns() {
+    const entry = currentEntry();
+    if (!entry) return false;
+    return queue.some((row) => row.reask && row.source.id === entry.source.id && row.step === step);
+  }
+
+  // A reload of a section set opens the missed step. The mixed set keeps its order.
+  function hoistPending() {
+    if (!walk) return;
+    const pending = queue.filter((entry) => entry.reask);
+    if (!pending.length) return;
+    queue = pending.concat(queue.filter((entry) => !entry.reask));
+    index = 0;
   }
 
   function scheduleReask(source, stepIndex, itemSeed) {
@@ -323,7 +346,9 @@ export async function mountPrep(el, ctx, spec) {
       return;
     }
     const where = walk ? `Section ${section}` : (chapter ? `Chapter ${chapter}` : chaptersPhrase(pool));
-    status.textContent = `${where}. ${index + 1} of ${queue.length}.`;
+    const total = listed || queue.length;
+    status.textContent = `${where}. ${index + 1} of ${total}.`;
+    const proof = String(item.kind).startsWith('proof');
     renderCard(stage, {
       item,
       view: entry.view,
@@ -333,6 +358,8 @@ export async function mountPrep(el, ctx, spec) {
       right,
       revealAnswer: phase === 'told',
       missLine: missLine(item),
+      returns: phase !== 'ask' && stepReturns(),
+      reading: entry.view === 'worked' && proof ? sectionIdea(item.chapter, item.section) : '',
       choiceSeed: choiceSeed(entry.seed || 1, item.id, step),
       kindLabel: KIND_LABEL[item.kind] || 'Practice',
       count: `Step ${Math.min(step + 1, item.steps.length)} of ${item.steps.length}`,
@@ -425,7 +452,10 @@ export async function mountPrep(el, ctx, spec) {
       const btn = modeRow.querySelector(`#practice-mode-${id}`);
       if (btn) btn.setAttribute('aria-pressed', String(id === mode));
     }
-    endlessBtn.hidden = !hasGenerator || mode !== 'practice';
+    const entryNow = currentEntry();
+    const endlessHere = !!(mode === 'practice' && !done && entryNow
+      && entryNow.view !== 'worked' && !entryNow.reask && entryNow.source.generator);
+    endlessBtn.hidden = !endlessHere;
     newSet.hidden = mode !== 'practice';
     statusRow.hidden = mode === 'cards';
     if (mode === 'memory') paintMemory();
@@ -438,7 +468,7 @@ export async function mountPrep(el, ctx, spec) {
     else if (entry.view === 'worked') {
       const item = realized();
       const last = !item || step >= item.steps.length - 1;
-      setLede(last ? 'Try these steps.' : 'Next.');
+      setLede(last ? 'Try these steps.' : 'Read this filled line.');
     } else setLede('Check, then read the reason.');
     if (stickTop && mode === 'practice') {
       stickTop = false;
@@ -450,7 +480,8 @@ export async function mountPrep(el, ctx, spec) {
     }
     if (mode === 'practice' && (phase === 'hint' || phase === 'told')) {
       requestAnimationFrame(() => {
-        const node = stage.querySelector('#practice-next')
+        const node = stage.querySelector('#practice-hint')
+          || stage.querySelector('#practice-next')
           || stage.querySelector('#practice-hint-note')
           || stage.querySelector('#practice-why')
           || stage.querySelector('#practice-verdict');
@@ -462,9 +493,8 @@ export async function mountPrep(el, ctx, spec) {
   function doneLede() {
     const facts = practiceFacts(pool);
     if (!pool.length) return 'Check, then read the reason.';
-    if (shown && facts.length === 1) return `These lines were shown. ${facts[0]}`;
-    if (shown) return 'These lines were shown.';
     if (facts.length === 1) return facts[0];
+    if (shown) return 'These lines were shown.';
     if (facts.length) return 'The facts from this set.';
     return 'Set complete.';
   }
@@ -475,8 +505,13 @@ export async function mountPrep(el, ctx, spec) {
   }
 
   function fitAnswer() {
-    const choices = stage.querySelectorAll('.practice-choice');
-    const check = choices.length ? choices[choices.length - 1] : stage.querySelector('#practice-check');
+    const choices = [...stage.querySelectorAll('.practice-choice')];
+    const checkBtn = stage.querySelector('#practice-check');
+    const hintBtn = stage.querySelector('#practice-hint');
+    const candidates = choices.length ? [choices[choices.length - 1]] : [checkBtn, hintBtn].filter(Boolean);
+    const check = candidates.reduce((low, node) => (
+      !low || node.getBoundingClientRect().bottom > low.getBoundingClientRect().bottom ? node : low
+    ), null);
     if (!check) return;
     const header = document.getElementById('site-header');
     const topLimit = (header ? header.getBoundingClientRect().bottom : 0) + 8;
@@ -541,6 +576,8 @@ export async function mountPrep(el, ctx, spec) {
     stage,
     indexes);
   restorePending();
+  hoistPending();
+  openEntry();
   paint();
   return function unmount() {
     window.removeEventListener('resize', onResize);

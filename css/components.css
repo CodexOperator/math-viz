@@ -1342,7 +1342,7 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .practice-sheet,
 .practice-doors { min-width: 0; max-width: 100%; }
 #view:has(.practice-mount) { padding-top: var(--space-2); }
-.station.practice-mount { gap: var(--space-2); }
+.station.practice-mount { gap: 0.35rem; }
 .station.practice-mount .where-line { display: none; }
 .station.practice-mount .station-lede { margin-bottom: 0; }
 .station.practice-mount .book-next { padding: var(--space-2) var(--space-3); }
@@ -1355,8 +1355,8 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .practice-kicker .book-flag,
 .practice-kicker .book-page { margin: 0; }
 .practice-card {
-  gap: 0.35rem;
-  padding: var(--space-2) var(--space-3);
+  gap: 0.2rem;
+  padding: var(--space-1) var(--space-3);
 }
 .practice-card h2 {
   margin-bottom: 0;
@@ -1366,8 +1366,8 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .practice-card .source-tag { margin-top: 0; }
 .practice-card .practice-step-text { margin: 0; line-height: 1.4; }
 .practice-card .practice-why {
-  margin-top: 0.25rem;
-  padding: 0.35rem 0.65rem;
+  margin-top: 0;
+  padding: 0.2rem 0.65rem;
 }
 .practice-card h2,
 .practice-step-text,
@@ -1398,7 +1398,14 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   white-space: nowrap;
 }
 .practice-field input { width: 100%; font-family: var(--font-mono); }
-.practice-check-row { margin-top: var(--space-2); }
+.practice-check-row { margin-top: var(--space-2); flex-wrap: nowrap; }
+.practice-check-row .btn { flex: 1 1 0; min-width: 0; }
+.practice-idea {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.98rem;
+  line-height: 1.35;
+}
 .practice-choices { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
 .practice-choices[data-cols="2"] {
   display: grid;
@@ -1437,7 +1444,17 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .practice-memories,
 .practice-formulas { margin: 0; padding-left: 1.2rem; min-width: 0; max-width: 100%; }
 .practice-memories li,
-.practice-formulas li { margin: 0.35rem 0; max-width: 100%; overflow-x: auto; }
+.practice-formulas li {
+  margin: 0.35rem 0;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  padding-bottom: 0.35rem;
+}
+.practice-formulas li > p,
+.practice-memories li > p { margin: 0; max-width: 100%; min-width: 0; }
 .practice-doors { margin-top: var(--space-3); }
 .practice-doors h2 { margin-bottom: var(--space-2); }
 .practice-hint-line { margin: 0.2rem 0; }

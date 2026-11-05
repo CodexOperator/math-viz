@@ -136,7 +136,7 @@ function radiusItem(rand) {
         text: 'The radius is ___.',
         answer: String(rho),
         accept: [`\\sqrt{${pair[0] * pair[0] + pair[1] * pair[1]}}`],
-        why: `Theorem 4.16, page 125: dividing by $(${coeff})^n$ makes the radius $|${coeff}|$. The centre does not change it.`,
+        why: `Theorem 4.16, page 125: dividing by $(${coeff})^n$ makes the radius $|${coeff}|$. The centre does not change it. $|${coeff}| = ${rho}$.`,
         hints: [
           'The centre $\\alpha$ does not appear in the radius.',
           'For $\\sum (z-\\alpha)^n/c^n$ the radius is $|c|$.',
