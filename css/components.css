@@ -1245,10 +1245,13 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 
 .ch6-stage {
   /* Wider than 16rem, and short enough that Play stays on the first screen. */
-  width: min(100%, calc(100dvh - 30rem));
+  width: min(100%, calc(100dvh - 33rem));
   max-width: 100%;
   aspect-ratio: 1;
   touch-action: none;
+}
+@media (max-width: 40rem) {
+  .ch6-stage { width: min(100%, calc(100dvh - 35rem)); }
 }
 
 .ch6-stage svg { display: block; width: 100%; height: 100%; }
@@ -1264,13 +1267,24 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .ch6-step { margin: 0; max-width: 62ch; }
 .ch6-step[data-right="true"] { color: var(--ok); }
 
-.ch6-choices { display: flex; flex-direction: column; gap: var(--space-2); }
+.ch6-choices { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
 .ch6-choice {
+  display: flex;
+  flex-wrap: nowrap;
   justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  white-space: nowrap;
   text-align: left;
-  white-space: normal;
   min-height: var(--tap);
 }
+.ch6-choice span,
+.ch6-choice .katex { white-space: nowrap; }
+.ch6-why,
+.ch6-next-camp { margin: 0; max-width: 62ch; }
+.ch6-student { min-width: 0; }
 
 .ch6-blank {
   min-height: var(--tap);

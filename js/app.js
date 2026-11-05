@@ -230,6 +230,7 @@ export function start() {
       ])));
     const list = el('ul', { class: 'nav-list', id: 'nav-chapters', 'aria-label': 'Chapters' });
     for (const ch of BOOK_CHAPTERS) {
+      if (ch.n > 7) continue;
       list.append(el('li', {}, el('a', {
         class: 'nav-link', id: `nav-chapter-${ch.n}`, href: `#chapter-${ch.n}`, 'data-chapter': String(ch.n),
       }, [

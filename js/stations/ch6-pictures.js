@@ -6,7 +6,7 @@ import { h, appendRich } from './test2-ui.js';
 import {
   SEGMENT_END, DEFORM_OUT, DEFORM_RADIUS,
   realIntegral, wrapTurn, claim61, claim62, claim63, riemannPartial,
-  deformEdgeU, BEND_A, BEND_B, claim64, claim65, claim66, LIOUVILLE_COLLAPSE,
+  deformEdgeU, BEND_A, BEND_B, claim64, claim65, claim66,
 } from '../book/ch6-math.js';
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -539,6 +539,69 @@ export function mountCauchy(parent) {
   };
 }
 
+export function mountGoursat(parent) {
+  const { stage, claim, play } = mountShell(parent, {
+    stage: 'ch6-goursat-stage',
+    claim: 'ch6-goursat-claim',
+    play: 'ch6-goursat-play',
+    frame: 'ch6-goursat-frame',
+  }, 'Goursat subdivides a triangle. The integrand is analytic, so the integral over the boundary is 0.');
+  const A = [70, 360];
+  const B = [410, 360];
+  const C = [240, 80];
+  const mid = (p, q) => [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+  const outer = svgEl('polygon', { fill: 'none', stroke: 'var(--polar)', 'stroke-width': '2.5', 'stroke-linejoin': 'round' });
+  const cuts = svgEl('g', { id: 'ch6-goursat-cuts' });
+  stage.append(outer, cuts);
+  outer.setAttribute('points', `${A.join(',')} ${B.join(',')} ${C.join(',')}`);
+  let claimText = '';
+  function paint(u) {
+    const level = u < 0.34 ? 0 : (u < 0.67 ? 1 : 2);
+    cuts.replaceChildren();
+    if (level >= 1) {
+      const mab = mid(A, B);
+      const mbc = mid(B, C);
+      const mca = mid(C, A);
+      cuts.append(svgEl('line', { x1: mab[0], y1: mab[1], x2: mbc[0], y2: mbc[1], stroke: 'var(--input)', 'stroke-width': '2.5' }));
+      cuts.append(svgEl('line', { x1: mbc[0], y1: mbc[1], x2: mca[0], y2: mca[1], stroke: 'var(--input)', 'stroke-width': '2.5' }));
+      cuts.append(svgEl('line', { x1: mca[0], y1: mca[1], x2: mab[0], y2: mab[1], stroke: 'var(--input)', 'stroke-width': '2.5' }));
+      if (level >= 2) {
+        const p = mid(C, mca);
+        const q = mid(C, mbc);
+        const r = mid(mca, mbc);
+        cuts.append(svgEl('line', { x1: p[0], y1: p[1], x2: q[0], y2: q[1], stroke: 'var(--input)', 'stroke-width': '2' }));
+        cuts.append(svgEl('line', { x1: q[0], y1: q[1], x2: r[0], y2: r[1], stroke: 'var(--input)', 'stroke-width': '2' }));
+        cuts.append(svgEl('line', { x1: r[0], y1: r[1], x2: p[0], y2: p[1], stroke: 'var(--input)', 'stroke-width': '2' }));
+      }
+    }
+    const sentence = level === 0
+      ? 'The triangle is whole. Subdivide it. The integrand is analytic.'
+      : 'The midpoints are in. Theorem 6.5, page 183, says this integral is $0$.';
+    stage.dataset.holds = level >= 1 ? 'true' : 'false';
+    stage.dataset.subdivided = level >= 1 ? 'true' : 'false';
+    stage.dataset.level = String(level);
+    if (sentence !== claimText) {
+      claimText = sentence;
+      claim.replaceChildren();
+      appendRich(claim, claimText);
+    }
+  }
+  const clock = player(play, prefersReducedMotion, 1600, paint, [0, 0.5, 1]);
+  clock.set(0);
+  function onKey(ev) {
+    if (ev.key !== 'ArrowRight' && ev.key !== 'ArrowLeft') return;
+    ev.preventDefault();
+    const level = Number(stage.dataset.level || '0') + (ev.key === 'ArrowRight' ? 1 : -1);
+    const next = Math.min(2, Math.max(0, level));
+    clock.set(next / 2);
+  }
+  stage.addEventListener('keydown', onKey);
+  return function stop() {
+    stage.removeEventListener('keydown', onKey);
+    clock.destroy();
+  };
+}
+
 export function mountLiouville(parent) {
   const { stage, claim, play } = mountShell(parent, {
     stage: 'ch6-liouville-stage',
@@ -559,16 +622,21 @@ export function mountLiouville(parent) {
   circle.setAttribute('cy', map.Y(0));
   circle.setAttribute('cx', map.X(0));
   let claimText = '';
+  const seen = new Set();
   function paintR(u) {
     const R = 1 + 3 * Math.min(1, Math.max(0, u));
-    const sentence = claim66(R);
+    const bin = Math.min(5, Math.max(0, Math.floor((R - 1) / 0.5)));
+    seen.add(bin);
+    const every = seen.size >= 6;
+    const sentence = claim66(R, every);
     circle.setAttribute('r', map.X(R) - map.X(0));
     handle.setAttribute('cx', map.X(R));
     handle.setAttribute('cy', map.Y(0));
     value.setAttribute('cx', map.X(1 / R));
     value.setAttribute('cy', map.Y(0));
     stage.dataset.holds = sentence.holds ? 'true' : 'false';
-    stage.dataset.collapsed = sentence.collapsed ? 'true' : 'false';
+    stage.dataset.collapsed = 'false';
+    stage.dataset.every = every ? 'true' : 'false';
     stage.dataset.radius = String(R);
     if (sentence.text !== claimText) {
       claimText = sentence.text;
@@ -576,8 +644,7 @@ export function mountLiouville(parent) {
       appendRich(claim, claimText);
     }
   }
-  const collapseU = (LIOUVILLE_COLLAPSE - 1) / 3;
-  const clock = player(play, prefersReducedMotion, 2400, paintR, [0, collapseU, 1]);
+  const clock = player(play, prefersReducedMotion, 2400, paintR, [0, 1 / 6, 2 / 6, 3 / 6, 4 / 6, 5 / 6, 1]);
   clock.set(0);
   const drop = bindDrag(stage, handle, () => clock.stop(), (ev) => {
     const p = clientToLocal(stage, ev);

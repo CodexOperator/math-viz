@@ -72,15 +72,16 @@
     "steps": [
       {
         "text": "The segment is parametrized by ___ .",
-        "answer": "\\(z(t)=(2+i\\pi/4)t\\), \\(0\\le t\\le 1\\)",
+        "answer": "\\(z(t)=(2+i\\pi/4)t,\\ 0\\le t\\le 1\\)",
         "accept": [],
         "choices": [
-          "\\(z(t)=(2+i\\pi/4)t\\), \\(0\\le t\\le 1\\)",
+          "\\(z(t)=(2+i\\pi/4)t,\\ 0\\le t\\le 1\\)",
           "\\(z(t)=e^{it}\\), \\(0\\le t\\le 2\\pi\\)",
           "\\(z(t)=t\\), \\(0\\le t\\le 2\\)",
           "\\(z(t)=2+i\\pi t/4\\), \\(0\\le t\\le 1\\)"
         ],
-        "why": "The segment from \\(0\\) to \\(B\\) is \\(z(t)=Bt\\)."
+        "why": "The segment from \\(0\\) to \\(B\\) is \\(z(t)=Bt\\).",
+        "miss": "The segment from $0$ to $B$ is $z(t)=Bt$."
       }
     ],
     "generator": null,
@@ -105,7 +106,8 @@
           "2+\\frac{i\\pi}{4}",
           "2+i*pi/4"
         ],
-        "why": "\\(z(t)\\) is linear, so the derivative is the constant \\(2+i\\pi/4\\)."
+        "why": "\\(z(t)\\) is linear, so the derivative is the constant \\(2+i\\pi/4\\).",
+        "miss": "A linear parametrization has a constant derivative. The coefficient of $t$ stays covered."
       },
       {
         "text": "The integral equals ___ .",
@@ -115,7 +117,8 @@
           "\\exp(2+i\\pi/4)-1",
           "exp(2+i*pi/4)-1"
         ],
-        "why": "\\(\\int_0^1 e^{Bt} B\\,dt = e^{B}-1\\)."
+        "why": "\\(\\int_0^1 e^{Bt} B\\,dt = e^{B}-1\\).",
+        "miss": "After multiplying by $z'(t)$, integrate $e^{Bt}B$ from $0$ to $1$. The value stays covered."
       }
     ],
     "generator": null,
@@ -141,7 +144,8 @@
           "\\(z(t)=t\\), \\(-1\\le t\\le 1\\)",
           "\\(z(t)=e^{it}\\), \\(0\\le t\\le 2\\pi\\)"
         ],
-        "why": "The upper semicircle runs from \\(1\\) through \\(i\\) to \\(-1\\), which is \\(e^{it}\\) for \\(t\\) from \\(0\\) to \\(\\pi\\)."
+        "why": "The upper semicircle runs from \\(1\\) through \\(i\\) to \\(-1\\), which is \\(e^{it}\\) for \\(t\\) from \\(0\\) to \\(\\pi\\).",
+        "miss": "The upper semicircle runs from $1$ through $i$ to $-1$. The parametrization stays covered."
       }
     ],
     "generator": null,
@@ -166,7 +170,8 @@
           "ie^{3it}",
           "i\\exp(3it)"
         ],
-        "why": "\\(z^{2}=e^{2it}\\) and \\(z'=ie^{it}\\), so the product is \\(ie^{3it}\\)."
+        "why": "\\(z^{2}=e^{2it}\\) and \\(z'=ie^{it}\\), so the product is \\(ie^{3it}\\).",
+        "miss": "Multiply $z(t)^2$ by $z'(t)$. The product stays covered."
       },
       {
         "text": "The integral equals ___ .",
@@ -175,7 +180,8 @@
           "-2/3",
           "-\\frac{2}{3}"
         ],
-        "why": "\\(\\int_0^{\\pi} ie^{3it}\\,dt = (e^{3i\\pi}-1)/3 = -2/3\\)."
+        "why": "\\(\\int_0^{\\pi} ie^{3it}\\,dt = (e^{3i\\pi}-1)/3 = -2/3\\).",
+        "miss": "Integrate that product from $0$ to $\\pi$. The value stays covered."
       }
     ],
     "generator": null,
@@ -196,7 +202,8 @@
         "text": "The integral equals ___ .",
         "answer": "",
         "accept": [],
-        "why": ""
+        "why": "",
+        "miss": "Name the antiderivative and evaluate it at the two ends. The value stays covered."
       }
     ],
     "generator": {
@@ -213,6 +220,100 @@
       }
     },
     "memory": "Compute \\((z-a)^{n+1}/(n+1)\\) at the two ends when \\(n\\ne -1\\). For \\(n=-1\\), take the change in argument along the segment."
+  },
+  {
+    "id": "ch6-6.2-ml-11",
+    "chapter": 6,
+    "section": "6.2",
+    "cite": {
+      "ref": "Example 6.11",
+      "page": 177
+    },
+    "kind": "next-step-blank",
+    "prompt": "Example 6.11. \\(C\\) is the segment from \\(2\\) to \\(2+i\\). Bound \\(\\left|\\int_C dz/(z^2+1)\\right|\\).",
+    "steps": [
+      {
+        "text": "The bound is ___ .",
+        "answer": "1/(2\\sqrt{5})",
+        "accept": [
+          "\\frac{1}{2\\sqrt{5}}",
+          "1/(2\\sqrt{5})"
+        ],
+        "miss": "length times a bound on $|f|$",
+        "why": "On this segment $|z^2+1|\\ge 2\\sqrt{5}$ and the length is $1$, so the bound is $1/(2\\sqrt{5})$."
+      }
+    ],
+    "memory": "Length times a bound: $|\\int_C f\\,dz|\\le ML$.",
+    "generator": null
+  },
+  {
+    "id": "ch6-6.2-ex5",
+    "chapter": 6,
+    "section": "6.2",
+    "cite": {
+      "ref": "§6.2, Exercise 5",
+      "page": 178
+    },
+    "kind": "next-step-blank",
+    "prompt": "Exercise 5, page 178. Evaluate \\(\\int_C x\\,dz\\) from \\(-4\\) to \\(4\\).",
+    "steps": [
+      {
+        "text": "The polygonal path through \\(-4\\), \\(-4+4i\\), \\(4+4i\\), and \\(4\\) gives ___ .",
+        "answer": "-32i",
+        "accept": [
+          "-32i",
+          "-32 i"
+        ],
+        "miss": "$x$ is the real part. Parametrize each side and add. The value stays covered.",
+        "why": "The three sides sum to $-32i$."
+      },
+      {
+        "text": "The upper half of $|z|=4$, clockwise, gives ___ .",
+        "answer": "-8\\pi i",
+        "accept": [
+          "-8\\pi i"
+        ],
+        "miss": "Parametrize the clockwise semicircle and multiply by $z'(t)$. The value stays covered.",
+        "why": "The clockwise upper semicircle integrates to $-8\\pi i$."
+      }
+    ],
+    "memory": "On a polygon, add the sides. A clockwise semicircle flips the sign of the counterclockwise value.",
+    "generator": null
+  },
+  {
+    "id": "ch6-6.2-ex9",
+    "chapter": 6,
+    "section": "6.2",
+    "cite": {
+      "ref": "§6.2, Exercise 9",
+      "page": 179
+    },
+    "kind": "next-step-blank",
+    "prompt": "Exercise 9, page 179. Use the circle parametrization from Exercise 8.",
+    "steps": [
+      {
+        "text": "\\(\\int_{C_R^+(z_0)} dz/(z-z_0)\\) equals ___ .",
+        "answer": "2\\pi i",
+        "accept": [
+          "2\\pi i",
+          "2πi"
+        ],
+        "miss": "The power is $-1$. Exercise 8 writes the integral as an ordinary integral in $\\theta$. The value stays covered.",
+        "why": "The integral is $2\\pi i$."
+      },
+      {
+        "text": "For an integer \\(n\\ne 1\\), \\(\\int_{C_R^+(z_0)} dz/(z-z_0)^n\\) equals ___ .",
+        "answer": "0",
+        "accept": [
+          "0",
+          "0+0i"
+        ],
+        "miss": "The integer power is not $-1$. The value stays covered.",
+        "why": "Every integer power other than $-1$ integrates to $0$."
+      }
+    ],
+    "memory": "On a circle about $z_0$, only the power $-1$ survives, and it is $2\\pi i$.",
+    "generator": null
   },
   {
     "id": "ch6-6.3-cg-blank",
@@ -233,7 +334,8 @@
           "v dx + u dy",
           "(v dx + u dy)"
         ],
-        "why": "Equation (6.28) splits the integral into those two real line integrals."
+        "why": "Equation (6.28) splits the integral into those two real line integrals.",
+        "miss": "Equation (6.28) splits the integral into those two real line integrals."
       },
       {
         "text": "Green's theorem turns the real part into \\(\\iint (-v_x - u_y)\\,dx\\,dy\\). The imaginary part becomes \\(\\iint\\) ___ \\(dx\\,dy\\).",
@@ -243,7 +345,8 @@
           "u_x - v_y",
           "ux-vy"
         ],
-        "why": "Green's theorem with \\(P=v\\) and \\(Q=u\\) produces \\(u_x-v_y\\)."
+        "why": "Green's theorem with \\(P=v\\) and \\(Q=u\\) produces \\(u_x-v_y\\).",
+        "miss": "Green's theorem turns $P\\,dx+Q\\,dy$ into $Q_x-P_y$. Here $P=v$ and $Q=u$. The substituted integrand stays covered."
       },
       {
         "text": "Cauchy-Riemann says \\(u_x=v_y\\) and \\(u_y=-v_x\\), so the integral equals ___ .",
@@ -252,7 +355,8 @@
           "0",
           "0+0i"
         ],
-        "why": "Both double integrals are integrals of \\(0\\)."
+        "why": "Both double integrals are integrals of \\(0\\).",
+        "miss": "Cauchy-Riemann makes both double integrals vanish. The value stays covered."
       }
     ],
     "generator": null,
@@ -278,7 +382,8 @@
           "\\(C\\) is a triangle",
           "\\(f\\) has a pole inside \\(C\\)"
         ],
-        "why": "Page 184: Cauchy's proof is the intuitive one, and it needs \\(f'\\) continuous. Goursat removes that hypothesis."
+        "why": "Page 184: Cauchy's proof is the intuitive one, and it needs \\(f'\\) continuous. Goursat removes that hypothesis.",
+        "miss": "Page 184: Cauchy's proof is the intuitive one, and it needs a hypothesis Goursat removes. The hypothesis stays covered."
       },
       {
         "text": "Once both double integrals are zero, you conclude ___ .",
@@ -289,7 +394,8 @@
           "the integral equals the length of \\(C\\)",
           "\\(f\\) is constant"
         ],
-        "why": "That is the statement of Theorem 6.5."
+        "why": "That is the statement of Theorem 6.5.",
+        "miss": "Both double integrals are integrals of $0$. The conclusion of Theorem 6.5 stays covered."
       }
     ],
     "generator": null,
@@ -315,7 +421,8 @@
           "Theorem 6.1, so parametrize both curves",
           "Corollary 6.1, so the value is always \\(2\\pi i\\)"
         ],
-        "why": "Theorem 6.5 does not apply: the pole means there is no simply connected domain of analyticity containing the curve. Deformation is the result that keeps the value."
+        "why": "Theorem 6.5 does not apply: the pole means there is no simply connected domain of analyticity containing the curve. Deformation is the result that keeps the value.",
+        "miss": "Theorem 6.5 does not apply: the pole means there is no simply connected domain of analyticity containing the curve. Deformation is the result that keeps the value."
       }
     ],
     "generator": null,
@@ -356,7 +463,8 @@
         "text": "The integral equals ___ .",
         "answer": "",
         "accept": [],
-        "why": ""
+        "why": "",
+        "miss": "Look first at whether the pole is inside, and whether the power is $-1$. The value stays covered."
       }
     ],
     "generator": {
@@ -383,6 +491,126 @@
     "memory": "Look first: is the pole inside, and is the power exactly \\(-1\\)? That is the only case that is not \\(0\\)."
   },
   {
+    "id": "ch6-6.3-ex1",
+    "chapter": 6,
+    "section": "6.3",
+    "cite": {
+      "ref": "§6.3, Exercise 1",
+      "page": 191
+    },
+    "kind": "next-step-blank",
+    "prompt": "Exercise 1, page 191. \\(C\\) is the unit circle, positively oriented.",
+    "steps": [
+      {
+        "text": "\\(\\int_C z/(2z^2+1)\\,dz\\) equals ___ .",
+        "answer": "\\pi i",
+        "accept": [
+          "\\pi i",
+          "πi"
+        ],
+        "miss": "The poles are $\\pm i/\\sqrt{2}$. Both sit inside the unit circle. Split, then use Corollary 6.1. The value stays covered.",
+        "why": "Each pole contributes $\\pi i/2$. The sum is $\\pi i$."
+      },
+      {
+        "text": "\\(\\int_C \\tan z\\,dz\\) equals ___ .",
+        "answer": "0",
+        "accept": [
+          "0",
+          "0+0i"
+        ],
+        "miss": "Where is $\\tan z$ not analytic, and does that point lie inside the unit circle?",
+        "why": "The poles of $\\tan z$ are outside the unit circle, so Theorem 6.5 says the integral is $0$."
+      }
+    ],
+    "memory": "Poles inside: split and quote Corollary 6.1. Poles outside: Theorem 6.5, the integral is $0$.",
+    "generator": null
+  },
+  {
+    "id": "ch6-6.3-ex2",
+    "chapter": 6,
+    "section": "6.3",
+    "cite": {
+      "ref": "§6.3, Exercise 2",
+      "page": 191
+    },
+    "kind": "next-step-blank",
+    "prompt": "Exercise 2, page 191. \\(C\\) is the square with vertices \\(1\\pm i\\) and \\(-1\\pm i\\), positively oriented.",
+    "steps": [
+      {
+        "text": "\\(\\int_C dz/z\\) equals ___ .",
+        "answer": "2\\pi i",
+        "accept": [
+          "2\\pi i",
+          "2πi"
+        ],
+        "miss": "The origin is inside the square, and the power is $-1$. The value stays covered.",
+        "why": "Corollary 6.1 gives $2\\pi i$."
+      }
+    ],
+    "memory": "A square around $0$ is still a simple closed curve. $1/z$ integrates to $2\\pi i$.",
+    "generator": null
+  },
+  {
+    "id": "ch6-6.3-ex3",
+    "chapter": 6,
+    "section": "6.3",
+    "cite": {
+      "ref": "§6.3, Exercise 3",
+      "page": 191
+    },
+    "kind": "next-step-blank",
+    "prompt": "Exercise 3, page 191. Evaluate \\(\\int_{C_1^+(0)}(4z^2-4z+5)^{-1}\\,dz\\).",
+    "steps": [
+      {
+        "text": "The integral equals ___ .",
+        "answer": "0",
+        "accept": [
+          "0",
+          "0+0i"
+        ],
+        "miss": "Find the roots of $4z^2-4z+5$ and ask whether they lie inside the unit circle.",
+        "why": "The roots $\\tfrac{1}{2}\\pm i$ are outside the unit circle, so Theorem 6.5 says the integral is $0$."
+      }
+    ],
+    "memory": "If every singularity is outside, Theorem 6.5 says the integral is $0$.",
+    "generator": null
+  },
+  {
+    "id": "ch6-6.3-ex4",
+    "chapter": 6,
+    "section": "6.3",
+    "cite": {
+      "ref": "§6.3, Exercise 4",
+      "page": 191
+    },
+    "kind": "next-step-blank",
+    "prompt": "Exercise 4, page 191. \\(\\int_C (z^2-z)^{-1}\\,dz = \\int_C \\left(-1/z+1/(z-1)\\right)\\,dz\\).",
+    "steps": [
+      {
+        "text": "On \\(|z-1|=2\\), positively oriented, the integral equals ___ .",
+        "answer": "0",
+        "accept": [
+          "0",
+          "0+0i"
+        ],
+        "miss": "Both poles have to be checked against this circle. The value stays covered.",
+        "why": "Both poles are inside, and the contributions $-2\\pi i$ and $2\\pi i$ cancel."
+      },
+      {
+        "text": "On \\(|z-1|=1/2\\), positively oriented, the integral equals ___ .",
+        "answer": "2\\pi i",
+        "accept": [
+          "2\\pi i",
+          "2πi"
+        ],
+        "miss": "Only one of the poles $0$ and $1$ lies inside this smaller circle. The value stays covered.",
+        "why": "$1$ is inside and $0$ is outside, so the integral is $2\\pi i$."
+      }
+    ],
+    "memory": "Track which poles are inside before you add $2\\pi i$ and $-2\\pi i$.",
+    "generator": null
+  },
+  {
     "id": "ch6-6.1-ex1",
     "chapter": 6,
     "section": "6.1",
@@ -401,7 +629,8 @@
           "-\\frac{5}{4}",
           "-1.25"
         ],
-        "why": "\\((t-i)^3=(t^3-3t)+i(1-3t^2)\\). From 0 to 1 the real integral is \\(-5/4\\) and the imaginary integral is 0."
+        "why": "\\((t-i)^3=(t^3-3t)+i(1-3t^2)\\). From 0 to 1 the real integral is \\(-5/4\\) and the imaginary integral is 0.",
+        "miss": "Expand $(t-i)^3$ into a real part and an imaginary part, then integrate each from $0$ to $1$. The value stays covered."
       }
     ],
     "generator": null,
@@ -435,19 +664,29 @@
       "ref": "Example 6.14",
       "page": 189
     },
-    "kind": "next-step-mc",
-    "prompt": "Example 6.14. \\(\\int_{|z|=2} 2z/(z^2+2)\\,dz\\). Partial fractions split the integrand into \\(1/(z+i\\sqrt{2})\\) and \\(1/(z-i\\sqrt{2})\\).",
+    "kind": "next-step-blank",
+    "prompt": "Example 6.14. Evaluate \\(\\int_{|z|=2} 2z/(z^2+2)\\,dz\\).",
     "steps": [
       {
-        "text": "Both poles lie inside \\(|z|=2\\), so the integral equals ___ .",
-        "answer": "\\(4\\pi i\\)",
-        "choices": [
-          "\\(4\\pi i\\)",
-          "\\(2\\pi i\\)",
-          "\\(0\\)",
-          "\\(-2\\pi i\\)"
+        "text": "The partial-fraction split of \\(2z/(z^2+2)\\) is ___ .",
+        "answer": "1/(z-i\\sqrt{2})+1/(z+i\\sqrt{2})",
+        "accept": [
+          "1/(z+i\\sqrt{2})+1/(z-i\\sqrt{2})",
+          "\\frac{1}{z-i\\sqrt{2}}+\\frac{1}{z+i\\sqrt{2}}",
+          "\\frac{1}{z+i\\sqrt{2}}+\\frac{1}{z-i\\sqrt{2}}"
         ],
-        "why": "Corollary 6.1 gives \\(2\\pi i\\) for each pole. The sum is \\(4\\pi i\\)."
+        "miss": "Factor $z^2+2$. Split $2z$ over that product into two linear denominators. The split stays covered.",
+        "why": "The split is $1/(z-i\\sqrt{2})+1/(z+i\\sqrt{2})$."
+      },
+      {
+        "text": "Both poles lie inside $|z|=2$, so the integral equals ___ .",
+        "answer": "4\\pi i",
+        "accept": [
+          "4\\pi i",
+          "$4\\pi i$"
+        ],
+        "miss": "Each interior simple pole of $1/(z-z_0)$ contributes $2\\pi i$. Count the poles inside $|z|=2$. The total stays covered.",
+        "why": "Corollary 6.1 gives $2\\pi i$ for each pole. The sum is $4\\pi i$."
       }
     ],
     "generator": null,
@@ -473,7 +712,8 @@
           "both \\(\\pm i\\sqrt{2}\\)",
           "neither pole"
         ],
-        "why": "\\(i\\sqrt{2}\\) is inside \\(|z-i|=1\\). \\(-i\\sqrt{2}\\) is outside, so that term is \\(0\\) by Theorem 6.5."
+        "why": "\\(i\\sqrt{2}\\) is inside \\(|z-i|=1\\). \\(-i\\sqrt{2}\\) is outside, so that term is \\(0\\) by Theorem 6.5.",
+        "miss": "Which of $\\pm i\\sqrt{2}$ lies inside $|z-i|=1$? The outside pole contributes nothing."
       }
     ],
     "generator": null,
@@ -491,13 +731,25 @@
     "prompt": "Example 6.16. On the figure-eight contour, \\((z-2)/(z^2-z)=2/z-1/(z-1)\\).",
     "steps": [
       {
+        "text": "The loops are oriented ___ .",
+        "answer": "clockwise about 0, counterclockwise about 1",
+        "accept": [
+          "negative about 0, positive about 1",
+          "C1 clockwise and C2 counterclockwise",
+          "clockwise around 0 and counterclockwise around 1"
+        ],
+        "miss": "The sign of each loop is the missing piece. Read the direction around $0$ and around $1$ before you add.",
+        "why": "The loop about $0$ is clockwise, and the loop about $1$ is counterclockwise."
+      },
+      {
         "text": "The integral equals ___ .",
         "answer": "-6\\pi i",
         "accept": [
           "-6\\pi i",
           "-6\\pi{}i"
         ],
-        "why": "The \\(2/z\\) term contributes \\(-4\\pi i\\) and the \\(1/(z-1)\\) term contributes \\(-2\\pi i\\)."
+        "miss": "Add the two loops after each sign is known. The value stays covered.",
+        "why": "The $2/z$ term contributes $-4\\pi i$ and the $1/(z-1)$ term contributes $-2\\pi i$."
       }
     ],
     "generator": null,
@@ -541,11 +793,89 @@
           "4+2i",
           "4+2\\,i"
         ],
-        "why": "\\(((3+i)^2-(-1-i)^2)/2=(8+6i-2i)/2=4+2i\\)."
+        "why": "\\(((3+i)^2-(-1-i)^2)/2=(8+6i-2i)/2=4+2i\\).",
+        "miss": "Evaluate $z^2/2$ at the two ends and subtract. The value stays covered."
       }
     ],
     "generator": null,
     "memory": "For \\(z\\), the antiderivative is \\(z^2/2\\)."
+  },
+  {
+    "id": "ch6-6.4-ex17",
+    "chapter": 6,
+    "section": "6.4",
+    "cite": {
+      "ref": "Example 6.17",
+      "page": 194
+    },
+    "kind": "next-step-blank",
+    "prompt": "Example 6.17. \\(C\\) joins \\(4\\) to \\(8+6i\\), and \\(z^{1/2}\\) is the principal branch. The integrand is \\(1/(2z^{1/2})\\).",
+    "steps": [
+      {
+        "text": "The integral equals ___ .",
+        "answer": "1+i",
+        "accept": [
+          "1+i",
+          "1+1i"
+        ],
+        "miss": "An antiderivative is the principal square root. Evaluate it at the ends. The value stays covered.",
+        "why": "$(8+6i)^{1/2}-4^{1/2}=3+i-2=1+i$."
+      }
+    ],
+    "memory": "On a simply connected domain, evaluate the antiderivative at the ends.",
+    "generator": null
+  },
+  {
+    "id": "ch6-6.4-ex18",
+    "chapter": 6,
+    "section": "6.4",
+    "cite": {
+      "ref": "Example 6.18",
+      "page": 195
+    },
+    "kind": "next-step-blank",
+    "prompt": "Example 6.18. \\(C\\) is the segment from \\(1\\) to \\(i\\), and the integrand is \\(\\cos z\\).",
+    "steps": [
+      {
+        "text": "The integral equals ___ .",
+        "answer": "-\\sin 1+i\\sinh 1",
+        "accept": [
+          "-sin 1 + i sinh 1",
+          "-sin(1)+i sinh(1)",
+          "-\\sin(1)+i\\sinh(1)"
+        ],
+        "miss": "An antiderivative of $\\cos z$ is $\\sin z$. Evaluate it at the ends. The value stays covered.",
+        "why": "$\\sin i-\\sin 1=-\\sin 1+i\\sinh 1$."
+      }
+    ],
+    "memory": "$\\cos z$ has antiderivative $\\sin z$ on the whole plane.",
+    "generator": null
+  },
+  {
+    "id": "ch6-6.4-ex19",
+    "chapter": 6,
+    "section": "6.4",
+    "cite": {
+      "ref": "Example 6.19",
+      "page": 195
+    },
+    "kind": "next-step-blank",
+    "prompt": "Example 6.19. \\(D\\) is the plane slit along the negative real axis, and \\(C\\) in \\(D\\) joins \\(z_1\\) to \\(z_2\\).",
+    "steps": [
+      {
+        "text": "\\(\\int_C dz/z\\) equals ___ .",
+        "answer": "\\operatorname{Log}(z_2)-\\operatorname{Log}(z_1)",
+        "accept": [
+          "Log(z_2)-Log(z_1)",
+          "\\log(z_2)-\\log(z_1)",
+          "Log(z2)-Log(z1)"
+        ],
+        "miss": "On this slit plane, $1/z$ has an antiderivative. Name it at the two ends. The formula stays covered.",
+        "why": "Theorem 6.9 gives $\\operatorname{Log}(z_2)-\\operatorname{Log}(z_1)$."
+      }
+    ],
+    "memory": "On the slit plane, the antiderivative of $1/z$ is $\\operatorname{Log} z$.",
+    "generator": null
   },
   {
     "id": "ch6-6.5-cif-flash",
@@ -586,31 +916,62 @@
           "2\\pi i\\,e",
           "2\\pi i \\exp(1)"
         ],
-        "why": "Theorem 6.10 with \\(f(z)=e^{z}\\) and \\(z_0=1\\) gives \\(2\\pi i\\, e\\)."
+        "why": "Theorem 6.10 with \\(f(z)=e^{z}\\) and \\(z_0=1\\) gives \\(2\\pi i\\, e\\).",
+        "miss": "Theorem 6.10 multiplies $f(1)$ by $2\\pi i$. The value stays covered."
       }
     ],
     "generator": null,
     "memory": "\\(e^{z}\\) at \\(1\\) is \\(e\\), then multiply by \\(2\\pi i\\)."
   },
   {
-    "id": "ch6-6.6-morera-flash",
+    "id": "ch6-6.5-ex25",
     "chapter": 6,
-    "section": "6.6",
+    "section": "6.5",
     "cite": {
-      "ref": "Theorem 6.13",
-      "page": 203
+      "ref": "Example 6.25",
+      "page": 200
     },
-    "kind": "flash",
-    "prompt": "Morera's theorem. \\(f\\) is continuous in a simply connected domain, and \\(\\int_C f(z)\\,dz=0\\) for every closed contour in that domain. What follows?",
+    "kind": "next-step-blank",
+    "prompt": "Example 6.25. \\(C\\) is \\(|z|=2\\), positively oriented. The integrand is \\(e^{z^2}/(z-i)^4\\).",
     "steps": [
       {
-        "text": "",
-        "answer": "\\(f\\) is analytic.",
-        "why": "Theorem 6.13, page 203, is the converse of Cauchy-Goursat."
+        "text": "The integral equals ___ .",
+        "answer": "-4\\pi/(3e)",
+        "accept": [
+          "-\\frac{4\\pi}{3e}",
+          "-4\\pi/(3e)"
+        ],
+        "miss": "The power is 4, so $n=3$, and you divide by $3!$. The value stays covered.",
+        "why": "Theorem 6.12 with $f(z)=e^{z^2}$ and $n=3$ gives $2\\pi i\\, f'''(i)/3! = -4\\pi/(3e)$."
       }
     ],
-    "generator": null,
-    "memory": "Every closed contour integrates to \\(0\\), and \\(f\\) is continuous on a simply connected domain: \\(f\\) is analytic."
+    "memory": "Denominator power $n+1$. Divide by $n!$, then multiply by $2\\pi i$.",
+    "generator": null
+  },
+  {
+    "id": "ch6-6.5-cif",
+    "chapter": 6,
+    "section": "6.5",
+    "cite": {
+      "ref": "Theorem 6.12",
+      "page": 199
+    },
+    "kind": "blank",
+    "prompt": "A derivative formula.",
+    "steps": [
+      {
+        "text": "The integral equals ___ .",
+        "answer": "",
+        "accept": [],
+        "miss": "",
+        "why": ""
+      }
+    ],
+    "generator": {
+      "template": "ch6-cif",
+      "params": {}
+    },
+    "memory": "Denominator power $n+1$: multiply $f^{(n)}(z_0)$ by $2\\pi i$ and divide by $n!$."
   },
   {
     "id": "ch6-6.6-liouville-flash",
@@ -652,10 +1013,82 @@
           "Yes. \\(|e^{z}|=1\\) everywhere",
           "No. Liouville needs a pole"
         ],
-        "why": "\\(|e^{z}|=e^{x}\\) grows with \\(x\\). Liouville needs a bound on the whole plane."
+        "why": "\\(|e^{z}|=e^{x}\\) grows with \\(x\\). Liouville needs a bound on the whole plane.",
+        "miss": "$|e^{z}|=e^{x}$ grows with $x$. Liouville needs a bound on the whole plane."
       }
     ],
     "generator": null,
     "memory": "Entire is not enough. The function also has to be bounded."
+  },
+  {
+    "id": "ch6-6.6-morera-flash",
+    "chapter": 6,
+    "section": "6.6",
+    "cite": {
+      "ref": "Theorem 6.13",
+      "page": 203
+    },
+    "kind": "flash",
+    "prompt": "Morera's theorem. \\(f\\) is continuous in a simply connected domain, and \\(\\int_C f(z)\\,dz=0\\) for every closed contour in that domain. What follows?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "\\(f\\) is analytic.",
+        "why": "Theorem 6.13, page 203, is the converse of Cauchy-Goursat."
+      }
+    ],
+    "generator": null,
+    "memory": "Every closed contour integrates to \\(0\\), and \\(f\\) is continuous on a simply connected domain: \\(f\\) is analytic."
+  },
+  {
+    "id": "ch6-6.6-fta",
+    "chapter": 6,
+    "section": "6.6",
+    "cite": {
+      "ref": "Theorem 6.19",
+      "page": 206
+    },
+    "kind": "proof-mc",
+    "prompt": "Theorem 6.19, page 206. Suppose a polynomial \\(P\\) of degree at least 1 has no zero. Follow the proof.",
+    "steps": [
+      {
+        "text": "If $P(z)\\ne 0$ for every $z$, then $1/P$ is ___ .",
+        "answer": "entire",
+        "choices": [
+          "entire",
+          "constant",
+          "bounded",
+          "a polynomial"
+        ],
+        "miss": "The missing hypothesis is that $P$ has no zero on the plane. Do not state the conclusion.",
+        "why": "No zero anywhere makes $1/P$ analytic on the whole plane, so $1/P$ is entire."
+      },
+      {
+        "text": "For large $|z|$, $|P(z)|$ grows, so $1/P$ is ___ .",
+        "answer": "bounded",
+        "choices": [
+          "bounded",
+          "entire",
+          "zero",
+          "constant"
+        ],
+        "miss": "The missing hypothesis is a bound on $|1/P|$ when $|z|$ is large. Do not state the conclusion.",
+        "why": "Outside a large disk $|1/P|\\le 1$, and on the closed disk a continuous function is bounded, so $1/P$ is bounded."
+      },
+      {
+        "text": "Liouville then says $1/P$ is ___ .",
+        "answer": "constant",
+        "choices": [
+          "constant",
+          "entire",
+          "unbounded",
+          "zero"
+        ],
+        "miss": "The missing hypotheses are that $1/P$ is entire and bounded. Do not state the conclusion.",
+        "why": "Theorem 6.18 says an entire bounded function is constant, so $P$ is constant."
+      }
+    ],
+    "memory": "No zero makes $1/P$ entire and bounded, so Liouville says $1/P$ is constant.",
+    "generator": null
   }
 ]

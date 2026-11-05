@@ -17,7 +17,20 @@ function slug(id) {
 
 function ticksOf(store) {
   const stages = new Set(chapter6StageIds());
-  return loadSharedTicks(store, (id) => !!test2ProblemById(id) || stages.has(id), chapter4ExerciseIds());
+  const ch5 = new Set(chapter5ExerciseIds());
+  return loadSharedTicks(store, (id) => !!test2ProblemById(id) || stages.has(id) || ch5.has(id), chapter4ExerciseIds());
+}
+
+function inProgressChapter(ticks) {
+  const specs = [
+    { n: 4, sections: CHAPTER_4.sections, walk: 'Walk Chapter 4' },
+    { n: 5, sections: CHAPTER_5.sections, walk: 'Open Chapter 5' },
+    { n: 6, sections: CHAPTER_6.sections.filter((s) => s.exercises.length), walk: 'Walk Chapter 6' },
+  ];
+  const rows = specs.map((spec) => ({ ...spec, t: chapterTally(spec.sections, ticks) }));
+  const started = [...rows].reverse().find((row) => row.t.exercisesTicked > 0 && !row.t.complete);
+  if (started) return started;
+  return rows.find((row) => !row.t.complete) || null;
 }
 
 function exerciseHint(section, problem) {
@@ -53,14 +66,23 @@ function mountRoadmap(el, ctx, spec) {
 
   function paint() {
     const t = tally();
-    if (t.complete) {
-      status.textContent = `${nextSentence(t)} Chapter 5 is next.`;
-      walk.textContent = 'Open Chapter 5';
-      walk.setAttribute('href', '#chapter-5');
-    } else {
-      status.textContent = nextSentence(t);
-      walk.textContent = 'Walk Chapter 4';
+    const current = inProgressChapter(ticks);
+    if (!current) {
+      status.textContent = 'Chapters 4, 5, and 6 are done.';
+      walk.textContent = 'Walk Chapter 6';
+      walk.setAttribute('href', '#chapter-6');
+    } else if (current.n === 4) {
+      status.textContent = t.complete ? `${nextSentence(t)} Chapter 5 is next.` : nextSentence(t);
+      walk.textContent = current.walk;
       walk.setAttribute('href', '#chapter-4');
+    } else if (current.t.exercisesTicked > 0) {
+      status.textContent = `Next is ${current.t.nextId}. ${current.t.exercisesTicked} of ${current.t.exerciseTotal}.`;
+      walk.textContent = current.walk;
+      walk.setAttribute('href', `#chapter-${current.n}`);
+    } else {
+      status.textContent = `Chapter ${current.n} is next.`;
+      walk.textContent = current.walk;
+      walk.setAttribute('href', `#chapter-${current.n}`);
     }
     for (const node of list.querySelectorAll('.book-node')) {
       const n = Number(node.getAttribute('data-chapter'));

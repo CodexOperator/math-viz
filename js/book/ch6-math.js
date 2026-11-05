@@ -357,10 +357,14 @@ export function wrapTurn(T) {
   return u;
 }
 
+// The label is the value, not a wide angle. At 0.12 rad off π the integral is
+// still about −0.12 + 1.99i, so that edge must not read 2i.
+const TURN_TOL = 0.01;
+
 export function turnPhase(T) {
-  const u = wrapTurn(T);
-  if (u < 0.12 || TWO_PI - u < 0.12) return 'full';
-  if (Math.abs(u - PI) < 0.12) return 'half';
+  const w = realIntegral(wrapTurn(T));
+  if (Math.hypot(w.re, w.im) <= TURN_TOL) return 'full';
+  if (Math.hypot(w.re, w.im - 2) <= TURN_TOL) return 'half';
   return 'move';
 }
 
@@ -470,7 +474,7 @@ export function claim64(p) {
   if (bendStraight(p)) {
     return { holds: false, bent: false, text: 'The path is the straight segment. Bend the green point.' };
   }
-  return { holds: true, bent: true, text: 'The path has bent. The integral of $z$ is still $4+2i$.' };
+  return { holds: true, bent: true, text: 'The path has bent. The ends are still $-1-i$ and $3+i$.' };
 }
 
 // Theorem 6.10 for f(z)=z on the unit circle. Inside, the formula returns z0.
@@ -494,20 +498,41 @@ export function claim65(z) {
 }
 
 // Liouville via Cauchy's estimate |f'| ≤ M/R with M = 1.
+// One radius is one circle. holds is true only after every circle in the picture.
 export const LIOUVILLE_M = 1;
-export const LIOUVILLE_COLLAPSE = 3;
 
 export function liouvilleEstimate(radius) {
   const R = Math.max(0.4, Number(radius) || 0);
   return LIOUVILLE_M / R;
 }
 
-export function claim66(radius) {
+export function liouvilleBoundTex(radius) {
   const R = Math.max(0.4, Number(radius) || 0);
-  if (R >= LIOUVILLE_COLLAPSE) {
-    return { holds: true, collapsed: true, radius: R, text: 'The estimate has collapsed. A bound on every circle forces the derivative to $0$.' };
+  const n = Math.round(R);
+  if (Math.abs(R - n) < 1e-6 && n >= 1) return n === 1 ? '1' : `1/${n}`;
+  const v = LIOUVILLE_M / R;
+  return v.toFixed(2);
+}
+
+export function claim66(radius, every) {
+  const R = Math.max(0.4, Number(radius) || 0);
+  const bound = liouvilleBoundTex(R);
+  if (every) {
+    return {
+      holds: true,
+      collapsed: false,
+      every: true,
+      radius: R,
+      text: 'The bound $1/R$ has been read on every circle in the picture.',
+    };
   }
-  return { holds: false, collapsed: false, radius: R, text: 'On this circle the estimate of the derivative has not collapsed.' };
+  return {
+    holds: false,
+    collapsed: false,
+    every: false,
+    radius: R,
+    text: `On this circle $|f'|\\le ${bound}$. That is one circle.`,
+  };
 }
 
 export function onSegment(pole, start, end) {
@@ -590,60 +615,145 @@ export function circleIntegral(center, radius, pole, n) {
   return { re: 0, im: 0, tex: '0', inside };
 }
 
-export function generateCircle(seed, params) {
-  const rng = mulberry32(seed);
-  params = params || {};
-  const nR = params.n || [-4, 4];
-  const rR = params.r || [1, 3];
-  const aR = params.a || [-2, 2];
-  const cR = params.c || [-1, 1];
-  let center = { re: 0, im: 0 };
-  let radius = 1;
-  let pole = { re: 0, im: 0 };
-  let n = 0;
-  let value = null;
-  for (let guard = 0; guard < 40 && !value; guard++) {
-    center = { re: irand(rng, cR[0], cR[1]), im: irand(rng, cR[0], cR[1]) };
-    radius = irand(rng, rR[0], rR[1]);
-    pole = { re: irand(rng, aR[0], aR[1]), im: irand(rng, aR[0], aR[1]) };
-    n = irand(rng, nR[0], nR[1]);
-    if (radius <= 0) continue;
-    value = circleIntegral(center, radius, pole, n);
+function factorial(n) {
+  let r = 1;
+  for (let i = 2; i <= n; i += 1) r *= i;
+  return r;
+}
+
+// Theorem 6.12 for f(z)=e^z: ∫ e^z/(z−z0)^{n+1} dz = 2πi e^{z0} / n!.
+export function cifExpIntegral(order, z0) {
+  const n = order | 0;
+  const scale = Math.exp(z0) / factorial(n);
+  const den = factorial(n);
+  const g = rgcd(2, den);
+  const num = 2 / g;
+  const d = den / g;
+  let tex = '\\pi i';
+  if (z0 === 0) {
+    if (d === 1) tex = num === 1 ? '\\pi i' : `${num}\\pi i`;
+    else if (num === 1) tex = `\\frac{\\pi i}{${d}}`;
+    else tex = `\\frac{${num}\\pi i}{${d}}`;
+  } else {
+    tex = `\\frac{2\\pi i\\, e^{${z0}}}{${den}}`;
   }
-  if (!value) value = circleIntegral({ re: 0, im: 0 }, 2, { re: 0, im: 0 }, -1);
-  const cTex = fmtPole(center.re, center.im);
-  const circle = center.re === 0 && center.im === 0 ? `|z|=${radius}` : `|z-(${cTex})|=${radius}`;
+  return { re: 0, im: TWO_PI * scale, tex, order: n, z0 };
+}
+
+function circleLabel(center, radius) {
+  if (center.re === 0 && center.im === 0) return `|z|=${radius}`;
+  return `|z-(${fmtPole(center.re, center.im)})|=${radius}`;
+}
+
+function powerCard(center, radius, pole, n, value) {
   const integrand = powerTex(pole.re, pole.im, n);
-  const why = circleWhy(n, value.inside);
+  const lines = circleLines(n, value.inside, value.tex);
   return {
-    prompt: `Let $C$ be the circle $${circle}$, positively oriented.`,
+    prompt: `Let $C$ be the circle $${circleLabel(center, radius)}$, positively oriented.`,
     steps: [{
       text: `The integral of $${integrand}$ over $C$ equals ___.`,
       answer: `$${value.tex}$`,
       accept: value.tex === '0'
         ? ['0', '0+0i', '$0$']
         : ['2\\pi i', '2πi', '2pi i', '$2\\pi i$'],
-      why,
+      why: lines.why,
+      miss: lines.miss,
     }],
-    memory: 'Power $-1$ and the pole inside: $2\\pi i$. Any other integer power, or the pole outside: $0$.',
-    values: { re: value.re, im: value.im, n, radius, cx: center.re, cy: center.im, ax: pole.re, ay: pole.im },
+    memory: 'Power $-1$ and the pole inside: $2\\pi i$. Any other integer power of $1/(z-a)$, or the pole outside: $0$.',
+    cite: lines.cite,
+    values: {
+      kind: 'power', re: value.re, im: value.im, n, radius,
+      cx: center.re, cy: center.im, ax: pole.re, ay: pole.im,
+    },
   };
 }
 
-function circleWhy(n, inside) {
-  if (n >= 0) {
-    return 'A non-negative power is entire. Theorem 6.5, page 183, says the integral over this circle is $0$.';
-  }
+function circleLines(n, inside, tex) {
   if (n === -1 && inside) {
-    return 'Corollary 6.1, page 188: the pole is inside and the power is $-1$, so the integral is $2\\pi i$.';
+    return {
+      cite: { ref: 'Corollary 6.1', page: 188 },
+      miss: 'The pole is inside and the power is $-1$. Quote Corollary 6.1, page 188. The value stays covered.',
+      why: `Corollary 6.1, page 188: the pole is inside and the power is $-1$, so the integral is $${tex}$.`,
+    };
   }
-  if (inside) {
-    return 'Corollary 6.1, page 188: $z_0$ is inside and the integer power is not $-1$, so the integral is $0$.';
+  if (n < 0 && inside) {
+    return {
+      cite: { ref: 'Corollary 6.1', page: 188 },
+      miss: 'The pole is inside, and the integer power is not $-1$. Corollary 6.1, page 188, is the result. The value stays covered.',
+      why: `Corollary 6.1, page 188: $z_0$ is inside and the integer power is not $-1$, so the integral is $${tex}$.`,
+    };
   }
-  if (n === -1) {
-    return 'The pole is outside the circle, so $1/(z-a)$ is analytic inside and on $C$. Theorem 6.5, page 183, says the integral is $0$.';
+  if (n >= 0) {
+    return {
+      cite: { ref: 'Theorem 6.5', page: 183 },
+      miss: 'A non-negative power is entire. Theorem 6.5, page 183, applies to this circle. The value stays covered.',
+      why: `A non-negative power is entire. Theorem 6.5, page 183, says the integral over this circle is $${tex}$.`,
+    };
   }
-  return 'The pole is outside the circle, so this negative power is analytic inside and on $C$. Theorem 6.5, page 183, says the integral is $0$.';
+  return {
+    cite: { ref: 'Theorem 6.5', page: 183 },
+    miss: 'The pole is outside the circle, so the integrand is analytic inside and on $C$. Theorem 6.5, page 183, applies. The value stays covered.',
+    why: `The pole is outside the circle. Theorem 6.5, page 183, says the integral is $${tex}$.`,
+  };
+}
+
+function cifCard(order, radius) {
+  const z0 = 0;
+  const value = cifExpIntegral(order, z0);
+  const power = order + 1;
+  return {
+    prompt: `Let $C$ be the circle $|z|=${radius}$, positively oriented, and let $f(z)=e^{z}$.`,
+    steps: [{
+      text: `The integral of $e^{z}/z^{${power}}$ over $C$ equals ___.`,
+      answer: `$${value.tex}$`,
+      accept: [value.tex, `$${value.tex}$`],
+      miss: `The power in the denominator is ${power}, so $n=${order}$, and you divide by ${order}!. The value stays covered.`,
+      why: `Theorem 6.12, page 199, equation (6.48), with $f(z)=e^{z}$ and $n=${order}$ gives $${value.tex}$.`,
+    }],
+    memory: 'Denominator power $n+1$: multiply $f^{(n)}(z_0)$ by $2\\pi i$ and divide by $n!$.',
+    cite: { ref: 'Theorem 6.12', page: 199 },
+    values: {
+      kind: 'cif', re: value.re, im: value.im, n: -(order + 1), order,
+      radius, cx: 0, cy: 0, ax: z0, ay: 0,
+    },
+  };
+}
+
+// Half the seeds are power −1 with the pole inside. A quarter use a higher
+// denominator power, and that answer is the Theorem 6.12 value. The rest are 0.
+export function generateCircle(seed, params) {
+  const rng = mulberry32(seed);
+  params = params || {};
+  const rR = params.r || [1, 3];
+  const cR = params.c || [-1, 1];
+  const bucket = Math.abs(seed | 0) % 4;
+  const center = { re: irand(rng, cR[0], cR[1]), im: irand(rng, cR[0], cR[1]) };
+  let radius = irand(rng, rR[0], rR[1]);
+  if (radius <= 0) radius = 1;
+  if (bucket === 2) {
+    const order = 1 + (Math.abs(seed | 0) % 3);
+    return cifCard(order, Math.max(radius, 1));
+  }
+  if (bucket === 0 || bucket === 1) {
+    const pole = { re: center.re, im: center.im };
+    const value = circleIntegral(center, radius, pole, -1);
+    return powerCard(center, radius, pole, -1, value);
+  }
+  if (Math.abs(seed | 0) % 8 === 3) {
+    const n = -2 - (Math.abs(seed | 0) % 3);
+    const pole = { re: center.re, im: center.im };
+    const value = circleIntegral(center, radius, pole, n);
+    return powerCard(center, radius, pole, n, value);
+  }
+  const pole = { re: center.re + radius + 1, im: center.im };
+  const value = circleIntegral(center, radius, pole, -1);
+  return powerCard(center, radius, pole, -1, value);
+}
+
+export function generateCif(seed) {
+  const order = 1 + (Math.abs(seed | 0) % 3);
+  const radius = 1 + (Math.abs(seed | 0) % 3);
+  return cifCard(order, radius);
 }
 
 function cleanLog(start, end, pole) {
@@ -704,6 +814,9 @@ function segmentCard(start, end, pole, n, tex, value) {
       text: `The integral of $${integrand}$ along $C$ equals ___.`,
       answer: `$${tex}$`,
       accept: [tex, `$${tex}$`, tex.replace(/\\/g, '')],
+      miss: n === -1
+        ? 'On a straight segment the integral of $1/(z-a)$ is the change in $\\log|z-a|$ plus $i$ times the change in argument. The value stays covered.'
+        : `The antiderivative of $(z-a)^{${n}}$ is $(z-a)^{${n + 1}}/${n + 1}$. Evaluate it at the two ends. The value stays covered.`,
       why,
     }],
     memory: 'Parametrize $z(t)$, multiply by $z\'(t)$, and integrate in $t$. Off a pole, $(z-a)^{n}$ has antiderivative $(z-a)^{n+1}/(n+1)$ when $n\\ne -1$.',

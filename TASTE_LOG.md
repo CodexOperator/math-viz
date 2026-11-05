@@ -1632,3 +1632,25 @@ Left as is:
 3. The half-turn and full-turn sentences snap inside 0.12 radians. At the edge of the half-turn window the integral is about \(-0.12+1.99i\), and the blank already reads \(2i\).
 
 Keep: the six pictures, the page cites above, Example 6.1's \(-5/4\), the eight-step total beside \(\exp(2+i\pi/4)-1\), the semicircle \(-2/3\), Cauchy's proof blanks (the split, Green's theorem, Cauchy-Riemann, and 0), Examples 6.14–6.16, and the computed generators.
+
+## Chapter 6, batch 3
+
+Branch `cursor/chapter-6`, on top of `3894a6d`. Headless Chrome, light and dark, 390×844 and 1280×800. Fresh storage. No console errors. No sideways scroll. Play ends inside the 844 window at 390 and inside the 800 window at 1280, in both themes.
+
+A wrong check names the next move and leaves the value covered. The value line shows after the check is right. The 6.2 worked paragraph stops at the parametrization. The 6.4 worked paragraph stops at \(z^2/2\). The blanks under the pictures are inputs. Play does not fill them and does not enable Stage complete.
+
+Stage 6.5 states Theorem 6.12, page 199, equation (6.48). Example 6.21 stays the first exercise card. Example 6.25 asks for \(-4\pi/(3e)\), and a miss says the power is 4, so \(n=3\), divide by \(3!\).
+
+Half of the circle seeds are power \(-1\) with the pole inside. A quarter are \(e^z/z^{n+1}\), and the answer is the Theorem 6.12 value. Example 6.14 asks for the split, then \(4\pi i\). Example 6.16 asks for the loop orientation, then \(-6\pi i\). Example 6.11 asks for \(1/(2\sqrt{5})\), and the miss says length times a bound on \(|f|\). The Example 6.7 choices are one 44px line at 390.
+
+The 6.6 practice opens on Liouville, then \(e^z\), then Morera, then Theorem 6.19. A wrong step on that proof names the missing hypothesis. A missed flash stays at the front until Recalled.
+
+The Liouville tick waits until the bound \(1/R\) has been read on every circle in the picture, and the blank is the word constant. At radius 3 the claim is \(|f'|\le 1/3\), one circle. The half-turn and full-turn labels use the value, so 0.12 rad off \(\pi\) is not yet \(2i\).
+
+Stage 6.3 opens on Goursat's subdivision. The tick is Theorem 6.5, the integral is 0. The \(1/z\) drag is the next beat, and deformation has its own summit. Each stage has a why line under the title and Go to the next camp under the summit. 6.6 names Chapter 7. On `#book` the first button opens the chapter that is in progress. The phone drawer lists chapters 1 through 7.
+
+`node tools/check_vectors.mjs` 234/234. `node tools/fractal-smoke.mjs` passed. `node kit/smoke.mjs` passed.
+
+## Next
+
+The picture claims still say the value once the gesture has landed: the half turn says \(2i\), eight steps name \(\exp(2+i\pi/4)-1\), the deform claim names \(2\pi i\) and \(0\), and the Cauchy claim names the green point. The 6.6 sheet and summit still state that a bounded entire function is constant. Exercise 6.3.1 (b) and (d) are not cards. A missed flash stays at the front; there is no longer schedule than that. The shared practice engine is still not in the tree. Chapter 7 is named and is not a page. Chapters 8–11 stay on the book page as Later.
