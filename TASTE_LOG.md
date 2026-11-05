@@ -1330,3 +1330,792 @@ Nothing. No slider, no scrubber, no spring, no second clock.
 Yes. One batch, then stop. It is the one cut above.
 
 The hold, the button, and the frame clock are the lesson, and they hold. Something real is left, and it is the frame a mouse drag draws around the square. A touch does not draw it. After that frame is gone, nothing real is left of this walk's touch.
+
+## Chapter 2, batch 1
+
+Branch `cursor/chapter-2`. The page is a mountain of five stages in the book-path voice. Stages 2.1–2.3 each have one drag: green in the z plane, purple in the w plane, blue the set, orange its image. The claim flips. 2.4 and 2.5 are titles and citations.
+
+Checked in headless Chrome at 390×844 and at a wide window, and by dragging. No sideways scroll at 390 or at 360. Both planes of §2.1 sit on the phone together; the changing sentence starts at the bottom edge of that window. §2.2 shows the line x = 2 and the parabola. §2.3 starts with the point outside the disk and the drag puts the image inside. The linear generator’s Another button writes a new computed map. The three required checks passed.
+
+## Next batch
+
+- Draw §2.4 (the jump across the branch cut) and §2.5 (lines and circles under 1/z). The sphere is already a station.
+- When `js/practice/` lands, render `data/practice/ch2.json` with that engine and retire the local card.
+- Lift the §2.1 claim fully onto the 390px first screen. It currently starts on the last pixels.
+- A disk under a linear map, with centre and radius computed, beside the point generator.
+
+## skeptical-student (ch2 batch 1)
+
+I have not had complex analysis. I was on a phone, and I was tired. Preview https://ch2-preview.complexanalysis.pages.dev, tip `656f5c92`. I opened the book and then Chapter 2. Headless Chrome, a touch, 390×844 first, then 1280×800, light and dark. No product code changed. No console errors. No sideways scroll: `scrollWidth` matched the window at both widths, both themes.
+
+### Verdict
+
+ANOTHER BATCH. I could drag the dot and watch the other dot jump. I could not say what a linear map did, what a power did, or what a limit is. The sentence that would have told me sits under a list of links, or it describes a picture that is not on the page. Two of the five stages say the picture is a later batch. Do not add those pictures in this voice. Fix the three I already bounced off.
+
+### Where I got lost
+
+The book, 390×844, light. The card says "Next is §4.1, Exercise 3. 0 of 8 exercises." The button says Walk Chapter 4. Chapter 2 is on that same screen, flagged OPEN, and the names 2.1, 2.2, and 2.3 are links. "Open Chapter 2" is at y = 944, 23px tall, below the fold. I used it anyway.
+
+Chapter 2, first screen. "Five stages. Drag the green point. Blue is the set, orange is its image, and purple is where the point lands." Then "Next is 2.1. 0 of 3 stages marked," and no button. Then a paragraph about a turn, a stretch, and a slide, then two squares. The green dot is 7px across (6.8 measured). Dragging the corner of the square does nothing. Dragging the dot does: it crossed the blue line, the purple dot crossed the orange line, and the sentence went from "below the line Im w = 2" to "on or above." I never saw a turn, a stretch, a slide, or a half-plane. Those words are the worked paragraph at y = 1288, after seven textbook links. That list starts at y = 1002 and is 251px tall. The claim itself starts at y = 838 in an 844px window, so the first screen ends on "Drag the green point across the blue line." The same cut in the dark. At 1280×800 the squares are 455px and start at y = 500, so the first screen is the top of the squares and the claim is at y = 1023. The purple dot sits on the bottom edge. Light and dark, same crop.
+
+2.2 opens with a ray, roots, the exponential, and the Julia set. I do not know what a Julia set is. The picture is a vertical line and a curve. On arrival the sentence says the image "has left" the parabola, which is strange, because I had not put it there. Dragging the dot onto the line puts the purple dot on the curve, and that sentence is true. The summit says z^n opens a sector. I never saw a sector or a root.
+
+2.3 opens with two paths into one point, and a derivative. The picture is one dot, a circle, and a mirror of that dot. The instruction says into the disk and off the centre. The centre is drawn as a dot, so that is where the finger went (the drag landed at re = 1, im = 1). The sentence became "Definition 2.4 skips z0. Move off it." I never got the sentence about δ = ε, and I never saw two paths.
+
+Practice. Exercise 13 asks where (2+i)z − 2i sends −2+i. The picture I had just dragged was a different map, and nobody showed the multiplication. I typed hello. The page said "Not yet." The next card is another map I have not seen, w = (−2−i)z + (i), and a blank. Then "What is a complex function," 1 of 9, with Show the back. Under that closed card the Memory list already prints "One z, one w," "Into means the image fits inside S," "Inverse image: who landed here?" and six more, and the Summit is starting: "A linear map turns the plane, stretches it, and slides it." I could read the ending without doing the stage. Stage complete did not care. After one tap the status was "Next is 2.2. 1 of 3 stages marked." Go to 2.2 did scroll me there. That part is clear.
+
+2.4 and 2.5 each say "Title and citations. The picture is a later batch." Nothing to drag, nothing to mark. The next screen is blank except "Back to the book" at the bottom. The page is about 10000px tall and the 2.5 card ends near y = 9068. After I marked all three, the status said "Done. 3 of 3 stages. Sections 2.4 and 2.5 are titles." Back to the book landed at the top. The status was still the Chapter 4 exercise, the flag was still OPEN, and the Done marks on 2.1–2.3 were below the fold.
+
+### Ranked
+
+1. **Put the sentence that changes on the first screen, and put the formula in it.** Evidence: at 390×844 the claim starts at y = 838, so six pixels of it show. At 1280×800 the claim is at y = 1023, under a 455px crop. The map w = iz + i is the worked paragraph at y = 1288, after a 251px list of links. Change: drop the status card and the second "drag the green point" from above the squares, so both planes and the full claim sit above y = 844. The claim names the map: right of the blue line, the purple point is on or above Im w = 2, because w = iz + i. The seven links move to after the summit. On a laptop, cap the squares so that same claim is inside the 800px window.
+
+2. **Make the opening and the summit describe the drag I can actually do.** Evidence: 2.2 talks about a ray, a root, and the Julia set, and the summit is a sector opening; the drag put a point on x = 2 and the purple point sat on a parabola. 2.3 talks about two paths and a derivative; the finger hit the centre dot and the page said "Move off it." Change: 2.2's opening and summit say a vertical line goes to a parabola. Save sector, root, and Julia for a picture that shows them. 2.3's opening says the conjugate mirrors the point, and the image is inside the orange disk when the green point is inside the blue one and off the centre. Start the green point in that good place, so the first sentence is the success and dragging out flips it.
+
+3. **Ask me for the map I just watched, and don't print the answers under the question.** Evidence: Exercise 13 is a different formula from the picture, a wrong try says only "Not yet," and under the closed card "1 of 9" the Memory list and the start of the Summit are already on the screen. Change: one image of iz + i filled in, the next number blank, and a miss says "a number like 3+2i." Hold the nine definition cards until those words have appeared in a sentence on the stage. Hide the Memory list until the card is finished.
+
+4. **The summit is the line I just made true, and Stage complete waits for it.** Evidence: the 2.1 summit starts just under the memory list, past y = 2700, and Stage complete is live on arrival. I tapped it after one check. Change: once the claim has been true, show that summit sentence under the picture, and only then enable Stage complete.
+
+5. **Stop telling me the page is unfinished in your voice.** Evidence: 2.4 and 2.5 say "Title and citations. The picture is a later batch." The done line says they "are titles." After them, one screen is empty except Back to the book. Change: one line a student can read, "The branch cut is not drawn on this page yet," plus the book link, or leave the stage out of the scroll. Delete "later batch" and "are titles." No blank screen after the last card.
+
+6. **The book should admit I was in Chapter 2.** Evidence: the obvious button is Walk Chapter 4. Open Chapter 2 is 23px tall at y = 944. After the three marks, Back returned to scroll 0, the status was still the §4.1 exercise, and the chapter flag was still OPEN. Change: while 2.1 is next, the first button is Open Chapter 2, 44px tall, on the 390 screen. After the three marks, the status says 2.1–2.3 are marked. Back from the chapter returns to that card.
+
+### What to keep
+
+The drag is the one thing that taught me. The green point moves, the purple point follows, and the sentence flips. I saw it in the light and in the dark: below the line, then on or above; off the parabola, then on it. The colour words in the lede are short enough to use. Go to 2.2, once it appeared, is one tap and it moved. The worked paragraph for 2.1, once I found it, is the lesson: a quarter turn, then up by 1, and the half-plane goes to a half-plane. That sentence stays. It is in the wrong place. "One z, one w" is a line I would remember. The other eight, not yet.
+
+## pedagogy (ch2 batch 1)
+
+Preview https://ch2-preview.complexanalysis.pages.dev, branch `cursor/chapter-2`, tip `656f5c92`. Walked as a student in headless Chrome with touch: the book, then Chapter 2, at 390×844 and then 1280×800, light and then dark. No product code was changed. No console errors. No sideways scroll at either size.
+
+### Verdict
+
+ANOTHER BATCH
+
+Each walked stage has the skeleton the chapter asked for: a why, one drag, a worked label, practice, a memory list, a summit sentence, and a Stage complete button. The drag teaches, and the sentence it teaches is a different sentence from the summit. The worked block is a citation. Stage complete can be pressed before any of that, and the page will say Done while §2.4 and §2.5 are still captions.
+
+### How the walk went
+
+The book's first screen at 390 says "Next is §4.1, Exercise 3" and the button is Walk Chapter 4. Chapter 2 is on that same screen, flagged OPEN, with §2.1 through §2.4 as links. Following the button walks a different chapter. Opening Chapter 2 from the link does land on the mountain.
+
+Chapter 2, 390, light, fresh storage. The first screen is the title, the lede "Five stages. Drag the green point. Blue is the set, orange is its image, and purple is where the point lands.", the source line, "Next is 2.1. 0 of 3 stages marked.", the §2.1 why ("a turn, a stretch, then a slide"), both planes, and "Drag the green point across the blue line." The changing sentence starts at y = 838 in an 844px window, so the first screen cuts it. The green dot is 6.9px across. Dragging it from the left of the blue line to the right flips the sentence from "The image is below the line Im w = 2" to "The image is on or above the line Im w = 2", and the purple point crosses the orange line. That correspondence holds. It is the lesson the hand can check. The map on the page is w = iz + i, which turns and slides. The modulus of i is 1, so this picture has no stretch, and the half-plane is the line, not a shaded side.
+
+The same screen in the dark keeps the paper, the type, and the four colours. At 1280×800 the planes are large and the dot is about 20px. The claim sits at y = 1039, under an 800px window, so the first desktop screen is the why and the tops of the two planes.
+
+Under the §2.1 picture the page continues with seven pinned links, the worked paragraph, Exercise 13 as a blank, a generated linear image, a deck of 9 cards, nine memory lines, the summit at y = 2698, and Stage complete. The §2.2 summit is at y = 5290. The §2.3 summit is at y = 8254. The page is 9937px tall.
+
+§2.2. Off the line the sentence is "The image has left the parabola of the line x = 2." With the point on the line (Re z = 2) it becomes "The image sits on the parabola u = 4 − v²/16." The worked paragraph directly above the choices already says "The line x = 2 goes to the parabola u = 4 − v²/16." The first choice is that equation. Choosing u = 4 − v²/4 turns the border red (`rgb(179, 38, 30)`), leaves the other choices open, and shows no sentence. The right choice then explains v = 4y, so y = v/4 and u = 4 − y². The distractors are the real mistakes: the coefficient for a different line, the axes swapped, the wrong constant.
+
+The sector card is where the summit's idea appears. Three presses of Another left it on w = z² and 0 < arg z < π/4, and the true choice stayed 0 < arg w < π/2. The linear Another does write a new map. It moved from (−2 − i)z + i at z = −3 − i to −2z + (−2 + i) at z = 2 − 3i.
+
+§2.3. The why says that two paths into one point can disagree, and then the limit is not there. The picture is the conjugate at 1 + i, a limit that exists. Outside the disk: "The image is outside that disk." On the centre: "Definition 2.4 skips z₀. Move off it." Inside: "The image is inside the disk of radius 0.75. Here δ = ε." Those three sentences match the drag. The summit says the limit exists only when every path agrees, which is the same as the two real limits agreeing. One point is one path.
+
+§2.4 and §2.5 are a flag, a title, a page, the sentence "Title and citations. The picture is a later batch.", and two links. The branch cut and w = 1/z are the payoff the earlier whys point at (roots, the argument, the sphere), and a student cannot walk them.
+
+Pressing Stage complete on §2.1, §2.2, and §2.3, with §2.1 pressed before its practice, sets the status to "Done. 3 of 3 stages. Sections 2.4 and 2.5 are titles." and the button to Back to the book.
+
+A blank answered "nope" on Exercise 13 shows "Not yet." and keeps the reason hidden. The answer −5 − 2i shows "(2 + i)(−2 + i) = −5, then subtract 2i" and a Next step. The memory line stays hidden until the last step. That part is the right shape.
+
+The §2.1 deck opens on "What is a complex function, and what are the image, the domain, and the range?" as card 1 of 9. The page has not stated that definition. Show the back reveals it. Knew it advances. After Knew it through the deck, a card is still offered and the line reads "2 of 9. Not due yet." The memory list under the deck is the nine one-line slogans. "Apply Az + B to each vertex" and the other recipes stay on the problem cards.
+
+### Ranked cut or fix
+
+1. **Make the summit the sentence the drag just made true.** The §2.1 why and summit say a linear map turns, stretches, and slides, and a half-plane stays a half-plane. The drag checks a point against Im w = 2 under w = iz + i. Change: the summit on this picture is "Multiplication by i is a quarter turn, adding i slides the plane up by 1, and Re z ≥ 1 lands on Im w ≥ 2." Shade the half-plane, or leave a short segment so the quarter turn is visible. Keep "turn, stretch, slide" on the memory card, and show a stretch on a map whose multiplier has modulus other than 1. The §2.2 why and summit are about an angle multiplied by n. The drag checks a vertical line against a parabola. Change: the live picture is a ray or a sector whose angle widens, which is the sentence already written. Move the parabola under Worked. The sector card has to change the angle when Another is pressed, and the true choice has to change with it. The §2.3 why promises two paths that disagree. The drag shows three honest states of the conjugate, including the punctured centre. Change: the summit is "For the conjugate, the image disk has the same radius, so δ = ε, and the definition skips z₀." A path that disagrees is a second picture, on a later visit to this stage.
+
+2. **Work one example, then take the steps away.** Worked is one citation sentence. On §2.2 that sentence prints u = 4 − v²/16 in the paragraph above the choices, and the on-line claim prints it again. Change: work the line x = 1 in full, with the algebra visible, then ask x = 2 with the equation removed from the paragraph and from the claim. The claim can say "on the curve" and "off the curve." Exercise 13 should show the image of the first vertex already done, ask for the second, then ask for the third, and then ask what shape the triangle became. The two Theorem 2.1 cards are isolated sentences. Put them after a three-line write-up of one direction, and blank the matching step in the other direction.
+
+3. **A miss should name the next move.** "nope" produces "Not yet." A wrong parabola choice produces a red border and no words. Change: a wrong blank says the form ("a complex number, written 3+4i") and keeps the value hidden. A wrong choice says which mistake it is ("v²/4 belongs to the line x = 1", "v = … swaps the axes") and leaves the remaining choices open. Show the reason you already wrote for the right answer only after the right answer, as the page does now.
+
+4. **Stage complete has to be earned, and the mountain has five camps.** The lede says five stages. The counter says 0 of 3, then Done, while §2.4 and §2.5 still say "a later batch." The button toggles with no drag and no correct item. Change: a stage marks complete after the claim has been both true and false and one faded item is right. The summit sentence appears at that moment, followed by the name of the next stage. Count five. Until §2.4 and §2.5 have a picture, their line is the student sentence ("Arg jumps across the negative real axis"; "1/z swaps lines and circles, and 0 goes to the north pole") plus the page link. They stay ahead, and the chapter does not say Done.
+
+5. **Teach the sentence, then ask for it back.** Card 1 of 9 asks for the definition of a function, which this stage never says. The 1-, 3-, 7-, and 21-day ladder is real, and after every card is marked known the deck still offers a back and says "Not due yet." The memory list is the slogans. The recipes that finish an exam question ("Apply Az + B to each vertex", "on x = a, u = a² − v²/(4a²)", "a polynomial limit is the value at the point", "take the smaller δ") stay buried on the problem. Change: three cards, one for each idea the stage just showed, each one sentence stated on the page before the deck. When nothing is due, the deck says when the next card returns and stops offering the back. The memory list is those three sentences plus the recipes.
+
+6. **Put the worked sentence against the picture.** Seven links on §2.1, and nine on §2.3, sit between the drag and the example. The summit then waits under the memory list, at y = 2698 on a phone. Change: why, picture, claim, worked solution, faded practice, summit, Stage complete. The pinned pages move under the summit, as further reading. The student meets the example while the planes are still the thing they are looking at.
+
+### What to keep
+
+The one drag, the two planes, and the four colours in the lede are the same colours on the picture. The sentence under §2.1 flips when the point crosses the line, and the purple point agrees, in light and in dark. The three sentences on the conjugate picture are the best teaching on the page: outside, on the centre the definition skips z₀, inside the disk with δ = ε. The parabola distractors are mistakes a student actually makes. Cards are one at a time, the back stays closed until asked, and Again / Knew it writes a real gap. "Turn, stretch, slide" is an honest mnemonic for the general linear map and belongs on the card. The labels Why, Worked, Practice, Memory, and Summit are the right camps. The linear Another button already writes a new computed map. Citations name the section and the page. Both planes fit on the phone together.
+
+## Chapter 2, batch 2
+
+Council items 1–7, then §2.4 and §2.5 as stages. The reviewer commit `33d993a` and the lens notes above stay.
+
+The first screen at 390×844 holds both planes and the claim that names \(w = iz+i\). The claim ends near y = 694. At 1280×800 the squares are capped near 268px and the claim ends near y = 509 in the light and y = 718 in the dark. The status line is under the five stages, and it says 0 of 5. Stage complete stays disabled until the claim has been true and false and one problem is finished; the summit appears then and names the next stage. A wrong parabola choice says \(v^2/4\) belongs to \(x = 1\) and leaves the other choices open. A wrong blank says a number written like 3+2i. The memory list stays hidden until that card is finished. The sector generator’s correct angle is no longer always \(\pi/2\).
+
+§2.4 opens above the cut: Arg near \(\pi\), square root in the upper half-plane. §2.5 opens on the line \(x = 1\), with \(1/z\) on the orange circle. No sideways scroll, no console errors, light and dark, 390 and 1280. The three checks passed.
+
+## Next
+
+- The practice engine’s `js/book/registry.js` is on `cursor/practice-engine`. This page’s `mount(el, ctx)` reads `ctx.book.focus`, so their one line can point at `./stations/chapter2.js`. Their generator registry still needs `ch2-maps` before the catalog will accept this file.
+- A finger still has to catch the parabola. Snap puts the point on \(x = 2\) when it is close, and the sentence is true only then.
+- §2.4 does not yet show both sides of the cut in one still. The drag does.
+
+## test-prep-coach (ch2 batch 2)
+
+Preview https://ch2-preview.complexanalysis.pages.dev, branch `cursor/chapter-2`, tip `a0946d2`. Walked as a student with a MAT 412 exam on Howell & Mathews §§2.1–2.5. Headless Chrome, 390×844 then 1280×800, light then dark. Typed equivalent answers and wrong answers into the blanks, and clicked the wrong choices. The live practice file matches this commit (32 items). No product code changed. No console errors. No sideways scroll: `scrollWidth` matched the window at both widths, both themes.
+
+### Verdict
+
+ANOTHER BATCH
+
+The night-before tools are on the page. Theorem 2.1 has a proof blank and a proof multiple choice. Exercise 13 and the polynomial limit are next-step blanks. The parabola, the branch cut, and \(1/z\) are next-step choices. Four deterministic generators write a computed answer. Twenty-one flash cards carry a page in the title. A memory line appears once a card is finished. A wrong number on Exercise 13 is marked right. The proof blank is the sentence printed in the paragraph above it. The memory list has no page on the line, and it stays hidden until the card is already solved.
+
+### What I could sit down and drill
+
+At 390×844, light, the first screen holds both planes and the claim "Right of the blue line, \(w = iz+i\) lands on or above Im \(w = 2\)." The claim ends at y = 694. At 1280×800 the same claim ends at y = 718, inside the 800px window. Dark uses those positions. The paper is rgb(13, 18, 28). Practice starts under Worked, at y = 949 on the phone. Check, each choice, Another, and the blank are 44px tall. The status line reads "0 of 5 stages marked."
+
+Exercise 13, page 54, is a real next-step blank. The image of \(-2+i\) is given as \(-5-2i\). Typing \(-6\) for the image of \(-2+2i\) opens the product and Next step. Typing \(3+2i\) for the image of \(2+i\) opens the next reason. "triangle" finishes the card, and the line that appears is "Apply \(Az+B\) to each vertex." Exercise 1(a), page 66, accepts \(3+4i\) for \((2+i)^2\) and rejects \(4+4i\), which is the square before \(i^2 = -1\).
+
+Exercise 1(b), page 59, asks for the parabola of \(x = 2\) after the worked paragraph has done \(x = 1\). The claim under the picture says the point sits on the orange curve, and it does not print the equation. Choosing \(u = 4 - v^2/4\) turns that button red, leaves the other three open, and says "\(v^2/4\) is the image of the line \(x = 1\)." The branch card does the same for \(i\): "\(i\) is the limit from above the cut." The circle card names \(|w - 1/4| = 1/4\) as the image of \(x = 2\).
+
+The linear generator opens on \(w = (2+2i)z + (1-i)\) at \(z = -1-2i\). The image is \(3-7i\). Typing 999 stays wrong. Typing \(3-6i\) stays wrong. Typing \(3-7*i\) is accepted, and the reason is the product \((2+2i)(-1-2i)+(1-i) = 3-7i\). Five further presses of Another wrote five further maps. Across seeds 1 through 60 the arithmetic matched the printed image, and 55 of those images were different. A wrong answer on that card can fail.
+
+Flash cards are one at a time. The back of "What is a complex function…" stays closed until Show the back, and the title is "§2.1, function, page 43." Knew it walks image, into, inverse image, one-to-one, translation, rotation, magnification, and the linear map, on pages 46, 48, 49, and 50. The eight §2.3 cards state Definitions 2.3–2.6 and Theorems 2.1–2.4, each with its page.
+
+### Where the cram breaks
+
+**\(0-6i\) is marked correct for \(-6\).** On Exercise 13, at 390 and again at 1280, I typed `0-6i`. The blank locked, Check went grey, and the card showed \((2+i)(-2+2i) = -6+2i\), then subtract \(2i\). \(0-6i\) is \(-6i\). The accept list is what lets it through. `hello`, \(-6+2i\) (the product before the slide), and `2i-6` stay wrong. The only hint on those is "A number written like 3+2i."
+
+**The exam blanks reject equivalents the generator accepts.** On the image of \(2+i\), I typed `2i+3`, `3+2*i`, `3.0+2.0i`, and `(3+2i)`. Each is \(3+2i\). Each came back wrong, with that same hint. `3+2i` then passed. On the limit, `4i+3` and `3+4*i` were rejected and `3+4i` passed. On the generator, `3-7*i` passed, and `-7i+3` and `(3-7i)` did not. "right triangle" and "the triangle" were rejected on the last blank of Exercise 13. The miss said "A shape, such as a triangle." The three given vertices meet at a right angle, and multiplication by \(2+i\) keeps that angle, so the image is a right triangle. The modulus blank accepts `|f(z)-w0|` and "the modulus of \(f(z)-w_0\)". It rejects `|f(z)-w₀|` and \(\sqrt{(u-u_0)^2+(v-v_0)^2}\), which is the same modulus.
+
+**A miss on the proof tells you to write a complex number.** The Theorem 2.1 blank asks what \(|u-u_0|\) is at most. I typed `3+2i`. The line under the box was "A number written like 3+2i." The next blank asks for the word in "the ___ of \(\delta_1\) and \(\delta_2\)." I typed `maximum` and got the same sentence. On the proof choices, \(\varepsilon/2\) (one half, before the two halves are added) got the same sentence, and the other choices stayed open. The generated parabola's sign error, \(u = 9 + v^2/36\), got that sentence too, with all four choices still open. The sector generator, on the same page, says "That multiplies the fraction by \(n\) in the wrong place."
+
+**The proof and the branch answer sit in the paragraph above the question.** The §2.3 worked paragraph says: if \(|f(z)-w_0| < \varepsilon\), then \(|u-u_0| \le |f(z)-w_0|\), and the other direction takes the smaller of the two deltas. The blank underneath is that inequality, and the next blank is that word. The §2.4 paragraph says the square root from below approaches \(-i\). The choice card's correct button is \(-i\). The opening claim on that stage already puts the square root from above in the upper half-plane.
+
+**The sheet is a prize, and the line has no page.** Memory is hidden on arrival. It appears under Further reading, after the card is finished. The line Exercise 13 earned was "Apply \(Az+B\) to each vertex." The page, 54, is the card title, up the page. None of the 32 memory lines in the file carry a page. After all nine §2.1 cards were marked known, the deck said "1 of 9. Not due yet" and Show the back was still on the card. Each Knew it appended the slogan again, so the sheet listed "One z, one w." twice, then the other eight lines, then "One z, one w." again. No card asks for the roots of a number. The two §2.2 flashes state Definition 2.1, page 55, and Definition 2.2, page 59. The exam question is a number: halve the argument, or add \(2\pi k/n\).
+
+**Another is often the same line.** The parabola generator opened on \(x = 3\). The next presses were \(x = 1\), \(3\), \(3\), \(1\), \(3\), and then \(x = 2\). \(x = 1\) is the line the worked paragraph just finished. \(x = 2\) is Exercise 1(b), the card directly above. The reciprocal generator's second item was \(x = 1\), the circle the card above already asks for. Three vertical lines is a few. The button reprints them. The sector generator does cycle six angles, from \(0 < \arg w < 2\pi/3\) through \(0 < \arg w < 2\pi\), and a wrong choice explains itself. The linear generator is the one that keeps writing a new map.
+
+### Ranked
+
+1. **Reject \(0-6i\).** Evidence: typing `0-6i` on Exercise 13 locked the blank and revealed the reason for \(-6\), at both widths. \(0-6i\) is \(-6i\). Change: delete `0-6i` from that accept list. Grade every complex blank by the parsed value, the way the linear generator already does, so \(-6\), \(-6+0i\), and \(-6.0\) count, and \(-6i\) does not.
+
+2. **Accept the forms a student actually writes.** Evidence: on the image of \(2+i\), `2i+3`, `3+2*i`, `3.0+2.0i`, and `(3+2i)` were rejected, and `3+2i` passed. The generator accepted `3-7*i` and rejected `-7i+3` and `(3-7i)`. "right triangle" was rejected while the miss named a triangle. Change: put the real and imaginary parts on Exercise 13, on both limit blanks, and on every generated linear item, and accept a parse in either order, with a star, with parentheses, or with a trailing `.0`. Accept "a triangle", "the triangle", and "right triangle" on that last blank. On the modulus blank, accept \(|f(z)-w_0|\) and \(\sqrt{(u-u_0)^2+(v-v_0)^2}\).
+
+3. **A miss names the mistake.** Evidence: `3+2i` in the modulus blank, `maximum` in the delta blank, \(\varepsilon/2\) on the proof choices, and \(u = 9 + v^2/36\) on the generated parabola all returned "A number written like 3+2i." The shape miss was "A shape, such as a triangle." The static parabola, on the same page, says "\(v^2/4\) is the image of the line \(x = 1\)" and leaves the other choices open. Change: the modulus miss says the bound is \(|f(z)-w_0|\). The \(\varepsilon/2\) miss says the two halves add. The delta miss says the smaller of \(\delta_1\) and \(\delta_2\). The generated parabola gets a line for the sign error and a line for the swapped axes. The shape miss stops containing the answer.
+
+4. **The sentence above the blank is a different example.** Evidence: the §2.3 paragraph states \(|u-u_0| \le |f(z)-w_0|\) and "the smaller of the two deltas" immediately above those two blanks. The §2.4 paragraph states that the square root from below approaches \(-i\), and \(-i\) is the correct choice. Change: work the filled proof on one function, and blank the matching step of Theorem 2.1 without that sentence still on the screen. On §2.4 the paragraph says Arg jumps. The value \(-i\) stays inside the card until it is chosen.
+
+5. **Open the memory sheet with the page on the line.** Evidence: the sheet is hidden on arrival and sits under Further reading. The earned line was "Apply \(Az+B\) to each vertex" with no page. Marking the deck known appended "One z, one w." a second time, and the deck said "Not due yet" while Show the back stayed up. Change: the sheet is visible when the stage opens, above Practice. Each line is the recipe and the page. "Apply \(Az+B\) to each vertex. Page 54." "On \(x = a\), \(y = v/(2a)\) and \(u = a^2 - y^2\). Page 59." "A complex limit is the two real limits. Take the smaller \(\delta\). Page 62." "Arg jumps across the negative real axis. Page 68." "On \(x = a\), \(|w - 1/(2a)| = 1/(2a)\). Page 72." "The \(n\) roots: modulus to the \(1/n\), argument \((\operatorname{Arg} + 2\pi k)/n\), \(k = 0,\ldots,n-1\). Page 59." One copy of each line. Show the back stays available the week of the exam.
+
+6. **Another should be a new problem, and one of them should be a root.** Evidence: the parabola generator opened on \(x = 3\), then the presses were \(x = 1, 3, 3, 1, 3\), and then \(x = 2\), the exercise above it. The reciprocal generator's second item was the \(x = 1\) circle already on the card. No item asks for a square root or an \(n\)th root of a number. Change: the parabola and reciprocal generators draw a line that is not the worked line and not the card above, and a press changes the line. Add one deterministic root item, a few fixed numbers or an endless seed, with the answer computed from the argument. A choice that forgets \(2\pi k\), or halves the wrong angle, carries a sentence the way the sector card already does.
+
+### Keep
+
+The card titles carry the section and the page: Exercise 13 page 54, Theorem 2.1 page 62, Definition 2.1 page 55, Section 2.4 page 68, Section 2.5 page 72. Exercise 1(b), the branch card, and the circle card name the mistake and leave the other choices open. The linear generator computes the image, rejects a wrong number, and accepts \(3-7*i\). Flashes are one card, the back stays closed, and the cite is the title, pages 43 through 64. The \(x = 2\) parabola is asked after \(x = 1\) is worked, and the claim does not print the equation. The \(1/z\) card asks for \(x = 1\) after \(x = 2\) is worked. At both widths and in both themes the claim is on the first screen, the controls are 44px, nothing scrolls sideways, and the console stays quiet.
+
+## unslop (ch2 batch 2)
+
+Read heydamir/unslop at `a6f121ee` (polish only; `kit/SKILL.md` wins where they disagree). The walk is the preview and tip `a0946d2`: `js/stations/chapter2.js` and `js/stations/ch2-picture.js` on https://ch2-preview.complexanalysis.pages.dev matched that commit. Headless Chrome, 390×844 then 1280×800, light then dark, `#chapter-2`, all five stages. A drag on each picture in the light, and a drag of §2.4 to the left edge. No product code changed. No console errors. No sideways scroll: `scrollWidth` was 390 and 1280. Commit `c4c73c7` landed on this branch during the walk. It rewords the §2.5 sentence quoted in item 2, and it does not close the six fixes.
+
+The page is already this book. Warm paper, a serif title, four teaching colours on the planes, quiet chrome. Light paper is `#f6f3ec`, dark paper is `#0d121c`. Blue, orange, green, and purple are `#0b63ad`, `#a84300`, `#006e53`, `#9d3a8a` in the light and `#62adf2`, `#ff9d5c`, `#3fd0a0`, `#e48fd2` in the dark. No gradient, no glow, no emoji, no badge, no pulsing control. The uppercase kickers are the book path. This pass leaves them.
+
+The moment is the pair of planes. At 390 the first screen holds both squares and the claim: the squares are 158×158 from y = 448, and the claim ends at y = 694, in the light and in the dark. At 1280 the squares are 268×268, the pair is 544px wide inside a 952px card, and the claim ends at y = 718 in an 800px window, again in both themes. A drag on §2.1 moves the sentence from “on or above Im w = 2” to “below.” The square’s outline stays `none`.
+
+### Verdict
+
+ANOTHER BATCH
+
+One batch, these six, then this lens rests. The picture, the colours, and the first screen already hold. What is left is copy and marks that still look like the draft: an empty heading, a sentence about a different line, caret math on the buttons, and a 5px dot the frame can cut.
+
+### Ranked
+
+1. **Hide the Summit heading until the sentence is there.** On every stage, at both sizes and in both themes, the heading SUMMIT is showing and the sentence under it is hidden. The next thing is the disabled Stage complete bar. On §2.4 that is the block under the flash card: the heading, then a grey “Stage complete.” Change: hide that heading with the sentence. When the stage is earned, show the heading and the sentence together. The button stays, and it stays disabled until then.
+
+2. **The §2.5 worked paragraph should be the line on the screen.** The picture opens on \(x = 1\), and the claim says \(1/z\) sits on the orange circle. The paragraph under Worked is the algebra for \(x = 2\), and then the sentence “The picture uses a different vertical line.” The practice card under it asks for the circle of the line the picture already shows. `c4c73c7` changes that sentence to “The picture uses the line \(x = 1\)” and cites Example 2.24 for the \(x = 2\) circle. The picture is still \(x = 1\), and the paragraph above it is still \(x = 2\). Change: the worked lines are \(x = 1\) and \(|w - 1/2| = 1/2\). The circle for \(x = 2\) stays in the practice.
+
+3. **The practice formulas should be the same math as the paragraph above them.** §2.2’s buttons read `u = 4 - v^2/16`, `u = 4 - v^2/4`, `v = 4 - u^2/16`, and `u = 2 - v^2/16`, each 143×44, under a prompt set in KaTeX. §2.5’s buttons read `|w - 1/2| = 1/2` and `|w - 1/4| = 1/4`. §2.3’s prompt says “u0 + iv0”, and one choice says `|z - z_0|`. Change: render those labels and that prompt with the same math as the worked paragraph, so the caret and the underscores go. The plain forms can stay in the accepted answers.
+
+4. **The four root choices should be one row.** On §2.4, at both widths and in both themes, the choices are `-i`, `i`, `1`, and `-1`, each 49×44, stacked. The card beside them is 358px on the phone. Change: one row of four targets, each at least 44px, the same height. Four symbols fit in the card (four 44px targets and the gaps are about 200px).
+
+5. **§2.2 says the worked answer twice, and then says the parabola was computed.** The worked paragraph gives \(u = 1 - v^2/4\) for \(x = 1\). The card directly under it says “The line \(x = 1\) was \(u = 1 - v^2/4\).” The next card opens with “Another vertical line under z^2. The parabola is computed.” Change: the \(x = 2\) card asks for the image and leaves the line just worked in the paragraph above. The generator prompt ends at “Another vertical line under \(z^2\).”
+
+6. **The mark is 5.4px on the phone, and the frame cuts it at the edge.** Each square is 158×158 at 390, and the green circle is radius 11 in a 320 viewBox, which draws at 5.4px. At 1280 it is 9.2px in a 268px square. Dragging §2.4 to the left edge put the centre 2px inside the border with that 5.4px radius, so the mark crosses the frame. The claim on that still was “On the negative real axis, Arg jumps.” The outline stayed none. Change: paint the green mark and the purple mark at about 14px on the phone. The 44px hit stays. Clamp the centre in by that radius so the whole mark stays inside the square.
+
+### Keep
+
+The paper, the serif title, and the four teaching colours. The header is the name, the theme button, and the menu, and it stays quiet in both themes. The lede is the colour key, one time, and the captions under the squares say “z plane” and “w plane.” The uppercase kickers (The Book, Worked, Practice, Further reading) stay. They are the book path. Show the back stays the card’s own full-width button, and the back stays closed until asked. Stage complete stays 44px and stays disabled until the claim has been both true and false. The 544px cap on the pair stays, so the claim can end at y = 718 inside the 800px window. A drag leaves the square unframed. Memory stays hidden until the card is finished. The status line, “0 of 5 stages marked.”, sits under the five stages.
+
+## Chapter 2, batch 3
+
+Started from `3467fc0`. Items 1–13.
+
+On the book, at 390, Open Chapter 2 is the first control, 44px, from y = 265 to 309. A stored stage mark changes the status to “Chapter 2: 2 of 5 stages marked.” The green and purple marks draw at 13.8px on the phone, the hit stays 44px, and the §2.4 mark stops at the left edge of the square. The Summit heading stays hidden with its sentence. Another on the parabola moves from \(x = 4\) to \(x = 5\), and neither generator offers \(x = 1\) or \(x = 2\). §2.5 works \(x = 1\) as \(|w-1/2|=1/2\). The \(x = 2\) card asks for the image and does not reprint \(u = 1 - v^2/4\). The claim says “On the blue line or to its right.” The four root choices sit in one row, each 44px. A closed Memory sheet button holds the page cites. The roots item’s miss names the dropped \(2\pi k\).
+
+Claim ends at y = 694 at 390 and y = 718 at 1280 in the dark. No sideways scroll. No console errors. The three checks passed.
+
+## skeptical-student (Ch2 batch 3)
+
+I have not had complex analysis. I was on a phone, and I was tired. Preview https://ch2-preview.complexanalysis.pages.dev, branch `cursor/chapter-2`, tip `52997b5`. Headless Chrome, a touch, 390×844 first, then 1280×800, light and dark. Fresh storage, then one stage marked. No product code changed. No console errors. No sideways scroll: `scrollWidth` was 390 and 1280.
+
+### Verdict
+
+ANOTHER BATCH. I can drag the green speck and watch the purple one move, and the sentence does flip. I still cannot say what a linear map did, what a limit is, or what a branch cut is. The book tells me to walk Chapter 4. One picture tells me I missed the line I am standing under. Fix those. Do not add a sixth stage.
+
+### Where I got lost
+
+The preview opened on Test 1. The first screen is WHICH TEST, The Map, and "Drag the dot, read the four lines, then find your problem on the map." No chapter, no book. The dot is not on that screen. I went to the book.
+
+The book, 390×844, light. Open Chapter 2 is the first control, 324×44, at y = 265. Under it the status is a 324×256 blank slab. The only sentence in the slab is "Next is §4.1, Exercise 3. 0 of 8 exercises." Walk Chapter 4 is the button at the bottom of the blank. Chapter 2's own card, flagged OPEN, starts at y = 849, under the fold. At 1280×800 the same card is one row: Open Chapter 2, that §4.1 sentence, Walk Chapter 4. The Chapter 2 section links are on that laptop screen. The sidebar also lists chapters 8 through 11.
+
+Chapter 2, first screen, 390, light and dark. The lede is "Five stages. Drag the green point. Purple is where it lands. Blue is the line or circle you test, and orange is the curve it maps to." Then 2.1, "Multiplication by i is a quarter turn, and adding i slides the plane up by 1," then both squares, then "On the blue line or to its right, w = iz+i lands on or above Im w = 2." The claim ends at y = 693. Memory sheet sits at y = 694, and WORKED starts at y = 754, so the first screen ends in the worked paragraph. At 1280 the squares are 268px, the claim ends at y = 718, inside the 800px window, in the light and in the dark. Dark paper is rgb(13, 18, 28). The claim is rgb(233, 237, 245). The shades and the four colours read in both themes.
+
+The quarter turn is a small orange arc at the origin. The thing I can check is the shade: right of the blue line, the purple point is on or above the orange line. I dragged the corner of the square. The point stayed at re = 1.6, im = 0.3. The green circle is 13.7px across in a 158px square (23.3px at 1280). Dragging the speck itself moved it to re = −0.62 and the sentence became "Left of the blue line, w = iz+i lands below Im w = 2." The purple point dropped below the orange line. That part I understood. The worked paragraph then says "Here |i| = 1, so this picture does not stretch." I had not been looking for a stretch.
+
+Memory sheet. I tapped it. The button went grey. The new line, "Apply Az+B to each vertex. Page 54.", is at y = 2243. Nothing on the screen I was looking at changed.
+
+Practice. Exercise 13 asks where (2+i)z − 2i sends −2+2i. The picture I had just dragged was w = iz+i. I typed hello. The page said "A number written like 3+2i." The next card is a third map, w = (2+2i)z + (1−i). Then a flash card, "What is a complex function, and what are the image, the domain, and the range?", 1 of 9. Show the back stayed closed until I asked. The back is a real sentence, and under it "One z, one w." Stage complete, under that card, is a full-width grey button. After the drag both ways it was still dead, and it does not say why. The summit stayed hidden. "0 of 5 stages marked." is at y = 10598. The page is 10,840px. Stage 2.1 is 2,053px. Stage 2.2 is 2,631px, and 1,751px of that is practice.
+
+2.2. The why matches the drag: a vertical line, a parabola. Off the line, "w = z² has left the orange curve." On the line, it sits on the curve. The worked paragraph is the algebra for x = 1. The card under it asks for x = 2. I picked u = 4 − v²/4. The button went red, the other three stayed open, and the line was "v^2/4 belongs to the line x = 1." Another moved the generated line from x = 4 to x = 5. Then a card about a sector under z³. The picture has no sector. I do not know what arg means.
+
+2.3. "The conjugate mirrors the point, and that limit exists." Both dots sit in the upper part of a circle. The sentence is "Here δ = ε." I do not know δ, ε, or a conjugate. Dragging onto the centre dot says "Definition 2.4 skips z₀. Move off it." Dragging out says "The image is outside that disk." That last one I could see.
+
+2.4. The dot starts above the dashed line, and the sentence says the square root is in the upper half-plane. A short drag, to im = −0.19, flipped it: "Below the cut, Arg z is near −π, and the principal square root is in the lower half-plane." The purple point dropped below the axis. A longer drag, the one I actually made the first time, landed at im = −1.38, still under the dashed line, in the lower half of the square. The sentence became "Off the cut, Arg does not jump. Cross the blue ray." I had crossed it. The four choices −i, i, 1, −1 sit in one row, each 51×44. Tapping i said "i is the limit from above the cut" and left the others open. Tapping −i explained the half-angle and enabled Stage complete. The summit, "Arg jumps across the negative real axis, and the principal square root jumps with it. Next is 2.5.", was in the page at that moment and not on the screen I was looking at. Marked. The status became "1 of 5 stages marked."
+
+2.5 is the one I could say back. "1/z sends the line x = 1 to a circle." On the line, the purple point sits on the orange circle. Off the line, it leaves, faded. At 0 the purple point vanishes and the sentence says 1/z is not a point of the plane. The worked paragraph is the algebra u = 1/(1+y²). I did not compute it. The picture was enough.
+
+The Book, at the top of the chapter, is 69×17. Back to the book, at the bottom, is 23px tall. After the mark, the book status does say "Chapter 2: 1 of 5 stages marked." The slab is still 256px tall. Walk Chapter 4 is still the other button. The Done on 2.4 is on the chapter card, under the fold. The menu button and the theme button are 44px.
+
+### Ranked
+
+1. **The book's sentence has to be the button I am about to press, and the slab has to shrink to that sentence.** Evidence: at 390 the status under Open Chapter 2 is 324×256, and the only words are "Next is §4.1, Exercise 3. 0 of 8 exercises." Walk Chapter 4 is the other button. Chapter 2 starts at y = 849. At 1280 the same three things are one row. After I marked 2.4 the sentence became "Chapter 2: 1 of 5 stages marked." and the slab was still 256px, with Walk Chapter 4 still in it. Change: the sentence is "Next is §2.1." One button, Open Chapter 2. Walk Chapter 4 moves onto the Chapter 4 card. The status is one line. `flex: 1 1 16rem` on `.book-status` is the blank.
+
+2. **Memory sheet has to open where my thumb is.** Evidence: the button is on the first screen, y = 694, 156×44, between the claim and Worked. After the tap the button greys and the line "Apply Az+B to each vertex. Page 54." is at y = 2243. The same button sits in that spot on 2.2, 2.3, 2.4, and 2.5. Change: delete the button. Print that one line under the claim, already open.
+
+3. **Below the dashed line is below the cut.** Evidence: a 28px drag to im = −0.19 showed the lower half-plane sentence, and the purple point dropped. The drag I made first landed at im = −1.38, the dot still in the lower half of the square, under the dashed line. The sentence was "Off the cut, Arg does not jump. Cross the blue ray." Tapping −i then enabled Stage complete, so the stage can be marked on the "does not jump" sentence. Change: the whole lower half says the square root is in the lower half-plane. The whole upper half says the upper half-plane. "Cross the blue ray" is only for a dot that is still on the right of the origin. Stage complete waits for those two sentences.
+
+4. **The line above the picture has to be the sentence the drag checks.** Evidence: 2.1 says a quarter turn. The picture is a shaded half and a small arc, and the sentence that flips is the line Im w = 2. The worked line says the picture does not stretch. 2.3 says the conjugate mirrors the point, and the claim says δ = ε. Dragging onto the centre says "Definition 2.4 skips z₀." 2.2's picture is a parabola, and a later card asks where a sector goes under z³. Exercise 13 is w = (2+i)z − 2i, a different map from the planes above it. Change: 2.1's line is "Right of the blue line, the purple point sits on or above the orange line." 2.3's line is "Inside the blue circle, the purple point is inside the orange circle." δ, the conjugate, and Definition 2.4 stay in the worked paragraph. The sector card leaves this page until a picture shows a sector. The first blank is an image under the map on the screen.
+
+5. **Tell me what the grey button is waiting for, and put "0 of 5" at the top.** Evidence: after the 2.1 drag both ways, Stage complete stayed disabled and the label stayed "Stage complete", with no description. The summit stayed hidden. "0 of 5 stages marked." is at y = 10598 on a 10,840px page. 2.1's practice is 919px: Exercise 13, a generated map, and card 1 of 9. The summit I earned on 2.4 was below the screen I was looking at. Change: "0 of 5" sits under the title, with a link for each stage. The disabled button reads "Answer one card to finish 2.1." One practice card on the stage, the one about the picture. The rest wait behind Another. When the stage is earned, scroll the summit up under the picture.
+
+6. **A press anywhere in the z square moves the point, and the point is big enough to see.** Evidence: at 390 the green circle is 13.7×13.7 inside a 158×158 square. A drag from 8px inside the corner left re = 1.6, im = 0.3. A drag on the speck flipped the claim. At 1280 the speck is 23.3px and the corner still does nothing. Change: finger down anywhere in the z square puts the green point there. Paint the point about 22px on the phone.
+
+### What to keep
+
+The drag, once it hits, is the lesson. Left of the blue line, the purple point drops below the orange line. Off the line, it leaves the parabola. Inside the circle, outside the circle, and on the centre the page tells me to move. On x = 1 the purple point sits on the orange circle. At 0 it vanishes, and the sentence says 1/z is not a point of the plane. I saw that in the light and in the dark. The claim is on the first screen at both sizes: it ends at y = 693 on the phone and y = 718 on the laptop. The lede's four colours are the colours on the squares. Open Chapter 2 is a real 44px button, and after a mark the book does say "Chapter 2: 1 of 5 stages marked." A wrong parabola choice names the line x = 1 and leaves the other choices open. Another goes from x = 4 to x = 5. hello gets "A number written like 3+2i." The i on the branch card says "i is the limit from above the cut." Show the back stays closed until I ask, and "One z, one w." is the line I would remember. The four root buttons are one row, each 44px tall, and they fit. The theme button and the menu are 44px. Nothing scrolls sideways. The console stays quiet.
+
+## reviewer (Ch2 batch 3)
+
+Reviewed `52997b5` on `cursor/chapter-2` against Howell & Mathews, *Complex Analysis*, 202 Updated Edition (the attached PDF; printed page n is PDF page n+9). Preview https://ch2-preview.complexanalysis.pages.dev was that tip. Not merged. No deploy.
+
+### Verdict
+
+ACCEPT WITH FIXES
+
+The five pictures and the static answers match the book. Two memory lines cited the wrong page, and the roots card marked two of its four choices right. Those are fixed on this branch. The tip after the fixes is in the commit that adds this section.
+
+### What matches the book
+
+Checked every claim in `js/stations/chapter2.js`, `js/stations/ch2-picture.js`, and `data/practice/ch2.json`, and recomputed the generators for seeds 1–80.
+
+- §2.1, page 43: a function sends each z in D to one w. Image, into, inverse image, and one-to-one are page 46. Translation is page 48. Rotation and magnification are named on page 49. The linear map w = Az + B is page 50.
+- Example 2.9, pages 50–51. w = iz + i. Re z ≥ 1 maps onto Im w ≥ 2, because v = x + 1. The picture’s true sentence is that half-plane, boundary included. Left of the line, v is strictly below 2.
+- Exercise 13, page 54. w = (2+i)z − 2i. The vertices −2+i, −2+2i, and 2+i go to −5−2i, −6, and 3+2i. The domain triangle is right-angled, and a linear map keeps the angle, so “right triangle” is a true accept.
+- Definition 2.1, page 55, with −π < Arg ≤ π as on page 56. Example 2.12, page 56: x = a ≠ 0 goes to u = a² − y², v = 2ay, and Equation (2.10) is u = a² − v²/(4a²). Exercise 1(b), page 59, is x = 2, so u = 4 − v²/16. Page 58: w = zⁿ multiplies arguments by n. Definition 2.2, page 59, is the principal nth root only.
+- Definition 2.3, page 61. Definition 2.4, Example 2.16, and the statement of Theorem 2.1 are page 62. The proof, including |u−u₀| ≤ |f(z)−w₀|, the minimum of δ₁ and δ₂, and the two halves adding to ε, is page 63. The conjugate keeps distance, so δ = ε. The book’s solution says “y axis”; conjugation reflects in the real axis, and the picture does that. Theorems 2.2 and 2.3 and Definitions 2.5 and 2.6 are page 64. Theorem 2.4 starts on page 64; the composition bullet, which needs f continuous in a neighborhood of g(z₀), is page 65. The card states that neighborhood. Exercise 1(a), page 66, is lim (z→2+i) (z² − 4z + 2 + 5i) = −3+5i. (2+i)² = 3+4i.
+- Example 2.21, pages 68–69. At a negative real number the limit from above is i√r₀ and from below is −i√r₀. Near −1, the lower choice −i is the book’s limit. A branch, page 68, is one continuous single-valued choice.
+- §2.5 opens on page 72. Figure 2.22, the sphere and the north pole, is page 73. Equation (2.32), page 74, sends 0 to ∞. Example 2.24, page 76: the line x = a ≠ 0 goes to the circle with centre 1/(2a) and radius |1/(2a)|. The picture’s x = 1 circle is |w − 1/2| = 1/2. The card’s x = 2 circle is |w − 1/4| = 1/4.
+- Equation (1.45), page 32, is the full set of nth roots: modulus to the 1/n, argument (Arg + 2πk)/n, k = 0,…,n−1. The roots card was citing Definition 2.2 for that formula.
+
+Generator arithmetic, recomputed rather than read off the string: each linear image is (a+bi)(x+yi)+(c+di); each vertical line satisfies Equation (2.10); each reciprocal sample sits on the circle of radius |1/(2a)|; each listed root powers back to the number. `0-6i` is still rejected for −6. `2i+3`, `-6.0`, and `(3+2i)` still count. `js/core/map-route.js` matches `kit/template/js/core/map-route.js`. Live code does not import `kit/`. `node tools/check_vectors.mjs` (234/234), `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. The roots card was graded in headless Chrome on this tree: the title is Equation (1.45), page 32; “i and −i” on the square roots of 1 says those are the square roots of −1 and stays a wrong choice; “1 and −1” locks. No console errors on that load.
+
+### Fixes pushed to cursor/chapter-2
+
+- The roots card listed the roots in both orders and accepted both, so two of the four buttons were right. One order is the answer. Each other button names the dropped roots (k = 0 only, the square roots of 1, or the square roots of −1). The cite is Equation (1.45), page 32, not Definition 2.2.
+- The §2.2 sheet cited page 59 for Equation (2.10). That equation is on page 56. The sheet now says u = a² − y², v = 2ay, and u = a² − v²/(4a²), page 56. The nth-root line cites Equation (1.45), page 32.
+- The §2.5 sheet cited page 72 for the circle and wrote radius 1/(2a) with no absolute value. Example 2.24, page 76, uses |1/(2a)|. The lines-and-circles flash why now says page 76, which is where that sentence is. The section still opens on page 72, and that pin stays on Further reading.
+
+### Leftovers not fixed
+
+1. **Below the cut, but not near it, the §2.4 sentence says to cross the ray.** At about −1.1 − 1.38i, Arg is about −2.24, which is not near −π, and the principal square root is still in the lower half-plane. The claim says “Off the cut, Arg does not jump. Cross the blue ray.” The jump is only beside the cut: the code asks for an argument within 0.55 of ±π, which is what Example 2.21 computes. That restriction should stay. Widening “near −π” to the whole lower half-plane would be false. The miss is the instruction. A point with negative real part and negative imaginary part is already on the lower side. At z = 0 the same fallback says Arg does not jump, and page 69 calls the origin the branch point.
+2. **At 0, the §2.5 sentence does not name ∞.** “At 0, 1/z is not a point of the plane” is true of the finite plane, and the purple dot is hidden. Equation (2.32) on page 74 sends that point to ∞, the north pole of Figure 2.22. The worked line does not say so.
+3. **A finished card appends a second memory line.** The sheet line carries the page. The earned `memory` string does not, so it is added again without the page. Neither line is false.
+4. **Another on the roots card repeats three numbers.** Seeds cycle the square roots of 1, the fourth roots of 1, and the square roots of −1. Each list satisfies Equation (1.45). The fourth press reprints the first. A modulus other than 1 is not in the pool.
+
+## ux-veteran (Ch2 batch 3)
+
+Preview https://ch2-preview.complexanalysis.pages.dev, branch `cursor/chapter-2`, tip `52997b5`. The live `chapter2.js` lede matched that commit. Walked as a student in headless Chrome with a touch: home, the drawer, the book, then Chapter 2 through all five stages. 390×844 first, then 1280×800, light then dark. No product code changed. No console errors. No sideways scroll: `scrollWidth` was 390 and 1280 on the home, the book, and Chapter 2, in both themes. `cee2b0d` and `2cd1380` landed after the walk. They correct two sheet cites and the roots card. The door, the handoff, the grey button, the memory list, the colour key, and the ray sentence are the ones measured below.
+
+### Verdict
+
+ANOTHER BATCH
+
+The chapter opens on the picture. At 390×844 the two planes sit at y = 448 and the claim ends at y = 694, in the light and in the dark. At 1280×800 the planes are 268px, the pair is 544px, and the claim ends at y = 718, again in both themes. Dragging the green point flips that sentence on §2.1, §2.2, §2.3, and §2.5, and the purple point follows. The type is the site's type. The climb around the picture still loses a student in three places: the book card names a different chapter than its button, the link to the next stage throws away the stage just earned, and Stage complete sits grey with no reason.
+
+### How the walk went
+
+Home, 390, light, fresh storage. The first screen is Test 1: Which test, The Map, the four thread pills, and two buttons. The word chapter is absent. The drawer opens from a 44×44 Places button. Its first row is The Book, 44px. The rows under it are the Test 1 places, including Linear Maps and zⁿ. At 1280 the hamburger is gone and that same Book row is the top of the sidebar, at y = 72.
+
+The book, 390, both themes. Open Chapter 2 is the first control, 324×44, from y = 265 to 309, fill `rgb(47, 62, 92)` in the light and `rgb(207, 216, 234)` in the dark. The line under it says "Next is §4.1, Exercise 3. 0 of 8 exercises." That line's box is 256px tall, so Walk Chapter 4, also 44px, starts at y = 581. The card is one button, one sentence, a hole, and a second button. Chapter 1, flagged LATER, is the first chapter on the screen. The Chapter 2 card starts at y = 849, five pixels under an 844px window. Its five section rows are links, and they are 26px tall (the §2.5 row wraps to 53). The chapter titles are not links. At 1280 the hole is gone: the status is 26px and the two buttons share y = 233. The sentence still names §4.1 beside a button that opens Chapter 2.
+
+Chapter 2, first screen, both sizes, both themes. THE BOOK, the Iowan title, the lede "Five stages. Drag the green point. Purple is where it lands. Blue is the line or circle you test, and orange is the curve it maps to.", the source line, then §2.1. The why is the quarter turn and the slide. Both squares are on the screen, shaded, with a 17×17 orange arc on the phone. The claim is "On the blue line or to its right, w = iz+i lands on or above Im w = 2." The green mark draws at 13.7px on the phone and 23.3px at 1280. A press 20px from its centre moves it. A press on the corner of the square leaves it at re = 1.6. A press 50px from the centre, still inside the square, leaves it there. Dragging to the left edge flips the claim to "lands below Im w = 2", and the mark stays inside the square (11.9px of inset). Dragging back flips it the other way. Memory sheet, 156×44, sits in that gap, and WORKED starts under it.
+
+Stage complete, on arrival, is disabled at y = 1878. The Summit heading is hidden with its sentence. After the claim had been true and then false, the button was still disabled and the summit was still hidden. Exercise 13 then took `-6`, `3+2i`, and `triangle`. A wrong try, `hello`, said "A number written like 3+2i." The Check button is 85×44 and the blank is 44px tall. Finishing the card enabled Stage complete, showed the summit, and opened the memory list. The summit reads the quarter turn, the slide, and Re z ≥ 1, then "Next is 2.2." That link is 21×19. Tapping it landed on `#chapter-2-2-2` with the §2.2 title at y = 96, under a header that ends at y = 56. Coming back to `#chapter-2`, Stage complete was disabled again, the summit was hidden, and `mv:progress.ch2` was unset. Redoing the drag and the card enabled the button. Pressing it set the label to Marked and the status to "1 of 5 stages marked." That status lives at y = 10475 on a page 11043px tall.
+
+The memory list that opened is two bullets: "Apply Az+B to each vertex. Page 54." and "Apply Az+B to each vertex." It sits at y = 2453. The button that owns it is at y = 694. Opening the sheet does not bring the list onto the screen.
+
+§2.2 opens on the line, and the claim says the image sits on the orange curve. Dragging off the line flips it. The four choices for x = 2 are stacked, each 44px tall, set in the same math as the paragraph. §2.3 opens inside the disk, "Here δ = ε", and dragging out flips it to outside the disk. §2.5 opens on the circle, and dragging off the line flips it; the purple mark drops to opacity 0.45 once it leaves the window. §2.4 opens above the cut, with the square root in the upper half-plane. Dragging to the lower left, re = −1.94 and im = −1.44, puts the mark below the dashed ray and inside the square. The claim says "Off the cut, Arg does not jump. Cross the blue ray."
+
+The four root choices are one row, each 51×44, at both widths and in both themes. Further reading links are 23px tall, or 49px when they wrap, and each opens the textbook in a new tab. They sit between Stage complete and the next stage.
+
+THE BOOK at the top of the chapter is 69×17, on Chapter 2 and on Chapter 4. Back to the book, at the bottom, is 23px tall. From the book scrolled to 900, opening the chapter, scrolling to 1400, and pressing Back returned to `#book` at scroll 0. Forward returned to `#chapter-2` at scroll 0. After the mark, the kicker does land on the book, and the status there reads "Chapter 2: 1 of 5 stages marked." A deep link to `#chapter-2-2-4` puts the flag at y = 73 and the title at y = 96. The header ends at 56, so the title is clear of it. Back from that kicker returned to the section, title still at y = 96.
+
+The footer key, opened on Chapter 2 at both sizes, shows `#colour-key-test1`. Its first line is "Blue is the Cartesian address." Its second is "Orange is the polar address." The circuit, Test 2, Julia, and Newton lists are in the footer and hidden. The wide sidebar highlights "2 Complex Functions". It also still lists Residue Theory through the Laplace transform.
+
+The chapter uses the station type. At 390 the title is Iowan Old Style, 25.85px, weight 600, `rgb(26, 34, 48)` in the light and `rgb(233, 237, 245)` in the dark. The lede is 16.8px in the muted grey. The paper is `rgb(246, 243, 236)` and `rgb(13, 18, 28)`. A card is white in the light, radius 10px, 16px of padding. Addresses and Chapter 4 use that same title, lede, and kicker. At 1280 the chapter title is 36px and the sidebar is 280px. Nothing in the chrome asks for a new type.
+
+### Ranked
+
+1. **The book's first screen should name the button it is showing.** Evidence: at 390, both themes, Open Chapter 2 runs from y = 265 to 309, and the sentence in the same card is "Next is §4.1, Exercise 3. 0 of 8 exercises." That sentence's box is 256px tall (`flex: 1 1 16rem` on a column), so Walk Chapter 4 starts at y = 581 and the Chapter 2 card starts at y = 849, under the fold. At 1280 the box is 26px and the sentence still names §4.1. The five section rows are 26px tall. Change: the line reads "Chapter 2. 0 of 5 stages marked." On the phone the status is `flex: 0 1 auto`, so the Chapter 2 card sits on the 844px screen. Each §2.1–§2.5 row is 44px tall. Walk Chapter 4 stays the second button.
+
+2. **The way to the next stage has to keep the stage.** Evidence: "Next is 2.2" is 21×19. Tapping it opened `#chapter-2-2-2`, and returning to `#chapter-2` showed Stage complete disabled, the summit hidden, and no `mv:progress.ch2` mark. Pressing Stage complete after a second pass did store the mark, and the book then said "Chapter 2: 1 of 5 stages marked." THE BOOK is 69×17. Back to the book is 23px. Browser Back from scroll 1400 returned to `#book` at scroll 0, and Forward returned to the chapter at scroll 0. Change: "Go to 2.2" is a 44px button under Stage complete, and the press writes the mark before it moves. The Book is that same 44px control at the top of the chapter. Browser Back returns to the scroll the student left.
+
+3. **Say what Stage complete is waiting for.** Evidence: on arrival the button is disabled at y = 1878 and the Summit heading is hidden. After the claim had been both true and false, it was still disabled and the summit was still hidden. The flash deck above it reads "1 of 9." The button enabled only after Exercise 13 was finished. Change: while it is disabled, one line names the missing piece, "Drag until the sentence changes" or "Finish one practice card." When both have happened, show the Summit heading and the sentence together, and enable the button.
+
+4. **Put the memory list under its button, once.** Evidence: Memory sheet is 156×44 at y = 694, between the claim and WORKED. Finishing Exercise 13 opened the list at y = 2453, off the phone screen, as two bullets of "Apply Az+B to each vertex," one with "Page 54" and one without. Change: the button and the list are one block after Practice, closed until asked, and opening it shows the lines under the button. One copy of each line, with its page.
+
+5. **The colour key on this chapter is the key the pictures use.** Evidence: the lede says blue is the line or circle you test and orange is the curve it maps to. The footer key opened on Chapter 2, at 390 and at 1280, both themes, and the visible list was `#colour-key-test1`: "Blue is the Cartesian address" and "Orange is the polar address." Change: on a book chapter the key is those four words. Blue is the set you test, orange is where it lands, green is the point you drag, purple is the image. Arg, the seam, the threads, and the Test 2 lines stay off this page.
+
+6. **A point already below the ray should not be told to cross it, and a press on the square should move the point.** Evidence: §2.4 opens with "Above the cut." Dragging to re = −1.94, im = −1.44 put the mark below the dashed ray, inside the square, and the claim said "Off the cut, Arg does not jump. Cross the blue ray." The jump stays the band beside the cut, about 0.55 from ±π, which is what Example 2.21 computes. Calling the whole half-plane "near −π" would be false. On §2.1 a press in the corner of the square, and a press 50px from the dot, left the point at re = 1.6. Change: a point on the lower side says it is on the lower side and that Arg is not yet near −π, so move toward the ray. The same for the upper side. "Cross the blue ray" is only while the point is still on the right of the origin. A press anywhere on the z plane moves the green point.
+
+### Keep
+
+The first screen of the chapter. Both planes, the shaded half-plane, the claim that names w = iz+i, and the four colours, at 390 and at 1280, in the light and in the dark. The drag on §2.1, §2.2, §2.3, and §2.5 flips the sentence and the purple point agrees. The green mark stays inside the square, 13.7px on the phone and 23.3px on the laptop, and a press within 20px of it moves. Open Chapter 2 is a real 44px primary button. After a mark, the book status says how many of the five stages are marked. Stage complete stays 44px and stays disabled until the claim has been both ways and one card is finished, and the Summit heading stays hidden until then. The practice blanks and the choice buttons are 44px, the formulas match the paragraph, and the four roots sit in one row at 51×44. Show the back stays closed. A deep link to §2.4 puts the title clear of the header. The sidebar at 1280 highlights Chapter 2. The paper, the Iowan title, and the lede match Addresses and Chapter 4. No sideways scroll, and the console stayed quiet.
+
+## taste-skill (Ch2 batch 3)
+
+Read Leonxlnx/taste-skill at `12af471f`. Judged the preview through it. `kit/SKILL.md` wins where they disagree, and the site style stays: four teaching colours, one gesture, no second clock, the book-path kickers, the system serif and the system sans, the paper. Polish only. No product code changed.
+
+Preview https://ch2-preview.complexanalysis.pages.dev, branch `cursor/chapter-2`. The live `js/stations/ch2-picture.js` contains the batch-3 claim “On the blue line or to its right.” Walked `#book` and `#chapter-2` in headless Chrome, 390×844 then 1280×800, light then dark. Dragged the green point on §2.1. Ran `inspect.mjs` on `#chapter-2` at those two widths. No console errors. `scrollWidth` was 390 and 1280.
+
+### Verdict
+
+ANOTHER BATCH
+
+The phone chapter is the page. Both planes and the sentence that flips are on the first screen, in both themes. What is left is one empty card on the way in, and a wide screen whose picture does not use the card.
+
+### What the first screens actually hold
+
+The book, 390, light and dark. Open Chapter 2 is 324×44 at y = 265. Under it the status is 324×256, and the only words in that box are “Next is §4.1, Exercise 3. 0 of 8 exercises.” Walk Chapter 4 is the next control, 324×44 at y = 581. The Chapter 2 card starts at y = 849, under the fold. The 256px is the status flex basis of 16rem, which on the phone column becomes a blank band. At 1280 those three sit on one line and the status is 26px, so the hole is the phone. Dark paper is `rgb(13, 18, 28)`. The band is the same in both themes.
+
+Chapter 2, 390, light and dark. The title is one line, 25.85px. The lede is the colour key, muted, and it passes contrast (6.2:1 on the light paper, 8.6:1 on the dark). Both squares are 158×158 from y = 448. The claim ends at y = 694. A drag left flips it from “on or above Im w = 2” to “below,” and the purple point crosses the orange line. The green and purple marks are 13.7px. The orange quarter-turn arc is 17.2×17.2. The why on that card is “Multiplication by i is a quarter turn.”
+
+Chapter 2, 1280, light and dark. The squares are 268×268. The pair runs from x = 321 to x = 865. The card runs from x = 304 to x = 1256. The claim ends at y = 718, inside the 800px window. `inspect.mjs` calls the empty region to the right of that pair a void of 373×640 at (907, 107), 23% of the first screen, and fails the first screen for having no dominant element: the title is 36px, 2.8vw, and no picture holds a third of the viewport. The same left edge repeats down the page. On §2.2 the four choices are 158×44 at x = 338, inside a practice card 918px wide.
+
+On every stage, both widths, both themes, the Memory sheet button starts on the claim’s last line. At 390 the §2.1 claim ends at y = 694 and the button is 44px from there. Worked starts at y = 754. Stage complete is on the page from the start, at opacity 0.45, full width, disabled. The summit heading stays hidden until the stage is earned. Back to the book, at the bottom of 10717px, is 134×23.
+
+The §2.2 parabola, the §2.3 disks, the §2.4 dashed cut, and the §2.5 circle read in both themes. The four root choices are one row, each 44px tall and about 51px wide. Nothing scrolls sideways.
+
+### Critique
+
+```
+ROUND 1
+Seen in one second: on the phone, two shaded squares and a green dot; on the laptop, a small pair in the left of a wide card; on the book, a tall empty card between two buttons.
+Idea (one sentence): one drag moves a green point, and the purple point and the sentence change with it.
+Live thing: the drag on each stage.
+Layout words by section: book=card / 2.1=split / 2.2=split / 2.3=split / 2.4=split / 2.5=split
+Scores: design 6 · usability 7 · creativity 8 · content 8 → arithmetic 7.0, capped at 6.0
+Caps applied: focal-point FAIL at 1280 (no dominant element on the first screen). Overall cannot exceed 6.0 while that FAIL stands.
+Top three problems:
+1. The book card at 390 is a 256px blank between Open Chapter 2 and Walk Chapter 4, and the sentence names §4.1. 390-dark-book, 390-light-book.
+2. The 1280 first screen leaves a 373×640 void to the right of the planes. inspect voidBox, both themes.
+3. The quarter turn the why names is a 17px arc. 390 fold, light and dark.
+```
+
+House rules the inspector also failed, and this pass leaves, because the kit and the site style win: the uppercase kickers (20 of them: “2.1”, “Worked”, “Practice”, “Further reading”), the 1px card and plane outlines (32), the header and footer hairlines, KaTeX’s math faces on top of the two text faces, the cream paper `#f6f3ec`, the muted lede at 6.2:1, SVG planes that are not photographs, and a still page. The drag is the motion. A scroll fade would be a second clock. Five stages of one shape is the mountain, not a card grid to restyle.
+
+### Ranked
+
+1. **Close the hole in the book’s first card, and make the sentence the button.** Evidence: at 390, light and dark, Open Chapter 2 is 324×44 at y = 265, the status is 324×256, and Walk Chapter 4 is at y = 581. The words in the blank are “Next is §4.1, Exercise 3. 0 of 8 exercises.” The Chapter 2 card is at y = 849. At 1280 the status is 26px on one line with the buttons, so this is the phone. Change: in the phone column, the status basis is the line, not 16rem. With no stage marked, the sentence is “Chapter 2 is open. 0 of 5 stages marked.” Walk Chapter 4 leaves this card.
+
+2. **Give the wide screen one picture that uses the card.** Evidence: at 1280, light and dark, the planes are 268×268 and end at x = 865 in a card that ends at x = 1256. The claim ends at y = 718. The inspector’s void is 373×640 at (907, 107). It fails the first screen: title 36px, no picture a third of the viewport. Change: on the wide layout only, the claim sits in that right half, level with the planes, and the pair grows until that row still ends inside the 800px window. The phone stack stays. Planes 158×158 from y = 448, claim ending at y = 694.
+
+3. **Draw the quarter turn at a size the why can point at.** Evidence: at 390, light and dark, the orange arc’s box is 17.2×17.2 on a 158px square. The green mark beside it is 13.7px. The line above the squares says multiplication by i is a quarter turn. Change: the arc’s radius is about a third of the square, still on the unshaded side of the blue line. One drag. No second control.
+
+4. **Let the choices use the card they sit in.** Evidence: §2.2 at 390, the four formulas are 158×44 at x = 50, stacked, in a card at x = 33 that is 324px wide, so about 150px of the card is empty beside each one. At 1280 the same buttons are 158×44 at x = 338 in a card 918px wide. The step aligns to the start, so the buttons stay as wide as the longest formula. Change: the choices stretch to the card. On the wide layout they sit in one row, each at least 44px. The phone keeps the stack, at the card’s width.
+
+5. **Put Worked against the claim, and open the sheet under the button.** Evidence: every stage, both widths, both themes. At 390 the §2.1 claim ends at y = 694, the Memory sheet button is 156×44 from there, and Worked starts at y = 754. Tapping it does not open the line under the button. The heading and “Apply Az+B to each vertex. Page 54.” appear at y = 2224, after Further reading, 1500px down the stage. At 1280 the claim ends at y = 718 and the button starts on that line. The same order on §2.2 through §2.5. Change: claim, then Worked, with nothing between them. The button and the list it opens move together, under Practice.
+
+6. **Hide Stage complete until the stage is earned.** Evidence: the button is on every stage from arrival, full width, disabled, opacity 0.45. The summit heading on the same block is already hidden until the claim has been true and false and one item is right. Five faded bars read as controls that failed to load. Change: hide the button with the heading. When the stage is earned, show them together, and the button stays 44px.
+
+### Keep
+
+The paper, the serif title, and the four teaching colours. Light paper `#f6f3ec`, dark paper `#0d121c`, the same blue, orange, green, and purple on the planes in both themes. The phone chapter’s first screen: both squares, the captions “z plane” and “w plane,” and a claim that ends at y = 694 and flips when the green point crosses the line. The 544px cap can stay only until the claim moves beside the pair. Until then it is what keeps that sentence inside 800px. The kickers stay. They are the book path, and the kit beats the inspector’s ban on them. Show the back stays full width, and the back stays closed. The four root choices stay one row of 44px targets. The parabola, the disks, the dashed cut, and the circle stay the pictures. One drag, no chips, no clock. The lede stays muted: 6.2:1 and 8.6:1 are readable, and it is the colour key once. No sideways scroll, no console errors, light and dark, 390 and 1280.
+
+## Chapter 2, batch 4
+
+Started from `607522e`, which already contains the reviewer fixes at `2cd1380`. Items 1–7 from the merged batch 3 list.
+
+The book’s first card says “Chapter 2 is open. 0 of 5 stages marked.” The status is 26px on a phone, not a 256px hole. Walk Chapter 4 sits on the Chapter 4 card. §2.1–§2.5 are 44px rows. The drawer lists chapters 1–7. Open Chapter 2 still opens the chapter in progress.
+
+Stage complete stays hidden with the summit until the drag has been both ways and one card is right. Until then the line says “Drag until the sentence changes” or “Finish one practice card.” Go to 2.2 is a 44px button that writes the stage mark, then moves. The Book and Back to the book are 44px. Browser Back returns to the scroll the student left.
+
+The memory sheet is one block after Practice, closed until asked, and a finished card does not append a second line without its page. §2.4 says “Cross the blue ray” only to the right of the origin. Deep in the lower half, the square root is in the lower half-plane and Arg is not yet near −π. The origin says it is the branch point. Stage complete on §2.4 waits for the two half-plane sentences. A press anywhere in the z square moves the green point. The mark is about 22px across on a phone. At 0, §2.5 names ∞ and the north pole, Equation (2.32), page 74. Another on the roots card reaches moduli other than 1.
+
+`0-6i` is still rejected for −6. It is −6i. −6, −6+0i, and −6.0 still count.
+
+Checked in headless Chrome at 390 and 1280, light and dark. No sideways scroll. No console errors. `node tools/check_vectors.mjs` (234/234), `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed.
+
+## Next
+
+- At 1280 the two planes still sit in the left of a wide card. The claim ends inside the 800px window (y = 743) and does not yet sit beside them.
+- The quarter-turn arc is still small next to the sentence that names it. The practice choices do not yet stretch to the card.
+- On a book chapter the footer colour key is still the Test 1 key.
+- The roadmap page still lists chapters 8–11. The drawer stops at 7.
+- The practice engine on `cursor/practice-engine` still needs `ch2-maps` before its catalog will accept this file.
+
+## unslop (chapter-2 batch 4)
+
+Read heydamir/unslop at `a6f121ee`. Polish only. `kit/SKILL.md` wins where they disagree: the four teaching colours, the book-path kickers, one gesture, one clock, no new picture and no second control. The walk is https://ch2-preview.complexanalysis.pages.dev at tip `8215b05`. Headless Chrome, 390×844 then 1280×800, light then dark, `#book` and `#chapter-2` through the five stages. A drag on §2.1 both ways, a drag on §2.4 to the lower left and to the right of the origin, and a press on §2.5. No product code changed. No console errors. No sideways scroll: `scrollWidth` was 390 and 1280.
+
+The page is already this book. Warm paper, a serif title, four teaching colours on the planes, quiet chrome. Light paper is `rgb(246, 243, 236)`. Dark paper is `#0d121c`. The half-plane shade reads in both themes: right of the blue line is the blue field, above the orange line is the warm field. No gradient, no glow, no emoji, no badge, no pulsing control.
+
+Direction, taken from the page. Product: one drag moves a green point, and the purple point and one sentence change with it. Character: calm, exact, a little warm. World: warm paper and a pair of planes. Moments: those two planes, the shade, the curve, the cut, the circle. Signature: the same four colours on every stage.
+
+### Verdict
+
+ANOTHER BATCH
+
+One polish batch, the five cuts below, then this lens rests. The phone chapter and the book’s first card already hold. What is left is the wide card, the arc the sentence points at, and two draft-math breaks.
+
+### Ranked
+
+1. **On the wide screen, put the claim in the empty half of the card.** At 1280, light and dark, the planes are 268×268. The pair is 544px wide and ends at x = 865. The card ends at x = 1256, so 391px of the card is empty. The claim ends at y = 743, inside the 800px window, under the pair. The same left edge repeats on §2.2 through §2.5, and the practice buttons sit in it: a 158px formula in a 952px card. Change: on the wide layout only, the claim sits in that right half, level with the planes, and the pair grows until the row still ends inside the 800px window. The phone stack stays. Planes 158×158 from y = 473, claim ending at y = 718.
+
+2. **Draw the quarter turn at the size the sentence is pointing at.** At 390, light and dark, the orange arc’s box is 17.2×17.2 on a 158px square. The green mark beside it is 21.5px. At 1280 the arc is 29.3×29.3 on a 268px square, and the green mark is 36.6px. The line above the squares says multiplication by i is a quarter turn. The worked line says “The orange arc is that quarter turn.” Change: the arc’s box is about a third of the square, still on the unshaded side of the blue line. One drag. No second control.
+
+3. **The sector card should use the same math as the sentence above the buttons.** At 390 and at 1280 the parabola buttons are set as math, `u = 16 − v²/64` and the three beside it. The next card’s title is “§2.2, angles under z^n, page 58”, with a caret. Its four buttons read `0 < argw < 3π/2`, `0 < argw < π/2`, `0 < argw < 3π`, and `π/2 < argw < π`: the letters a, r, g run into w. The prompt above those buttons sets `\arg` with a gap. Change: the title is angles under \(z^n\). Each choice is \(0 < \arg w < \cdots\), with the same gap as the prompt.
+
+4. **Let a choice use the width of its card.** At 390 the four parabola formulas are 158×44 at x = 50, in a card 358px wide. The sector buttons are 189×44 in that same card. At 1280 those buttons are 158×44 and 189×44 at x = 338, in a card 952px wide. Another sits at the label’s width under them. The root row is the exception that already works: −i, i, 1, −1, each 51×44, in one row. Change: the stacked choices stretch to the card’s content width, and on the wide layout the four formulas sit in one row, each at least 44px. The root row stays four compact targets.
+
+5. **Keep the period on the circle sentence.** At 390 the §2.5 worked paragraph ends the formula and puts the period on the next line: “which is the circle \(|w − 1/2| = 1/2\)” and then “. At 0, \(1/z\) is not a point of the plane.” Change: the period stays with \(|w − 1/2| = 1/2\). The sentence about 0 and the north pole starts after it.
+
+### Keep
+
+The paper, the serif title, and the four teaching colours, in the light and in the dark. The phone’s first screen: both squares, the captions “z plane” and “w plane”, and a claim that ends at y = 718 and flips. Dragging §2.1 to the left set the claim to “lands below Im w = 2” and the waiting line to “Finish one practice card.” Stage complete stayed hidden. Dragging back brought the first sentence back. The uppercase kickers stay. They are the book path. Show the back stays the card’s full-width button, and the back stays closed. Memory sheet is one 44px control after Practice. The Book and Back to the book are 44px. The book’s first card says “Chapter 2 is open. 0 of 5 stages marked.” The status is 26px. Open Chapter 2 is 44px, and §2.1–§2.5 are 44px rows. At 1280 that status shares the row with the button. The drawer lists The Book and chapters 1–7, and the current chapter is a quiet surface step. The parabola, the disks, the dashed cut, and the orange circle already say their sentences. On §2.4, right of the origin, the claim says “Cross the blue ray.” The green mark is 21.5px on the phone and stays the thing you drag. The footer colour key is off this page (`display: none`, height 0). The lede is the key. The roadmap’s later chapters stay a table of contents. No sideways scroll, and the console stayed quiet.
+
+## ux-veteran (chapter-2 batch 4)
+
+Preview https://ch2-preview.complexanalysis.pages.dev, branch `cursor/chapter-2`, tip `8215b05`. The live `js/stations/chapter2.js`, `js/stations/ch2-picture.js`, `js/stations/book.js`, `js/app.js`, and `css/components.css` matched that commit. Walked as a student in headless Chrome with a touch: home, the drawer, the book, Chapter 2 through a finished Exercise 13 and Go to 2.2, then §2.4, then Chapter 3 from the drawer. 390×844 first, then 1280×800, light then dark. No product code changed. No console errors. No sideways scroll: `scrollWidth` was 390, and 1265 in the 1280 window.
+
+### Verdict
+
+ANOTHER BATCH
+
+The chapter opens on the two planes, and the claim is on that screen at both sizes, in the light and in the dark. A press anywhere in the z square moves the green point, and the sentence flips. Browser Back returns to the scroll the student left, to the pixel. The book’s first card names Chapter 2 and is one line tall. The finger still misses the section names, the reading links are 23px, and the summit appears half a screen below the card that earned it.
+
+### How the walk went
+
+Home, 390, light, fresh storage. The first screen is Which test, The Map, and “Drag the dot, read the four lines, then find your problem on the map.” The word chapter is absent. The menu and the theme button are 44×44. The site title, the way home, is 237×30. The drawer’s first row is The Book, 358×44. Under it are the Test 1 places. At 1280 the hamburger is gone and that same Book row is the top of the sidebar.
+
+The book, 390, both themes. Open Chapter 2 is the first control, 324×44, from y = 265 to 309. The line under it is “Chapter 2 is open. 0 of 5 stages marked.” and that line’s box is 26px tall. The 256px hole is gone. The Chapter 2 card starts at y = 567, on the 844px screen, and §2.1 through §2.4 are on that screen. Walk Chapter 4 is on the Chapter 4 card, at y = 1460, 44px tall. After a stage mark, the same line reads “Chapter 2. 1 of 5 stages marked.” Dark paper is `rgb(13, 18, 28)`. The button fill is `rgb(207, 216, 234)`.
+
+The section rows are 44px tall. The link inside each row is not. §2.1’s anchor is 273×18. §2.2, §2.3, and §2.4 match it. §2.5 wraps, and the anchor is 35px. A press 6px under the §2.1 words, still inside the row, left the hash on `#book` at scroll 406.
+
+Chapter 2, first screen, 390, light and dark. The title is Iowan Old Style, 25.85px, weight 600. The lede is the four colours, 16.8px, muted. Both squares are 158×158 from y = 473. The claim ends at y = 718 in the light and y = 717 in the dark. WORKED starts at y = 734, so the first screen includes the claim and the start of the example. At 1280×800 the squares are 268px, the pair is 544px, and the claim ends at y = 743, in the light and in the dark. The pair sits in the left of a card that runs to x = 1241. The sidebar lists chapters 1–7 and highlights Chapter 2.
+
+The orange arc the why points at is 17.2×17.2 on the phone square. At 1280 it is 29.3px on the 268px square. The green mark is 21.5px on the phone and 36.6px at 1280. A press in the corner of the square, 8px in from the top left, moved the point to re = −1.16 and the claim to “lands below Im w = 2.” Pressing back to the right flipped it the other way. The whole square is the target.
+
+On arrival, Stage complete and the Summit heading are hidden. The line “Drag until the sentence changes” is at y = 1934, under the practice. The claim the hand is reading ends at y = 718. After the drag both ways the line, still down there, says “Finish one practice card.” Exercise 13 took `−6`, `3+2i`, and `triangle`. The screen that finished on is the next card, “§2.1, linear transformation,” with the blank still empty. The summit is at viewport y = 1336, Go to 2.2 at y = 1475, both below the 844px window. “0 of 5 stages marked.” is at y = 10719 on a page 10979px tall. Between the finished card and the summit is the flash card, “1 of 9.”
+
+Go to 2.2, once scrolled into view, is 108×44. The press writes `{"2.1": true}` and opens `#chapter-2-2-2` with the flag at y = 73 and the title at y = 96. The header ends at 56. The claim on arrival says the image sits on the orange curve, and the picture is the line and the parabola. Coming back, the button reads Marked and the summit stays.
+
+Memory sheet, 156×44, opens the line under itself: button at y = 436, the line at y = 488, “Apply Az+B to each vertex. Page 54.” One copy. Closed until asked.
+
+Browser Back, measured without scrolling the link into view first. The book was at scroll 406. The §2.1 words opened `#chapter-2-2-1`. The chapter was scrolled to 2200. Back returned to `#book` at 406. Forward returned to the chapter at 2200. From the chapter at 2600, the drawer’s The Book row (44px) opened `#book` at 0, and Back returned to the chapter at 2600.
+
+§2.4, a press in the lower left, re = −1.75 and im = −1.01, said the square root is in the lower half-plane and Arg is near −π. A press on the right, re = 0.55, said “Off the cut, Arg does not jump. Cross the blue ray.” The four root choices are one row, each 51×44.
+
+The footer colour key on the chapter, at both sizes and in both themes, is `display: none`. The Test 1 sentences are not on this page. The lede is the key. On Addresses the same key is `display: block`, which is that page’s key.
+
+The drawer on the chapter is The Book and chapters 1–7, each row 44px, and chapter 2 is the current row. Tapping “3 Analytic and Harmonic Functions” opens `#chapter-3`. The page title stays The Book. The current row becomes The Book. The Chapter 3 card sits with its top on the header (y = 56), the flag LATER at y = 73, and the title at y = 97, so the card is readable. The lede still says “Eleven chapters.” Chapters 8–11 are on the roadmap from y = 1973, and they are not in the drawer.
+
+Chapter 4, for the type. The title is the same Iowan, 25.85px, weight 600, `rgb(26, 34, 48)`. The lede is the same 16.8px muted grey. The paper matches. Its “The Book” is 69×17, and “Back to the book” is 134×23. Chapter 2’s same two controls are 44px. Addresses uses that same title, lede, and paper. Further reading on Chapter 2 is 23px for the short pins (Translation, page 48, is 162×23) and 49px when the pin wraps. The source line on the chapter is 356×36. The book’s citation is 314×36.
+
+At 1280 the §2.2 choices are 158×44, stacked, in a card 903px wide. The finger can hit them. The card’s right side is empty. This pass leaves that to the layout pass. The claim is already inside the 800px window.
+
+### Ranked
+
+1. **When the stage is earned, put the summit on the screen the student is on, and put the count under the title.** Evidence: after Exercise 13, scrollY was 740 and the viewport showed the next blank. The summit was at viewport y = 1336 and Go to 2.2 at y = 1475, under the “1 of 9” flash card. “0 of 5 stages marked.” is at y = 10719. On arrival the waiting line, “Drag until the sentence changes,” is at y = 1934, while the claim ends at y = 718. Change: the waiting line sits under the claim and updates there. When the stage is earned, scroll the Summit heading, the sentence, Stage complete, and Go to the next stage up under the header. “0 of 5” sits under the chapter title.
+
+2. **The section row has to be the thing the thumb hits.** Evidence: at 390 each §2.1–§2.4 anchor is 273×18 inside a row 324×44. §2.5’s anchor is 35×273. A press 6px under the §2.1 words, inside the row, stayed on `#book` at scroll 406. Change: the anchor fills the row, min-height 44px, and the page number is inside that target.
+
+3. **The links that leave the page are still short, and Chapter 4’s up control is the old size.** Evidence: Further reading pins that fit on one line are 23px tall. The chapter source line is 356×36. The book citation is 314×36. The site title is 237×30. Chapter 4’s “The Book” is 69×17 and “Back to the book” is 134×23, in the same book file where Chapter 2’s copies are 44px. Change: those links get min-height 44. Chapter 4’s kicker and footer link use the same `book-tap` treatment Chapter 2 already has.
+
+4. **A later chapter in the drawer has to say so before the tap.** Evidence: the drawer rows for chapters 1–7 are the same 44px control. Tapping chapter 3 set the hash to `#chapter-3`, left the page title as The Book, and moved the current row to The Book. The card is flagged LATER, with the title at y = 97, clear of the header. The lede says “Eleven chapters.” Chapters 8–11 start at y = 1973 on the roadmap and are absent from the drawer. Change: a chapter that is not open is marked Later on its drawer row, and that row stays current after the tap. The lede counts the seven chapters the drawer lists. Chapters 8–11 leave the roadmap.
+
+5. **Draw the quarter turn at a size the first screen can point at.** Evidence: at 390, light and the same square in the dark, the orange arc is 17.2×17.2 on a 158px square. The why on that screen says multiplication by i is a quarter turn, and the worked line, which starts at y = 734 inside the 844px window, says the orange arc is that quarter turn. At 1280 the arc is 29.3px on a 268px square. Change: the arc’s radius is about a third of the square, on the unshaded side of the blue line. One drag. No second control.
+
+### Keep
+
+The first screen of the chapter. Both planes, the shaded half, the claim that names \(w = iz+i\), and the four colours in the lede, at 390 and at 1280, in the light and in the dark. The claim ends at y = 718 on the phone and y = 743 on the laptop. The drag: a press in the corner moves the point, the sentence flips, and the purple point follows. The green mark is 21.5px on the phone. Open Chapter 2 is a 44px primary button, the status under it is one line, and the Chapter 2 card is on the 390 screen. Walk Chapter 4 stays on the Chapter 4 card. After a mark, that status line says how many of the five stages are marked. Go to 2.2 is 44px, it writes the mark, and it lands with the next title clear of the header. Stage complete stays hidden until the claim has been both ways and one card is finished. The memory sheet opens under its own button, one line, with the page. Browser Back returns to the scroll the student left: 406 back to 406, and 2600 back to 2600 through the drawer. §2.4 says “Cross the blue ray” on the right of the origin, and a point already in the lower left is told it is in the lower half-plane. The four roots are one row at 51×44. The drawer on the chapter is chapters 1–7, each row 44px, and chapter 2 is the current row. The footer colour key stays hidden on the book, so the Test 1 key is not on this page. The paper, the Iowan title, and the lede match Addresses and Chapter 4. No sideways scroll, and the console stayed quiet.
+
+## reviewer (Ch2 batch 4)
+
+Reviewed `8215b05` on `cursor/chapter-2` against Howell & Mathews, *Complex Analysis*, 202 Updated Edition (complexanalysis.org PDF, title page “202 Updated Edition”; printed page n is PDF page n+9). Preview https://ch2-preview.complexanalysis.pages.dev served that tip: `ch2-picture.js`, `chapter2.js`, `ch2-maps.js`, and `data/practice/ch2.json` matched the tree. Not merged. gh-pages untouched.
+
+### Verdict
+
+ACCEPT WITH FIXES
+
+Do not accept `0-6i` or `−6i` for −6. `0-6i` parses as `0 + (−6i) = −6i`. Exercise 13 asks for the image of `−2+2i` under `w = (2+i)z − 2i`, and the book’s answer (page 431) is the triangle with vertices `−5−2i`, `−6`, and `3+2i`. `−6` is real. `−6`, `−6+0i`, and `−6.0` still count. `0-6i` counts only when the value really is `−6i`.
+
+### What matches the book
+
+Checked the claims in `js/stations/chapter2.js`, `js/stations/ch2-picture.js`, and `data/practice/ch2.json`, and recomputed the generators.
+
+- §2.1, page 43: one z in D goes to one w. Image, into, inverse image, and one-to-one are page 46. Translation is page 48. Rotation and magnification are page 49 (`w = ze^{iα}`, `w = Kz` for K > 0). The linear map `w = Az + B` is page 50: turn by Arg A, stretch by |A|, slide by B.
+- Example 2.9, pages 50–51. `w = iz + i` sends Re z ≥ 1 onto Im w ≥ 2, because v = x + 1. The boundary is included. Left of the line, v is strictly below 2. Page 51: a linear map preserves angles, so the image of Exercise 13 is a right triangle. The right angle was recomputed: the images `−5−2i`, `−6`, and `3+2i` meet at a right angle.
+- Exercise 13, page 54, and the selected answer on page 431. The three images match.
+- Definition 2.1, page 55. Equation (2.10), page 56: `u = a² − v²/(4a²)`. Example 2.12 is that page. Page 58: `w = z^n` multiplies arguments by n and raises moduli to the n. Definition 2.2 and Exercise 1(b), the line x = 2, are page 59. The selected answer for the strip names `u = 4 − v²/16` when x = 2.
+- Equation (1.45), page 32, is the full set of nth roots. The roots card powers each listed root back to the number. Another reaches moduli 1, 4, 9, and 16. One of the four choices matches.
+- Definition 2.3, page 61. Definition 2.4, Example 2.16, and Theorem 2.1 are page 62. The proof, including the minimum of δ₁ and δ₂ and the two halves adding to ε, is page 63. Exercise 1(a), page 66, is `−3+5i`, which is the selected answer. The picture of the conjugate reflects across the real axis. The book’s Example 2.16 says “y axis”; that sentence in the book is the slip. `|conjugate(z) − conjugate(z₀)| = |z − z₀|`, so δ = ε, and the orange disk is centred at `1 − i`.
+- Example 2.21, pages 68–69. The upper limit at a negative real is `i√r₀` and the lower limit is `−i√r₀`. Near −1 the lower choice is −i. A branch, page 68, is one continuous single-valued choice. Page 69: the origin is the branch point.
+- §2.5 opens on page 72. Figure 2.22 and the north pole are page 73. Equation (2.32), page 74, sends 0 to ∞. Example 2.24, page 76: centre `1/(2a)`, radius `|1/(2a)|`. The picture’s x = 1 circle is `|w − 1/2| = 1/2`. The card’s x = 2 circle is `|w − 1/4| = 1/4`.
+
+`js/core/map-route.js` matches `kit/template/js/core/map-route.js`. Live code does not import `kit/`. `node tools/check_vectors.mjs` (234/234), `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed on `8215b05` and again after the three fixes below. In headless Chrome the Exercise 13 blank rejected `0-6i` and `−6i`, locked on `−6`, and the §2.3 sheet read page 63. A drag just left of the origin said Arg is near π. Deep in the lower half, Arg was not near −π. At 0, §2.5 named ∞ and the north pole. No console errors. `scrollWidth` did not exceed the window at 390 or 1280.
+
+### Fixes pushed to cursor/chapter-2
+
+- Just left of the origin, Arg can already be within 0.55 of π while the real part is still greater than −0.05. At `−0.03+0.01i`, Arg is about 2.82 and the sentence said Arg was not yet near π. The near-π sentence now follows the argument test. The 0.55 band is unchanged. Deep in the lower half, at `−1.1−1.38i`, the square root stays in the lower half-plane and Arg is still not near −π.
+- The §2.3 sheet said “Take the smaller δ. Page 62.” The minimum of δ₁ and δ₂ is the first full paragraph of the proof, printed page 63. Theorem 2.1 is still cited on page 62, where the statement is.
+- The sector choices were wrapped as math with a plain `arg w`. Math mode drops the space, so the button read `argw`. They now use `\arg` and `\pi`, the same commands as the prompt. The four angles are unchanged.
+
+### Leftovers not fixed
+
+1. At 1280 the two planes still sit in the left of a wide card, and the claim does not sit beside them. The quarter-turn arc is still the short arc from the positive real axis to the positive imaginary axis, and it is still small. Practice choices do not stretch to the card. The sector card’s title still shows a caret in `z^n`. The §2.5 worked line can still break before the period that closes `|w − 1/2| = 1/2`.
+2. The roadmap still lists chapters 8–11. The drawer stops at 7. On the book chapter the footer colour key is not the Test 1 key: `body[data-book="true"] .colour-key` is `display: none`.
+3. The practice engine on `cursor/practice-engine` still needs `ch2-maps` in its generator catalog.
+
+## Chapter 2, batch 5
+
+Started from `b64738c`. The merged list, on the current paper and type.
+
+After Exercise 13 the summit scrolls up under the header: Summit, the sentence, Stage complete, and Go to 2.2. The waiting line sits under the claim (on a wide window it sits in that same column). “0 of 5 stages marked.” sits under the chapter title.
+
+§2.1–§2.5 are full-row links, 44px, page number included. A press under the words opens the stage. Further reading, the source line, the site title, and Chapter 4’s Book and Back controls are 44px. Chapter 5 uses the same Book control.
+
+Unopened drawer rows say Later. Opening Chapter 3 keeps that row current. The book lede says Chapters 1–7. Chapters 8–11 are not drawn. The data list still has eleven chapters so the contents check holds.
+
+The orange quarter-turn arc is about a third of the square and stays on the unshaded side of the blue line, on the phone and on the wide plane. At 1280 the claim sits beside the planes and the pair ends inside the 800px window. Phone planes stay about 158px. Stacked practice choices use the card; at 1280 they are one row, each 44px. The four root choices stay a compact row. The sector title is \(z^n\). The circle sentence keeps its period on \(|w - 1/2| = 1/2\). `0-6i` and `−6i` are still rejected for `−6`.
+
+`ch2-maps` stays out of the shared practice-engine catalog. That catalog is not on this branch.
+
+Checked in headless Chrome at 390×844 and 1280×800, light and dark. No sideways scroll. No console errors. `node tools/check_vectors.mjs` (234/234), `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed.
+
+## taste-skill (chapter-2 batch 5)
+
+Read Leonxlnx/taste-skill at `12af471f`. Judged the preview through it. `kit/SKILL.md` wins where they disagree, and the site style stays: four teaching colours, one gesture, no second clock, the book-path kickers, the system serif and the system sans, the paper. Polish only. No product code changed.
+
+Preview https://ch2-preview.complexanalysis.pages.dev, tip `0113eb9` on `cursor/chapter-2`. The live `css/components.css` has the wide-card rule from that commit. Walked `#book` and `#chapter-2` in headless Chrome, 390×844 then 1280×800, light then dark. Opened the phone drawer. Dragged the green point on §2.1 both ways. No console errors. `scrollWidth` was 390 and 1280.
+
+### Verdict
+
+ANOTHER BATCH
+
+One polish batch, the six cuts below, then this lens rests. The phone chapter and the wide card already hold: both planes, the claim, and an arc a third of the square. What is left is the sentence breaking inside a formula, one wrapped word beside the planes, and a first screen that says the count twice and ends on a label.
+
+### Critique
+
+```
+ROUND 1
+Seen in one second: two shaded squares and a green dot, with an orange quarter-turn on the left square. On the laptop the claim sits in the right of that pair. On the book, Open Chapter 2, then a later chapter, then the open list.
+Idea (one sentence): one drag moves a green point, and the purple point and the sentence change with it.
+Live thing: the drag on each stage.
+Layout words by section: book=list / 2.1=split / 2.2=split / 2.3=split / 2.4=split / 2.5=split
+Scores: design 7 · usability 8 · creativity 8 · content 8 → overall 7.6
+Caps applied: none. The uppercase kickers, the 1px plane outlines, and the header hairline are the book path. The kit keeps them, so they do not cap the score. The planes are the picture. A scroll fade would be a second clock.
+Top three problems:
+1. On the phone the claim breaks inside w = iz + i. 390-light-ch2, 390-dark-ch2.
+2. At 1280 the waiting line wraps, and “changes” is its own line beside the planes. 1280-light-ch2, 1280-dark-ch2.
+3. The phone chapter ends on the word WORKED, and the line above the card opens “Five stages” under “0 of 5 stages marked.” 390-light-ch2, 390-dark-ch2.
+```
+
+House rules this pass leaves, because the kit and the site style win: the uppercase kickers (The Book, 2.1, Worked, Practice, Further reading), the 1px card and plane outlines, the header hairline, KaTeX’s math faces on top of the two text faces, the cream paper `#f6f3ec` and the dark paper `#0d121c`, the muted lede, and a still page. Five stages of one shape is the mountain. The drag is the motion.
+
+### Ranked
+
+1. **Keep each formula in the claim on one line.** At 390, light and dark, the §2.1 claim is 324×53 at y = 717, 17px, full ink `rgb(26, 34, 48)`. “On the blue line or to its right, ” ends the first line (245px). `w` and `=` sit on that line. `iz + i` starts the next line, at y = 748, then “lands on or above Im w = 2.” The sentence the picture checks breaks after the equals sign. At 1280 the same formula stays together, and `Im w = 2` drops to its own line in the 256px column, which is a clean break. The §2.5 worked line still splits the same way at 1280: `v =` ends the line and `−y/(1 + y²)` starts the next, while `|w − 1/2| = 1/2.` stays whole and keeps its period. Change: in the claim and the worked line, each formula wraps as one piece. The phone claim then breaks before `w = iz + i`.
+
+2. **On the wide screen, put the waiting line under the pair.** At 1280, light and dark, the claim column is 256px at x = 945. “Drag until the sentence changes” is one muted line of 258px on the phone (`rgb(81, 91, 108)`, y = 786, height 26). In the 256px column it wraps, and the second line is 67px: the word “changes”. The claim is the sentence beside the 300px planes. Change: the waiting line sits under the pair, the full width of the card, still one muted line. The claim is the only text in that column. The phone stack stays, where the line already fits.
+
+3. **Make the lede two lines, so the first screen does not end on WORKED.** At 390, light and dark, scroll 0. The status at y = 167 says “0 of 5 stages marked.” The lede at y = 193 is 78px, three lines, the same muted colour, and it opens “Five stages.” Deleting those two words leaves the block at 78px, so the fold does not move. Worked is 15px at y = 829, and its bottom is the bottom of the 844px screen. Example 2.9 starts at y = 848. Change: the lede does not restate the count. It names the four colours in two lines and keeps “line or circle.” Measured at 390: “Drag the green point. Purple lands. Blue is the line or circle, orange the curve.” is 52px, Worked moves to y = 803, and the example starts at y = 822, so the first line of Example 2.9 is on the screen. A fuller wording is right when it stays two lines and the example’s top stays on that screen.
+
+4. **Keep the licence on one line of the book citation.** At 390, light and dark, the book source is 358×81 at y = 187. The lines are “Howell & Mathews, Complex Analysis,” then “202 Updated Edition, table of contents, pages i–ii. CC BY”, then a 22px line that is “4.0.” Change: `CC BY 4.0.` stays together. “Pages i–ii” already names the contents, so “table of contents,” can leave and the licence fits on the second line.
+
+5. **Let the open chapter’s list lead the phone book.** At 390 the Chapter 1 card is 358×167 at y = 428. Its last line is the wrapped word “Addresses.” from “Already drawn: One Point, Two Addresses.” §2.1 is at y = 717, §2.3 at y = 813, and §2.4 at y = 861, under the fold. A later card with no extra sentence, Chapter 6, is 115px. The rows themselves are 44px (§2.5 is 47, because the title wraps). Change: a later chapter is the flag, the title, and the page. The map link is that title, on one line. §2.4 then clears the 844px screen.
+
+6. **In the dark, the shaded half-plane has to stay orange.** At 390, light, the w-plane shade above the line is `rgb(241, 225, 214)` and the line is `rgb(204, 145, 107)`. At 390, dark, the same shade is `rgb(58, 48, 51)` and the line is `rgb(157, 103, 71)`. The line is still orange. The half the claim is about has gone brown. The same pair is on the 1280 dark first screen. Change: the dark tint is a tint of that orange line, mixed with the dark paper. The light peach stays. One drag. No second colour.
+
+### Keep
+
+The paper, the serif title, and the four teaching colours on the marks that already read. Light paper `rgb(246, 243, 236)`, dark paper `rgb(13, 18, 28)`. The green dot, the purple dot, the blue line, and the orange arc, in both themes. The arc’s box is 52×52 on the 158px phone square and 99×99 on the 300px wide square, a third of the square, on the unshaded side of the blue line. Phone planes are 158×158. At 1280 the pair is 300×300 from x = 321, the claim is beside it at x = 945, and the row ends inside the 800px window. A press on the left of the z square sets the claim to “lands below Im w = 2” and the waiting line to “Finish one practice card.” Pressing back restores the first sentence. Stage complete stays hidden. Summit, scrolled up, sits at y = 72, and the header ends at 56. The phone waiting line is one muted line. §2.1 through §2.4 titles are one line. §2.5 is two lines, 54px. The parabola, the disks, the dashed cut, and the orange circle stay the pictures. Show the back stays the card’s full-width button. Memory sheet is 156×44. The four root choices stay one row, each 51×44. At 1280 the stacked choices are one row, each 215×44. The sector choices use `\arg` with a gap. The circle sentence keeps its period on `|w − 1/2| = 1/2`. Open Chapter 2 is 324×44, and the status under it is 26px: “Chapter 2 is open. 0 of 5 stages marked.” The phone drawer rows are 44px. Later sits on chapters 1, 3, 6, and 7, and Chapter 2 is the current row. The book lede says Chapters 1–7. The kickers stay. They are the book path. No sideways scroll, and the console stayed quiet.
+
+## ux-veteran (chapter-2 batch 5)
+
+Preview https://ch2-preview.complexanalysis.pages.dev, branch `cursor/chapter-2`, tip `0113eb9`. The live `js/stations/chapter2.js`, `js/stations/ch2-picture.js`, `js/stations/book.js`, `js/app.js`, and `css/components.css` matched that commit. Walked as a student in headless Chrome: home, the drawer, the book, Chapter 2 through a finished Exercise 13 and Go to 2.2, a fresh `#chapter-2-2-4`, Chapter 3 from the drawer, the §2.2 choices, the roots card, and §2.5. 390×844 first, then 1280×800, light then dark. No product code changed. No console errors. No sideways scroll: `scrollWidth` was 390 and 1280 on the home, the book, and Chapter 2, in both themes.
+
+### Verdict
+
+ANOTHER BATCH
+
+The batch-5 list is on the page. The phone opens on the two planes, the claim, and the line that says what is left. After Exercise 13 the summit sits under the header with Stage complete and Go to 2.2 on that same screen. Three leftovers still meet the thumb or the sentence: the roots card prints its words as one math run, the further-reading marker drops onto the page number, and the book’s “Already drawn” links are 23px.
+
+### How the walk went
+
+Home, 390, light, fresh storage. The first screen is Which test, The Map, and the lede. The menu and the theme button are 44×44. The site title is 237×44. The drawer’s first row is The Book, 358×44. Under it are the Test 1 places, each row 44px. At 1280 the hamburger is gone and that Book row is the top of the sidebar.
+
+The book, 390, both themes. Open Chapter 2 is 324×44, from y = 309 to 353, fill `rgb(47, 62, 92)` in the light and `rgb(207, 216, 234)` in the dark. The line under it is “Chapter 2 is open. 0 of 5 stages marked.” and that line is 26px. The Chapter 2 card starts at y = 611, on the 844px screen, with §2.1 through §2.3 in view. At 1280 the button and the status share one row (button y = 258, status y = 267). The lede is “Chapters 1–7, in the order Howell and Mathews print them.” Chapters 8–11 are absent.
+
+The section rows are the target. §2.1 through §2.4 are 324×44. §2.5 wraps and the row is 46.5px. A press 6px under the §2.1 words, inside the row, opened `#chapter-2-2-1`. The same press on §2.4 opened `#chapter-2-2-4` with the flag at y = 73 and the title at y = 96. The header ends at 56. A fresh load of `#chapter-2-2-4` lands on those same numbers.
+
+Chapter 2, first screen, 390, light and dark. The title is Iowan Old Style, 25.85px, weight 600. “0 of 5 stages marked.” sits under it, at y = 167. The lede is the four colours. Both squares are 158×158 from y = 525. The claim ends at y = 770. “Drag until the sentence changes” ends at y = 813. WORKED is the last line on the screen, at y = 829. The orange arc is 52×52 on the 158px square, on the unshaded side of the blue line. The green mark is 21.4px. A press in the corner of the square moved the point to re = −0.29, im = 1.29, flipped the claim to “lands below Im w = 2”, and changed the waiting line to “Finish one practice card.” A press back on the right, re = 1.75, restored the first sentence.
+
+At 1280×800, light and dark, the squares are 300px and the pair ends at y = 766, inside the window. The claim sits in the column to the right of the w plane, x = 945, a 256px measure, and it ends at y = 635. The waiting line is in that column and ends at y = 703. The arc is 99×99 on the 300px square. The sidebar lists chapters 1–7, marks 1, 3, 6, and 7 Later, and highlights Chapter 2.
+
+Exercise 13 took `−6`, `3+2i`, and `triangle`. The page then showed Summit at y = 72, the sentence under it, Stage complete at y = 182 (44px), and Go to 2.2 at y = 234 (108×44). The header ends at 56. “0 of 5 stages marked.” had scrolled off with the title. Go wrote `{"2.1": true}` and opened `#chapter-2-2-2` with the flag at y = 73 and the title at y = 96. The picture on arrival is the line and the parabola, and the waiting line is under that claim.
+
+Browser Back, measured on the phone. The book was at scroll 500. The §2.1 row opened the stage. The chapter was scrolled to 1800. Back returned to `#book` at 500. Forward returned to `#chapter-2-2-1` at 1800. From the chapter at 2600, the drawer’s The Book row opened `#book` at 0, and Back returned to the chapter at 2600.
+
+The drawer on the chapter is The Book and chapters 1–7, each row 44px. Chapters 1, 3, 6, and 7 say Later. Tapping chapter 3 closed the drawer, left that row current, and opened the roadmap with the Later flag at y = 73 and the title at y = 96. The page title is The Book. Chapters 8–11 are not on that page.
+
+The footer colour key on the chapter and the book, at both sizes and in both themes, is `display: none`. Further reading links are 44px on one line and 67px when they wrap. The Book and Back to the book are 44px on Chapter 2, Chapter 4, and Chapter 5. Chapter 4’s picture chips (“The disk in Definition 4.1”, “One Newton Step”, and the six beside them) are 36px, the same `a.chip` height as the map’s topic chips.
+
+The roots card, Equation (1.45), first paint, both widths. The prompt is “The square roots of 1 are.” The four buttons read `1and − 1`, `1`, `iand − i`, and `only1`. On the phone each is 290×44, stacked to the card. At 1280 they are one row, each 44px tall. The §2.4 row above that card is the compact one: −i, i, 1, −1, each 51×44, and those four read as themselves. The sector buttons read `0 < arg w < 3π/2` and the three beside it, with a gap after arg. The title is angles under \(z^n\). On §2.5 the worked line ends `|w − 1/2| = 1/2. At 0, 1/z is not a point of the plane.`
+
+The paper is `rgb(246, 243, 236)` in the light and `rgb(13, 18, 28)` in the dark. The chapter title, the lede, and the planes use the same type and the same four colours as the book and as Chapter 4.
+
+### Ranked
+
+1. **The roots card has to say the words.** Evidence: Equation (1.45), first paint, 390 and 1280. The buttons are `1and − 1`, `iand − i`, and `only1`. The markup is one math run, `<mn>1</mn><mi>a</mi><mi>n</mi><mi>d</mi><mo>−</mo><mn>1</mn>`, so the space in “1 and −1” is dropped. On the phone the buttons are 290×44 and fill the card. At 1280 they are one row of 44px targets. The §2.4 row of −i, i, 1, −1 stays readable at 51×44. Change: render the words outside math mode, so the buttons read `1 and −1`, `i and −i`, and `only 1`. A choice that is only a formula stays in math. The phone keeps the stack at the card’s width. The wide row stays one row, each target at least 44px.
+
+2. **The further-reading marker has to sit on the first line.** Evidence: at 390, after the summit, “Function, image, domain, range, page 43” is a 305×67 link of two lines, and the list marker is drawn beside `43`. “Image of a set, into, inverse image, one-to-one, page 46” does the same. A one-line pin, “Translation, page 48”, is 162×44 and the marker sits on that line. The link is `inline-block` with min-height 44, so a wrapped pin’s baseline is the last line. Change: the link is a block, min-height still 44, so the marker stays on the first line and the page number stays inside the same target.
+
+3. **The “Already drawn” links are the short targets left on the book.** Evidence: at 1280, light and dark, the three door links are 23px tall: “One Point, Two Addresses” (208×23), “A Function Is a Motion” (178×23), and “The Derivative Is a Move” (195×23). At 390 the first wraps to 49px and the other two stay 23px. §2.1–§2.5, Open Chapter 2, The Book, and Back to the book are 44px. Change: `.book-door a` uses the same 44px inline-flex treatment as `.book-tap`.
+
+### Keep
+
+The first screen of the chapter. Both planes, the shaded half, the quarter-turn arc at a third of the square, the claim that names \(w = iz+i\), and the waiting line under it, at 390 and at 1280, in the light and in the dark. On the phone the planes are 158px from y = 525, the claim ends at y = 770, and the waiting line ends at y = 813. At 1280 the planes are 300px, the claim sits beside the w plane, and that row ends inside the 800px window. A press in the corner moves the point and flips the sentence. “0 of 5 stages marked.” sits under the title. Open Chapter 2 is a 44px primary button, the status under it is one line, and the Chapter 2 card is on the 390 screen. §2.1–§2.5 are full-row targets, and a press under the words opens the stage with the title clear of the header. After Exercise 13, Summit, the sentence, Stage complete, and Go to 2.2 are on the screen under the header. Go is 44px, it writes the mark, and §2.2 opens with its title at y = 96. Browser Back returns to the scroll the student left: 500 back to 500, 1800 back to 1800, and 2600 back to 2600 through the drawer. The drawer is chapters 1–7, each row 44px, Later on the chapters that are not open, and chapter 3 stays current after the tap. The book lede counts seven chapters. The sector choices keep the gap in `\arg w`. The §2.4 roots stay a compact row of 51×44. The circle sentence keeps its period on \(|w − 1/2| = 1/2\). The colour key stays off the book. Chapter 4 and Chapter 5 use the same 44px Book and Back controls. The map’s 36px topic chips stay the map’s chips. The paper, the Iowan title, and the four teaching colours match the rest of the site. No sideways scroll, and the console stayed quiet.
+
+## Chapter 2, batch 6
+
+Started from `0113eb9`. The merged list, on the current paper and type. Howell & Mathews, *Complex Analysis*, 202 Updated Edition. Printed page n is PDF page n+9.
+
+The roots card keeps words outside math. The buttons read `1 and −1`, `i and −i`, and `only 1`. A choice that is only a formula stays one math run, so the sector buttons still show the gap in `\arg w`. Further-reading links are blocks, min-height 44, and the marker sits on the first line with the page number inside the same target. Book doors are 44px. A later chapter is the flag, the title, and the page, and that title is the map link. On the phone, §2.4 ends at y = 843. `CC BY 4.0.` stays on one line of the book citation. Pages i–ii already name the contents.
+
+Each formula in the claim and the worked line is one piece. On the phone the claim breaks before \(w = iz+i\), and \(\operatorname{Im} w = 2\) is the next line. The lede no longer repeats the stage count. Example 2.9 starts at y = 824, on the 844px screen. At 1280 the claim sits alone beside the planes and “Drag until the sentence changes” is one muted line under the pair, ending at y = 799. The wide squares are 264px so that line fits. The phone squares stay 158px. The light half-plane is still the peach `rgb(241, 225, 214)`. In the dark the same wash is 58% of the orange line on the dark paper, `rgb(156, 102, 71)`.
+
+The branch sentence and the branch card now say a branch is continuous in a domain except, perhaps, on the boundary (page 68). Exercise 13’s shape line names the preserved right angle at \(-2+i\), still a right angle at \(-5-2i\) (page 51). `0-6i` and `−6i` are still rejected for `−6`.
+
+`ch2-maps` stays out of the shared practice-engine catalog. That catalog is on `cursor/practice-engine`, which this branch does not own, and Chapters 8+ are out of scope. The generator stays in `js/practice/gen/ch2-maps.js`.
+
+Checked in headless Chrome at 390×844 and 1280×800, light and dark. No sideways scroll. No console errors. `node tools/check_vectors.mjs` (234/234), `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. `js/core/map-route.js` matches the kit template.
+
+## unslop (chapter-2 batch 6)
+
+Read heydamir/unslop at `a6f121ee`. Polish only. `kit/SKILL.md` wins where they disagree: the four teaching colours, the book-path kickers, one gesture, one clock, no new picture and no second control. `BRIEF.md` and `LENSES.md` are not on this branch. The walk is https://ch2-preview.complexanalysis.pages.dev at tip `7d8dea4`. The live `js/stations/chapter2.js`, `js/stations/ch2-picture.js`, `css/components.css`, and `css/theme.css` matched that commit. Headless Chrome, 390×844 then 1280×800, light then dark, `#book` and `#chapter-2` through the five stages. A drag on §2.1 to the left and back. No product code changed. No console errors. No sideways scroll: `scrollWidth` was 390 and 1280.
+
+The page is already this book. Warm paper, a serif title, four teaching colours on the planes, quiet chrome. Light paper is `rgb(246, 243, 236)`. Dark paper is `rgb(13, 18, 28)`. No gradient, no glow, no emoji, no badge, no pulsing control.
+
+Direction, taken from the page. Product: one drag moves a green point, and the purple point and one sentence change with it. Character: calm, exact, a little warm. World: warm paper and a pair of planes. Moments: those two planes, the shade, the arc, the curve, the cut, the circle. Signature: the same four colours on every stage.
+
+### Verdict
+
+ANOTHER BATCH
+
+One polish batch, the five cuts below, then this lens rests. The phone chapter and the wide card already hold. What is left is the dark wash sitting five times heavier than the blue wash, two orphan lines, and titles that break.
+
+### Ranked
+
+1. **The dark orange wash has to sit at the same weight as the blue wash.** At 390 and at 1280, dark, the w-plane shade is `rgb(156, 102, 71)`, which is 58% of `#ff9d5c` on the surface `rgb(21, 28, 43)`. That colour is `oklch(0.561 0.083 50)` and its luminance is 0.170. The blue wash beside it is `rgb(33, 51, 75)`, `oklch(0.317 0.049 256)`, luminance 0.032. On the light page the two washes already match: peach `rgb(241, 225, 214)` at 0.774 and blue `rgb(216, 230, 242)` at 0.776. The dark orange half is a tan field, and the orange line is a hairline on top of it. A darker sRGB mix of the same bright line goes grey, which is the wash this batch was correcting: the old 16% mix is `rgb(58, 48, 51)`. Change: the dark shade is its own colour, hue 53 (the line `#ff9d5c` is `oklch(0.784 0.142 53)`), lightness near the blue wash, chroma high enough to stay warm. `oklch(0.40 0.08 53)` is that step. The light peach stays. The line stays `#ff9d5c`. One drag. No second colour.
+
+2. **Keep \(\operatorname{Im} w = 2\) on the line with “lands on or above,” so the phone screen does not cut Example 2.9.** At 390, light and dark, the claim is 324×80. The lines are “On the blue line or to its right,” then “\(w = iz+i\) lands on or above”, then “\(\operatorname{Im} w = 2\).” The third line is 81px and ends at x = 114. The lead is 240px and the first formula is 92px, together 332px, so the formula drops off a 324px measure by 8px and the second formula has nowhere to sit. Example 2.9’s first line starts at y = 825. The next line starts at y = 852. The 844px screen cuts \(w = iz+i\) and the word after it. At 1280 the same stub is the third line of the 256px column at x = 873. The planes end at x = 857. The claim ends at x = 1129. The card runs to about x = 1256. Change: the phone’s first line holds the lead and \(w = iz+i\). Those 8px come from the claim’s own measure, still inside the 358px card. The second line is “lands on or above \(\operatorname{Im} w = 2\)”, about 228px. The claim is two lines, and Example 2.9’s first line clears 844. On the wide layout the claim column’s max rises from 16rem to 21rem, so that same second line fits beside the planes. The planes stay 264px. The waiting line stays one muted row under the pair.
+
+3. **On the wide screen, the lede’s second line is the word “curve.”** At 1280, light and dark, `#chapter-lede` is 52px. The first line ends at x = 862: “Drag the green point. Purple lands. Blue is the line or circle, orange the”. The second line is “curve.”, 43px. `.station-lede` caps the measure at 62ch. At 390 the same lede is two even lines, “Drag the green point. Purple lands. Blue is” and “the line or circle, orange the curve.” Change: from the sidebar up, the lede is one line. The sentence is about 610px and the column holds it. The phone’s two lines stay.
+
+4. **A wrapped title has to break before a formula, and the book rows have to share a height.** At 390 the §2.5 row starts at y = 847, height 46.5. The name breaks after “w =” and “1/z” is the next line. The page number sits at the right of that row. The whole title “2.5 The Reciprocal Transformation w = 1/z” is 409px in a card whose text is 324px, so it will be two lines. Chapter 3’s title is 68px, “Analytic and” and then “Harmonic Functions”, and the string is 341px at 22.4px. Chapter 4’s title is 54px, breaking after “Sequences,”. Section 4.3 is 85px. Sections 4.1 and 4.2 are 26px. Chapter 2’s rows are already 44px, and the page number is on the row. Change: \(w = 1/z\) is one piece, so §2.5 breaks before the formula. Chapter 3 and chapter 4 titles stay one line at the size that fits the 324px card. Section rows use the chapter 2 row. A title that needs two lines breaks on a word, and the page number stays on the first line.
+
+5. **Sidebar titles stay one line, and every row stays 44px.** At 1280, light and dark, chapters 1, 2, 5, and 6 are 44px with a 19.4px title. Chapters 3, 4, and 7 are 46.8px because the title is 38.8px. “Sequences, Series, and Fractals” is 227px in a 217px box. “Analytic and Harmonic Functions” is 239px, and Later narrows that box to 171px. “Taylor and Laurent Series” is 184px in the 171px box. The row itself is 263px. `.nav-title` is `min-width: 0`, so the title shrinks and wraps. Change: the title is one line at the current size. Later stays at the end of the row and does not wrap the title. The sidebar is wide enough for 239px of title plus Later. The planes stay 264px.
+
+### Keep
+
+The paper, the serif title, and the four teaching colours on the marks that already read. The green dot, the purple dot, the blue line, and the orange arc, in both themes. The arc is 52×52 on the 158px phone square and 87×87 on the 264px wide square, a third of the square, on the unshaded side of the blue line. Phone planes are 158×158 from y = 499. At 1280 the pair is 264×264 from x = 321, y = 466, the claim sits beside the w plane, and “Drag until the sentence changes” is one line under the pair, ending at y = 799. A press on the left of the z square sets the claim to “lands below \(\operatorname{Im} w = 2\)” and the waiting line to “Finish one practice card.” Pressing back restores the first sentence. Stage complete stays hidden. The uppercase kickers stay. They are the book path. The lede on the phone is two even lines and does not repeat the count. “0 of 5 stages marked.” sits under the title. Open Chapter 2 is 324×44. The status under it is one line. §2.1 through §2.4 are 44px rows, and §2.4 ends at y = 843, on the phone screen. The book doors are 44px, including “A Function Is a Motion.” `CC BY 4.0.` stays on the citation line. The parabola choices, the sector choices, and the circle choices are 44px and the formulas are whole. The roots card reads `1 and −1`, `i and −i`, and `only 1`. At 1280 those choices are one row. The four §2.4 roots stay a compact row, each 51×44. Further reading that wraps is 67px, and the marker starts with the link. The §2.5 worked line keeps \(v = -y/(1+y^2)\) in one piece and the period on \(|w − 1/2| = 1/2\). The drawer is The Book and chapters 1–7, each row 44px, with Later on the chapters that are not open. The footer colour key stays off this page. No sideways scroll, and the console stayed quiet.
+
+## ux-veteran (chapter-2 batch 6)
+
+Preview https://ch2-preview.complexanalysis.pages.dev, branch `cursor/chapter-2`, tip `7d8dea4`. The live chapter, the book, and the wide claim rule matched that commit. Walked as a student in headless Chrome: home, the drawer, the book, Chapter 2 through Exercise 13 and Go to 2.2, a press on the §2.4 row, a fresh `#chapter-2-2-4`, and Chapter 3 from the drawer. 390×844 first, then 1280×800, light then dark. No product code changed. No console errors. No sideways scroll: `scrollWidth` was 390 and 1280 on the home, the book, and Chapter 2, in both themes.
+
+### Verdict
+
+REST
+
+The batch-6 layout is on the page, in both themes. On the phone §2.4 ends at y = 843, inside the 844px screen. At 1280 the waiting line is one muted line under the planes and ends at y = 799. The book doors are 44px. Example 2.9 starts at y = 824, and its first line is on the screen. The drawer, the 44px rows, the climb, and Back all hold. One wide lede still leaves the word “curve.” on a line by itself. That wrap is recorded below. It does not open another round.
+
+### How the walk went
+
+Home, 390, light, fresh storage. The first screen is Which test, The Map, and the lede. The menu and the theme button are 44×44. The site title is 237×44. The drawer’s first row is The Book, 358×44. Under it the Test 1 and Test 2 chips are 44px, then the Test 1 places, each row 44px. Escape closed the drawer. At 1280 the hamburger is gone and, on the book and on Chapter 2, that Book row is the top of a 280px sidebar.
+
+The book, 390, both themes. Open Chapter 2 is 324×44, from y = 290 to 334, fill `rgb(47, 62, 92)` in the light and `rgb(207, 216, 234)` in the dark. The line under it is “Chapter 2 is open. 0 of 5 stages marked.” and that line is 26px. The citation is two lines. The second is “202 Updated Edition, pages i–ii. CC BY 4.0.” The lede is “Chapters 1–7, in the order Howell and Mathews print them.” The Chapter 2 card is on the screen. §2.1 through §2.3 are on it, and §2.4 is the last row: y = 799, 324×44, bottom 843. §2.5 wraps and starts at y = 847, under the fold. At 1280 the button and the status share one row (button y = 258, status y = 267), the citation is one line with `CC BY 4.0.` on it, and §2.4 ends at y = 785, inside the 800px window.
+
+The doors are the target. “1 Complex Numbers” is 214×44. “A Function Is a Motion” is 178×44. “3 Analytic and Harmonic Functions” is 324×68 on the phone, where the title wraps, and 358×44 at 1280. A press 6px above the bottom of the §2.4 row opened `#chapter-2-2-4` with the flag at y = 73 and the title at y = 97. A fresh load of that hash lands on the same numbers. The header ends at 56.
+
+Chapter 2, first screen, 390, light and dark. The title is Iowan Old Style, 25.85px, weight 600. “0 of 5 stages marked.” sits under it, at y = 167. The lede is two lines, “Drag the green point. Purple lands. Blue is” and “the line or circle, orange the curve.”, and it does not restate the count. Both squares are 158×158 from y = 499. The claim ends at y = 767. It breaks before \(w = iz+i\), and \(\operatorname{Im} w = 2\) is the next line. “Drag until the sentence changes” is one muted line and ends at y = 801. WORKED ends at y = 820. Example 2.9 starts at y = 824, and the line on the screen is “Example 2.9, page 50. \(w = iz+i\). The”. The orange arc’s box is 107 of the 320 view, a third of the square, on the unshaded side of the blue line, about 53px on the phone square. The green mark is 21.4px. A press on the left of the square moved the point to re = −0.27, flipped the claim to “lands below Im w = 2”, and changed the waiting line to “Finish one practice card.” A press on the right restored the first sentence. The light half-plane is `rgb(241, 225, 214)`. In the dark the wash is the orange line `rgb(255, 157, 92)` at 0.58 on the plane `rgb(21, 28, 43)`, which blends to `rgb(157, 103, 71)`.
+
+At 1280×800, light and dark, the squares are 264px from x = 321 and the pair ends at y = 730, inside the window. The claim sits in the column to the right of the w plane, x = 873, a 256px measure, and each formula stays one piece. The waiting line spans the row under the pair, x = 321, width 808, one line, and ends at y = 799. The arc is about 88px, still a third of the 264px square, still on the unshaded side. The sidebar lists chapters 1–7, marks 1, 3, 6, and 7 Later, and highlights Chapter 2.
+
+Exercise 13 took `−6`, then Next step, `3+2i`, then Next step, and `triangle`. Next step is 44px. The page then showed Summit at y = 72, the sentence under it, Stage complete at y = 182 (166×44), and Go to 2.2 at y = 234 (108×44). The header ends at 56. “0 of 5 stages marked.” had scrolled off with the title. Go wrote `{"2.1": true}` and opened `#chapter-2-2-2` with the flag at y = 73, the title at y = 97, and the status “1 of 5 stages marked.”
+
+Browser Back, measured on the phone. The book was at scroll 500. The §2.1 row opened the stage. The chapter was scrolled to 1800. Back returned to `#book` at 500. Forward returned to `#chapter-2-2-1` at 1800. From the chapter at 2600, the drawer’s The Book row opened `#book` at 0, and Back returned to the chapter at 2600.
+
+The drawer on the chapter is The Book and chapters 1–7, each row 44px. Chapters 1, 3, 6, and 7 say Later. Chapter 2 is the current row. Tapping chapter 3 closed the drawer, left that row current, and opened the roadmap with the Later flag at y = 73. The page title is The Book. Chapters 8–11 are not on that page.
+
+The footer colour key on the chapter and the book, at both sizes and in both themes, is `display: none`. Further-reading links are blocks. A wrapped pin is 67px and the marker sits on the first line, with the page number inside the same target. A one-line pin is 44px. The Book and Back to the book are 44px. The roots card reads `1 and −1`, `1`, `i and −i`, and `only 1`. On the phone each choice is 290×44. At 1280 the formula choices are one row, each 215×44. The sector choices keep the gap in `\arg w`. The circle sentence keeps its period on `|w − 1/2| = 1/2`.
+
+The paper is `rgb(246, 243, 236)` in the light and `rgb(13, 18, 28)` in the dark. Chapter 4’s title is the same Iowan face, 25.85px on the phone, and its Book control is 44px. The map’s topic chips and Chapter 4’s picture chips are 36px.
+
+The wide lede is the leftover. At 1280, both themes, `#chapter-lede` is 595×52 because its max-width is 62ch. The first line ends at “orange the”. The second line is the word “curve.”
+
+### Ranked
+
+1. **On the wide screen, put the lede on one line.** Evidence: at 1280, light and dark, the lede is 595×52, max-width 62ch. “Drag the green point. Purple lands. Blue is the line or circle, orange the” fills the first line, and “curve.” is the second. At 390 the same sentence is two full lines in the 358px column, and that break is what keeps Example 2.9 at y = 824. The column beside the sidebar is 952px, and the sentence fits in it. Change: from the sidebar up, this lede uses that column, so it is one line. The phone keeps the two lines it has.
+
+### Keep
+
+The phone chapter’s first screen. Both planes at 158px from y = 499, the quarter-turn arc at a third of the square on the unshaded side of the blue line, the claim that breaks before \(w = iz+i\), the waiting line ending at y = 801, WORKED, and the first line of Example 2.9 at y = 824. The same screen in the dark, with the warm wash `rgb(157, 103, 71)` above the orange line. At 1280 the planes are 264px, the claim sits beside the w plane, and “Drag until the sentence changes” is one line under the pair, ending at y = 799. A press on the square moves the point and flips the sentence. “0 of 5 stages marked.” sits under the title and does not get repeated in the lede. Open Chapter 2 is a 44px primary button, the status under it is one line, and §2.4 is the last row on the 390 screen, bottom 843. The doors are 44px, and `CC BY 4.0.` stays with “pages i–ii”. A press in the §2.4 row, and a fresh `#chapter-2-2-4`, put the title at y = 97, clear of the header. After Exercise 13, Summit, the sentence, Stage complete, and Go to 2.2 are on the screen under the header. Go is 44px, it writes the mark, and §2.2 opens with its title at y = 97. Browser Back returns to the scroll the student left: 500 back to 500, 1800 back to 1800, and 2600 back to 2600 through the drawer. The drawer is chapters 1–7, each row 44px, Later on the chapters that are not open, and chapter 3 stays current after the tap. The book lede counts seven chapters. The roots card says the words. The sector choices keep the gap in `\arg w`. The circle sentence keeps its period. Further reading keeps the marker on the first line. The colour key stays off the book. The map’s 36px chips stay the map’s chips. The paper, the Iowan title, and the four teaching colours match the book and Chapter 4. No sideways scroll, and the console stayed quiet.
+
+## reviewer (Ch2 batch 6)
+
+Reviewed `7d8dea4` on `cursor/chapter-2` against Howell & Mathews, *Complex Analysis*, 202 Updated Edition (the professor PDF; printed page n is PDF page n+9). Preview https://ch2-preview.complexanalysis.pages.dev served that tip: `chapter2.js` and `ch2-picture.js` matched the tree. `BRIEF.md` and `LENSES.md` are not on this branch. The loop is the one in `kit/SKILL.md`. Not merged. `gh-pages` untouched. The unslop note at `02cd256` and the ux-veteran note at `327e5c6` are logs only. The page is the same.
+
+### Verdict
+
+ACCEPT WITH FIXES
+
+The five pictures, the pins, and the card answers match the book. One worked sentence put Definition 2.1 on the branch. That cite is fixed on this branch.
+
+### What matches the book
+
+Checked the claims in `js/stations/chapter2.js`, `js/stations/ch2-picture.js`, and `data/practice/ch2.json`, and recomputed the generator (`selfCheck` for seeds 1–80).
+
+- §2.1, page 43: one z in D goes to one w. Image, into, inverse image, and one-to-one are page 46. Translation is page 48. Rotation and magnification are page 49. The linear map w = Az + B is page 50: turn by Arg A, stretch by |A|, slide by B.
+- Example 2.9, pages 50–51. w = iz + i sends Re z ≥ 1 onto Im w ≥ 2, because v = x + 1. The boundary is included. Left of the line, v is strictly below 2. Page 51: a linear transformation preserves angles, because it is a rotation, a magnification, and a translation. The right angle at −2+i (straight up, straight right) is still a right angle at −5−2i. The images −5−2i, −6, and 3+2i have dot product 0.
+- Exercise 13, page 54, and the selected answer on page 432. The triangle has vertices −5−2i, −6, and 3+2i. `0-6i`, `−6i`, and `-6i` stay rejected. `−6` locks. The shape line still accepts triangle and right triangle.
+- Equation (1.45), page 32. The roots card’s first paint reads `1 and −1`, `i and −i`, and `only 1`, with the words outside math. One choice is the answer. Each listed root powers back to the number. A formula-only choice stays one math run: the sector buttons are `0 < arg w < …` with the gap after arg.
+- Equation (2.10), page 56: u = a² − v²/(4a²). The line x = 1 is u = 1 − v²/4. Exercise 1(b), page 59, is x = 2, so u = 4 − v²/16. The selected answer says the same.
+- Definition 2.3, page 61. Definition 2.4 and Theorem 2.1 are page 62. The minimum of δ₁ and δ₂, and the two halves adding to ε, are page 63. Exercise 1(a), page 66, is −3+5i. The selected answer on page 433 is −3+5i. (2+i)² = 3+4i. Example 2.16 says the conjugate reflects about the y axis. That sentence in the book is the slip. The picture reflects across the real axis, and the orange disk is centred at 1−i. δ = ε.
+- Example 2.21, pages 68–69. The upper limit at a negative real is i√r₀ and the lower limit is −i√r₀. Near −1 the lower choice is −i. Page 68: a branch is any single-valued function that is continuous in some domain (except, perhaps, on the boundary) and assigns one of the values. Page 69: the origin is the branch point.
+- §2.5 opens on page 72. Figure 2.22 and the north pole are page 73. Equation (2.32), page 74, sends 0 to ∞. Example 2.24, page 76: centre 1/(2a), radius |1/(2a)|. The picture’s x = 1 circle is |w − 1/2| = 1/2. The card’s x = 2 circle is |w − 1/4| = 1/4.
+
+Walked in headless Chrome at 390×844 and 1280×800, light and dark. No console errors. `scrollWidth` was 390 on the phone and 1265 in the 1280 window. The phone lede does not repeat the stage count. Each formula in the claim is one piece: w = iz+i on its own line, then Im w = 2. Example 2.9 starts at y = 824. At 1280 the claim sits alone beside the 264px planes and the waiting line under the pair ends at y = 799. The dark half-plane composites to rgb(156, 102, 71). The light wash is rgb(241, 225, 214). `CC BY 4.0.` is one line of the citation. §2.4 ends at y = 843. Further-reading links are blocks, min-height 44, marker on the first line, page inside the link. Book doors are 44px. A later chapter with a map is the flag, the title as that link, and the page. Chapters 6 and 7 have no door, so the title is the title. A press on the z square flips the §2.1 sentence both ways.
+
+`js/core/map-route.js` matches `kit/template/js/core/map-route.js` (sha256 `94ff34704f9df4355a5fc512b931691be006b744e4a52b2c0ec10edccf7fa231`). Live code does not import `kit/`. `node tools/check_vectors.mjs` (234/234), `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed.
+
+### Fixes pushed to cursor/chapter-2
+
+- The §2.4 worked line ended the branch sentence and then said “Definition 2.1, page 55.” Definition 2.1, page 55, is the principal square root. The branch sentence is page 68, and it is not a numbered definition. The square root now carries Definition 2.1. The branch sentence carries page 68. The flash card already said page 68.
+
+### Leftovers not fixed
+
+1. The Theorem 2.1 blank still accepts the letter e for ε. ε, epsilon, and the two halves adding to ε are the book’s bound (page 63). The letter e is not.
+2. The Theorem 2.4 pin says page 64. The sum and the difference start there. The composition, which needs f continuous in a neighborhood of g(z₀), is the next page, 65.
+3. On a phone, Chapter 3’s title wraps to 68px. The card is still the flag, the title, and the page, and §2.4 still ends at 843. Chapters 6 and 7 have no drawn map, so those titles are not links.

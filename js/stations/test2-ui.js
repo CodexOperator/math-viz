@@ -48,7 +48,11 @@ export function sourceTag(cite) {
   const a = h('a', { href: cite.href, target: '_blank', rel: 'noopener noreferrer' });
   a.textContent = cite.pin;
   p.append(a);
-  p.append(document.createTextNode(`. ${BOOK.licence}.`));
+  p.append(document.createTextNode('. '));
+  const licence = document.createElement('span');
+  licence.className = 'source-licence';
+  licence.textContent = `${BOOK.licence}.`;
+  p.append(licence);
   return p;
 }
 

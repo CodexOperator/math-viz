@@ -111,6 +111,7 @@ body {
   align-items: center;
   gap: var(--space-2);
   min-width: 0;
+  min-height: var(--tap);
   color: var(--text);
   text-decoration: none;
 }
@@ -272,6 +273,16 @@ body[data-nav-open="true"] {
 
 .nav-title { flex: 1 1 auto; min-width: 0; }
 
+.nav-later {
+  flex: none;
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .nav-threads { flex: none; display: inline-flex; gap: 3px; }
 
 /* A thread dot: solid for T1 and T3, a dashed ring for T2 (so colour is never the only cue). */
@@ -411,7 +422,15 @@ body[data-nav-open="true"] {
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
-.source-tag a { color: inherit; }
+.source-tag a {
+  display: inline-block;
+  box-sizing: border-box;
+  min-height: var(--tap);
+  padding-block: 0.55rem;
+  line-height: 1.3;
+  color: inherit;
+}
+.source-licence { white-space: nowrap; }
 .scope-banner {
   margin: 0 0 var(--space-3);
   padding: var(--space-2) var(--space-3);
@@ -1039,6 +1058,14 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   margin: 0;
 }
 
+#book-open-2 { min-height: var(--tap); }
+
+@media (max-width: 40rem) {
+  #book-next { flex-direction: column; align-items: stretch; }
+  /* 16rem is the width basis in a row. In this column it was a 256px hole. */
+  #book-status { flex: 0 1 auto; }
+}
+
 .book-path,
 .chapter-path,
 .book-sections {
@@ -1184,7 +1211,7 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 
 .book-page,
 .book-node-note,
-.book-door,
+p.book-door,
 .book-section-page,
 .book-footer-link {
   margin: 0;
@@ -1201,6 +1228,45 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   min-width: 0;
 }
 
+#book-sections-2 > li {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  min-height: var(--tap);
+  padding: 0;
+}
+
+#book-sections-2 > li > a.book-section-link {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  gap: 0.35rem 0.75rem;
+  width: 100%;
+  min-height: var(--tap);
+  min-width: 0;
+  padding: 0.35rem 0;
+  color: var(--accent);
+  font-size: 0.92rem;
+  line-height: 1.2;
+  text-decoration: none;
+}
+
+#book-sections-2 .book-section-name {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+#book-sections-2 > li > a.book-section-link:hover .book-section-name {
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+
+#book-sections-2 .book-section-page,
+#book-sections-2 .book-section-mark { white-space: nowrap; }
+
+#book-sections-2 .book-section-page { color: var(--text-muted); }
+
 .book-section-page { margin-left: auto; font-variant-numeric: tabular-nums; }
 .book-section-mark { font-size: 0.82rem; font-weight: 700; }
 .book-section-mark:empty { display: none; }
@@ -1209,6 +1275,14 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 
 .book-read { margin: 0; padding-left: 1.2rem; }
 .book-read li { margin: 0.15rem 0; }
+.book-read a {
+  display: block;
+  box-sizing: border-box;
+  max-width: 100%;
+  min-height: var(--tap);
+  padding-block: 0.65rem;
+  line-height: 1.35;
+}
 .book-label {
   margin: var(--space-3) 0 var(--space-1);
   font-family: var(--font);
@@ -1220,6 +1294,234 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 }
 
 .section-idea { max-width: 62ch; margin: 0; }
+
+.ch2-picture { min-width: 0; }
+
+.ch2-maps {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  width: min(100%, 34rem);
+  min-width: 0;
+}
+
+.ch2-path { padding-bottom: var(--space-4); }
+
+.ch2-complete:disabled { opacity: 0.45; }
+
+.ch2-drag { cursor: grab; }
+.ch2-drag:active { cursor: grabbing; }
+
+.ch2-memory-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.ch2-memory-block .book-read { margin: 0; }
+
+.ch2-waiting { margin-top: var(--space-3); }
+
+.ch2-done {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.ch2-done .btn { min-height: var(--tap); }
+
+a.book-tap,
+.book-door a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+}
+
+p.book-door a { white-space: nowrap; }
+
+h2.book-door a {
+  display: inline-block;
+  box-sizing: border-box;
+  max-width: 100%;
+  padding-block: 0.45rem;
+  line-height: 1.2;
+  white-space: normal;
+}
+
+.ch2-plane {
+  margin: 0;
+  min-width: 0;
+}
+
+.ch2-plane svg,
+.ch2-stage {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  touch-action: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.ch2-stage:focus:not(:focus-visible) { outline: none; }
+
+.ch2-observe,
+.ch2-claim,
+.ch2-summit,
+.ch2-memory {
+  max-width: 62ch;
+  margin: var(--space-2) 0 0;
+}
+
+/* A formula is one piece. The line breaks before it, not after the equals sign. */
+.ch2-claim .katex,
+.section-idea .katex {
+  white-space: nowrap;
+}
+
+.ch2-shade-polar {
+  fill: var(--polar);
+  opacity: var(--polar-shade-opacity);
+}
+
+.ch2-summit { font-family: var(--font-display); }
+
+@media (max-width: 40rem) {
+  .ch2-claim {
+    min-height: calc(1.0625rem * 1.55 * 2);
+    margin-top: var(--space-1);
+  }
+  .ch2-waiting { margin-top: var(--space-2); }
+  .ch2-picture + .book-label { margin-top: var(--space-1); }
+  #book-path { gap: var(--space-2); }
+}
+
+.ch2-aside {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+
+/* From the sidebar up, the claim sits beside the planes and the waiting
+   line is one muted row under the pair. The phone stack stays. */
+@media (min-width: 56.25rem) {
+  .ch2-picture {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(9rem, 16rem);
+    align-items: center;
+    justify-content: start;
+    column-gap: var(--space-3);
+  }
+
+  .ch2-aside { display: contents; }
+
+  .ch2-maps {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+    max-width: 34rem;
+  }
+
+  .ch2-claim {
+    grid-column: 2;
+    grid-row: 1;
+    margin: 0;
+    max-width: none;
+  }
+
+  .ch2-waiting {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+  }
+}
+
+/* Wide card: the planes grow until that row still ends inside an 800px window. */
+@media (min-width: 75rem) {
+  .ch2-picture {
+    grid-template-columns: auto minmax(12rem, 16rem);
+  }
+
+  .ch2-maps {
+    width: min(42rem, calc((100dvh - 33.5rem) * 2 + var(--space-2)));
+    max-width: none;
+  }
+}
+
+.ch2-choices {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+}
+
+.ch2-choices:not(.ch2-choices-row) {
+  align-self: stretch;
+  width: 100%;
+}
+
+.ch2-choices .btn { text-align: left; min-height: var(--tap); }
+
+.ch2-choices:not(.ch2-choices-row) .btn {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.ch2-choices-row { flex-direction: row; flex-wrap: nowrap; align-self: flex-start; width: auto; }
+.ch2-choices-row .btn {
+  flex: 1 1 0;
+  width: auto;
+  min-width: var(--tap);
+  justify-content: center;
+  text-align: center;
+}
+
+@media (min-width: 75rem) {
+  .ch2-choices:not(.ch2-choices-row) {
+    flex-direction: row;
+    flex-wrap: nowrap;
+  }
+
+  .ch2-choices:not(.ch2-choices-row) .btn {
+    flex: 1 1 0;
+    width: auto;
+    min-width: var(--tap);
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+.ch2-blank {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-width: 22rem;
+  font-size: 0.92rem;
+}
+
+.ch2-blank input {
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  min-height: var(--tap);
+  padding: 0 var(--space-2);
+}
+
+.ch2-blank input[data-right="true"] { border-color: var(--ok); }
+.ch2-choices .btn[data-right="false"] { border-color: var(--danger); }
+.ch2-choices .btn[data-right="true"] { border-color: var(--ok); }
+
+.ch2-step { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); margin-top: var(--space-2); }
+.ch2-step .btn { min-height: var(--tap); }
 .chapter-exercises { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
 .chapter-card { min-width: 0; }
 .chapter-card p { min-width: 0; }

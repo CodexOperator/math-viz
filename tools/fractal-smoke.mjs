@@ -118,7 +118,8 @@ check('#chapter-4 opens chapter 4', parseRoute('#chapter-4').book.kind === 'chap
 check('#chapter-4-4-1-3 focuses exercise 4.1.3', parseRoute('#chapter-4-4-1-3').book.focus === '4.1.3');
 check('#chapter-1 stays on the roadmap', parseRoute('#chapter-1').book.kind === 'roadmap' && parseRoute('#chapter-1').book.chapter === 1);
 check('a junk token on a later chapter is not a page', parseRoute('#chapter-1-extra').station == null && parseRoute('#chapter-1-extra').book == null);
-check('eleven chapters, 4 and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_CHAPTERS.join() === '4,5' && BOOK_CHAPTERS.filter((ch) => ch.open).map((ch) => ch.n).join() === '4,5');
+check('eleven chapters, 2, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_CHAPTERS.join() === '2,4,5' && BOOK_CHAPTERS.filter((ch) => ch.open).map((ch) => ch.n).join() === '2,4,5');
+check('#chapter-2 opens chapter 2', parseRoute('#chapter-2').book.kind === 'chapter' && parseRoute('#chapter-2').book.chapter === 2 && parseRoute('#chapter-2-2-3').book.focus === '2.3');
 check('chapter 4 sections follow the contents', CHAPTER_4.sections.map((s) => `${s.id} ${s.page}`).join() === '4.1 102,4.2 109,4.3 118,4.4 123');
 check('chapter 4 exercises are the homework set plus 4.4.6', chapter4ExerciseIds().join() === '4.1.3,4.1.13,4.2.3,4.2.4,4.2.5,4.3.1,4.3.2,4.4.6');
 {

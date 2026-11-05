@@ -22,6 +22,7 @@
   /* the teaching colours */
   --cart: #0b63ad;
   --polar: #a84300;
+  --polar-shade-opacity: 0.16;
   --input: #006e53;
   --output: #9d3a8a;
   --seam: #6b7384;
@@ -74,6 +75,7 @@
     --focus: #e9edf5;
     --cart: #62adf2;
     --polar: #ff9d5c;
+    --polar-shade-opacity: 0.58;
     --input: #3fd0a0;
     --output: #e48fd2;
     --seam: #8e99b0;
@@ -103,6 +105,7 @@
   --focus: #e9edf5;
   --cart: #62adf2;
   --polar: #ff9d5c;
+  --polar-shade-opacity: 0.58;
   --input: #3fd0a0;
   --output: #e48fd2;
   --seam: #8e99b0;
