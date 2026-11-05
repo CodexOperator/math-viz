@@ -2,7 +2,7 @@
 // One step at a time. A generator item computes its answer. A flash card is one
 // card: the back stays closed until asked, and Again / Knew it sets the next due date.
 
-import { generate, answerMatches } from '../practice/gen/ch2-maps.js';
+import { generate, answerMatches, choiceRuns } from '../practice/gen/ch2-maps.js';
 import { loadFlashBox, saveFlashBox } from '../book/ch2-progress.js';
 import { h, appendRich } from './test2-ui.js';
 
@@ -19,10 +19,11 @@ function withPage(item) {
   return page ? `${line} Page ${page}.` : line;
 }
 
-function asMath(choice) {
-  const s = String(choice);
-  if (/^[A-Za-z][A-Za-z ]+$/.test(s) && !/[=^|]/.test(s)) return s;
-  return `\\(${s}\\)`;
+function renderChoice(el, choice) {
+  for (const run of choiceRuns(choice)) {
+    if (!run.math) el.append(document.createTextNode(run.text));
+    else rich(el, `\\(${run.text}\\)`);
+  }
 }
 
 function stepOf(item, made, index) {
@@ -129,7 +130,7 @@ function card(item, store, onDone) {
       const row = h('div', { class: rowClass, id: `ch2-card-choices-${id}` });
       choices.forEach((choice, i) => {
         const b = h('button', { type: 'button', class: 'btn', id: `ch2-card-choice-${id}-${i}` }, '');
-        rich(b, asMath(choice));
+        renderChoice(b, choice);
         b.addEventListener('click', () => {
           if (b.disabled) return;
           const ok = answerMatches(choice, { answer: step.answer, accept: step.accept, values: step.values });

@@ -61,7 +61,12 @@ function plane(id, label) {
 }
 
 function shade(view, re0, re1, im0, im1, color) {
-  const rect = svgEl('rect', { fill: color, opacity: '0.16' });
+  const rect = svgEl('rect', { fill: color });
+  // The orange half-plane uses a theme opacity. In the dark, 0.16 of the
+  // light orange over the blue-gray paper reads brown. --polar-shade-opacity
+  // keeps that wash a tint of the orange line. The light peach stays 0.16.
+  if (color === 'var(--polar)') rect.setAttribute('class', 'ch2-shade-polar');
+  else rect.setAttribute('opacity', '0.16');
   const x = view.X(Math.min(re0, re1));
   const y = view.Y(Math.max(im0, im1));
   rect.setAttribute('x', x);

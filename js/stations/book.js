@@ -95,11 +95,21 @@ function mountRoadmap(el, ctx, spec) {
 
   for (const ch of BOOK_CHAPTERS) {
     if (ch.n > 7) continue;
+    const door = ch.door ? stationById(ch.door) : null;
+    // A later chapter is the flag, the title, and the page. The title is the
+    // map link, on one line, so the open chapter's rows reach the first screen.
+    // Chapter 2 keeps its section list, and its station link stays under that list.
+    const titleBits = [
+      h('span', { class: 'book-num' }, String(ch.n)),
+      document.createTextNode(` ${ch.title}`),
+    ];
+    const title = door && ch.n !== 2
+      ? h('h2', { class: 'book-door', id: `book-title-${ch.n}` },
+        h('a', { href: `#${door.id}` }, ...titleBits))
+      : h('h2', { id: `book-title-${ch.n}` }, ...titleBits);
     const head = h('div', { class: 'book-node-head' },
       h('p', { class: 'book-flag', id: `book-flag-${ch.n}` }, 'Later'),
-      h('h2', { id: `book-title-${ch.n}` },
-        h('span', { class: 'book-num' }, String(ch.n)),
-        document.createTextNode(` ${ch.title}`)),
+      title,
       h('p', { class: 'book-page', id: `book-page-${ch.n}` }, `Page ${ch.page}`));
     const kids = [head];
     if (ch.n === 2 || ch.n === 4) {
@@ -121,14 +131,11 @@ function mountRoadmap(el, ctx, spec) {
     }
     if (ch.n === 4) kids.push(walk);
     if (ch.n === 5) kids.push(open5);
-    if (ch.door) {
-      const st = stationById(ch.door);
-      if (st) {
-        kids.push(h('p', { class: 'book-door', id: `book-door-${ch.n}` },
-          'Already drawn: ',
-          h('a', { href: `#${st.id}` }, st.title),
-          '.'));
-      }
+    if (door && ch.n === 2) {
+      kids.push(h('p', { class: 'book-door', id: `book-door-${ch.n}` },
+        'Already drawn: ',
+        h('a', { href: `#${door.id}` }, door.title),
+        '.'));
     }
     list.append(h('li', { class: 'book-node', id: `book-node-${ch.n}`, 'data-chapter': String(ch.n), 'data-state': 'later' }, ...kids));
   }
@@ -139,7 +146,7 @@ function mountRoadmap(el, ctx, spec) {
     h('header', { class: 'station-header' },
       h('h1', { id: 'book-title' }, 'The Book'),
       h('p', { class: 'station-lede', id: 'book-lede' }, 'Chapters 1–7, in the order Howell and Mathews print them.'),
-      sourceTag({ pin: '202 Updated Edition, table of contents, pages i–ii', href: BOOK.html })),
+      sourceTag({ pin: '202 Updated Edition, pages i–ii', href: BOOK.html })),
     h('div', { class: 'book-next', id: 'book-next' }, open2, status),
     list);
 

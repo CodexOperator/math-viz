@@ -40,7 +40,7 @@
           "a right triangle"
         ],
         "form": "The name of the shape.",
-        "why": "A linear map sends a triangle to a triangle."
+        "why": "Page 51: a linear map preserves angles. The right angle at \\(-2+i\\) stays a right angle at \\(-5-2i\\)."
       }
     ],
     "generator": null,
@@ -748,7 +748,7 @@
     "steps": [
       {
         "text": "",
-        "answer": "A branch is one continuous single-valued choice of the values of a multivalued function.",
+        "answer": "A branch is one single-valued choice of the values of a multivalued function, continuous in a domain except, perhaps, on the boundary.",
         "why": "Section 2.4, page 68."
       }
     ],

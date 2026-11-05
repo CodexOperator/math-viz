@@ -1,6 +1,9 @@
 // Deterministic images for Chapter 2 practice.
 // A linear map w = (a+bi)z + (c+di), the parabola of a vertical line under z^2,
 // and a sector under z^n. Answers are computed from the seed. No DOM.
+// The shared practice-engine catalog lives on cursor/practice-engine, which this
+// chapter branch does not own. Chapters 8+ are out of scope here, so this file
+// stays the local generator and is not registered in that catalog.
 
 function lcg(seed) {
   let s = (Number(seed) >>> 0) || 1;
@@ -23,6 +26,44 @@ function irand(rng, lo, hi) {
 function pair(range, fallback) {
   if (Array.isArray(range) && range.length >= 2) return range;
   return fallback;
+}
+
+// A button that mixes words and a formula has to keep the words outside math,
+// or KaTeX drops the spaces ("1 and -1" paints as "1and − 1"). A formula with
+// no English word stays one math run. Single letters (i, u, v) stay math.
+const MATH_NAME = new Set(['i', 'e', 'pi', 'arg', 're', 'im', 'sin', 'cos', 'exp', 'log', 'sqrt', 'conj']);
+
+export function choiceRuns(choice) {
+  const s = String(choice);
+  const tokens = s.split(/(\s+)/);
+  const english = (token) => /^[A-Za-z]{2,}$/.test(token) && !MATH_NAME.has(token.toLowerCase());
+  if (!tokens.some(english)) return [{ math: true, text: s }];
+  const runs = [];
+  let math = [];
+  const flush = () => {
+    if (!math.length) return;
+    const raw = math.join('');
+    math = [];
+    const formula = raw.trim();
+    if (!formula) {
+      runs.push({ math: false, text: raw });
+      return;
+    }
+    const at = raw.indexOf(formula);
+    const lead = raw.slice(0, at);
+    const trail = raw.slice(at + formula.length);
+    if (lead) runs.push({ math: false, text: lead });
+    runs.push({ math: true, text: formula });
+    if (trail) runs.push({ math: false, text: trail });
+  };
+  for (const token of tokens) {
+    if (english(token)) {
+      flush();
+      runs.push({ math: false, text: token });
+    } else math.push(token);
+  }
+  flush();
+  return runs;
 }
 
 export function fmtComplex(re, im) {
@@ -427,6 +468,16 @@ export function selfCheck() {
     }
     if (!/Arg \+ 2πk/.test(Object.values(root.miss).join(' '))) throw new Error(`root miss text ${seed}`);
   }
+  const painted = (choice) => choiceRuns(choice).map((run) => (run.math ? `(${run.text})` : run.text)).join('');
+  if (painted('1 and -1') !== '(1) and (-1)') throw new Error(`roots words ${painted('1 and -1')}`);
+  if (painted('i and -i') !== '(i) and (-i)') throw new Error(`roots words ${painted('i and -i')}`);
+  if (painted('only 1') !== 'only (1)') throw new Error(`roots words ${painted('only 1')}`);
+  if (painted('the real axis') !== 'the real axis') throw new Error('axis left math');
+  if (painted('the punctured disk about z_0') !== 'the punctured disk about (z_0)') throw new Error('disk split');
+  const sector = choiceRuns('0 < \\arg w < 2\\pi/3');
+  if (sector.length !== 1 || sector[0].math !== true) throw new Error('sector left math');
+  const parabola = choiceRuns('u = 4 - v^2/16');
+  if (parabola.length !== 1 || parabola[0].math !== true) throw new Error('parabola left math');
   if (answerMatches('0-6i', { answer: '-6', accept: ['-6+0i'] })) throw new Error('0-6i must stay -6i');
   if (answerMatches('-6i', { answer: '-6', accept: ['-6+0i', '-6.0'] })) throw new Error('-6i must stay imaginary');
   if (answerMatches('−6i', { answer: '-6', accept: ['-6+0i', '-6.0'] })) throw new Error('−6i must stay imaginary');

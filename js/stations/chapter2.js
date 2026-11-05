@@ -79,7 +79,7 @@ const COPY = {
   '2.4': {
     why: 'Arg jumps when the point crosses the negative real axis.',
     summit: 'Arg jumps across the negative real axis, and the principal square root jumps with it.',
-    example: 'Example 2.21, pages 68–69. At a negative real number the limit from above and the limit from below are different square roots, so the principal square root jumps. A branch is one continuous choice of those values. Definition 2.1, page 55.',
+    example: 'Example 2.21, pages 68–69. At a negative real number the limit from above and the limit from below are different square roots, so the principal square root jumps. A branch is one single-valued choice of those values, continuous in a domain except, perhaps, on the boundary. Definition 2.1, page 55.',
     picture: mountBranch,
     next: '2.5',
     sheet: [
@@ -280,7 +280,7 @@ export function mount(el, ctx, focusArg) {
       h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back', class: 'book-tap' }, 'The Book')),
       h('h1', { id: 'chapter-title' }, 'Chapter 2. Complex Functions'),
       status,
-      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Five stages. Drag the green point. Purple is where it lands. Blue is the line or circle you test, and orange is the curve it maps to.'),
+      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Drag the green point. Purple lands. Blue is the line or circle, orange the curve.'),
       sourceTag({ pin: 'Chapter 2, Complex Functions, page 43', href: sectionHref(S21) })),
     path,
     h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end', class: 'book-tap' }, 'Back to the book')));
