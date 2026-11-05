@@ -1043,6 +1043,8 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 
 @media (max-width: 40rem) {
   #book-next { flex-direction: column; align-items: stretch; }
+  /* 16rem is the row's width. In the phone column it was a 256px blank. */
+  #book-next > .book-status { flex: 0 0 auto; }
 }
 
 .book-path,
@@ -1063,6 +1065,10 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 
 /* The last section can still scroll its title up under the header. */
 .chapter-path { padding-bottom: calc(100dvh - var(--header-h)); }
+
+/* Chapters 6 and 7 have no page of their own. The same padding lets those
+   roadmap cards sit under the header. */
+#book-path { padding-bottom: calc(100dvh - var(--header-h)); }
 
 .exp-picture {
   display: flex;
@@ -1238,14 +1244,40 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   width: min(100%, calc(100dvh - 31rem));
 }
 
-/* Phone: the first screen ends on Play. The why, both sentences, starts on the next thumb. */
+/* Phone: the gesture is one line, so the why pad grows by that saved height.
+   The first screen still ends on Play. Both why sentences start on the next thumb. */
 @media (max-width: 40rem) {
-  #chapter-section-3-1-why-block { padding-top: 4.5rem; }
+  #chapter-section-3-1-why-block { padding-top: 7.8rem; }
 }
 
-/* Laptop: the removed lede's slot stays empty, so the status does not rise into the 800px edge. */
+/* Wide: the sentence sits beside the square. The phone stays a column.
+   The square's width is a length, so the grid column does not shrink it. */
 @media (min-width: 56.25rem) {
-  #chapter-section-3-1-why-block { margin-bottom: 2.75rem; }
+  .ch3-picture {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--space-4);
+    row-gap: var(--space-2);
+    align-items: start;
+  }
+
+  .ch3-picture > .exp-stage {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    width: calc(100dvh - 24rem);
+    max-width: none;
+    justify-self: start;
+  }
+
+  #chapter-section-3-1-picture .exp-stage {
+    width: calc(100dvh - 31rem);
+    max-width: none;
+  }
+
+  .ch3-picture > .ch3-observe { grid-column: 2; grid-row: 1; }
+  .ch3-picture > .exp-claim { grid-column: 2; grid-row: 2; }
+  .ch3-picture > .ch3-deriv-row,
+  .ch3-picture > .chips { grid-column: 2; grid-row: 3; }
 }
 
 .ch3-path { padding-bottom: 0; }
@@ -1274,6 +1306,14 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .ch3-picture .exp-claim {
   min-height: calc(1.0625rem * 1.55 * 2);
 }
+
+.ch3-observe {
+  margin: 0;
+  max-width: 62ch;
+  color: var(--text);
+}
+
+.book-door .station-link { max-width: 100%; }
 
 a.book-flag {
   display: inline-flex;

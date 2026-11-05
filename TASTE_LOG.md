@@ -2014,3 +2014,19 @@ Same system as chapter 4, measured at 390. Light: the paper is rgb(246, 243, 236
 ### Keep
 
 The 324px phone square, the 45° sentence, the gesture line, and Play ending at y=783, in both themes. The why, both sentences, starts whole on the next thumb. The phone square stays 324px. At 1280 the square is 304px at x=321, the why ends at y=783.5, and the status starts at y=844.5, in both themes. conj keeps the claim at 52.7px and Play at one y. The dot stays under the finger inside the square, a press 26px out changes nothing, and at real part 1.98 the three marks are still drawn. The four teaching colours. The Book on this chapter at 44px. Back restoring scrollY 900 and 1400. The 44px flag and the memory list at y=72.5. `#chapter-3-3-2` and `#chapter-3-3-3` with the title at y=121. Mark stage complete, the green edge, and 3.2's title and why 98px under that button. The reload line "3.1 · Differentiable and Analytic Functions · 1 of 3", with "Next is 3.2" on the status. The drawer, chapters 1 through 7, the cover, and Escape. Walk Chapter 4 hidden until 3 of 3, and the lede that counts seven chapters. The seven roadmap cards, and chapter 3's 44px section rows. Exercise 1(a) as the prompt, the steps, and the source line. Exercise 3's formulas, each one piece inside the button, at 390 and at 1280. Shown inputs at 44px. The source line 49px under the last camp. The type, the paper, and the cards, shared with chapter 4. No sideways scroll.
+
+## Chapter 3 batch 6
+
+Branch `cursor/chapter-3`. Headless Chrome, 390×844 and 1280×800, light and dark. No console errors. No sideways scroll (`scrollWidth` 390 and 1265).
+
+A drag at Im = 1 stops at Re 2.29, before the frame. The green step, purple image, and orange turn stay visible, and the claim still quotes the turn (24°) and the stretch (5). At 2.28 the point is unchanged. The picture line is one sentence in the claim's ink: "Drag the green dot." "Drag the green corner." "Drag the green point."
+
+On a phone the square stays 324px. Play ends at y=730, because the gesture is one line. The why, both sentences, still starts at y=894. At 0 of 3 the status row is gone. After 3.1 is marked, the kicker stays 3.1 and the status says "Next is 3.2." on that stage. The pin list is gone. A cold `#chapter-3-3-1` stays at scroll 0, with the camp name at y=202. The flag still puts the memory list at y=72. `#chapter-3-3-2` puts the title at y=121.
+
+From 56.25rem the sentence sits beside the square. The opening square is 304px at x=321. §3.2 stays 416px. The 44px margin under the why is gone, so on the laptop the why ends at y=636.
+
+On the phone book the status is 53px, the height of the two lines. Chapter 3's Open card starts at y=766. Chapters 1 and 2 say Already drawn and do not say Later. Both doors are 44px station links. Chapters 4 and 5 use the same "The Book" control, 109×44. `#chapter-6` and `#chapter-7` sit at y=56 under the header, and those rows are current. `#book` marks The Book. Walk Chapter 4 stays hidden until 3 of 3.
+
+Theorem 3.5's flash back now includes \(f'(z_0)=e^{-i\theta_0}(U_r+iV_r)\), Equations (3.23) and (3.24), page 91. §3.3 Exercise 2 is a Laplace blank (`next-step-blank`) and a separate choice (`next-step-mc`).
+
+Deferred: Open Chapter 2 waits until that chapter's page meets this branch. The §3.3 summit still restates the why. The shared practice renderer is not on this branch. Chapters 8–11 stay in the data and off the list.

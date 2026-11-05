@@ -1,7 +1,7 @@
 // The three Chapter 3 pictures. Each has one gesture, at most three controls, and the site's clock.
 
 import { createFrame, createMotion, prefersReducedMotion } from '../core/anim.js';
-import { derivativeScene, squareScene, levelScene, clampRect, wrapPi, circleComparePoint, sharedGain, markScale, arcRadius, PLANE_SIZE } from './ch3-math.js';
+import { derivativeScene, squareScene, levelScene, clampRect, clampDrawn, wrapPi, circleComparePoint, sharedGain, markScale, arcRadius, PLANE_SIZE } from './ch3-math.js';
 import { h, appendRich } from '../stations/test2-ui.js';
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -230,7 +230,7 @@ export function mountDerivativePicture(parent) {
     return Math.hypot(ev.clientX - dot.x, ev.clientY - dot.y) <= HIT;
   }
   function place(re, im) {
-    return clampRect(re, im, span);
+    return clampDrawn(fn, re, im, phi, span);
   }
   function moveTo(ev) {
     const p = clientMath(shell.stage, span, ev);
@@ -292,7 +292,7 @@ export function mountDerivativePicture(parent) {
     stopPlay();
     paint();
   });
-  const observe = h('p', { class: 'book-page', id: 'chapter-deriv-observe' }, 'Drag the green dot. Green is the step. Purple is where it goes. Orange is the turn.');
+  const observe = h('p', { class: 'ch3-observe', id: 'chapter-deriv-observe' }, 'Drag the green dot.');
   const row = h('div', { class: 'ch3-deriv-row', id: 'chapter-deriv-row' }, shell.controls, play);
   parent.append(shell.frame, observe, shell.claim, row);
   paint();
@@ -392,7 +392,7 @@ export function mountSquarePicture(parent) {
     theta += ev.shiftKey ? d * 2 : d;
     paint();
   });
-  const observe = h('p', { class: 'book-page', id: 'chapter-square-observe' }, 'Drag the green corner. Green is the tiny square. Purple is its image.');
+  const observe = h('p', { class: 'ch3-observe', id: 'chapter-square-observe' }, 'Drag the green corner.');
   parent.append(shell.frame, observe, shell.claim, shell.controls);
   paint();
   return function unmount() {
@@ -608,7 +608,7 @@ export function mountLevelPicture(parent) {
     z = place(z.re + d[0], z.im + d[1]);
     paint();
   });
-  const observe = h('p', { class: 'book-page', id: 'chapter-level-observe' }, 'Drag the green point. Orange is a level of u. Purple is the other family.');
+  const observe = h('p', { class: 'ch3-observe', id: 'chapter-level-observe' }, 'Drag the green point.');
   parent.append(shell.frame, observe, shell.claim, shell.controls);
   paint();
   return function unmount() {

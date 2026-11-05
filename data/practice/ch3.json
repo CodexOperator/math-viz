@@ -656,12 +656,12 @@
     "steps": [
       {
         "text": "",
-        "answer": "For f = U + iV in r and θ, with continuous partials: r U_r = V_θ and r V_r = -U_θ.",
-        "why": "Theorem 3.5, page 91. The book asks for the proof in Exercise 10."
+        "answer": "For f = U + iV in r and θ, with continuous partials: r U_r = V_θ and r V_r = -U_θ. Then f'(z_0) = e^{-iθ_0}(U_r + i V_r). Equations (3.23) and (3.24), page 91.",
+        "why": "Theorem 3.5, page 91. Equations (3.23) and (3.24) give one form of f'. The book asks for the proof in Exercise 10."
       }
     ],
     "generator": null,
-    "memory": "Polar form: r U_r = V_θ and r V_r = -U_θ."
+        "memory": "Polar form: r U_r = V_θ and r V_r = -U_θ. Then f' = e^{-iθ}(U_r + i V_r)."
   },
   {
     "id": "ch3-3.2-flash-t36",
@@ -711,7 +711,19 @@
         "accept": ["6y + 6x", "6(x+y)", "6(x + y)"],
         "why": "\\(v_{xx} = 6x\\) and \\(v_{yy} = 6y\\). The sum is \\(6x + 6y\\), not 0.",
         "miss": "Take both second partials. Laplace is what you are testing, not a value to assume."
-      },
+      }
+    ],
+    "generator": null,
+    "memory": "An analytic function's imaginary part is harmonic. x³ + y³ has Laplacian 6x + 6y, so it cannot be one."
+  },
+  {
+    "id": "ch3-3.3-im-002",
+    "chapter": 3,
+    "section": "3.3",
+    "cite": {"ref": "§3.3, Exercise 2", "page": 100},
+    "kind": "next-step-mc",
+    "prompt": "Does an analytic function \\(f = u + iv\\) exist for which the imaginary part is \\(v(x, y) = x^{3} + y^{3}\\)? The Laplacian is \\(6x + 6y\\).",
+    "steps": [
       {
         "text": "So an analytic \\(f\\) with this imaginary part",
         "answer": "does not exist",
@@ -725,7 +737,7 @@
       }
     ],
     "generator": null,
-    "memory": "An analytic function's imaginary part is harmonic. x³ + y³ has Laplacian 6x + 6y, so it cannot be one."
+    "memory": "A part that fails Laplace's equation cannot belong to an analytic function."
   },
   {
     "id": "ch3-3.3-conj-001",

@@ -6,7 +6,7 @@ import { stationsForMap, stationForTopic, stationForProblem, stationById, thread
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
 import { BOOK_CHAPTERS, CHAPTER_3, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, chapter3StageIds, chapter4ExerciseIds, chapter5ExerciseIds } from '../js/data/book-path.js';
-import { derivativeScene, squareScene, levelScene, circleComparePoint, clampRect, sharedGain, markScale, arcRadius, PLANE_SIZE } from '../js/book/ch3-math.js';
+import { derivativeScene, squareScene, levelScene, circleComparePoint, clampRect, clampDrawn, marksDrawn, sharedGain, markScale, arcRadius, PLANE_SIZE } from '../js/book/ch3-math.js';
 import { answersMatch } from '../js/book/ch3-grade.js';
 import { selfCheck as crPolyChecks } from '../js/practice/gen/cr-poly.js';
 import { selfCheck as harmonicChecks } from '../js/practice/gen/harmonic-conjugate.js';
@@ -337,6 +337,26 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
   }
   const frame = clampRect(3, 1, span);
   check('the drag still stops at the frame', near(frame.re, span) && near(frame.im, 1));
+  const stopped = clampDrawn('sq', 3, 1, 0, span);
+  const held = clampDrawn('sq', 2.28, 1, 0, span);
+  check('the point stops while the three marks are still drawn',
+    stopped.re < 2.38 && stopped.re > 2.2 && near(stopped.im, 1)
+    && marksDrawn('sq', stopped, 0, span)
+    && !marksDrawn('sq', { re: span, im: 1 }, 0, span)
+    && near(held.re, 2.28) && near(held.im, 1));
+  const t35back = t35.steps[0].answer;
+  check('theorem 3.5 names one polar form of the derivative',
+    t35.kind === 'flash'
+    && t35back.includes('U_r + i V_r')
+    && t35back.includes('(3.23)')
+    && t35back.includes('(3.24)'));
+  const laplace = ch3Items.find((item) => item.id === 'ch3-3.3-im-001');
+  const exists = ch3Items.find((item) => item.id === 'ch3-3.3-im-002');
+  check('exercise 2 keeps the Laplace blank apart from the choice',
+    laplace && laplace.kind === 'next-step-blank'
+    && laplace.steps.every((step) => !step.choices)
+    && exists && exists.kind === 'next-step-mc'
+    && exists.steps[0].choices.includes(exists.steps[0].answer));
   check('a L Hopital miss does not print the value',
     hop.steps[0].accept.includes('0, 0')
     && hop.steps[2].why.includes('-4i')

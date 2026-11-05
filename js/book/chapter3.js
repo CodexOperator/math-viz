@@ -27,9 +27,7 @@ function load(store) {
 
 function statusLine(tally) {
   if (tally.complete) return `Done. ${tally.sectionsFinished} of ${tally.sectionTotal} stages.`;
-  const section = CHAPTER_3.sections.find((s) => s.id === tally.nextId);
-  const name = section ? `${section.id} ${section.title}` : tally.nextId;
-  return `Next is ${name}. ${tally.sectionsFinished} of ${tally.sectionTotal} stages.`;
+  return `Next is ${tally.nextId}.`;
 }
 
 export function mount(el, ctx, focus) {
@@ -41,15 +39,36 @@ export function mount(el, ctx, focus) {
   const stageLine = h('p', { id: 'chapter-stage-line' });
   const statusWrap = h('div', { class: 'book-next', id: 'chapter-next-row' }, status);
   const buttons = [];
+  const anchors = new Map();
   const opening = CHAPTER_3.sections[0];
+
+  function finishedAnchor(tally) {
+    if (tally.complete) return CHAPTER_3.sections[CHAPTER_3.sections.length - 1].id;
+    const nextIndex = CHAPTER_3.sections.findIndex((s) => s.id === tally.nextId);
+    for (let i = nextIndex - 1; i >= 0; i -= 1) {
+      if (sectionFinished(CHAPTER_3.sections[i], ticks)) return CHAPTER_3.sections[i].id;
+    }
+    for (let i = CHAPTER_3.sections.length - 1; i > nextIndex; i -= 1) {
+      if (sectionFinished(CHAPTER_3.sections[i], ticks)) return CHAPTER_3.sections[i].id;
+    }
+    return opening.id;
+  }
 
   function paint() {
     const t = chapterTally(CHAPTER_3.sections, ticks);
-    status.textContent = statusLine(t);
     // The line under the title sits over the derivative square, so it keeps
-    // naming 3.1 after that stage is marked. The count updates. "Next is 3.2"
-    // stays on the status card.
+    // naming 3.1 after that stage is marked. The count updates. While nothing
+    // is marked, the kicker already names 3.1, so the status row stays off.
+    // After a stage is marked, "Next is 3.2." sits with that stage.
     stageLine.textContent = `${opening.id} · ${opening.title} · ${t.sectionsFinished} of ${t.sectionTotal}`;
+    if (t.sectionsFinished === 0) {
+      statusWrap.hidden = true;
+    } else {
+      status.textContent = statusLine(t);
+      statusWrap.hidden = false;
+      const anchor = anchors.get(finishedAnchor(t));
+      if (anchor) anchor.after(statusWrap);
+    }
     for (const node of path.querySelectorAll('.section-node')) {
       const id = node.getAttribute('data-section');
       const section = CHAPTER_3.sections.find((s) => s.id === id);
@@ -72,12 +91,6 @@ export function mount(el, ctx, focus) {
     const picture = h('section', { class: 'exp-picture ch3-picture', id: `${scope}-picture`, 'aria-label': section.title });
     const mountPicture = PICTURES[section.id];
     if (mountPicture) stops.push(mountPicture(picture));
-    const read = h('ul', { class: 'book-read', id: `${scope}-read` });
-    section.read.forEach((item, i) => {
-      read.append(h('li', null, h('a', {
-        href: item.href, target: '_blank', rel: 'noopener noreferrer', id: `${scope}-read-${i + 1}`,
-      }, item.pin)));
-    });
     const workedBody = h('div', { id: `${scope}-worked-body` });
     for (const para of section.worked.body) {
       const p = h('p');
@@ -116,6 +129,8 @@ export function mount(el, ctx, focus) {
       paint();
     });
     buttons.push(mark);
+    const actions = h('div', { class: 'problem-actions', id: `${scope}-actions` }, mark);
+    anchors.set(section.id, actions);
     const flagHash = `#chapter-3-${slug(section.id)}`;
     const flag = h('a', { class: 'book-flag', href: flagHash, id: `${scope}-flag` }, section.id);
     flag.addEventListener('click', (ev) => {
@@ -135,8 +150,6 @@ export function mount(el, ctx, focus) {
       h('p', { class: 'book-label', id: `${scope}-why-label` }, "Why you'd care"),
       why);
     const rest = [
-      h('p', { class: 'book-label' }, 'In the book'),
-      read,
       ...termBlock,
       h('p', { class: 'book-label' }, 'Worked'),
       worked,
@@ -148,10 +161,10 @@ export function mount(el, ctx, focus) {
       deck,
       h('p', { class: 'book-label' }, 'Summit'),
       summit,
-      h('div', { class: 'problem-actions' }, mark),
+      actions,
     ];
     const openOnPicture = section.id === '3.1'
-      ? [picture, whyBlock, statusWrap, ...heading, ...rest]
+      ? [picture, whyBlock, ...heading, ...rest]
       : [...heading, whyBlock, picture, ...rest];
     path.append(h('li', {
       class: 'section-node', id: scope, 'data-section': section.id, 'data-state': 'ahead',
@@ -172,9 +185,19 @@ export function mount(el, ctx, focus) {
   const targetId = focusSection(focus);
   const target = targetId ? el.querySelector(`#${targetId}`) : null;
   if (target) target.classList.add('is-target');
-  const memory = memoryId ? el.querySelector(`#${memoryId}`) : null;
-  if (memory) memory.scrollIntoView({ block: 'start' });
-  else if (target) target.scrollIntoView({ block: 'start' });
+  const memory = memoryId ? document.getElementById(memoryId) : null;
+  const openingId = `chapter-section-${slug(opening.id)}`;
+  // A cold #chapter-3-3-1 is the first screen. Scrolling the camp under the
+  // header would hide the stage line. The flag still scrolls the memory list.
+  // The route focuses the page after mount, so the scroll is repeated on the
+  // next frame, after that focus.
+  const land = memory || (target && target.id !== openingId ? target : null);
+  if (land) {
+    const go = () => land.scrollIntoView({ block: 'start' });
+    go();
+    requestAnimationFrame(go);
+  }
+  document.documentElement.dataset.ch3Memory = `${memoryId || ''}|${memory ? 'yes' : 'no'}|${Math.round(window.scrollY)}`;
 
   return function unmount() {
     for (const stop of stops) stop();

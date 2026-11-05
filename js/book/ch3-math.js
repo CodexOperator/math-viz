@@ -222,6 +222,61 @@ export function markScale(z, vector, span, shared, minPx) {
   return scale > 0 ? scale : 0;
 }
 
+// The step, the image, and the turn (when the turn is not zero) are the three
+// marks. A zero-length image has nothing to draw. The page hides an arrow
+// shorter than 4px and a turn whose arc cannot sit inside the square.
+export function marksDrawn(fn, z, phi, span) {
+  const scene = derivativeScene(fn, z, phi);
+  const shared = sharedGain(z, [scene.h, scene.image], span);
+  const pxPer = PLANE_SIZE / (2 * span);
+  const lengthPx = (vector, scale) => {
+    const len = Math.hypot(Number(vector && vector.re) || 0, Number(vector && vector.im) || 0);
+    if (!(len > 1e-9)) return Infinity;
+    return scale * len * pxPer;
+  };
+  const gs = markScale(z, scene.h, span, shared, 11);
+  const ps = markScale(z, scene.image, span, shared, 11);
+  if (lengthPx(scene.h, gs) < 4 || lengthPx(scene.image, ps) < 4) return false;
+  const turn = scene.turn || 0;
+  if (Math.abs(turn) <= 0.12) return true;
+  const ox = ((Number(z.re) + span) / (2 * span)) * PLANE_SIZE;
+  const oy = ((span - Number(z.im)) / (2 * span)) * PLANE_SIZE;
+  return arcRadius(ox, oy, Number(phi) || 0, (Number(phi) || 0) + turn) > 0;
+}
+
+function lastDrawn(fn, from, to, phi, span) {
+  if (!marksDrawn(fn, from, phi, span)) return null;
+  let lo = 0;
+  let hi = 1;
+  let best = from;
+  for (let n = 0; n < 20; n += 1) {
+    const t = (lo + hi) / 2;
+    const mid = {
+      re: from.re + (to.re - from.re) * t,
+      im: from.im + (to.im - from.im) * t,
+    };
+    if (marksDrawn(fn, mid, phi, span)) {
+      best = mid;
+      lo = t;
+    } else {
+      hi = t;
+    }
+  }
+  return best;
+}
+
+// The finger may ask for the frame. Keep the coordinate that still fits, and
+// stop the other at the last place the three marks are drawn. A horizontal
+// drag at Im = 1 stays on that line.
+export function clampDrawn(fn, re, im, phi, span) {
+  const asked = clampRect(re, im, span);
+  if (marksDrawn(fn, asked, phi, span)) return asked;
+  return lastDrawn(fn, { re: 0, im: asked.im }, asked, phi, span)
+    || lastDrawn(fn, { re: asked.re, im: 0 }, asked, phi, span)
+    || lastDrawn(fn, { re: 0, im: 0 }, asked, phi, span)
+    || { re: 0, im: 0 };
+}
+
 // Orange turn. Shrink the radius until the arc sits inside the square.
 export function arcRadius(ox, oy, a0, a1) {
   const delta = a1 - a0;

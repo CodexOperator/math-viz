@@ -306,7 +306,9 @@ export function start() {
     for (const a of nav.querySelectorAll('a.nav-link')) {
       let on = false;
       if (bookRoute) {
-        on = bookRoute.kind === 'chapter'
+        // #book marks The Book. A chapter hash, including a later chapter
+        // that only scrolls the roadmap, marks that chapter's row.
+        on = bookRoute.chapter
           ? a.dataset.chapter === String(bookRoute.chapter)
           : a.id === 'nav-book';
       } else {

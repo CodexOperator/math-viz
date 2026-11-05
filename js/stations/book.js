@@ -87,10 +87,22 @@ function mountRoadmap(el, ctx, spec) {
       node.setAttribute('data-state', state);
       const flag = node.querySelector('.book-flag');
       if (!flag) continue;
-      if (n === 4) flag.textContent = t.complete ? 'Done' : (t3.complete ? 'Next' : 'Later');
-      else if (n === 5) flag.textContent = 'Open';
-      else if (n === 3) flag.textContent = t3.complete ? 'Done' : 'Open';
-      else flag.textContent = 'Later';
+      if (n === 1 || n === 2) {
+        flag.hidden = true;
+        flag.textContent = '';
+      } else if (n === 4) {
+        flag.hidden = false;
+        flag.textContent = t.complete ? 'Done' : (t3.complete ? 'Next' : 'Later');
+      } else if (n === 5) {
+        flag.hidden = false;
+        flag.textContent = 'Open';
+      } else if (n === 3) {
+        flag.hidden = false;
+        flag.textContent = t3.complete ? 'Done' : 'Open';
+      } else {
+        flag.hidden = false;
+        flag.textContent = 'Later';
+      }
     }
     for (const row of list.querySelectorAll('[data-section]')) {
       const id = row.getAttribute('data-section');
@@ -139,8 +151,7 @@ function mountRoadmap(el, ctx, spec) {
       if (st) {
         kids.push(h('p', { class: 'book-door', id: `book-door-${ch.n}` },
           'Already drawn: ',
-          h('a', { href: `#${st.id}` }, st.title),
-          '.'));
+          h('a', { class: 'station-link', href: `#${st.id}` }, st.title)));
       }
     }
     list.append(h('li', { class: 'book-node', id: `book-node-${ch.n}`, 'data-chapter': String(ch.n), 'data-state': 'later' }, ...kids));
@@ -293,7 +304,7 @@ function mountChapter4(el, ctx, focus) {
 
   el.append(
     h('header', { class: 'station-header' },
-      h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back' }, 'The Book')),
+      h('a', { class: 'station-link', href: '#book', id: 'chapter-back' }, 'The Book'),
       h('h1', { id: 'chapter-title' }, 'Chapter 4. Sequences, Series, and Fractals'),
       h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Four sections. Tick an exercise when you have worked it. The hint stays closed until you ask.'),
       sourceTag({ pin: CHAPTER_4.pin, href: CHAPTER_4.href })),
@@ -410,7 +421,7 @@ function mountChapter5(el, ctx, focus) {
 
   el.append(
     h('header', { class: 'station-header' },
-      h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back' }, 'The Book')),
+      h('a', { class: 'station-link', href: '#book', id: 'chapter-back' }, 'The Book'),
       h('h1', { id: 'chapter-title' }, 'Chapter 5. The exponential')),
     picture,
     h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Section 5.1. A blank fills when the picture makes it true. The hint stays closed until you ask.'),
