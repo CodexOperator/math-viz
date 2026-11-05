@@ -1881,3 +1881,65 @@ Checked and left as is. Definition 7.1 and the negation (7.3) are page 211, and 
 On the preview at `90093ea`, headless Chrome, no console errors, no failed requests. At 390×844, light and dark, Play is 70×44 and ends at y = 835, and `scrollWidth` is 390. Laurent left at y = 96 (40px under the 56px header) and the menu's Chapter 7 brought it back at y = 96, with the why in view. 7.4's first Play ends on two purple rings, the readout "order 2", and "Play the pole". The zero card sits under that button. The next card stays hidden until that blank is answered and the second Play ends on order 1. At 1280×800, light and dark, the square is 480 and the claim and Play sit beside it. Play ends at y = 457. The Book row on Chapters 4 and 5 is 87×44, and their pins and the picture chip are 44px. The "Already drawn" link is 44px tall. The Log answer line is the typeset series. The blanks accept \(0\) and \(-8+8i\), then \(1/(-8+8i)\); \(0/0\) then \(-1/4\); and \(1\), \(1/2\), \(5\). Exercise 3(a) rejects removable and accepts a pole of order 1, then \(6/z\). Exercise 2(a) accepts order 4, then 3.
 
 `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` and `node kit/smoke.mjs` passed before the page fix. The page fix does not change a graded answer.
+
+## unslop (chapter-7 batch 5)
+
+Preview https://ch7-preview.complexanalysis.pages.dev/#chapter-7, branch `cursor/chapter-7` at `90093ea`. Phone 390×844 first, then 1280×800, light and dark. Walked the first screen, a full Play on 7.4 through "Play the pole", a finished 7.1 and 7.5 so the memory sheet opened with the summit, and the cards for the Log series, Exercise 6(a) and 6(b), Example 7.15, and Exercise 3(a). No product code was changed. `scrollWidth` matched the window at 390 and at 1280. The Log walk and the exercise walks recorded no console errors.
+
+The page is the book path, lightly slopped. Warm paper, the four teaching colours on the marks, one square, one claim. The batch put new words in the chrome, and those words now compete with the square.
+
+Direction, taken from the page. The product is one camp of a complex-analysis course: a picture, then the card that picture earns. The character is calm, exact, and a little warm. The world is the paper and the drawn plane. The moment is the square. The signature is the claim that changes with the green point.
+
+### Verdict
+
+ANOTHER BATCH
+
+The phone's first screen is already the climb, the Log series is set in the same math as its why, and "Play the pole" is the right label on the button. Six spots still say the same thing twice. One polish batch can quiet them. The palette, the type, and the card shape stay.
+
+### What the screen holds
+
+**390×844, light, fresh storage.** Paper `rgb(246, 243, 236)`. The title is Iowan at 25.85px, two lines, `rgb(26, 34, 48)`. The lede is the drag and Play, in `rgb(81, 91, 108)`. The status is "Uniform convergence · Stage 1 of 5". The square is 326×326 at y = 362. The claim is on the screen. Play is 70×44 and ends at y = 835. Dark paper is `rgb(13, 18, 28)`, the title `rgb(233, 237, 245)`, and Play still ends at y = 835.
+
+**1280×800, both themes.** The square is 480×480 at x = 304, y = 318, so its bottom is y = 798 in an 800px window. The axis sits on the window edge. The side column is `480px 448px`, aligned to the start. The claim starts at y = 318, beside the tip of the spike. The readout "n = 4" is at y = 378. Play is 70×44 at y = 413 and ends at y = 457. Under that button, beside the green point, is 341px of empty paper.
+
+**7.4 after one Play.** The claim is "The purple image went around twice. The zero has order 2." The readout is "order 2". The button is "Play the pole", 144×44, still one line. At rest, in the light, its fill is white `rgb(255, 255, 255)`. The standing line above the square, "Drag the green point once around the orange circle.", is weight 600. The claim is weight 400. A third line, "Play on. The image winds the other way.", sits under the button. On the phone it is the next row, at y = 790. On the wide page the button is at y = 328, beside the top of the rings, and that third line is at y = 721, under the square. The same three lines in the dark. The wide column again leaves 341px empty under the button.
+
+**Memory, after Stage complete.** The sheet is hidden until the press, then it opens. On the phone the summit "One N works for the whole set." is 17px, weight 600, at y = 72. MEMORY is the book's label: 12.48px, weight 700, uppercase, `letter-spacing: 0.06em`, muted. The first bullet is "One \(N_\varepsilon\) for the whole set." in the same 17px primary ink as the summit. Six bullets follow. Go to 7.2 is on that screen, 44px. The 7.5 summit is "The singularity at 0 is removable." The open sheet under it is 574px. Its second bullet says a bounded isolated singularity is removable, and the L'Hôpital bullet wraps the primes across 106px. Same ink in the dark. On that preview the essential line still cites Theorem 7.17 at page 241. The branch after this walk cites page 242.
+
+**The Log card.** Example 7.2 accepts `-sum_{n=1}^infty z^n/n`. The answer line is inline KaTeX, 115×25, 17px, the same size as the sentence. It does not widen the page at 390 or at 1280, light or dark. The stem above it still ends in a blank. The why under it sets the book's equation the same way.
+
+**Exercise 6(a), 390.** The heading is "Corollary 7.11, page 240". The prompt says "Exercise 6(a) of §7.5, page 243" and then "Corollary 7.11, page 240" again. The step is "both ___, and \(g'(1+i)=\) ___" with one field and one Check. The accepted line is the raw string "0 and -8+8i". The limit under it is typeset \((-1-i)/16\). The underscores stay in the stem. The finished card is 579px, with two why boxes of 122px. Exercise 6(b) uses the same heading, "Corollary 7.11, page 240".
+
+**Example 7.15, 390.** The heading is "Example 7.15, page 240" and the prompt starts with those words, then the sentence about stopping the division and switching to a Laurent series, then \(a_0\). The open card is 389px before the first Check. After 1, \(1/2\), and 5 it is 770px. Each step still shows the blank above the value, and each value has its own why box. \(1/2\) is typeset. 1 and 5 are plain digits. At 1280 the finished card is 479px.
+
+**Exercise 3(a), 390.** The heading is "§7.4, Exercise 3(a), page 238" and the prompt repeats "Exercise 3(a) of §7.4, page 238." Four choices, each 44×290, the full inner width of the 324px card: removable, a pole of order 1, a pole of order 2, essential. The open card is 386px. Exercises 3(c) and 3(g) use that same list of four.
+
+### Ranked cuts
+
+1. **Put the claim and Play beside the middle of the square.** Evidence: at 1280, light and dark, the square is 480 and ends at y = 798. The claim starts at the top of the square and Play ends at y = 457. The green point, and on 7.4 the rings, sit in the 341px of paper under that button. The phone stack already ends Play at y = 835. Change: on the wide page, center the claim, the readout, and Play on the square. Move the stage line to just under the square, so the axis clears the window. The phone order stays picture, claim, readout, Play.
+
+2. **Let "Play the pole" be the only next instruction.** Evidence: after the zero lap, both widths and both themes. The weight-600 line still says "Drag the green point once around the orange circle." The claim, weight 400, says the image went around twice and the zero has order 2. The button is "Play the pole", 144×44. The line under it says "Play on. The image winds the other way." On the wide page that line is at y = 721 and the button is at y = 328. Change: the claim takes the 600 weight, and the standing drag line goes back to 400. Hide the wait line once the button says "Play the pole".
+
+3. **Open the sheet on the formulas, under a summit that stays the one dark line.** Evidence: the 7.1 sheet opens on Stage complete. The summit and the first bullet both say one \(N\) works for the whole set, both at 17px, the bullet in primary ink. MEMORY is the existing uppercase label. The 7.5 sheet is 574px, and its second bullet repeats "removable". The L'Hôpital bullet wraps the primes. Change: keep the sheet open and keep the MEMORY label. Drop the bullet that restates the summit. Set the list in the muted ink. Write the L'Hôpital line as the quotient \(f'(\alpha)/g'(\alpha)\).
+
+4. **Give Exercise 6 one blank per field, and its own heading.** Evidence: 6(a) shows two underscores and one input. The answer "0 and -8+8i" is raw text. The limit is typeset. 6(a) and 6(b) are both headed "Corollary 7.11, page 240". The prompt says that corollary a second time, and it already says both functions are zero. The finished 6(a) card is 579px, and the blanks stay in the stem. Change: the headings are "Exercise 6(a), page 243" and "Exercise 6(b), page 243". The first step is one blank, \(g'(1+i)\), typeset the way the limit is. A right step replaces the blank in the sentence.
+
+5. **Start Example 7.15 at the series.** Evidence: the heading and the prompt both open with "Example 7.15, page 240". The prompt then gives the Laurent-switch sentence, which the 7.5 memory line already carries. The open card is 389px. The finished card is 770px on the phone, three blanks left sitting above 1, \(1/2\), and 5, each with a why box. Change: the prompt starts at \(\sec z=1/\cos z\). The switch sentence stays on the memory line. A right blank is replaced in the sentence. One why, the series \(1+\frac{1}{2}z^2+\frac{5}{24}z^4\), sits under the last value.
+
+6. **Say Exercise 3(a) once, then the four rows.** Evidence: the heading is "§7.4, Exercise 3(a), page 238" and the first line of the prompt is "Exercise 3(a) of §7.4, page 238." The four choices are 44×290, equal, full width. The card is 386px before the answer. Exercises 3(c) and 3(g) repeat that list. Change: the prompt starts at \(z^2/(z-\sin z)\). The same for 3(c) and 3(g): the function, then the four rows. The page 448 sentence stays the why on 3(a).
+
+### What to keep
+
+The phone first screen, in both themes. The Book, the title, the lede that names the drag and Play, the status, the square, the claim, the readout, and Play at 70×44 ending at y = 835. Paper `rgb(246, 243, 236)` and `rgb(13, 18, 28)`. Iowan at 25.85px on the phone and 36px at 1280. The four teaching colours still separate on the dark paper.
+
+The 480 square on the wide page, and Play sitting beside it. The split is the right idea. It wants to be centered, and the square wants to stay 480.
+
+"Play the pole" on the button. One press ends on the two rings, the readout "order 2", and that sentence. The second press is the pole. The resting control is the same white 44px button, grown to 144px, still one line.
+
+The memory sheet opening with the summit. The summit is one sentence, the green edge is the done state, and Go to 7.2 is on the phone screen. MEMORY can stay the uppercase label the book already uses.
+
+The Log answer. Inline KaTeX, 17px, 115×25, no overflow at either width, either theme, the same math as the why.
+
+The card itself. White, 16px padding, 8px between rows, 10px radius. Check and the choices at 44px. One card open at a time. Exercise 6(b) following 6(a). The four Exercise 3 labels, which are the real traps. Example 7.15's three numbers, 1, \(1/2\), and 5.
+
+No sideways scroll at 390 or at 1280.
