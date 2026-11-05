@@ -568,8 +568,8 @@
       }
     ],
     "generator": null,
-    "memory": "If $z\\ne 1$, then $1/(1-z)=1+z+\\cdots+z^{n-1}+z^n/(1-z)$. Corollary 4.3, page 119.",
-    "formula": "$\\dfrac{1}{1-z}=1+z+\\cdots+z^{n-1}+\\dfrac{z^n}{1-z}$ for $z\\ne 1$."
+    "memory": "If $z\\ne 1$, then $1/(1-z)=1+z+\\cdots+z^{n-1}$\n$+z^n/(1-z)$. Corollary 4.3, page 119.",
+    "formula": "$\\dfrac{1}{1-z}=1+z+\\cdots+z^{n-1}$\n$+\\dfrac{z^n}{1-z}$ for $z\\ne 1$."
   },
   {
     "id": "ch4-4.3-theorem-4-13",

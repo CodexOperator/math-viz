@@ -1868,3 +1868,21 @@ Test prep lands at scroll 0, and the answer box does not take focus. The worked 
 Flashcards are one card. The front is the gloss, the count is on the card, and Show the back is 44px. The memory sheet's page is 390 wide, the lede is said once, and Print is 44px. Browser Back restores the book at 640 and the chapter at 500.
 
 The paper, the serif title, the sans text, the accent button, and the dark off-white primary are the station pages, on the book, on Chapter 4, on Chapter 5, and on the practice card. The source line stays the small textbook link. No emoji, no gradient, no glow. The four teaching colours stay on the pictures.
+
+## Practice engine, batch 7
+
+Branch `cursor/practice-engine`. Headless Chrome, touch, fresh storage, 390×844 and 1280×800, light and dark. No sideways scroll (`scrollWidth` matched the window at 390 and 1265). No console errors on those pages.
+
+A section set's up control is Chapter 4 or Chapter 5 (`#chapter-4`, `#chapter-5`). The mixed set stays The Book. §4.1 and §4.3 read "Proof · 4.1" and "Proof · 4.3", 118×44. Every worked step's lede is "Read this filled line." The button says "Try these steps" only on the last worked step. Hint is 71×44 beside Check at 1280, one line. Next hint is 114×44. Generate another is 185×44, one line, and Next keeps the accent. A first miss keeps the count and puts "This step comes back." in the muted colour under the hint. The revealed card is the filled answer, the reason, and Next.
+
+Set complete: the status is "Section 4.2." The card heading is "Set complete". The Newton sentence is the lede, once. The button is "Open the memory sheet."
+
+A reload of §4.2 opens the missed blank, "Section 4.2. 1 of 2.", kind Next step. Next lands on the step still ahead, not the worked line. The worked line stays behind those two cards.
+
+The §4.3 sheet stays 390 wide. Corollary 4.3 breaks at a plus, so the last term is its own line, and the cite is the parenthesis once: "(Corollary 4.3, page 119)". Theorem 4.12, Exercise 1(b), and Exercise 2 are named once the same way. The formula row fits the card (305/305).
+
+Chapter 4's picture chip is 205×44 and ends at y = 822, inside the 844 window, under Exercise 3's question. The return on that picture is "§4.1, Exercise 3", 180×44. The textbook line stays 13px. Chapter 5's first screen holds the claim, Play, the status, and "Test prep · 5.1": the button ends at 830 on the phone and at 782 in the 800px window, light and dark. The square is 358px on the phone and 384px at 1280.
+
+Playground doors say The Book and open `#book`. Theorem 4.9 stays connectedness on page 113. Theorem 4.11's flash stays the inequality on page 116. The sheet keeps the cardioid.
+
+Deferred: Chapters 1, 3, 6, and 7 still have no practice file, and `#chapter-2` is still the stub. Those pages belong to the chapter loops. This track does not register them. `ch2.json` stays the generator the mixed set can use once that chapter is open.

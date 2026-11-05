@@ -1163,8 +1163,11 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 
 .exp-stage {
   /* The square takes the column, and stops short of the height that would
-     push Play off the first screen. */
-  width: min(100%, calc(100dvh - 20rem));
+     push the claim, Play, the status, and Test prep off the first screen.
+     26rem is that chrome on an 800px window. The floor keeps a short window
+     from collapsing the picture. */
+  width: min(100%, max(12rem, calc(100dvh - 26rem)));
+  max-height: max(12rem, calc(100dvh - 26rem));
   max-width: 100%;
   aspect-ratio: 1;
   touch-action: none;
@@ -1328,6 +1331,19 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .section-mark { margin-top: var(--space-2); }
 .book-footer-link { margin-top: var(--space-2); }
 
+.chapter-picture { margin: 0; }
+.chapter-picture .chip { min-height: var(--tap); }
+.chapter-return { margin: 0; }
+.chapter-return .station-link { min-height: var(--tap); }
+.exp-status .btn { flex: 0 0 auto; min-height: var(--tap); white-space: nowrap; }
+
+@media (max-width: 40rem) {
+  .station:has(#chapter-path) { gap: var(--space-2); }
+  .station:has(#chapter-path) .station-lede { margin-bottom: var(--space-1); }
+  .station:has(#chapter-path) .section-node { padding: var(--space-2); }
+  .chapter-card h3 { margin-bottom: 0; }
+}
+
 /* Test prep. Same cards and buttons as the book pages. */
 .practice-toolbar {
   display: flex;
@@ -1398,8 +1414,25 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   white-space: nowrap;
 }
 .practice-field input { width: 100%; font-family: var(--font-mono); }
-.practice-check-row { margin-top: var(--space-2); flex-wrap: nowrap; }
-.practice-check-row .btn { flex: 1 1 0; min-width: 0; }
+.practice-check-row,
+.practice-act-row,
+.practice-word-row { margin-top: var(--space-2); flex-wrap: nowrap; }
+.practice-check-row .btn-primary,
+.practice-act-row .btn-primary { flex: 1 1 auto; min-width: 0; }
+.practice-card #practice-hint,
+.practice-card #practice-generate {
+  flex: 0 0 auto;
+  width: auto;
+  max-width: 100%;
+  min-height: var(--tap);
+  white-space: nowrap;
+}
+.practice-returns {
+  margin: 0.15rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
 .practice-idea {
   margin: 0;
   color: var(--text-muted);
@@ -1452,6 +1485,10 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   overflow-y: hidden;
   scrollbar-width: thin;
   padding-bottom: 0.35rem;
+}
+.practice-memories li.practice-break,
+.practice-formulas li.practice-break {
+  overflow-x: visible;
 }
 .practice-formulas li > p,
 .practice-memories li > p { margin: 0; max-width: 100%; min-width: 0; }

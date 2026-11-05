@@ -16,7 +16,7 @@ import { generate as expGenerate, principalQuarters } from '../js/practice/gen/e
 import { catalogIssues, loadCatalog, assertGeneratorSignatures } from '../js/practice/catalog.js';
 import { seedFirst } from '../js/practice/gen/index.js';
 import { generate as mapGenerate } from '../js/practice/gen/ch2-maps.js';
-import { testPrepEntries, sectionWalk, orderedChoices, mixedItems } from '../js/practice/queue.js';
+import { testPrepEntries, sectionWalk, orderedChoices, mixedItems, orderSectionReload } from '../js/practice/queue.js';
 import { walkSections, continueTarget, closedChapters } from '../js/book/continue.js';
 import { mergeLeitner, reviewCard, emptyDeck, dueOrder } from '../js/practice/leitner.js';
 import { mergeMisses, noteMiss, emptyMisses, clearMiss, pendingMisses } from '../js/practice/misses.js';
@@ -1203,6 +1203,15 @@ check('a fraction, a power, and a complex number match their equivalents',
     walk42[0] && walk42[0].view === 'worked' && walk42[0].source.section === '4.2'
     && walk42[1] && walk42[1].view === 'faded' && walk42[1].source.id === walk42[0].source.id
     && walk51[0] && walk51[0].view === 'worked' && walk51[1] && walk51[1].view === 'faded');
+  const missed42 = walk42.concat([{
+    source: walk42[1].source, seed: walk42[1].seed, view: 'faded', reask: true, step: 0,
+  }]);
+  const reloaded42 = orderSectionReload(missed42);
+  check('a section reload asks the missed blank, then the step still ahead',
+    reloaded42[0] && reloaded42[0].reask && reloaded42[0].step === 0
+    && reloaded42[1] && reloaded42[1].resume && reloaded42[1].step === 1
+    && reloaded42[reloaded42.length - 1].view === 'worked'
+    && reloaded42[reloaded42.length - 1].source.id === walk42[0].source.id);
   const openMix = mixedItems(PRACTICE, [1, 2, 3, 6, 7]);
   check('the mixed set is the open chapters',
     openMix.length > 0

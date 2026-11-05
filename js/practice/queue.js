@@ -121,6 +121,46 @@ export function practiceEntries(items, { mode, seed }) {
   return testPrepEntries(items, seed);
 }
 
+// A reload of a section set opens on the missed blank. The next card is the
+// step that was still ahead. A worked line already read stays behind those.
+export function orderSectionReload(entries) {
+  const pending = entries.filter((entry) => entry.reask);
+  if (!pending.length) return entries.slice();
+  const rest = entries.filter((entry) => !entry.reask);
+  const stepsById = new Map();
+  for (const miss of pending) {
+    const list = stepsById.get(miss.source.id) || [];
+    list.push(miss.step);
+    stepsById.set(miss.source.id, list);
+  }
+  const fadedAt = (miss) => rest.findIndex((entry) => entry.source.id === miss.source.id && entry.view !== 'worked');
+  pending.sort((a, b) => {
+    const ia = fadedAt(a);
+    const ib = fadedAt(b);
+    if (ia !== ib) return ia - ib;
+    return (a.step || 0) - (b.step || 0);
+  });
+  let cut = rest.length;
+  for (const miss of pending) {
+    const at = fadedAt(miss);
+    if (at >= 0 && at < cut) cut = at;
+  }
+  const ahead = [];
+  for (const entry of rest.slice(cut)) {
+    const missed = stepsById.get(entry.source.id);
+    if (!missed || entry.view === 'worked') {
+      ahead.push(entry);
+      continue;
+    }
+    const resumeAt = Math.max(...missed) + 1;
+    const known = entry.source.steps && entry.source.steps.length;
+    if (known && resumeAt >= known) continue;
+    if (resumeAt > 0) ahead.push({ ...entry, step: resumeAt, resume: true });
+    else ahead.push(entry);
+  }
+  return pending.concat(ahead, rest.slice(0, cut));
+}
+
 // Fisher-Yates with mulberry32. The same seed returns the same order.
 export function orderedChoices(choices, seed) {
   const list = (choices || []).slice();

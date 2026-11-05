@@ -5,7 +5,7 @@ import { h, appendRich } from '../stations/test2-ui.js';
 import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5 } from '../data/book-path.js';
 import { closedChapters } from '../book/continue.js';
 import { loadCatalog, realize } from './catalog.js';
-import { selectItems, sectionOfFocus, practiceEntries, choiceSeed, mixedItems } from './queue.js';
+import { selectItems, sectionOfFocus, practiceEntries, choiceSeed, mixedItems, orderSectionReload } from './queue.js';
 import { answersMatch } from './check.js';
 import { loadDeck, saveDeck, reviewCard, dueOrder, localDay } from './leitner.js';
 import { loadMisses, saveMisses, noteMiss, clearMiss, pendingMisses } from './misses.js';
@@ -109,6 +109,7 @@ export async function mountPrep(el, ctx, spec) {
   let shown = false;
   let stickTop = true;
   let listed = 0;
+  let reordered = false;
   let deck = loadDeck(ctx.store);
   let missesBook = loadMisses(ctx.store);
   let flashShow = false;
@@ -120,7 +121,12 @@ export async function mountPrep(el, ctx, spec) {
 
   const status = h('p', { class: 'book-status', id: 'practice-status' });
   const statusRow = h('div', { class: 'book-next', id: 'practice-next-row' }, status);
-  const up = h('a', { class: 'station-link', id: 'practice-book', href: '#book', 'data-dir': 'prev' }, 'The Book');
+  const sectionChapter = chapter || (section ? Number(String(section).split('.')[0]) : null);
+  const upToChapter = !!(section && (sectionChapter === 4 || sectionChapter === 5));
+  const up = h('a', {
+    class: 'station-link', id: 'practice-book', 'data-dir': 'prev',
+    href: upToChapter ? `#chapter-${sectionChapter}` : '#book',
+  }, upToChapter ? `Chapter ${sectionChapter}` : 'The Book');
   const endlessBtn = h('button', {
     type: 'button', class: 'chip', id: 'practice-endless', 'aria-pressed': 'false',
   }, 'Endless');
@@ -182,7 +188,19 @@ export async function mountPrep(el, ctx, spec) {
   function openEntry() {
     resetStep();
     const entry = currentEntry();
-    if (entry && entry.reask && Number.isInteger(entry.step)) step = entry.step;
+    if (!entry) {
+      done = true;
+      listed = queue.length;
+      stickTop = true;
+      return;
+    }
+    if (Number.isInteger(entry.step) && (entry.reask || entry.resume)) step = entry.step;
+    const item = realized();
+    if (item && entry.resume && step >= item.steps.length) {
+      index += 1;
+      openEntry();
+      return;
+    }
     listed = queue.length;
     stickTop = true;
   }
@@ -190,16 +208,30 @@ export async function mountPrep(el, ctx, spec) {
   function stepReturns() {
     const entry = currentEntry();
     if (!entry) return false;
-    return queue.some((row) => row.reask && row.source.id === entry.source.id && row.step === step);
+    return queue.some((row) => row !== entry && row.reask && row.source.id === entry.source.id && row.step === step);
   }
 
-  // A reload of a section set opens the missed step. The mixed set keeps its order.
+  // A reload of a section set opens the missed blank. The mixed set keeps its order.
   function hoistPending() {
     if (!walk) return;
-    const pending = queue.filter((entry) => entry.reask);
-    if (!pending.length) return;
-    queue = pending.concat(queue.filter((entry) => !entry.reask));
+    const next = orderSectionReload(queue);
+    const moved = next.length !== queue.length || next.some((entry, i) => entry !== queue[i]);
+    if (!moved) return;
+    queue = next;
+    reordered = true;
     index = 0;
+  }
+
+  // After a reload, the count is the missed blank and the steps still ahead.
+  // The worked line sits behind those cards and joins the count when you reach it.
+  function shownTotal() {
+    const total = listed || queue.length;
+    if (!reordered) return total;
+    let last = queue.length;
+    while (last > 0 && queue[last - 1].view === 'worked') last -= 1;
+    const ahead = last || queue.length;
+    if (index < ahead) return ahead;
+    return queue.length;
   }
 
   function scheduleReask(source, stepIndex, itemSeed) {
@@ -328,9 +360,10 @@ export async function mountPrep(el, ctx, spec) {
   function paintPractice() {
     const item = realized();
     const entry = currentEntry();
+    const where = walk ? `Section ${section}` : (chapter ? `Chapter ${chapter}` : chaptersPhrase(pool));
     if (!item || done) {
       status.textContent = pool.length
-        ? 'Set complete.'
+        ? `${where}.`
         : 'No items for this chapter yet.';
       if (!pool.length) {
         const filed = chaptersPhrase(mixedItems(PRACTICE, closed));
@@ -345,9 +378,7 @@ export async function mountPrep(el, ctx, spec) {
       renderCard(stage, { done: true, facts: practiceFacts(pool), shown }, { memory: () => { mode = 'memory'; paint(); } });
       return;
     }
-    const where = walk ? `Section ${section}` : (chapter ? `Chapter ${chapter}` : chaptersPhrase(pool));
-    const total = listed || queue.length;
-    status.textContent = `${where}. ${index + 1} of ${total}.`;
+    status.textContent = `${where}. ${index + 1} of ${shownTotal()}.`;
     const proof = String(item.kind).startsWith('proof');
     renderCard(stage, {
       item,
@@ -358,7 +389,7 @@ export async function mountPrep(el, ctx, spec) {
       right,
       revealAnswer: phase === 'told',
       missLine: missLine(item),
-      returns: phase !== 'ask' && stepReturns(),
+      returns: phase === 'hint' && misses === 1 && stepReturns(),
       reading: entry.view === 'worked' && proof ? sectionIdea(item.chapter, item.section) : '',
       choiceSeed: choiceSeed(entry.seed || 1, item.id, step),
       kindLabel: KIND_LABEL[item.kind] || 'Practice',
@@ -465,11 +496,8 @@ export async function mountPrep(el, ctx, spec) {
     if (mode === 'cards') setLede(flashShow ? 'Again, or got it.' : 'Show the back.');
     else if (mode === 'memory') setLede('The formulas and the one-line versions.');
     else if (done || !entry) setLede(doneLede());
-    else if (entry.view === 'worked') {
-      const item = realized();
-      const last = !item || step >= item.steps.length - 1;
-      setLede(last ? 'Try these steps.' : 'Read this filled line.');
-    } else setLede('Check, then read the reason.');
+    else if (entry.view === 'worked') setLede('Read this filled line.');
+    else setLede('Check, then read the reason.');
     if (stickTop && mode === 'practice') {
       stickTop = false;
       const scroller = document.scrollingElement || document.documentElement;

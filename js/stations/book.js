@@ -40,7 +40,7 @@ function nextSentence(ticks) {
 }
 
 function prepLabel(sectionId) {
-  if (sectionId === '4.1' || sectionId === '4.3') return 'Test prep · the proof';
+  if (sectionId === '4.1' || sectionId === '4.3') return `Proof · ${sectionId}`;
   return `Test prep · ${sectionId}`;
 }
 
@@ -266,7 +266,7 @@ function mountChapter4(el, ctx, focus) {
       body,
     ];
     if (pic) {
-      kids.push(h('p', null, h('a', {
+      kids.push(h('p', { class: 'chapter-picture' }, h('a', {
         class: 'chip', href: pictureHref(problem.id), id: `${cardId}-station`,
       }, pic.label)));
     }
@@ -343,8 +343,7 @@ function mountChapter5(el, ctx, focus) {
   },
     h('div', { class: 'section-head', id: `${scope}-head` },
       h('p', { class: 'book-flag', id: `${scope}-flag` }, '5.1'),
-      h('h2', { id: `${scope}-title` }, section.title),
-      h('a', { class: 'btn', href: `#${prepHash(5, '5.1')}`, id: 'chapter-section-5-1-practice' }, 'Test prep · 5.1')),
+      h('h2', { id: `${scope}-title` }, section.title)),
     h('p', { class: 'book-page' }, `Page ${section.page}`),
     idea,
     read,
@@ -409,8 +408,10 @@ function mountChapter5(el, ctx, focus) {
       h('h1', { id: 'chapter-title' }, 'Chapter 5. The exponential'),
       h('p', { class: 'where-line', id: 'where-line' }, 'Chapter 5 · The exponential')),
     picture,
+    h('div', { class: 'book-next exp-status', id: 'chapter-next-row' },
+      status,
+      h('a', { class: 'btn', href: `#${prepHash(5, '5.1')}`, id: 'chapter-section-5-1-practice' }, 'Test prep · 5.1')),
     h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Section 5.1. A blank fills when the picture makes it true. The hint stays closed until you ask.'),
-    h('div', { class: 'book-next', id: 'chapter-next-row' }, status),
     walk,
     later,
     sourceTag({ pin: 'Chapter 5, Elementary Functions, page 130', href: sectionHref('sec_exponential-function.html') }),

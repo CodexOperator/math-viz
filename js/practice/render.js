@@ -6,8 +6,35 @@ import { orderedChoices } from './queue.js';
 
 function rich(text, attrs) {
   const node = h('p', attrs || null);
-  appendRich(node, text || '');
+  appendBroken(node, text || '');
   return node;
+}
+
+function appendBroken(parent, text) {
+  const lines = String(text || '').split('\n');
+  lines.forEach((line, i) => {
+    if (i) parent.append(h('br'));
+    appendRich(parent, line);
+  });
+}
+
+function escapeReg(text) {
+  return String(text).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// The sheet names a line once, in the parenthesis. A memory that already
+// ends with that citation does not say it again.
+function withoutTrailingCite(memory, ref, page) {
+  let text = String(memory || '').trim();
+  const refText = String(ref || '').trim();
+  const tail = refText.includes(',') ? refText.split(',').pop().trim() : refText;
+  const pages = String(page);
+  const tails = [...new Set([refText, tail].filter((part) => part.length > 1))];
+  for (const part of tails) {
+    const re = new RegExp(`(?:^|\\s)${escapeReg(part)},?\\s*page\\s*${escapeReg(pages)}\\.?\\s*$`);
+    text = text.replace(re, '').trim();
+  }
+  return text;
 }
 
 function fillStep(parent, text, answer) {
@@ -94,11 +121,8 @@ export function renderCard(host, vm, act) {
   if (vm.done) {
     const facts = vm.facts || [];
     const kids = [h('h2', { id: 'practice-prompt' }, 'Set complete')];
-    if (facts.length !== 1) {
-      if (vm.shown) kids.push(rich('These lines were shown.'));
-      if (facts.length) facts.forEach((line) => kids.push(rich(line)));
-      else kids.push(rich('You retrieved this set.'));
-    }
+    if (facts.length > 1) facts.forEach((line) => kids.push(rich(line)));
+    else if (!facts.length) kids.push(rich('You retrieved this set.'));
     kids.push(h('div', { class: 'problem-actions' },
       h('button', { type: 'button', class: 'btn btn-primary', id: 'practice-to-memory' }, 'Open the memory sheet')));
     host.append(h('article', { class: 'card practice-card', id: 'practice-card' }, ...kids));
@@ -190,7 +214,7 @@ export function renderCard(host, vm, act) {
       const check = h('button', { type: 'button', class: 'btn btn-primary', id: 'practice-check' }, 'Check');
       check.addEventListener('click', () => act.answer(input.value));
       const row = h('div', { class: 'problem-actions practice-check-row', id: 'practice-check-row' }, check);
-      if (vm.phase === 'ask' && step.hints && step.hints.length) row.append(hintButton(vm, act));
+      if (step.hints && step.hints.length && vm.hint < step.hints.length) row.append(hintButton(vm, act));
       kids.push(field, row);
     }
     if (vm.phase === 'hint') {
@@ -198,24 +222,23 @@ export function renderCard(host, vm, act) {
     }
     const hinted = step.hints && vm.hint > 0 ? step.hints.slice(0, vm.hint) : [];
     const lines = hinted.length ? hinted : (vm.phase === 'hint' && vm.missLine ? [vm.missLine] : []);
-    if (lines.length || (vm.returns && vm.phase === 'hint')) {
+    if (lines.length) {
       const note = h('div', { class: 'hint-note', id: 'practice-hint-note' });
       lines.forEach((line, i) => {
         note.append(rich(line, { class: 'practice-hint-line', id: `practice-hint-line-${i}` }));
       });
-      if (vm.returns) note.append(rich('This step comes back.', { class: 'practice-hint-line', id: 'practice-returns' }));
       kids.push(note);
     }
-    const hintLater = step.hints && step.hints.length && vm.hint < step.hints.length
-      && (vm.phase === 'hint' || String(item.kind).endsWith('mc'));
+    if (vm.returns) {
+      kids.push(rich('This step comes back.', { class: 'practice-returns', id: 'practice-returns' }));
+    }
+    const hintLater = String(item.kind).endsWith('mc')
+      && step.hints && step.hints.length && vm.hint < step.hints.length;
     if (hintLater) {
-      kids.push(h('div', { class: 'problem-actions' }, hintButton(vm, act)));
+      kids.push(h('div', { class: 'problem-actions practice-word-row' }, hintButton(vm, act)));
     }
   } else {
     const why = rich(step.why || '', { class: 'practice-why', id: 'practice-why' });
-    const back = !vm.right && vm.returns
-      ? rich('This step comes back.', { class: 'practice-hint-line', id: 'practice-returns' })
-      : null;
     const verdict = h('p', {
       class: 'practice-verdict',
       id: 'practice-verdict',
@@ -228,7 +251,7 @@ export function renderCard(host, vm, act) {
     const last = vm.step >= item.steps.length - 1;
     const nextLabel = !last ? 'Next step' : (vm.endless && item.generator ? 'Generate another' : 'Next');
     actions.push(h('button', { type: 'button', class: 'btn btn-primary', id: 'practice-next' }, nextLabel));
-    kids.push(verdict, why, back, h('div', { class: 'problem-actions' }, ...actions));
+    kids.push(verdict, why, h('div', { class: 'problem-actions practice-act-row' }, ...actions));
   }
 
   const card = h('article', { class: 'card practice-card', id: 'practice-card', 'data-kind': item.kind, 'data-view': vm.view }, ...kids.filter(Boolean));
@@ -261,16 +284,23 @@ export function renderSheet(host, groups, conceal) {
     if (formulas.length) {
       block.append(h('p', { class: 'book-flag' }, 'Formulas'));
       const ul = h('ul', { class: 'practice-formulas' });
-      formulas.forEach((line) => ul.append(h('li', null, rich(line.formula))));
+      formulas.forEach((line) => {
+        const li = h('li', line.formula.includes('\n') ? { class: 'practice-break' } : null);
+        li.append(rich(line.formula));
+        ul.append(li);
+      });
       block.append(ul);
     }
     if (memories.length) {
       block.append(h('p', { class: 'book-flag' }, 'Takeaways'));
       const ul = h('ul', { class: 'practice-memories' });
       memories.forEach((line) => {
-        const li = h('li');
-        appendRich(li, line.memory);
-        li.append(document.createTextNode(` (${line.ref}, page ${line.page})`));
+        const body = withoutTrailingCite(line.memory, line.ref, line.page);
+        const broken = body.includes('\n');
+        const li = h('li', broken ? { class: 'practice-break' } : null);
+        appendBroken(li, body);
+        if (broken) li.append(h('br'));
+        li.append(document.createTextNode(`${broken ? '' : ' '}(${line.ref}, page ${line.page})`));
         ul.append(li);
       });
       block.append(ul);
