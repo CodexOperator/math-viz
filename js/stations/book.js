@@ -3,7 +3,7 @@
 // memory as the Test 2 index. Hints stay closed. No answer key on these cards.
 
 import { BOOK, sectionHref } from '../data/book.js';
-import { shellChapters, CHAPTER_4, CHAPTER_5, bookChapter, chapter4ExerciseIds, chapter5ExerciseIds, CHAPTER_PICTURE, pictureHref, OPEN_CHAPTERS } from '../data/book-path.js';
+import { shellChapters, CHAPTER_4, CHAPTER_5, bookChapter, chapter4ExerciseIds, chapter5ExerciseIds, CHAPTER_PICTURE, pictureHref } from '../data/book-path.js';
 import { test2ProblemById } from '../data/test2-problems.js';
 import { loadSharedTicks, saveSharedTicks, toggleTick, sectionFinished, chapterTally } from '../book/progress.js';
 import { continueSentence, continueTarget, walkSections } from '../book/continue.js';
@@ -65,7 +65,6 @@ export function mountBookHome(el, ctx, spec) {
   const list = h('ol', { class: 'book-path', id: 'book-path' });
 
   for (const ch of shellChapters()) {
-    const open = OPEN_CHAPTERS.includes(ch.n);
     const href = `#chapter-${ch.n}`;
     const expanded = walkSections().some((s) => s.chapter === ch.n);
     const head = expanded
@@ -75,10 +74,10 @@ export function mountBookHome(el, ctx, spec) {
           h('span', { class: 'book-num' }, String(ch.n)),
           document.createTextNode(` ${ch.title}`)),
         h('p', { class: 'book-page', id: `book-page-${ch.n}` }, `Page ${ch.page}`))
-      : h('a', { class: 'book-row book-row-closed', id: `book-open-${ch.n}`, href },
+      : h('div', { class: 'book-row book-row-closed', id: `book-open-${ch.n}` },
         h('span', { class: 'book-num' }, String(ch.n)),
         h('span', { class: 'book-closed-title', id: `book-title-${ch.n}` }, ch.title),
-        h('span', { class: 'book-flag', id: `book-flag-${ch.n}` }, open ? 'Open' : 'Closed'));
+        h('span', { class: 'book-flag', id: `book-flag-${ch.n}` }, 'Closed'));
     const kids = [head];
     if (expanded) {
       const sections = h('ol', { class: 'book-sections', id: `book-sections-${ch.n}` });
@@ -107,7 +106,7 @@ export function mountBookHome(el, ctx, spec) {
     const n = Number(node.getAttribute('data-chapter'));
     const mine = walkSections().filter((s) => s.chapter === n);
     let state = 'later';
-    let flag = OPEN_CHAPTERS.includes(n) ? 'Open' : 'Closed';
+    let flag = 'Closed';
     if (mine.length) {
       const done = mine.every((s) => sectionFinished(s, ticks));
       const current = mine.some((s) => s.id === tally.nextId);
@@ -135,7 +134,7 @@ export function mountBookHome(el, ctx, spec) {
       h('p', { class: 'where-line', id: 'where-line' }, 'The book · Chapters 1–7'),
       h('p', { class: 'station-lede', id: 'book-lede' }, 'Chapters 1 to 7, in the order Howell and Mathews print them.'),
       sourceTag({ pin: '202 Updated Edition, table of contents, pages i–ii', href: BOOK.html })),
-    h('div', { class: 'book-next', id: 'book-next' }, status, walk),
+    h('div', { class: 'book-next', id: 'book-next' }, walk, status),
     list);
 
   const focus = spec && spec.chapter;

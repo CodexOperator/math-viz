@@ -1,5 +1,8 @@
 // Two orders. A section walk is worked example, then the faded proof, then
 // the other items. Test prep interleaves sections by a seeded round-robin.
+// The same seed rebuilds the same order. A new seed is a new set.
+
+import { mulberry32 } from './seed.js';
 
 const KIND_ORDER = {
   'proof-blank': 0,
@@ -34,12 +37,14 @@ function bySectionThenKind(a, b) {
 }
 
 // Worked example, then faded steps, for each proof written as a blank.
-export function sectionWalk(items) {
+// The walk order does not move. The seed is what shuffles choices and generators.
+export function sectionWalk(items, seed = 1) {
   const live = items.filter((it) => it.kind !== 'flash').sort(bySectionThenKind);
+  const stamp = Number(seed) || 1;
   const out = [];
   for (const item of live) {
-    if (item.kind === 'proof-blank') out.push({ source: item, seed: 1, view: 'worked' });
-    out.push({ source: item, seed: 1, view: 'faded' });
+    if (item.kind === 'proof-blank') out.push({ source: item, seed: stamp, view: 'worked' });
+    out.push({ source: item, seed: stamp, view: 'faded' });
   }
   return out;
 }
@@ -64,23 +69,48 @@ export function interleave(items, seed = 1) {
       if (bucket.length) out.push(bucket.shift());
     }
   }
-  return out.map((item) => ({ source: item, seed: 1, view: 'faded' }));
+  const stamp = Number(seed) || 1;
+  return out.map((item) => ({ source: item, seed: stamp, view: 'faded' }));
 }
 
 // The mixed set opens on one worked proof, then that proof with the blanks.
 export function testPrepEntries(items, seed = 1) {
   const live = items.filter((it) => it.kind !== 'flash');
   const proof = live.find((it) => it.kind === 'proof-blank');
-  const rest = interleave(live.filter((it) => it !== proof), seed);
+  const stamp = Number(seed) || 1;
+  const rest = interleave(live.filter((it) => it !== proof), stamp);
   const out = [];
   if (proof) {
-    out.push({ source: proof, seed: 1, view: 'worked' });
-    out.push({ source: proof, seed: 1, view: 'faded' });
+    out.push({ source: proof, seed: stamp, view: 'worked' });
+    out.push({ source: proof, seed: stamp, view: 'faded' });
   }
   return out.concat(rest);
 }
 
 export function practiceEntries(items, { mode, seed }) {
-  if (mode === 'walk') return sectionWalk(items);
+  if (mode === 'walk') return sectionWalk(items, seed);
   return testPrepEntries(items, seed);
+}
+
+// Fisher-Yates with mulberry32. The same seed returns the same order.
+export function orderedChoices(choices, seed) {
+  const list = (choices || []).slice();
+  const rand = mulberry32(seed || 1);
+  for (let i = list.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    const tmp = list[i];
+    list[i] = list[j];
+    list[j] = tmp;
+  }
+  return list;
+}
+
+// One seed per step, so two blanks on one card do not share a shuffle.
+export function choiceSeed(seed, id, step) {
+  let h = (Number(seed) >>> 0) || 1;
+  const text = `${id}:${step}`;
+  for (let i = 0; i < text.length; i++) {
+    h = Math.imul(h ^ text.charCodeAt(i), 16777619) >>> 0;
+  }
+  return h || 1;
 }

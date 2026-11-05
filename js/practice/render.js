@@ -2,6 +2,7 @@
 // Prose with $...$ goes through appendRich. Nothing here uses innerHTML.
 
 import { h, appendRich, sourceTag } from '../stations/test2-ui.js';
+import { orderedChoices } from './queue.js';
 
 function rich(text, attrs) {
   const node = h('p', attrs || null);
@@ -72,10 +73,9 @@ export function renderCard(host, vm, act) {
     kids.push(h('div', { class: 'problem-actions' },
       h('button', { type: 'button', class: 'btn btn-primary', id: 'practice-next' }, 'Try these steps')));
   } else if (vm.phase === 'ask' || vm.phase === 'hint') {
-    const actions = [];
     if (String(item.kind).endsWith('mc')) {
       const choices = h('div', { class: 'practice-choices', id: 'practice-choices', role: 'group', 'aria-label': 'Choices' });
-      (step.choices || []).forEach((choice, i) => {
+      orderedChoices(step.choices || [], vm.choiceSeed || 1).forEach((choice, i) => {
         const btn = h('button', { type: 'button', class: 'btn practice-choice', id: `practice-choice-${i}` });
         appendRich(btn, choice);
         btn.addEventListener('click', () => act.answer(choice));
@@ -88,20 +88,33 @@ export function renderCard(host, vm, act) {
         type: 'text',
         autocomplete: 'off',
         spellcheck: 'false',
-        'aria-label': 'Your answer',
+        'aria-labelledby': 'practice-answer-label',
       });
-      const field = h('label', { class: 'field practice-field', id: 'practice-field', for: 'practice-input' });
-      appendRich(field, step.text || 'Your answer');
-      field.append(input);
+      const field = h('div', { class: 'practice-field', id: 'practice-field' },
+        h('span', { class: 'practice-answer-label', id: 'practice-answer-label' }, 'Your answer'),
+        input);
       input.addEventListener('keydown', (ev) => {
         if (ev.key === 'Enter') {
           ev.preventDefault();
           act.answer(input.value);
         }
       });
+      input.addEventListener('focus', () => { if (act.focus) act.focus(); });
       const check = h('button', { type: 'button', class: 'btn btn-primary', id: 'practice-check' }, 'Check');
       check.addEventListener('click', () => act.answer(input.value));
-      kids.push(field, h('div', { class: 'problem-actions' }, check));
+      kids.push(field, h('div', { class: 'problem-actions practice-check-row', id: 'practice-check-row' }, check));
+    }
+    if (vm.phase === 'hint') {
+      kids.push(h('p', { class: 'practice-verdict', id: 'practice-verdict', 'data-right': 'false' }, 'Not that one.'));
+    }
+    const hinted = step.hints && vm.hint > 0 ? step.hints.slice(0, vm.hint) : [];
+    const lines = hinted.length ? hinted : (vm.phase === 'hint' && vm.missLine ? [vm.missLine] : []);
+    if (lines.length) {
+      const note = h('div', { class: 'hint-note', id: 'practice-hint-note' });
+      lines.forEach((line, i) => {
+        note.append(rich(line, { class: 'practice-hint-line', id: `practice-hint-line-${i}` }));
+      });
+      kids.push(note);
     }
     if (step.hints && step.hints.length) {
       const hintBtn = h('button', {
@@ -110,21 +123,7 @@ export function renderCard(host, vm, act) {
       }, vm.hint > 0 && vm.hint < step.hints.length ? 'Next hint' : 'Hint');
       if (vm.hint >= step.hints.length) hintBtn.disabled = true;
       hintBtn.addEventListener('click', act.hint);
-      actions.push(hintBtn);
-    }
-    if (vm.hint > 0 && step.hints) {
-      const shown = step.hints.slice(0, vm.hint);
-      const note = h('div', { class: 'hint-note', id: 'practice-hint-note' });
-      shown.forEach((line, i) => {
-        note.append(rich(line, { class: 'practice-hint-line', id: `practice-hint-line-${i}` }));
-      });
-      kids.push(note);
-    }
-    if (actions.length) kids.push(h('div', { class: 'problem-actions' }, ...actions));
-    if (vm.phase === 'hint') {
-      const note = h('div', { class: 'hint-note', id: 'practice-miss-note' });
-      note.append(rich(vm.missLine || '', { class: 'practice-hint-line', id: 'practice-miss-line' }));
-      kids.push(h('p', { class: 'practice-verdict', id: 'practice-verdict', 'data-right': 'false' }, 'Not that one.'), note);
+      kids.push(h('div', { class: 'problem-actions' }, hintBtn));
     }
   } else {
     const why = rich(step.why || '', { class: 'practice-why', id: 'practice-why' });
@@ -133,11 +132,6 @@ export function renderCard(host, vm, act) {
       id: 'practice-verdict',
       'data-right': vm.right ? 'true' : 'false',
     }, vm.right ? 'Yes.' : 'Not that one.');
-    const reveal = h('p', { class: 'practice-reveal', id: 'practice-reveal' });
-    appendRich(reveal, 'The answer is ');
-    const ans = h('span', { class: 'practice-filled' });
-    appendRich(ans, step.answer);
-    reveal.append(ans, document.createTextNode('.'));
     const actions = [];
     if (vm.showGenerate) {
       actions.push(h('button', { type: 'button', class: 'btn', id: 'practice-generate' }, 'Generate another'));
@@ -145,7 +139,7 @@ export function renderCard(host, vm, act) {
     const last = vm.step >= item.steps.length - 1;
     const nextLabel = !last ? 'Next step' : (vm.endless && item.generator ? 'Generate another' : 'Next');
     actions.push(h('button', { type: 'button', class: 'btn btn-primary', id: 'practice-next' }, nextLabel));
-    kids.push(verdict, vm.revealAnswer ? reveal : null, why, h('div', { class: 'problem-actions' }, ...actions));
+    kids.push(verdict, why, h('div', { class: 'problem-actions' }, ...actions));
   }
 
   const card = h('article', { class: 'card practice-card', id: 'practice-card', 'data-kind': item.kind, 'data-view': vm.view }, ...kids.filter(Boolean));

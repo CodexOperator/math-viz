@@ -16,9 +16,10 @@ import { generate as expGenerate, principalQuarters } from '../js/practice/gen/e
 import { catalogIssues, loadCatalog, assertGeneratorSignatures } from '../js/practice/catalog.js';
 import { seedFirst } from '../js/practice/gen/index.js';
 import { generate as mapGenerate } from '../js/practice/gen/ch2-maps.js';
-import { testPrepEntries, sectionWalk } from '../js/practice/queue.js';
-import { walkSections, continueTarget } from '../js/book/continue.js';
+import { testPrepEntries, sectionWalk, orderedChoices } from '../js/practice/queue.js';
+import { walkSections, continueTarget, closedChapters } from '../js/book/continue.js';
 import { mergeLeitner, reviewCard, emptyDeck } from '../js/practice/leitner.js';
+import { mergeMisses, noteMiss, emptyMisses } from '../js/practice/misses.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
 import { parsePath, evalPath } from '../js/core/path-expr.js';
 import { smoothLoop, presetById, compileFormula } from '../js/core/path-geom.js';
@@ -1201,6 +1202,22 @@ check('a fraction, a power, and a complex number match their equivalents',
     mix[0] && mix[0].view === 'worked' && mix[0].source.kind === 'proof-blank'
     && mix[1] && mix[1].view === 'faded' && mix[1].source.id === mix[0].source.id);
   check('test prep then mixes sections', new Set(mix.slice(2, 6).map((e) => e.source.section)).size >= 2);
+  const mixAgain = testPrepEntries(PRACTICE, 3);
+  const mixOther = testPrepEntries(PRACTICE, 4);
+  check('the same seed rebuilds the same set',
+    mix.map((e) => `${e.source.id}:${e.view}:${e.seed}`).join() === mixAgain.map((e) => `${e.source.id}:${e.view}:${e.seed}`).join()
+    && mix.every((e) => e.seed === 3)
+    && mix.map((e) => e.source.id).join() !== mixOther.map((e) => e.source.id).join());
+  let choiceStable = true;
+  let choiceMoved = false;
+  for (let n = 1; n <= 12; n++) {
+    const once = orderedChoices(['a', 'b', 'c', 'd'], n);
+    const twice = orderedChoices(['a', 'b', 'c', 'd'], n);
+    if (once.join() !== twice.join() || new Set(once).size !== 4) choiceStable = false;
+    if (once.join() !== 'a,b,c,d') choiceMoved = true;
+  }
+  check('choice order follows the seed', choiceStable && choiceMoved);
+  check('a chapter with no section is closed', closedChapters().join() === '1,2,3,6,7');
   const counted = walkSections().reduce((n, s) => n + s.exercises.length, 0);
   const withChapter = walkSections({ 2: [{ id: '2.1', exercises: ['2.1.1'] }] });
   check('continue counts a registered chapter',
@@ -1268,5 +1285,12 @@ check('a fraction, a power, and a complex number match their equivalents',
   const kept = mergeLeitner(miss, second);
   check('a Leitner merge keeps the card that was practiced more',
     kept.cards.card.reviews === 2 && kept.cards.card.box === 2 && first.cards.card.due === '2026-11-05');
+  const missed = noteMiss(noteMiss(emptyMisses(), 'step-item', 0, 10), 'step-item', 0, 20);
+  const other = noteMiss(emptyMisses(), 'step-item', 0, 99);
+  const mergedMiss = mergeMisses(other, missed);
+  check('a miss record keeps the step that was missed more',
+    missed.steps['step-item']['0'].misses === 2
+    && mergedMiss.steps['step-item']['0'].misses === 2
+    && mergedMiss.steps['step-item']['0'].updated === 20);
 }
 }

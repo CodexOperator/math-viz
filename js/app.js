@@ -17,6 +17,7 @@ import { BOOK } from './data/book.js';
 import { parseBookRoute } from './book/route.js';
 import { CHAPTER_MODULES } from './book/registry.js';
 import { shellChapters, bookChapter } from './data/book-path.js';
+import { walkSections } from './book/continue.js';
 import { cssVar, getTheme, setTheme, onThemeChange, prefersReducedMotion, initTheme } from './core/theme.js';
 import { createStore } from './core/store.js';
 import { watchIds } from './core/ids.js';
@@ -224,17 +225,26 @@ export function start() {
   }
 
   // The drawer is the same list on every page: Chapters 1–7, then Test prep.
+  // shellChapters stops at 7. A chapter with no section on this branch is text.
   function buildShellNav() {
     nav.replaceChildren();
+    const open = new Set(walkSections().map((s) => s.chapter));
     const list = el('ul', { class: 'nav-list', id: 'nav-chapters', 'aria-label': 'Chapters' });
     for (const ch of shellChapters()) {
-      list.append(el('li', {}, el('a', {
-        class: 'nav-link', id: `nav-chapter-${ch.n}`, href: `#chapter-${ch.n}`, 'data-chapter': String(ch.n),
-        'aria-label': `${ch.n} ${ch.title}`,
-      }, [
+      const kids = [
         el('span', { class: 'nav-num', 'aria-hidden': 'true' }, String(ch.n)),
         el('span', { class: 'nav-title' }, ch.title),
-      ])));
+      ];
+      const row = open.has(ch.n)
+        ? el('a', {
+          class: 'nav-link', id: `nav-chapter-${ch.n}`, href: `#chapter-${ch.n}`, 'data-chapter': String(ch.n),
+          'aria-label': `${ch.n} ${ch.title}`,
+        }, kids)
+        : el('span', {
+          class: 'nav-link nav-closed', id: `nav-chapter-${ch.n}`,
+          'aria-label': `${ch.n} ${ch.title}, closed`,
+        }, kids);
+      list.append(el('li', {}, row));
     }
     list.append(el('li', {}, el('a', {
       class: 'nav-link', id: 'nav-test-prep', href: '#test-prep', 'aria-label': 'Test prep',
@@ -439,6 +449,7 @@ export function start() {
       placeWhere(section, whereText(route, null));
       view.dataset.state = 'ready';
       if (pendingScroll != null) window.scrollTo(0, pendingScroll);
+      else if (!(spec.kind === 'roadmap' && spec.chapter)) window.scrollTo(0, 0);
       finish(first, label);
     } catch (err) {
       if (seq !== state.seq) return;

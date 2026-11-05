@@ -1520,3 +1520,13 @@ The Test 1 row is 358×44 on the phone and 952×44 at 1280. Test 2 matches. They
 ### Keep
 
 The Book is one status sentence, one Continue at 44px, and Chapter 4 on the phone screen, in both themes. At 1280 the same list is the sidebar. Continue opens Chapter 4 at the top, The Book is 44px, and "Test prep · 4.1" is 44px. Test prep lands at scroll 0 on the worked proof, with the step in one paragraph. Test 1 and Test 2 are 44px rows under the card. Flashcards are one card: the name, then the sentence, Again and Got it at 44px, no flip. The paper, the type, the accent button, and the dark theme are the ones the station pages already use. Back from Chapter 4 returns to the book.
+
+# Practice engine — batch 4
+
+The answer label is the one line "Your answer". The step stays the only copy of the sentence, and Check sits under the box. On the Theorem 4.1 blank, Check is inside 390×844 and inside 1280×800, light and dark. A first miss says "Not that one." and hint 1 under Check, in view. Next hint adds the next line and does not print hint 1 again. A second miss fills the blank, shows the reason, and does not add "The answer is". The miss is stored at `mv:practice.misses`, merged the same way as the Leitner boxes. A hit fills the blank and "Yes." uses the ok token. Focusing the box scrolls it and Check above a short viewport. A chapter with no section is plain text flagged Closed, on the book and in the drawer. Continue is the first control and opens Chapter 4. The drawer is chapters 1–7, then Test prep. Chapter 3's closed title stays on one line at 360. Flashcards walk the unseen order: Corollary 4.1, then Definition 4.1, "2 of 36". The line under the title is "Try these steps.", "Check, then read the reason.", or "Show the back." A visit draws a new seed. New set draws another. The same seed rebuilds the same order, and choices shuffle from that seed. `#film-settle-story` says The Book and opens `#book`.
+
+Checked: `node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, `node kit/smoke.mjs`. Headless Chrome at 390×844 and 1280×800, light and dark, plus the closed title at 360×780. No console errors.
+
+## Still open
+
+Typing `#chapter-2` still opens the stub. The book and the drawer no longer link it. Film panels other than the settle film still say Story Map. A stored miss is not a review queue yet. Chapters 1, 3, 6, and 7 still have no practice of their own.

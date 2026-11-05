@@ -2,7 +2,7 @@
 // The walk is every exercise the open chapters actually have, in book order.
 // Ticks stay in progress.test2. This file only reads them.
 
-import { CHAPTER_4, CHAPTER_5, shellChapters, OPEN_CHAPTERS } from '../data/book-path.js';
+import { CHAPTER_4, CHAPTER_5, shellChapters } from '../data/book-path.js';
 import { CHAPTER_WALKS } from './registry.js';
 import { chapterTally } from './progress.js';
 import { test2ProblemById } from '../data/test2-problems.js';
@@ -28,7 +28,7 @@ export function walkSections(extra = CHAPTER_WALKS) {
 
 export function closedChapters() {
   const walking = new Set(walkSections().map((s) => s.chapter));
-  return shellChapters().filter((ch) => !OPEN_CHAPTERS.includes(ch.n) && !walking.has(ch.n)).map((ch) => ch.n);
+  return shellChapters().filter((ch) => !walking.has(ch.n)).map((ch) => ch.n);
 }
 
 export function exerciseLabel(id) {

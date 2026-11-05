@@ -220,14 +220,41 @@ a.book-section-link {
 a.book-row { flex-direction: column; align-items: stretch; gap: 0; }
 a.book-row h2 { color: inherit; }
 #book-path { gap: var(--space-2); }
-a.book-row-closed {
+a.book-row-closed,
+.book-row-closed {
+  display: flex;
   flex-direction: row;
-  align-items: baseline;
+  flex-wrap: nowrap;
+  align-items: center;
   gap: 0.65rem;
+  min-height: var(--tap);
+  min-width: 0;
   padding-top: 0;
   padding-bottom: 0;
+  color: inherit;
+  text-decoration: none;
 }
-.book-closed-title { font-weight: 600; }
+.book-closed-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.book-row-closed .book-num,
+.book-row-closed .book-flag { flex: none; }
+.book-row-closed .book-flag { margin: 0; }
+span.nav-link.nav-closed {
+  color: var(--text-muted);
+  cursor: default;
+}
+span.nav-link.nav-closed:hover { background: transparent; }
+.nav-closed .nav-title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 .section-head {
   display: flex;
   flex-wrap: wrap;
@@ -1318,8 +1345,22 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .practice-step-text,
 .practice-back,
 .practice-reveal { overflow-wrap: anywhere; }
-.practice-field { width: 100%; }
+.practice-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 100%;
+  min-width: 0;
+}
+.practice-answer-label {
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+}
 .practice-field input { width: 100%; font-family: var(--font-mono); }
+.practice-check-row { margin-top: var(--space-2); }
 .practice-choices { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
 .practice-choice {
   width: 100%;
@@ -1339,6 +1380,7 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   background: var(--surface-2);
 }
 .practice-verdict { margin: 0; font-weight: 700; }
+.practice-verdict[data-right="true"] { color: var(--ok); }
 .practice-verdict[data-right="false"] { color: var(--danger); }
 .practice-filled { font-weight: 700; }
 .practice-sheet { display: flex; flex-direction: column; gap: var(--space-3); }

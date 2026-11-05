@@ -4,9 +4,10 @@
 import { h } from '../stations/test2-ui.js';
 import { BOOK_CHAPTERS } from '../data/book-path.js';
 import { loadCatalog, realize } from './catalog.js';
-import { selectItems, sectionOfFocus, practiceEntries } from './queue.js';
+import { selectItems, sectionOfFocus, practiceEntries, choiceSeed } from './queue.js';
 import { answersMatch } from './check.js';
 import { loadDeck, saveDeck, reviewCard, dueOrder, localDay } from './leitner.js';
+import { loadMisses, saveMisses, noteMiss } from './misses.js';
 import { renderCard, renderSheet, renderFlash } from './render.js';
 
 const KIND_LABEL = {
@@ -59,7 +60,11 @@ export async function mountPrep(el, ctx, spec) {
   const PRACTICE = await loadCatalog();
   const pool = selectItems(PRACTICE, { chapter, section });
   const walk = !!(section);
-  const seed = 1 + (chapter || 0);
+  function drawSeed() {
+    const n = Math.floor(Math.random() * 2147483646) + 1;
+    return n;
+  }
+  let seed = drawSeed();
   let mode = 'practice';
   let endless = false;
   let queue = practiceEntries(pool, { mode: walk ? 'walk' : 'prep', seed });
@@ -71,8 +76,10 @@ export async function mountPrep(el, ctx, spec) {
   let right = false;
   let done = false;
   let deck = loadDeck(ctx.store);
+  let missesBook = loadMisses(ctx.store);
   let flashShow = false;
-  let flashCursor = 0;
+  let cardIds = null;
+  let cardPos = 0;
   const today = localDay();
 
   const status = h('p', { class: 'book-status', id: 'practice-status' });
@@ -89,6 +96,18 @@ export async function mountPrep(el, ctx, spec) {
     });
     modeRow.append(btn);
   }
+  const newSet = h('button', { type: 'button', class: 'chip', id: 'practice-new-set' }, 'New set');
+  newSet.addEventListener('click', () => {
+    let next = drawSeed();
+    if (next === seed) next = (seed % 2147483646) + 1;
+    seed = next;
+    queue = practiceEntries(pool, { mode: walk ? 'walk' : 'prep', seed });
+    index = 0;
+    resetStep();
+    done = false;
+    mode = 'practice';
+    paint();
+  });
   const hasGenerator = pool.some((it) => it.generator);
   if (hasGenerator) {
     endlessBtn.addEventListener('click', () => {
@@ -188,7 +207,14 @@ export async function mountPrep(el, ctx, spec) {
       return;
     }
     misses += 1;
-    phase = misses === 1 ? 'hint' : 'told';
+    missesBook = noteMiss(missesBook, item.id, step);
+    saveMisses(ctx.store, missesBook);
+    if (misses === 1) {
+      phase = 'hint';
+      if (hint < 1 && s.hints && s.hints.length) hint = 1;
+    } else {
+      phase = 'told';
+    }
     paint();
   }
 
@@ -217,8 +243,9 @@ export async function mountPrep(el, ctx, spec) {
       hint,
       phase: entry.view === 'worked' ? 'ask' : phase,
       right,
-      revealAnswer: phase === 'told' && !right,
+      revealAnswer: phase === 'told',
       missLine: missLine(item),
+      choiceSeed: choiceSeed(entry.seed || 1, item.id, step),
       kindLabel: KIND_LABEL[item.kind] || 'Practice',
       count: `Step ${Math.min(step + 1, item.steps.length)} of ${item.steps.length}`,
       showGenerate: !!(item.generator && phase === 'told' && step >= item.steps.length - 1 && !endless),
@@ -228,6 +255,7 @@ export async function mountPrep(el, ctx, spec) {
       hint: () => { hint += 1; paint(); },
       next: advance,
       generate: generateAnother,
+      focus: pinAnswer,
       memory: () => { mode = 'memory'; paint(); },
     });
   }
@@ -247,33 +275,35 @@ export async function mountPrep(el, ctx, spec) {
   }
 
   function paintCards() {
-    const { rows, early } = flashList();
-    if (!rows.length) {
+    if (!cardIds) {
+      const { rows } = flashList();
+      cardIds = rows.map((row) => row.item.id);
+    }
+    if (!cardIds.length) {
       status.textContent = 'No flashcards in this set.';
       renderFlash(stage, { item: null }, {});
       return;
     }
-    if (flashCursor >= rows.length) flashCursor = 0;
-    const row = rows[flashCursor];
-    const rec = deck.cards[row.item.id];
-    const fresh = rows.every((r) => !r.rec);
-    status.textContent = fresh
-      ? `${flashCursor + 1} of ${rows.length}`
-      : (early ? 'Nothing is due. This card is early.' : `${rows.length} due.`);
-    const front = row.item.cite && row.item.cite.ref ? row.item.cite.ref : row.item.prompt;
+    if (cardPos >= cardIds.length) cardPos = 0;
+    const item = pool.find((it) => it.id === cardIds[cardPos]);
+    if (!item) return;
+    const rec = deck.cards[item.id];
+    const count = `${cardPos + 1} of ${cardIds.length}`;
+    status.textContent = count;
+    const front = item.cite && item.cite.ref ? item.cite.ref : item.prompt;
     renderFlash(stage, {
-      item: { ...row.item, prompt: front },
+      item: { ...item, prompt: front },
       show: flashShow,
-      early,
+      early: false,
       box: rec ? rec.box : 0,
-      count: fresh ? `${flashCursor + 1} of ${rows.length}` : (rec ? `Box ${rec.box}` : 'New'),
+      count,
     }, {
       show: () => { flashShow = true; paint(); },
       grade: (grade) => {
-        deck = reviewCard(deck, row.item.id, grade, today);
+        deck = reviewCard(deck, item.id, grade, today);
         saveDeck(ctx.store, deck);
         flashShow = false;
-        flashCursor += 1;
+        cardPos += 1;
         paint();
       },
     });
@@ -285,24 +315,98 @@ export async function mountPrep(el, ctx, spec) {
       if (btn) btn.setAttribute('aria-pressed', String(id === mode));
     }
     endlessBtn.hidden = !hasGenerator || mode !== 'practice';
+    newSet.hidden = mode !== 'practice';
     if (mode === 'memory') paintMemory();
     else if (mode === 'cards') paintCards();
     else paintPractice();
+    const entry = currentEntry();
+    if (mode === 'cards') lede.textContent = 'Show the back.';
+    else if (mode === 'memory') lede.textContent = 'The formulas and the one-line versions.';
+    else if (entry && entry.view === 'worked' && !done) lede.textContent = 'Try these steps.';
+    else lede.textContent = 'Check, then read the reason.';
+    if (mode === 'practice' && phase === 'ask') {
+      requestAnimationFrame(() => fitAnswer());
+    }
+    if (mode === 'practice' && (phase === 'hint' || phase === 'told')) {
+      requestAnimationFrame(() => {
+        const node = stage.querySelector('#practice-hint-note')
+          || stage.querySelector('#practice-why')
+          || stage.querySelector('#practice-verdict');
+        revealInView(node);
+      });
+    }
   }
 
-  const lede = walk
-    ? 'A worked proof, then the same proof with the steps missing, then the exercises.'
-    : 'Items from more than one section, mixed. Check, then read the reason.';
+  function fitAnswer() {
+    const check = stage.querySelector('#practice-check') || stage.querySelector('.practice-choice');
+    if (!check) return;
+    const header = document.getElementById('site-header');
+    const topLimit = (header ? header.getBoundingClientRect().bottom : 0) + 8;
+    const vv = window.visualViewport;
+    const bottomLimit = (vv ? vv.offsetTop + vv.height : window.innerHeight) - 12;
+    const over = check.getBoundingClientRect().bottom - bottomLimit;
+    if (over > 0) window.scrollBy(0, Math.ceil(over));
+    const step = stage.querySelector('.practice-step-text');
+    if (!step) return;
+    const gap = topLimit - step.getBoundingClientRect().top;
+    if (gap > 0) {
+      const room = bottomLimit - check.getBoundingClientRect().bottom;
+      if (room > 0) window.scrollBy(0, -Math.min(gap, room));
+    }
+  }
+
+  function revealInView(node) {
+    if (!node || typeof node.getBoundingClientRect !== 'function') return;
+    const header = document.getElementById('site-header');
+    const topLimit = (header ? header.getBoundingClientRect().bottom : 0) + 8;
+    const vv = window.visualViewport;
+    const bottomLimit = (vv ? vv.offsetTop + vv.height : window.innerHeight) - 8;
+    const rect = node.getBoundingClientRect();
+    if (rect.bottom > bottomLimit) window.scrollBy(0, Math.ceil(rect.bottom - bottomLimit));
+    const next = node.getBoundingClientRect();
+    if (next.top < topLimit) window.scrollBy(0, Math.floor(next.top - topLimit));
+  }
+
+  function pinAnswer() {
+    const run = () => {
+      const input = stage.querySelector('#practice-input');
+      const check = stage.querySelector('#practice-check');
+      if (!input || !check || document.activeElement !== input) return;
+      revealInView(check);
+      const header = document.getElementById('site-header');
+      const topLimit = (header ? header.getBoundingClientRect().bottom : 0) + 8;
+      const inputTop = input.getBoundingClientRect().top;
+      if (inputTop < topLimit) {
+        const vv = window.visualViewport;
+        const bottomLimit = (vv ? vv.offsetTop + vv.height : window.innerHeight) - 8;
+        const shift = inputTop - topLimit;
+        if (check.getBoundingClientRect().bottom + shift <= bottomLimit) window.scrollBy(0, shift);
+      }
+    };
+    requestAnimationFrame(run);
+    setTimeout(run, 280);
+  }
+
+  const onResize = () => pinAnswer();
+  window.addEventListener('resize', onResize);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', onResize);
+
+  const lede = h('p', { class: 'station-lede', id: 'practice-lede' }, walk
+    ? 'Try these steps.'
+    : 'Check, then read the reason.');
   el.append(
     h('header', { class: 'station-header' },
       up,
       h('h1', { id: 'practice-title' }, 'Test prep'),
       h('p', { class: 'where-line', id: 'where-line' }, 'Test prep'),
-      h('p', { class: 'station-lede', id: 'practice-lede' }, lede)),
+      lede),
     h('div', { class: 'book-next', id: 'practice-next-row' }, status),
-    h('div', { class: 'practice-toolbar', id: 'practice-toolbar' }, modeRow, hasGenerator ? endlessBtn : null),
+    h('div', { class: 'practice-toolbar', id: 'practice-toolbar' }, modeRow, newSet, hasGenerator ? endlessBtn : null),
     stage,
     indexes);
   paint();
-  return function unmount() {};
+  return function unmount() {
+    window.removeEventListener('resize', onResize);
+    if (window.visualViewport) window.visualViewport.removeEventListener('resize', onResize);
+  };
 }
