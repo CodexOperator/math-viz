@@ -1902,3 +1902,51 @@ The orange quarter-turn arc is about a third of the square and stays on the unsh
 `ch2-maps` stays out of the shared practice-engine catalog. That catalog is not on this branch.
 
 Checked in headless Chrome at 390×844 and 1280×800, light and dark. No sideways scroll. No console errors. `node tools/check_vectors.mjs` (234/234), `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed.
+
+## taste-skill (chapter-2 batch 5)
+
+Read Leonxlnx/taste-skill at `12af471f`. Judged the preview through it. `kit/SKILL.md` wins where they disagree, and the site style stays: four teaching colours, one gesture, no second clock, the book-path kickers, the system serif and the system sans, the paper. Polish only. No product code changed.
+
+Preview https://ch2-preview.complexanalysis.pages.dev, tip `0113eb9` on `cursor/chapter-2`. The live `css/components.css` has the wide-card rule from that commit. Walked `#book` and `#chapter-2` in headless Chrome, 390×844 then 1280×800, light then dark. Opened the phone drawer. Dragged the green point on §2.1 both ways. No console errors. `scrollWidth` was 390 and 1280.
+
+### Verdict
+
+ANOTHER BATCH
+
+One polish batch, the six cuts below, then this lens rests. The phone chapter and the wide card already hold: both planes, the claim, and an arc a third of the square. What is left is the sentence breaking inside a formula, one wrapped word beside the planes, and a first screen that says the count twice and ends on a label.
+
+### Critique
+
+```
+ROUND 1
+Seen in one second: two shaded squares and a green dot, with an orange quarter-turn on the left square. On the laptop the claim sits in the right of that pair. On the book, Open Chapter 2, then a later chapter, then the open list.
+Idea (one sentence): one drag moves a green point, and the purple point and the sentence change with it.
+Live thing: the drag on each stage.
+Layout words by section: book=list / 2.1=split / 2.2=split / 2.3=split / 2.4=split / 2.5=split
+Scores: design 7 · usability 8 · creativity 8 · content 8 → overall 7.6
+Caps applied: none. The uppercase kickers, the 1px plane outlines, and the header hairline are the book path. The kit keeps them, so they do not cap the score. The planes are the picture. A scroll fade would be a second clock.
+Top three problems:
+1. On the phone the claim breaks inside w = iz + i. 390-light-ch2, 390-dark-ch2.
+2. At 1280 the waiting line wraps, and “changes” is its own line beside the planes. 1280-light-ch2, 1280-dark-ch2.
+3. The phone chapter ends on the word WORKED, and the line above the card opens “Five stages” under “0 of 5 stages marked.” 390-light-ch2, 390-dark-ch2.
+```
+
+House rules this pass leaves, because the kit and the site style win: the uppercase kickers (The Book, 2.1, Worked, Practice, Further reading), the 1px card and plane outlines, the header hairline, KaTeX’s math faces on top of the two text faces, the cream paper `#f6f3ec` and the dark paper `#0d121c`, the muted lede, and a still page. Five stages of one shape is the mountain. The drag is the motion.
+
+### Ranked
+
+1. **Keep each formula in the claim on one line.** At 390, light and dark, the §2.1 claim is 324×53 at y = 717, 17px, full ink `rgb(26, 34, 48)`. “On the blue line or to its right, ” ends the first line (245px). `w` and `=` sit on that line. `iz + i` starts the next line, at y = 748, then “lands on or above Im w = 2.” The sentence the picture checks breaks after the equals sign. At 1280 the same formula stays together, and `Im w = 2` drops to its own line in the 256px column, which is a clean break. The §2.5 worked line still splits the same way at 1280: `v =` ends the line and `−y/(1 + y²)` starts the next, while `|w − 1/2| = 1/2.` stays whole and keeps its period. Change: in the claim and the worked line, each formula wraps as one piece. The phone claim then breaks before `w = iz + i`.
+
+2. **On the wide screen, put the waiting line under the pair.** At 1280, light and dark, the claim column is 256px at x = 945. “Drag until the sentence changes” is one muted line of 258px on the phone (`rgb(81, 91, 108)`, y = 786, height 26). In the 256px column it wraps, and the second line is 67px: the word “changes”. The claim is the sentence beside the 300px planes. Change: the waiting line sits under the pair, the full width of the card, still one muted line. The claim is the only text in that column. The phone stack stays, where the line already fits.
+
+3. **Make the lede two lines, so the first screen does not end on WORKED.** At 390, light and dark, scroll 0. The status at y = 167 says “0 of 5 stages marked.” The lede at y = 193 is 78px, three lines, the same muted colour, and it opens “Five stages.” Deleting those two words leaves the block at 78px, so the fold does not move. Worked is 15px at y = 829, and its bottom is the bottom of the 844px screen. Example 2.9 starts at y = 848. Change: the lede does not restate the count. It names the four colours in two lines and keeps “line or circle.” Measured at 390: “Drag the green point. Purple lands. Blue is the line or circle, orange the curve.” is 52px, Worked moves to y = 803, and the example starts at y = 822, so the first line of Example 2.9 is on the screen. A fuller wording is right when it stays two lines and the example’s top stays on that screen.
+
+4. **Keep the licence on one line of the book citation.** At 390, light and dark, the book source is 358×81 at y = 187. The lines are “Howell & Mathews, Complex Analysis,” then “202 Updated Edition, table of contents, pages i–ii. CC BY”, then a 22px line that is “4.0.” Change: `CC BY 4.0.` stays together. “Pages i–ii” already names the contents, so “table of contents,” can leave and the licence fits on the second line.
+
+5. **Let the open chapter’s list lead the phone book.** At 390 the Chapter 1 card is 358×167 at y = 428. Its last line is the wrapped word “Addresses.” from “Already drawn: One Point, Two Addresses.” §2.1 is at y = 717, §2.3 at y = 813, and §2.4 at y = 861, under the fold. A later card with no extra sentence, Chapter 6, is 115px. The rows themselves are 44px (§2.5 is 47, because the title wraps). Change: a later chapter is the flag, the title, and the page. The map link is that title, on one line. §2.4 then clears the 844px screen.
+
+6. **In the dark, the shaded half-plane has to stay orange.** At 390, light, the w-plane shade above the line is `rgb(241, 225, 214)` and the line is `rgb(204, 145, 107)`. At 390, dark, the same shade is `rgb(58, 48, 51)` and the line is `rgb(157, 103, 71)`. The line is still orange. The half the claim is about has gone brown. The same pair is on the 1280 dark first screen. Change: the dark tint is a tint of that orange line, mixed with the dark paper. The light peach stays. One drag. No second colour.
+
+### Keep
+
+The paper, the serif title, and the four teaching colours on the marks that already read. Light paper `rgb(246, 243, 236)`, dark paper `rgb(13, 18, 28)`. The green dot, the purple dot, the blue line, and the orange arc, in both themes. The arc’s box is 52×52 on the 158px phone square and 99×99 on the 300px wide square, a third of the square, on the unshaded side of the blue line. Phone planes are 158×158. At 1280 the pair is 300×300 from x = 321, the claim is beside it at x = 945, and the row ends inside the 800px window. A press on the left of the z square sets the claim to “lands below Im w = 2” and the waiting line to “Finish one practice card.” Pressing back restores the first sentence. Stage complete stays hidden. Summit, scrolled up, sits at y = 72, and the header ends at 56. The phone waiting line is one muted line. §2.1 through §2.4 titles are one line. §2.5 is two lines, 54px. The parabola, the disks, the dashed cut, and the orange circle stay the pictures. Show the back stays the card’s full-width button. Memory sheet is 156×44. The four root choices stay one row, each 51×44. At 1280 the stacked choices are one row, each 215×44. The sector choices use `\arg` with a gap. The circle sentence keeps its period on `|w − 1/2| = 1/2`. Open Chapter 2 is 324×44, and the status under it is 26px: “Chapter 2 is open. 0 of 5 stages marked.” The phone drawer rows are 44px. Later sits on chapters 1, 3, 6, and 7, and Chapter 2 is the current row. The book lede says Chapters 1–7. The kickers stay. They are the book path. No sideways scroll, and the console stayed quiet.
