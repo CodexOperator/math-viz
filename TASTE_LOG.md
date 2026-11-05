@@ -1800,3 +1800,28 @@ Same system as chapter 4, measured at 390. Light: the paper is rgb(246, 243, 236
 ### Keep
 
 The 324px phone square, the 45° sentence, the gesture line, and Play on the first screen, in both themes. The why starts on that screen. Do not shrink the square to pull the rest of it up. conj keeps the claim at 52.7px and Play at one y. The dot stays under the finger inside the square, a press 26px out changes nothing, and past the frame the dot stops. The four teaching colours. The Book at 44px. Back restoring scrollY 900 and 1400. The 44px flag, the memory list at y=72, and `#chapter-3-3-3` with the title at y=121. Mark stage complete, the green edge, and 3.2's title and why 98px under that button. The drawer, chapters 1 through 7, the cover, and Escape. Shown inputs at 44px. The source line 49px under the last camp. No sideways scroll. The type, the paper, and the cards, shared with chapter 4.
+
+## reviewer (ch3 batch 4)
+
+Reviewed `63cbc5e` on `cursor/chapter-3` (PR #46) against Howell & Mathews, Complex Analysis, 202 Updated Edition. One fix landed on the branch: the Exercise 1(a) note now says the key's quadratic is not \(g'(z)\), and it no longer prints the derivative of \(h\). Not merged. gh-pages untouched.
+
+### Verdict
+
+ACCEPT WITH FIXES
+
+Checked against the professor PDF (complexanalysis.org, 471 pages, title page "202 Updated Edition"). Printed pages 79–101 and the selected answers on 435–436. Chapter pins match those pages: Equation (3.1) and Example 3.1 on 79; Definitions 3.1 and 3.2, the singular-point sentence, and (3.4)–(3.12) on 81; Theorem 3.1 on 82; Theorem 3.2 and Exercises 1–3 on 83; Exercises 7 and 11 on 84; Theorem 3.3 and (3.14)–(3.16) on 86; Example 3.4 on 87; Example 3.6 on 88; Theorem 3.4 on 89; Theorem 3.5 and (3.22) on 91; Theorem 3.6 on 92; Theorem 3.7 and Exercises 1, 3, and 7 on 93; Laplace (3.26), Theorem 3.8, and the conjugate definition on 95; Example 3.11 on 96; Theorem 3.9 and (3.27) on 97; Exercises 2 and 5 on 100.
+
+The five new cards compute the book's answers. Exercise 1(b) is \(h'(z) = 3/(z+2)^2\), singular at \(-2\). Exercise 3: \([f]^3\), \(fg\), \(f(z-1)\), and \(f(g(z))\) must be entire; \(f/g\) and \(f(1/z)\) need not. Exercise 1(b) of §3.2 is \((y+ix)/(x^2+y^2) = i/z\) for \(z \neq 0\), with \(f' = -i/z^2\). Exercise 3 is \(a = 1\), \(b = 2\). Exercise 2 of §3.3 has Laplacian \(6x+6y\), so no such analytic \(f\). The answer key on page 435 prints \(15z^2-8z+7\) for 1(a) and files \(h'\) under 1(c). The card's derivative stays \(5(z^2-iz+9)^4(2z-i)\). A wrong last step on Exercise 7(a) does not print \(-4i\); \(4(-i)\) is accepted and then the why shows it.
+
+Generators recompute. Four hundred random polynomials in \(z\) of degree 2 or 3 had Laplace zero, passed Cauchy-Riemann, and rebuilt \(\operatorname{Im}(f)\) from \(\int u_x\,dy\) plus \(C(x)\). Two hundred generator seeds threw nothing, and each answer sat in its choices. The real-axis family is Exercise 1(g): \(f' = 2ax\) only on \(y = 0\). The origin family is the \(|z|^2\) pattern, \(f'(0) = 0\).
+
+Pictures. \(z^2\) at \(1+i\) is a turn of \(45^\circ\) and a stretch of \(2\sqrt{2}\). A turned square stays a square through a half-turn of samples. Stretch at angle 0 is a rectangle; at \(45^\circ\) the sides are equal and the angle is not. Conjugate levels of \(x^2-y^2\) and \(2xy\) meet at a right angle except at the origin. Circles do that only on the diagonal. A drag clamps to the drawn square.
+
+On the preview, at 390×844, the five cards graded in place: a wrong numerator on the quotient stayed on the step, \(b=2\) and \(a=1\) passed, \(a=-1\) did not, \(6y+6x\) passed, and "does not exist" was the right choice for \(v = x^3+y^3\). No console errors. `node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. No live file imports `kit/`. `js/core/map-route.js` is byte-identical to `kit/template/js/core/map-route.js`.
+
+### Leftovers
+
+1. The local card is still the renderer. Exercise 2's second step is a choice list inside a `next-step-blank` item. The local card treats any step with `choices` as multiple choice. A shared renderer that keys off the item kind would turn that step into a typed blank.
+2. Theorem 3.5 is still a flash. Exercise 10, the polar proof, is not a card. Theorem 3.6's constant-modulus proof is not a card.
+3. `#book` still has to grow "Open Chapter 2" when that branch meets this one. The Chapter 3 button is already on the page.
+4. The Theorem 3.4 flash memory line is the short form, "Cauchy-Riemann plus continuous partials." The flash back and the §3.2 recipe state the neighborhood, the partials continuous at the point, and the equations at the point.

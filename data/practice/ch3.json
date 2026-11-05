@@ -27,7 +27,7 @@
       }
     ],
     "generator": null,
-    "note": "The selected-answers key on page 435 prints \\(15z^{2}-8z+7\\) for this derivative, and it labels \\(h'(z)=3/(z+2)^{2}\\) as 1(c). \\(h\\) is Exercise 1(b).",
+    "note": "The selected-answers key on page 435 prints \\(15z^{2}-8z+7\\) for this derivative. That quadratic is not \\(g'(z)\\). The same page lists the derivative of \\(h\\) under 1(c); \\(h\\) is Exercise 1(b).",
     "memory": "A power of a polynomial: n[inside]^{n-1} times the inside derivative."
   },
   {
