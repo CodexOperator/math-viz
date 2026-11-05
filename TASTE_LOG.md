@@ -1825,3 +1825,51 @@ On the preview, at 390×844, the five cards graded in place: a wrong numerator o
 2. Theorem 3.5 is still a flash. Exercise 10, the polar proof, is not a card. Theorem 3.6's constant-modulus proof is not a card.
 3. `#book` still has to grow "Open Chapter 2" when that branch meets this one. The Chapter 3 button is already on the page.
 4. The Theorem 3.4 flash memory line is the short form, "Cauchy-Riemann plus continuous partials." The flash back and the §3.2 recipe state the neighborhood, the partials continuous at the point, and the equations at the point.
+
+## unslop (chapter-3 batch 4)
+
+Preview https://ch3-preview.complexanalysis.pages.dev/#chapter-3, tip `63cbc5e`. The served `js/book/chapter3.js`, `js/book/ch3-pictures.js`, `css/components.css`, and `data/practice/ch3.json` match that commit. Phone 390×844 first, touch, light then dark, then 1280×800, light then dark. A rightward drag from 1+i, a drag to the frame and past it, Play, then Pause. §3.2, §3.3, Exercise 1(a), Exercise 3, the rational card, the constants card, and Exercise 2. No console errors. No sideways scroll (`scrollWidth` is 390 and 1280). Dark uses the same boxes as light. Body text is rgb(26, 34, 48) in the light and rgb(233, 237, 245) in the dark. No emoji, no gradient, no glow.
+
+## Verdict
+
+ANOTHER BATCH
+
+The phone square fills the card, and the finger holds the dot. The arrows that square is there to show disappear on the way to the frame, and Exercise 3's choices break on that same phone. One batch for the five cuts below. Then this lens rests.
+
+## What the hand does
+
+At rest the point is 1+i. On the phone the square is 324×324, from y=259 to 583, the same width as §3.2 and §3.3. The side gaps are 17px, the card's padding. The green step is 56px, the purple image is 158px, the orange turn is 14×34, and the handle is 9.5px. A rightward drag stays on the finger, miss 0.6px, and the imaginary part stays 1.00 through real part 2.19. At the frame the real part stops at 2.40. The dot stays on that edge while the finger goes on past it.
+
+Play says Pause, and the claim stays "The turn stays 45° and the stretch stays 2√2, for every direction." On the laptop the same drag keeps the miss at 0.3px. Play ends at y=783 on the phone and y=691 at 1280, inside both windows, in both themes.
+
+## What reads as unfinished
+
+**The drag erases the arrows.** From 1+i the green step, the purple image, and the orange turn are on the square. At real part 1.84 the green step is still drawn, about 8 units in the picture. At 1.99 its visibility is hidden. At 2.13 both arrows are hidden. At 2.28 the arc is hidden too. The claim at 2.19 + i still says the turn is 24° and the stretch is 4.82. The square shows a green dot.
+
+**Exercise 3 breaks a formula in the button.** On the phone, light and dark, the four choices sit in 290px buttons. `f(z−1)` draws as a 56×51 block, so the 1 drops onto a second line inside the button, and "and" sits beside the break. The fourth choice is 52px tall with a scroll width of 319: the last formula, `f(g(z))`, runs 30px past the button. At 1280 those four choices are 884×44, one line, and the formula stays inside the button. The prompt above them is whole at both widths. The rational card's four choices (`i/z`, `−i/z`, `1/z`, `iz`) are one line on the phone.
+
+**Exercise 1(a) speaks in the answer key.** Between the prompt and "Step 1 of 3" there is a paragraph, 133px on the phone and 53px at 1280: "The selected-answers key on page 435 prints 15z² − 8z + 7 for this derivative, and it labels h'(z) = 3/(z+2)² as 1(c). h is Exercise 1(b)." The next card is Exercise 1(b), and that derivative is the line it asks for. The card is already on the screen under the note. The paragraph is the unfinished piece. A wording that drops h'(z) and still tells the student what page 435 printed belongs off the card the same way.
+
+**The wide square sits apart from its sentence.** At 1280, both themes, the opening square is 304×304 at x=628. The gesture and the claim start at x=321. The paper between those two left edges is 307px, and the side gaps inside the 952px card are 324 and 324. §3.2 on that window is a 416px square. The why still ends at y=783, inside 800.
+
+**The first screen ends on a fragment.** On the phone, Play ends at y=783. "WHY YOU'D CARE" ends at 818. The why runs from y=822 to 928, so the window cuts it after "A derivative is one number that turns". At 1280 the why finishes, bottom 783, and the next line, "Three stages, from the derivative to a harmonic conjugate.", runs from y=783.5 to 809.5 and is cut by the 800 edge. The stage line already on that screen reads "3.1 · Differentiable and Analytic Functions · 0 of 3".
+
+## Cut
+
+1. **The arrows stay drawn for every point inside the square.** Evidence: on the phone the green step is hidden at real part 1.99, both arrows are hidden at 2.13, and the arc is hidden at 2.28, while the claim still names a turn and a stretch. The finger's miss on that drag is 0.6px and the imaginary part stays 1.00. Change: scale the step, the image, and the turn down so each one is still a mark at 1.99 and at 2.13. The point still stops at real part 2.40 when the finger leaves the frame.
+
+2. **Each formula in a choice stays one piece, inside the button.** Evidence: at 390, `f(z−1)` is a 56×51 block inside a 290×52 button, and the fourth choice's `f(g(z))` extends 30px past the button (scroll width 319). At 1280 the same choices are one line. Change: a choice may break between formulas. `f(z−1)` stays on one line, and every formula ends inside the button, at 390 and at 1280, in both themes.
+
+3. **The answer-key paragraph leaves Exercise 1(a).** Evidence, on the preview: the paragraph sits between the prompt and "Step 1 of 3", 133px on the phone, and it prints h'(z) = 3/(z+2)², the derivative the next card asks for. Change: the card keeps the prompt, the three steps, and the source line. The paragraph goes, including a later wording that still reports what the answer key printed.
+
+4. **The wide square shares the sentence's left edge.** Evidence: at 1280 the square's left edge is x=628 and the claim's left edge is x=321. The why ends at y=783 inside 800. Change: align the opening square with the claim, the edge the sentence already uses. Keep the cap that holds the why inside 800.
+
+5. **The first screen ends on a finished sentence.** Evidence: at 390 the why is cut after "A derivative is one number that turns" (the paragraph runs to y=928 in an 844 window). At 1280 the line "Three stages, from the derivative to a harmonic conjugate." is cut at y=809.5, and the stage line has already said 3.1 and 0 of 3. Change: on the phone this screen ends on Play, and the why starts whole on the next thumb, both sentences. Remove the "Three stages" line. The stage line and the status stay.
+
+## Keep
+
+The phone square at 324px, even with §3.2 and §3.3, and the 17px that is the card padding. The finger on the dot, miss at most 0.6px, imaginary part held at 1, and the stop at real part 2.40. Play on the first screen at both widths, in both themes, and the claim box that stays put when the point moves. The four teaching colours on the axes, the step, the turn, and the image. z² and conj, Turn and Stretch, Conjugates and Circles. §3.2's square filling its frame, and §3.3's two families crossing at a right angle. The five new cards as cards: the quotient, the entire-function question, the rational choices that already fit, the constants a and b, and the imaginary part x³+y³. Their source lines. The Book at 109×44. The kickers, in the site's small caps. No sideways scroll.
+
+## Add
+
+Nothing. No slider, no scrubber, no second clock, no third chip, no new hue.
