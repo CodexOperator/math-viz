@@ -1654,3 +1654,60 @@ Stage 6.3 opens on Goursat's subdivision. The tick is Theorem 6.5, the integral 
 ## Next
 
 The picture claims still say the value once the gesture has landed: the half turn says \(2i\), eight steps name \(\exp(2+i\pi/4)-1\), the deform claim names \(2\pi i\) and \(0\), and the Cauchy claim names the green point. The 6.6 sheet and summit still state that a bounded entire function is constant. Exercise 6.3.1 (b) and (d) are not cards. A missed flash stays at the front; there is no longer schedule than that. The shared practice engine is still not in the tree. Chapter 7 is named and is not a page. Chapters 8–11 stay on the book page as Later.
+
+## skeptical-student (chapter-6 batch 3)
+
+Branch `cursor/chapter-6`, tip `c18dde6`. Preview https://ch6-preview.complexanalysis.pages.dev/#chapter-6. Chrome, fresh storage. 390×844 light, then the theme control into the dark. Then 1280×800 light, and the theme control into the dark. No console errors. No failed assets. `scrollWidth` was 390 and 1280. The phone page is 26044px. The laptop page is 20505px.
+
+I have never seen this subject. I am on a phone. I wanted three things: what you are asking, what I do, and what I just learned.
+
+### What I could actually do
+
+The first screen, in both themes and at both widths, is the title, stage 6.1, one sentence, the circle, a claim, and Play. On the phone the square is 284×284 at y = 437, the claim is at y = 729, and Play is 70×44 at y = 790, so it ends at 834 in the 844 window. On the laptop the square is 272×272 at y = 371 and Play is at y = 712, so it ends at 756 in the 800 window. Dark ink on the claim is `rgb(233, 237, 245)` on paper `rgb(13, 18, 28)`. Light ink is `rgb(26, 34, 48)` on `rgb(246, 243, 236)`.
+
+Play on 6.1 walks the green point around the orange circle and ends on "A full turn brings the integral back to 0." Play on 6.2 lights eight orange dots and says they sit on \(4.23+5.20i\), beside \(\exp(2+i\pi/4)-1\). Play on 6.3 cuts the triangle into smaller triangles and says the integral is 0. Play on 6.4 bends the segment into two green sides over a dashed line and says the ends are still \(-1-i\) and \(3+i\). Play on 6.5 moves the green point inside the unit circle, puts a purple ring on it, and says the integral is the green point. Play on 6.6 grows the orange circle and parks a purple dot near the origin. The claim says the bound \(1/R\) has been read on every circle.
+
+The menu button is 44×44. The Book and chapters 1 through 7 are 44px rows, and Chapter 6 is the marked one. Chapter 7 opens the book on a Later card, page 210.
+
+Typing \(2i\) on Example 6.1 opened "Expand \((t-i)^3\) into a real part and an imaginary part, then integrate each from 0 to 1. The value stays covered." Typing 1 on Example 6.11 opened "length times a bound on \(|f|\)." Pressing "Theorem 6.5, so the integral is 0" left all four buttons on, and the note said the pole means Theorem 6.5 does not apply and deformation keeps the value. The four Example 6.7 choices are one 44px line at 390 (`scrollWidth` 289, `clientWidth` 288). \(2+(pi/4)i\) was accepted as \(z'(t)\). Show the back, then Missed and Recalled, both 44×141.
+
+### Where I got lost
+
+The claim on arrival is "The integral has left 0. The real part and the imaginary part are still separate." I see one purple dot. I cannot tell what is separate, or what number I am supposed to find.
+
+The blank says "From 0 to \(\pi\) the integral is" and the box is empty. I sampled the claim 152 times through one Play, about every 16ms. "Half a turn leaves the integral at \(2i\)" appeared once, at 709ms. The other 151 samples were "left 0" or "back to 0." I typed \(2i\) and \(0\) while the point was still at the top of the circle. Both checks passed. Stage complete stayed disabled, and the only words on it are "Stage complete." The half-turn window is a tolerance of 0.01 on the value. On the 284px square that is about half a pixel along the orange circle. A drag aimed at the exact left point did show \(2i\). A thumb does not land on half a pixel, and Play does not leave the sentence up.
+
+The line under the 6.1 title is "Later integrals come back to this real integral." Under 6.2 it is "A contour is the real integral from 6.1, after a parametrization." Under 6.6 it is "Liouville needs every circle." I do not have those words. I still do not know what the stage is for.
+
+On 6.2 the finished claim prints the exact value, and the blank underneath is "The exact value is". I would copy it and learn nothing about the orange dots. On 6.3 the line under the title, before Play, already says a closed analytic path integrates to 0. Play repeats 0. The blank asks for that 0. On 6.6, after Play, the claim says the bound "has been read." I did not read anything. The blank says "\(f\) is" and waits. The sheet further down says a bounded entire function is constant. That is where the word is.
+
+On the phone the Theorem 6.6 buttons are cut off in the 288px row: "Theorem 6.6, deformation of cor" (`scrollWidth` 346), "Theorem 6.1, so parametrize bot" (378), "Corollary 6.1, so the value is alw" (368). The line above them reads "Reach for ."
+
+The bend has no number on it. After Play I know the ends stayed. I cannot see whether the integral stayed.
+
+### Where I got bored
+
+6.1 is 2482px. 6.2 is 5626px and nine cards. 6.3 is 8272px and twelve cards. The 6.1 summit, "a complex integral is the real integral plus \(i\) times the imaginary integral," sits at y = 2108, under the flashcard and Example 6.1. I had stopped reading before Example 6.11. The pictures that do something (the ring on the inside point, the triangle cutting itself, the purple dot sliding to the origin) are separated by cards that ask me to copy a theorem number.
+
+### Verdict
+
+ANOTHER BATCH. I could press Play, and on 6.5 I could say the words "the green point." I could not finish 6.1 from the picture, I could not read three of the theorem buttons, and I was done with the page about six screens in. One batch is the six cuts below. When the half-turn line stays on the page, the disabled tick says what is missing, and the summit sits under the picture, this lens rests.
+
+### Ranked cuts
+
+1. **The half-turn line stays up, and a dead tick says what is missing.** Through one Play the \(2i\) sentence was on screen for one 16ms sample, at 709ms. Both blanks accepted \(2i\) and \(0\) while the phase was still `move`, and Stage complete stayed disabled with no other label. The window is a value tolerance of 0.01, about half a pixel on the 284px square. Change: once the green point comes within a thumb of the left side of the orange circle, a line under the picture reads "Half a turn: \(2i\)" and stays after Play finishes. The full-turn line can still be the live claim. While Stage complete is disabled, the button's line names the missing piece: "Bring the point all the way around" or "Fill both lines."
+
+2. **The sentence above the box stops before the answer.** After Play on 6.2 the claim is "Eight steps sit on \(4.23+5.20i\), beside \(\exp(2+i\pi/4)-1\)," and the blank is "The exact value is". The 6.3 line under the title, before Play, says a closed analytic path integrates to 0. The 6.6 sheet, between the blank and the tick, says a bounded entire function is constant. Change: the eight-step claim reports \(4.23+5.20i\) and leaves the exact value in the blank. The 6.3 line under the title says this camp is a closed path with nothing inside it; 0 shows up in the claim after the triangle subdivides. "Constant" leaves the 6.6 sheet until that check is right. The summit can keep the word after the tick.
+
+3. **A choice on the phone shows the whole answer, in a sentence.** At 390 the Theorem 6.6 row clips to "deformation of cor", "parametrize bot", and "the value is alw", and the stem is "Reach for ." The same stem is the step text `Reach for ___ .` with the blank removed and the period left behind. Change: the choice wraps onto a second line, and that stem goes away. The question is already the prompt. The Example 6.7 choices already fit on one 44px line; those stay as they are.
+
+4. **The first sentence of the stage is about the picture.** "Later integrals come back to this real integral." "A contour is the real integral from 6.1, after a parametrization." "Liouville needs every circle." The arrival claim says the real part and the imaginary part are still separate, over one purple dot. Change: 6.1 says "Purple is the total so far, while green walks the circle." 6.2 says "Orange dots are pieces of the path. Add them up." 6.6 says "Purple is a bound on the derivative. Watch it as the circle grows." The arrival claim on 6.1 says the total has left 0, and it waits to talk about two parts until the picture draws two parts.
+
+5. **The summit and Stage complete sit under the blanks.** The 6.1 summit is at y = 2108, under two cards. 6.2 is 5626px and nine cards before its summit. 6.3 is 8272px and twelve cards, and its tick is in the middle, at y = 9313, with the rest of the cards after it. Change: on every stage the summit and Stage complete move to just under that picture's blanks. The cards stay on the page, after the tick. Go to the next camp stays with the summit.
+
+6. **The bend and the radius say what just happened.** After Play the bend claim is "The path has bent. The ends are still \(-1-i\) and \(3+i\)." There is no mark for the value, and the blank asks for the integral of \(z\). After Play the radius claim is "The bound \(1/R\) has been read on every circle," and the blank asks what \(f\) is. Change: the bent claim says the integral is the same as on the straight segment, and \(4+2i\) stays in the blank. The finished radius claim says the purple bound shrank to the origin, so the derivative is 0. The miss on that blank says a derivative of 0 means \(f\) does not change, and the word stays covered.
+
+### What to keep
+
+Play on the first screen, both themes, both widths, with the square, the claim, and the button in that window. The four colours on the marks. The triangle that cuts itself when you press Play, and the claim that then says the integral is 0. The inside point with the purple ring, and the claim that ends "the green point." The radius picture once the purple dot has moved off the handle. The four Example 6.7 choices, one 44px line at 390. The misses that leave the number covered: Example 6.1, Example 6.11, and the deformation note that leaves the buttons on. \(2+(pi/4)i\) counting as the derivative. Show the back, Missed, and Recalled. The drawer, chapters 1 through 7, each row 44px. Stage complete staying off until the picture and the blanks agree, once the button says which one is missing.
+
