@@ -371,7 +371,7 @@ function diskPanel() {
 function zeroPanel(ctx) {
   const samples = [
     { id: 'zero-c-0', label: 'c = 0', c: { re: 0, im: 0 }, text: 'Settles at 0. The orbit of 0 is 0, 0, 0, …. It is bounded, so the Julia set is the unit circle, one piece.' },
-    { id: 'zero-c-i', label: 'c = i', c: { re: 0, im: 1 }, text: 'Stays. It cycles. Example 4.10, page 113. The steps are 0, i, −1 + i, −i, and then it repeats. Bounded, so the Julia set is connected. The printed list of that orbit omits i. The index names the slip.' },
+    { id: 'zero-c-i', label: 'c = i', c: { re: 0, im: 1 }, text: 'Stays. It cycles. Example 4.10, page 113. The steps are 0, i, then −1 + i, −i, −1 + i, −i, …. Bounded, so the Julia set is connected. The printed list of that orbit omits i. The index names the slip.' },
     { id: 'zero-c-m2', label: 'c = −2', c: { re: -2, im: 0 }, text: 'Exercise 5. Theorem 4.9, page 113: the Julia set is connected exactly when this orbit stays bounded. Read the steps in the list. The index does not print them.' },
     { id: 'zero-c-quarter', label: 'c = 0.3', c: { re: 0.3, im: 0 }, text: 'Leaves. Real and greater than 1/4. Exercise 8: this c is not in the set of c whose orbit of 0 stays bounded. The terms keep climbing.' },
   ];

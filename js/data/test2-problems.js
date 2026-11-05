@@ -122,7 +122,7 @@ export const TEST2_PROBLEMS = deepFreeze([
     pin: '§4.2, Example 4.10, page 113',
     statement: T`Show that the Julia set for $f_i$ is connected.`,
     book: T`We have $f_i(0)=i$, $f_i(i)=-1+i$, $f_i(-1+i)=-i$, and $f_i(-i)=-1+i$. The printed list of the orbit is $\{0,\ -1+i,\ -i,\ -1+i,\ -i,\ldots\}$, which is bounded, so the Julia set is connected by Theorem 4.9, page 113.`,
-    added: T`The printed list skips $i$. The four steps in the same solution give the orbit $0,\ i,\ -1+i,\ -i$, and then it repeats. The HTML and the PDF both print the short list. The set is still bounded.`,
+    added: T`The printed list skips $i$. The same solution's four evaluations give $0,\ i,\ -1+i,\ -i$, and the next value is $-1+i$ again. The cycle is $\{-1+i,\ -i\}$, Example 4.12, page 116. The HTML and the PDF both print the short list. The set is still bounded.`,
   }),
   P({
     id: 'E4.2.1', exercise: 'Example 4.7, page 110', section: '4.2', chapter: 4, group: 'C', scope: 'core', kind: 'example', quoted: true,

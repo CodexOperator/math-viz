@@ -155,7 +155,7 @@
       {
         "text": "How do you write $\\sin z$ and $\\cos z$ for an exam?",
         "answer": "$\\sin z=(e^{iz}-e^{-iz})/(2i)$, $\\cos z=(e^{iz}+e^{-iz})/2$, the derivative pair, $\\sin(x+iy)=\\sin x\\cosh y+i\\cos x\\sinh y$, and vertical segments go to hyperbolas.",
-        "why": "Definition 5.5, page 148, Identities (5.34)–(5.35), page 150, Theorem 5.4, page 149, and Figure 5.7, page 152."
+        "why": "Definition 5.5, page 148, Identities (5.34), (5.35), and (5.36), page 150, Theorem 5.4, page 149, and Figure 5.7, page 152."
       }
     ],
     "generator": null,

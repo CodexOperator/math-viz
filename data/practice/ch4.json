@@ -1655,7 +1655,7 @@
       "href": "https://complexanalysis.org/web/sec_julia-mandelbrot.html#Kc_Connected"
     },
     "kind": "next-step-mc",
-    "prompt": "The orbit of $0$ at $c=i$ is $0,\\, i,\\, -1+i,\\, -i$, and then it repeats.",
+    "prompt": "The orbit of $0$ at $c=i$ is $0,\\, i,\\, -1+i,\\, -i,\\, -1+i,\\, -i,\\, \\ldots$.",
     "steps": [
       {
         "text": "The Julia set is ___.",
@@ -1670,7 +1670,7 @@
         "misses": [
           {
             "choice": "dust, because the orbit of $0$ leaves",
-            "why": "This orbit repeats. It does not leave. A bounded orbit of $0$ means the Julia set is connected. Theorem 4.9, page 113."
+            "why": "The tail cycles between $-1+i$ and $-i$. It does not return to $0$, and it does not leave. A bounded orbit of $0$ means the Julia set is connected. Theorem 4.9, page 113."
           },
           {
             "choice": "connected, because the orbit of $0$ leaves",

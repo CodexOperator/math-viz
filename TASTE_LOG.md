@@ -1819,3 +1819,27 @@ The five batch-3 cuts are in. The recipe is five lines with the pages on the lin
 Play stays inside the window: it ends at 821 on the phone and at 788 at 1280. The status card starts just under that window. Leave the square at 358px. The empty field to its right on the laptop is the room Play is using. The walk opens with the purple mark on the bottom and the green ring on the right, and the ring is 44px. The Book link is the 44px station link. A section flag on an open camp sits 8px under it. Continue opens `#chapter-4` at the top. Back returns the book, the bare URL, and the chapter to the scroll you left, and the practice button does the same.
 
 Julia's + and − are 44×44 under a coarse pointer and 32×32 with the mouse. Practice 5.4 lands at the top of Test prep. The mode row is three chips, each 44px. Later chapters are one line and 44px. The type is Iowan Old Style at 25.85px, the paper is rgb(246, 243, 236) in the light and rgb(13, 18, 28) in the dark, and the blue Continue button is the station button. The where-line, the white card, and the 44px up control stay.
+
+## reviewer (ch4-5 batch 4)
+
+Reviewed at tip `c0102e6`, then two small correctness fixes on the same branch. Checked against Howell & Mathews, 202 Updated Edition (PDF title page: 202 Updated Edition, 471 pages). Printed page N is the footer on that page. Preview `book.js` and `data/practice/ch4.json` matched `c0102e6` byte for byte, and that preview still said the orbit repeats. `node tools/check_vectors.mjs` 234/234. `node tools/fractal-smoke.mjs` passed. `node kit/smoke.mjs` passed. No `kit/` import in live code. `js/core/map-route.js` matches `kit/template/js/core/map-route.js`.
+
+### Verdict
+
+ACCEPT WITH FIXES. The fixes are on this branch. The batch-4 statements that were rechecked against the PDF are right, and the generators compute their answers. Two sentences were false or mis-cited and are corrected.
+
+### Fixes
+
+Example 4.10, page 113, computes \(f_i(0)=i\), \(f_i(i)=-1+i\), \(f_i(-1+i)=-i\), \(f_i(-i)=-1+i\). The orbit is \(0, i, -1+i, -i, -1+i, -i, \ldots\). The printed list drops \(i\). The practice prompt, the \(c=i\) chip, and the index note said \(0, i, -1+i, -i\), and then it repeats, which sends the list back to \(0\). Example 4.12, page 116, names the 2-cycle \(\{-1+i, -i\}\). Those three sentences now show the cycle.
+
+The §5.4 flash why cited Identities (5.34)–(5.35) for an answer that also writes \(\cos z=(e^{iz}+e^{-iz})/2\). That formula is Identity (5.36), page 150. The why now names (5.34), (5.35), and (5.36).
+
+### Checked, and left as written
+
+Theorem 4.9, page 113: the Julia set is connected iff the orbit of 0 is bounded. The §4.2 sheet says one piece when that orbit stays bounded, and disconnected when it leaves. Theorem 4.12, page 118: \(|z|<1\) sums to \(1/(1-z)\), and \(|z|\ge 1\) diverges. Theorem 4.15, page 124, pulls convergence in toward the centre. Exercise 6, page 129, is No: \(|2+3i|=\sqrt{13}<\sqrt{17}=|4-i|\). Theorem 4.16, page 125, gives \(R=\infty\) when the coefficient ratio goes to 0. Identity (5.1), page 132, and Equations (5.6)–(5.7), page 133: \(|e^{z}|=e^{x}\), and Arg sits in \((-\pi,\pi]\), with \(\pm\pi\) at \(\pi\). Exercise 2(c), page 135, lands \(\pm i\pi\) at \(-1\). Theorem 5.4, page 149, and the answer key for Exercise 1, page 156, start the cosine derivative at \(n\ge 1\). Identity (5.35), page 150, is \(\sin(x+iy)=\sin x\cosh y+i\cos x\sinh y\). Exercise 6(c), page 157, is \(\sin(2i)=i\sinh 2\). Figure 5.7, page 152, sends vertical segments to hyperbolas. The five generators were recomputed: sine parts on the \(5\times 5\) grid, 400 geometric sums, the radii, the shifted sums, 200 exponential modulus-and-argument seeds, the two-moduli comparison, and the ratio-test factorials.
+
+### Leftovers
+
+1. The §4.1 stay sentence says modulus 1 means the terms do not settle. At \(z=1\) the powers are \(1, 1, 1, \ldots\), which settles at 1. The same line is in `films/film-settle.html`. Split that sentence: \(z=1\) settles at 1, and every other point on the circle does not settle at one point.
+2. The memory line for Exercise 1(a), page 108, states the general fact "if \(|w|<1\), then \(w^n\to 0\)." That exercise is the one limit \(\bigl(\tfrac12+\tfrac i4\bigr)^n=0\), and the answer 0 is right. The general fact is §4.3, Exercise 6, page 123. Point the memory line there.
+3. §§5.2, 5.3, and 5.5 are still Later rows. Not a batch-4 error.
