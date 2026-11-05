@@ -1658,3 +1658,40 @@ Theorem 1.4 says precisely \(n\) solutions, not necessarily distinct. The powers
 4. Stages 1.3 through 1.6 still keep the summit at the foot. Only 1.2 folds the first two cards above it.
 5. On a 1280×800 window the colour key sits just under the fold. Times i is on that screen. The phone is the screen the key ends.
 6. Chapters 8–11 stay on the book page. They are not in the drawer.
+
+## reviewer (ch1 batch 4)
+
+Preview https://ch1-preview.complexanalysis.pages.dev, tip `7eb34f9` on `cursor/chapter-1` (PR #44), checked against Howell & Mathews, Complex Analysis, 202 Updated Edition (PDF, 471 pages; printed pages 1–42). Fixes pushed on `cursor/chapter-1`. Did not merge. Did not touch `gh-pages`.
+
+### Verdict
+
+ACCEPT WITH FIXES. The stage arithmetic, the named pages, and the generator values match the print edition. Two sentences did not, and one exercise link opened Chapter 1’s first page. Those are corrected.
+
+### What the book says
+
+Equation (1.6), page 3, is \((2+\sqrt{-1})+(2-\sqrt{-1})=4\), and \(4^3-15\cdot 4-4=0\). Formula (1.3) is page 2. Definitions 1.1 and 1.2 are page 10, Definition 1.3 is page 10, Definition 1.4 is page 11, and page 13 is the proof of (P1) together with \(i=(0,1)\) and \(i^2=-1\). Exercise 1(a), page 15, is \(i^{275}=-i\). Exercise 1(f) is \((7-2i)(3i+5)=41+11i\). Exercise 6, page 15, asks to prove or disprove the real-part sum and the real-part product.
+
+Example 1.6, page 20, is \(z_1=1+2i\) and \(z_2=3+2i\): the moduli are \(\sqrt{5}\) and \(\sqrt{13}\), and the product is \(-1+8i\). Identity (1.21) is page 17. The distance formula and Theorem 1.2 are page 18. Identity (1.24) is \(|z_1+z_2|\ge |z_1|-|z_2|\), page 19. Identities (1.25) and (1.26) are page 19. Exercise 1(a) is \(\sqrt{10}\), Exercise 1(c) is \(|(1+i)^{50}|=2^{25}\), Exercise 2(a) is \(6+4i\) and \(-2+2i\), and Exercise 3(b) sits on \(|z-i|=2\).
+
+Example 1.7, page 22, is the first polar form of \(1+i\): length \(\sqrt{2}\), angle \(\pi/4\). Definition 1.11, page 23, is the one value in \((-\pi,\pi]\). Euler’s formula is Equation (1.32), page 25, and the exponential form is (1.35) on that page. Theorem 1.3, page 26, equates the sets \(\arg\). Example 1.13, page 27, restates the same length and Arg, then computes the inverse. Exercise 7, page 28, is \(z_1=-1+i\sqrt{3}\) and \(z_2=-\sqrt{3}+i\): the Args sum to \(3\pi/2\), and the product is \(-4i\), whose Arg is \(-\pi/2\).
+
+Equation (1.40) and Theorem 1.4, page 30, are De Moivre and precisely \(n\) solutions, not necessarily distinct. Equation (1.43), page 31, is \(e^{i 2\pi k/n}\). Equation (1.45), page 32, is the general root. Theorem 1.5 and Example 1.21, page 33, solve \(z^2+(1+i)z+5i=0\) with square roots \(3-3i\) and \(-3+3i\), and the roots are \(1-2i\) and \(-2+i\). Exercise 2, page 34, is \((\sqrt{3}+i)^4=-8+8\sqrt{3}\,i\). The length of \((\sqrt{3}+i)^{10}\) is \(1024\).
+
+Equation (1.48), page 35, is \(z(t)=z_0+t(z_1-z_0)\). Equation (1.50), page 37, is the open disk. Example 1.25, page 38, is \(D_1(0)\) with \(\varepsilon=1-|z_0|\), exterior \(|z|>1\), boundary \(|z|=1\). Figure 1.30, page 39, is the open annulus \(1<|z|<2\). A region is a domain plus some, none, or all of its boundary, page 40. Exercise 6, page 41, is the open disk as a domain and the closed disk not. The half-closed annulus \(\{z:1<|z|\le 2\}\) is bounded, and it is not open, not closed, and not a domain.
+
+`generate(seed, params)` recomputed cleanly across 400 seeds of add, subtract, multiply, divide, modulus, Arg, and polar form. The twelve angles include the axes and \(\pi/6\), \(\pi/3\), and their fourth-quadrant pairs. Arg stays in \((-\pi,\pi]\). A \(2\pi\) shift is rejected, and \(-\pi\) is not \(\operatorname{Arg}(-1)\).
+
+### Fixes
+
+Example 1.6 named \(\sqrt{3}+2i\). The book’s second number is \(3+2i\). The worked sentence now says that. The §1.2 Exercise 6 source link opened `sec_origin.html`. It now opens `sec_algebra-1.html#x1_2_6`. The Theorem 1.3 card still says an argument of a product is a sum of arguments. Its why and memory now keep the wrap into \((-\pi,\pi]\) for the name Arg, which is Definition 1.11 and Exercise 7, and they leave Theorem 1.3 as the set equality.
+
+`node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. `js/core/map-route.js` is byte-identical to the kit copy. No live file imports `kit/`. Headless Chrome on the preview, 390×844 and 1280×800, light and dark: no console errors, no failed requests, no sideways scroll. Times i ends at y = 724 on the phone and y = 794 on the laptop. Two presses say \(i^2\) landed on \(-1\). A fourth press says “Back at 1.” The identity heading renders. Got it stays hidden until Show the back. Next root names \(2\pi k/5\) and holds at \(k=0\). The 1.6 buttons stay disabled until the green point moves, and Inside is right at radius 0.9.
+
+### Still open
+
+1. The \(1+i\) card cites Example 1.13, page 27. Example 1.7, page 22, is where the book first writes that polar form. Example 1.13 states the same length and Arg, then computes the inverse.
+2. The modulus flash cites Identity (1.25) and also states the quotient, which is Identity (1.26). Both are page 19. The addition flash cites Definition 1.1 and also states subtraction, which is Definition 1.2. Both are page 10.
+3. The closed-disk flash cites Example 1.25, page 38. The closed and punctured disks are Equations (1.51) and (1.52), page 37. The example is the open disk, its exterior, and its boundary.
+4. The shared practice engine is not on this branch. Chapter 1 still renders the schema with the local card. Progress is still localStorage.
+5. Stages 1.3 through 1.6 still keep the summit at the foot. On a 1280×800 window the colour key ends at y = 855, under the fold. Times i is on that screen.
+6. Chapters 8–11 stay on the book page. They are not in the drawer.

@@ -103,7 +103,7 @@ export const CHAPTER_1 = deepFreeze({
         pin: 'Page 17, and Figure 1.10 on page 18',
         href: sectionHref(GEO1, 'fig_ch-01-10'),
         title: 'The length of $4+3i$',
-        body: 'Definition 1.8 writes $|4+3i|$ as $\\sqrt{4^2+3^2}$. The legs are the real part and the imaginary part, and Identity (1.21) says each leg is at most the hypotenuse. Example 1.6, page 20, multiplies the lengths of a different pair, $1+2i$ and $\\sqrt{3}+2i$.',
+        body: 'Definition 1.8 writes $|4+3i|$ as $\\sqrt{4^2+3^2}$. The legs are the real part and the imaginary part, and Identity (1.21) says each leg is at most the hypotenuse. Example 1.6, page 20, multiplies the lengths of a different pair, $1+2i$ and $3+2i$.',
       },
       memory: [
         '$|z|=\\sqrt{x^2+y^2}$. That is the distance to $0$. Definition 1.8.',
@@ -239,6 +239,7 @@ const CITE_HREF = {
   'Definition 1.9': sectionHref(GEO2, 'def_polar_rep'),
   'Definition 1.11': sectionHref(GEO2, 'Arg_z'),
   '§1.2, Exercise 1(f)': sectionHref(ALG1, 'x1_2_1'),
+  '§1.2, Exercise 6': sectionHref(ALG1, 'x1_2_6'),
   '§1.2, Exercise 1(a)': sectionHref(ALG1, 'x1_2_1'),
   '§1.3, Exercise 1(a)': sectionHref(GEO1, 'x1_3_1'),
   '§1.3, Exercise 2(a)': sectionHref(GEO1, 'x1_3_2'),

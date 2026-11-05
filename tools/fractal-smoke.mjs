@@ -186,7 +186,7 @@ check('eleven chapters, 1, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_C
       neg.steps[1].answer.startsWith('-') && matchesCh1(book, neg.steps[2]) && matchesCh1(neg.steps[2].answer, neg.steps[2]));
     check('the half-closed annulus is Figure 1.30, and Example 1.6 is another pair',
       ann.cite.ref === 'Figure 1.30' && ann.cite.page === 39 && !/Exercise 9/.test(ann.prompt) && /Page 40/.test(ann.steps[0].why)
-      && /1\+2i/.test(worked) && !/same length/.test(worked));
+      && /1\+2i/.test(worked) && /3\+2i/.test(worked) && !/\\sqrt\{3\}\+2i/.test(worked) && !/same length/.test(worked));
   }
   {
     let zeroCoord = false;
