@@ -153,7 +153,11 @@ export function generate(seed, params) {
   const frac = forms(1, a - b);
   const constant = forms(1, a * b);
   const cubic = forms(a + b, 1);
-  const prompt = `Exercise 10 of §7.3, page 230. The Laurent series of $1/((${lin(a)})(${lin(b)}))$ centered at $0$, in $|z|<${inner}$, $${inner}<|z|<${outer}$, and $|z|>${outer}$.`;
+  const named = a === 2 && b === 3;
+  const where = `in $|z|<${inner}$, $${inner}<|z|<${outer}$, and $|z|>${outer}$`;
+  const prompt = named
+    ? `Exercise 10 of §7.3, page 230. The Laurent series of $1/((${lin(a)})(${lin(b)}))$ centered at $0$, ${where}.`
+    : `The same three regions, for a new pair of poles. The Laurent series of $1/((${lin(a)})(${lin(b)}))$ centered at $0$, ${where}.`;
   if (mode === 'mc') {
     const right = `negative powers from the pole at $${a}$, and non-negative powers from the pole at $${b}$`;
     const bothIn = 'non-negative powers from both poles';

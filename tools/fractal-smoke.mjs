@@ -267,7 +267,9 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
     && made10.steps[1].answer === '\\frac{1}{6}'
     && made10.steps[2].answer === '5'
     && threeAgrees(1, ex10.generator.params, 80) < 1e-6
-    && threeProblem(2, ex10.generator.params).a !== 2);
+    && threeProblem(2, ex10.generator.params).a !== 2
+    && /Exercise 10/.test(made10.prompt)
+    && !/Exercise 10/.test(threeProblem(2, ex10.generator.params).prompt));
   check('exercise 3 classifies sin(1/z) and z exp(1/z) from the series',
     ex3.cite.page === 238
     && ex3.kind === 'next-step-mc'
@@ -277,6 +279,11 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
     && /z\\exp/.test(made3b.prompt)
     && classProblem(4, ex3.generator.params).kind === 'pole'
     && classProblem(4, ex3.generator.params).order === 1
+    && /Corollary 7\.8/.test(classProblem(4, ex3.generator.params).steps[0].why)
+    && /Exercise 3/.test(classProblem(3, ex3.generator.params).prompt)
+    && classProblem(3, ex3.generator.params).kind === 'removable'
+    && !/Exercise 3/.test(classProblem(5, ex3.generator.params).prompt)
+    && classProblem(5, ex3.generator.params).order === 1
     && ex3.steps[0].choiceWhy.length === 4);
   check('theorem 7.14 is pinned and L\'Hôpital has a next step',
     readFileSync(new URL('../js/data/chapter-7.js', import.meta.url), 'utf8').includes('Theorem 7.14, page 240')
@@ -301,7 +308,10 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
   check('taylor agreement is withheld until the partial sum has caught the value',
     taylorClaim(0.9, 0, 0, false).holds === false
     && /not caught/.test(taylorClaim(0.9, 0, 0, false).text)
-    && taylorClaim(0.2, 0, 0, false).text === 'The partial sum has settled near 0.');
+    && taylorClaim(0.2, 0, 0, false).text === 'The partial sum has settled near 0.'
+    && /caught the value/.test(taylorClaim(0.9, 0, 12, false).text)
+    && !/near 0/.test(taylorClaim(0.9, 0, 12, false).text)
+    && taylorClaim(0.6, 0, 12, false).holds === true);
   check('chapter 7 exports five stages and the generators are seed-first',
     chapter7WalkSections().map((s) => s.id).join() === '7.1,7.2,7.3,7.4,7.5'
     && chapter7WalkSections()[0].exercises[0] === 'ch7-stage-7.1'
@@ -320,7 +330,7 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
     && /removable/.test(removableClaim(0.1).text)
     && /slip/.test(practice.find((item) => item.id === 'ch7-7.1-mtest-blank').steps[2].why)
     && readFileSync(new URL('../js/app.js', import.meta.url), 'utf8').includes('if (ch.n > 7) continue')
-    && !/next batch|cards are written/.test(readFileSync(new URL('../js/data/chapter-7.js', import.meta.url), 'utf8')));
+    && !/next batch|cards are written|opposite winding/.test(readFileSync(new URL('../js/data/chapter-7.js', import.meta.url), 'utf8')));
   const inside = laurentClaim(0.4, 0.1, 8);
   const between = laurentClaim(1.5, 0, 12);
   const outside = laurentClaim(2.8, 0.1, 12);

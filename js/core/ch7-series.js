@@ -123,8 +123,11 @@ export function taylorClaim(re, im, n, revealed = true) {
   if (outside || revealed) {
     text = 'The agreement stops at the circle through $\\pm i$.';
     holds = !outside && err < TAYLOR_SETTLE;
-  } else if (err < TAYLOR_SETTLE) {
+  } else if (err < TAYLOR_SETTLE && z.mod <= 0.35) {
     text = 'The partial sum has settled near 0.';
+    holds = true;
+  } else if (err < TAYLOR_SETTLE) {
+    text = 'Inside the disk, this partial sum has caught the value.';
     holds = true;
   } else {
     text = 'Inside the disk, this partial sum has not caught the value yet.';

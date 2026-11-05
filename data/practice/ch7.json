@@ -510,7 +510,7 @@
           "two",
           "order 2"
         ],
-        "why": "One trip of $z$ around 0 sends $z^2$ around twice. The order is that winding."
+        "why": "Definition 7.6, page 234: $z^2$ and its first derivative vanish at 0, and the second derivative is 2. The picture counts that order as two turns."
       }
     ],
     "generator": null,

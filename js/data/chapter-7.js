@@ -116,12 +116,12 @@ export const CHAPTER_7 = deepFreeze({
       picture: 'winding',
       why: 'The negative powers name the singularity: none, a finite string, or an infinite tail. The order is how many times the image winds.',
       observe: 'Drag the green point once around the orange circle.',
-      key: 'Blue axes. Orange is the circle about the zero. Green is the point you drag. Purple is $z^2$, and it winds twice.',
+      key: 'Blue axes. Orange is the circle about the zero. Green is the point you drag. Purple follows the direction of $z^2$. The second turn sits on a larger ring so both turns stay visible.',
       summit: 'One trip around a zero of order $k$ sends the image around $k$ times.',
       worked: {
         pin: 'Definition 7.5, page 232, and Theorem 7.12, page 235',
         href: sectionHref(S74, 'sec_singularities-4'),
-        body: 'On the picture, $f(z)=z^2$ has a zero of order 2 at 0: one lap of the green point sends the purple image around twice. A simple pole is the opposite winding. $1/z$ sends the image once the other way, which is a pole of order 1. Theorem 7.12 writes a pole of order $k$ as $h(z)/(z-\\alpha)^k$ with $h(\\alpha)\\neq 0$.',
+        body: 'On the picture, $f(z)=z^2$ has a zero of order 2 at 0: one lap of the green point sends the purple image around twice. A pole winds the other way. $1/z$ sends the image once the other way, which is a pole of order 1. Theorem 7.12 writes a pole of order $k$ as $h(z)/(z-\\alpha)^k$ with $h(\\alpha)\\neq 0$.',
       },
       memory: [
         'No negative powers: removable. Lowest power $-k$: a pole of order $k$. Infinitely many: essential (Definition 7.5, page 232).',

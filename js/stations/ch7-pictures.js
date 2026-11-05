@@ -588,7 +588,7 @@ export function mountWinding(parent) {
     viewBox: `0 0 ${size} ${size}`,
     tabindex: '0',
     role: 'img',
-    'aria-label': 'A circle about a zero of order 2. Drag the green point around the circle. Purple is z squared and winds twice.',
+    'aria-label': 'A circle about a zero of order 2. Drag the green point around the circle. Purple follows the direction of z squared and winds twice. The second turn sits on a larger ring.',
   });
   const axisX = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2', x1: X(-1.4), y1: Y(0), x2: X(1.4), y2: Y(0) });
   const axisY = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2', x1: X(0), y1: Y(-1.4), x2: X(0), y2: Y(1.4) });

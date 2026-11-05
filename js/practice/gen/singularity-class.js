@@ -110,12 +110,13 @@ const CATALOG = [
   {
     tex: 'z^{2}/(z-\\sin z)',
     series: z2OverZMinusSin,
-    slip: 'The selected answer on page 448 calls this removable. $z-\\sin z$ has a zero of order 3 and $z^2$ has a zero of order 2, so the quotient has a pole of order 1.',
+    slip: 'The selected answer on page 448 calls this removable. $z-\\sin z$ has a zero of order 3 and $z^2$ has a zero of order 2, so Corollary 7.8, page 236, says the quotient has a pole of order 1.',
   },
   {
     tex: '\\sin z/z^{2}',
     series: sinOverW2,
     slip: null,
+    exercise: false,
   },
 ];
 
@@ -148,9 +149,10 @@ export function generate(seed, params) {
   const choices = ['removable', 'a pole of order 1', 'a pole of order 2', 'essential'];
   if (!choices.includes(answer)) choices[1] = answer;
   const choiceWhy = choices.map((label) => whyFor(label, found, entry.slip));
-  const cited = params && params.cite === false
-    ? `Classify the singularity of $${entry.tex}$ at $0$.`
-    : `Exercise 3 of §7.4, page 238. Classify the singularity of $${entry.tex}$ at $0$.`;
+  const named = entry.exercise !== false && !(params && params.cite === false);
+  const cited = named
+    ? `Exercise 3 of §7.4, page 238. Classify the singularity of $${entry.tex}$ at $0$.`
+    : `Classify the singularity of $${entry.tex}$ at $0$.`;
   return {
     seed: n,
     kind: found.kind,
