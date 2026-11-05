@@ -1913,3 +1913,41 @@ On a local server, 390×844 and 1280×800, light and dark: the phone square is 3
 Theorem 4.9 stays page 113, connectedness. Theorem 4.11 stays page 116, the main cardioid and an attracting fixed point.
 
 Still open: §§5.2, 5.3, and 5.5 have no picture. Chapters 1–3, 6, and 7 are roadmap lines. The circuit stations stay off the §5.4 stage.
+
+## unslop (chapters-4-5 batch 5)
+
+Branch `cursor/chapter-4-5-2649`, walked at tip `1abe4ea`. Preview https://book-preview.complexanalysis.pages.dev. `js/stations/book.js` on that host is the same bytes as this tip. Fresh storage. Phone first, 390×844, light and then dark, then 1280×800, light and dark. The book, Chapter 4, §4.2, Chapter 5 at scroll 0, the §5.1 title, `#chapter-5-5-1`, §5.4, the Later rows 5.2 and 5.5, Practice 4.1, Practice 5.4, the Chapter 4 flash deck, and Test prep’s flash deck. A drag of the green ring from scroll 0. Reduced motion, one look, from a fresh load. No product code was changed. No console errors on those pages. `scrollWidth` was 390 and 1280.
+
+Unslop at `a6f121ee`, with kit/SKILL.md winning where they differ. This is a light pass. The paper, the serif title, the white card, and the four teaching colours are the brand, and this note leaves them. The page is a textbook: the circle is the moment, and the sentence under it is the signature. No emoji, no gradient text, no glow, no blob.
+
+### Verdict
+
+ANOTHER BATCH. At scroll 0 the first screen is the circle, the sentence, and Play, in both themes, at both widths. The door the book uses for §5.1 scrolls that circle off the screen and leaves a second copy of the instruction. The recipe cards then repeat the pin that is already on the page. One batch, the six cuts below. After that, this lens can rest.
+
+### Ranked cuts
+
+1. **The book’s §5.1 row opens under the picture.** `#chapter-5-5-1`, light and dark. At 390 the page is scrolled to 846. The Book link is 44px, from y = 57 to 101. The square is 358px and sits at y = −496. At 1280 the scroll is 787 and the square, 357px, sits at y = −443. The heading on that screen is an `<a>`, 44px tall, "The Complex Exponential Function." The line under it is "Drag changes the radius. Play turns the angle. The value is that radius times a turn." A click of that heading, from scroll 0, does the other thing: the square lands at y = 109, 8px under the Book link. Change: the row and the hash land there, on the square. The heading is a heading, the same as the Chapter 4 camps.
+
+2. **The recipe card repeats the pin on the same screen.** On Chapter 4, both widths and both themes, "Definition 4.1, page 103" is a 44px pin, and the card that follows opens with the same words as an h3, then "Howell & Mathews, Complex Analysis, 202 Updated Edition." At 390 the card starts at y = 782, so the repeated heading is in the window, under the pin. On §5.4 the pins are Definition 5.5, Theorem 5.4, Identity (5.35), and Figure 5.7, each 44px, and the card’s h3 is "Identity (5.35), page 150" again, then the same edition line. The five steps already name their own pages, and step 4 is that identity. Change: the card is the numbered lines. The heading and the edition line go. The pins stay.
+
+3. **The §5.1 card prints the identity, then step 1 prints it again.** The formula paragraph is \(e^{x+iy}=e^{x}(\cos y+i\sin y)\). The first step is "Write \(e^{z}=e^{x}(\cos y+i\sin y)\)." The modulus line and the angle line follow. §5.4 already dropped this extra formula. The §5.4 card is five steps and no formula paragraph. Change: drop the formula line on §5.1. The three steps stay.
+
+4. **The §5.1 idea is the lede again.** The lede, on the first screen, is "Drag the green ring. Play turns the angle. A blank fills when the picture makes it true." The idea under the heading is "Drag changes the radius. Play turns the angle. The value is that radius times a turn." That idea is the sentence `#chapter-5-5-1` leaves you on. Change: the idea goes. The lede is the instruction. The claim is the sentence that moves.
+
+5. **The practice heading is the citation the source line repeats.** Practice 4.1, light and dark. At 390 the heading is 130px, five lines, and it starts "Theorem 4.1, pages 103–104." The source line under it is "Howell & Mathews, Complex Analysis, Theorem 4.1, page 104. CC BY 4.0." At 1280 the same heading is 69px. Practice 5.4 is the one line "Establish \(d/dz\cos z=-\sin z\)." Change: the heading is the question. The theorem, the exercise, and the page stay on the source line. The same cut covers the later prompts in that section, including the one that ends "Exercise 1(a), page 108." That string is the heading when the card comes up. This pass stopped on the theorem card.
+
+6. **The opened Later row wears a second box.** `#chapter-5-5-2` and `#chapter-5-5-5`, both widths, both themes. The opened card is at y = 109, 8px under the Book link, and its outline is 2px solid ink, rgb(26, 34, 48) in the light and rgb(233, 237, 245) in the dark, offset 2px outside a card that already has a border and already says Later. The two cards under it are the same words with the quiet border. Change: one border, the card’s own. The outline goes. The word Later, and the place under The Book, stay.
+
+### What to keep
+
+At scroll 0 the circle is the page. On the phone it is 358×358, from y = 350 to 708. The claim is two lines, "\(e^{z}\) sits on the bottom of the unit circle." Play is 70×44 and ends at 821. The status card starts at 845, one pixel under the window. At 1280 the square is 357×357, from x = 304, y = 344. The claim is one line. Play ends at 788 in the 800px window. The column is 952px. The paper to the right of the square is the room that keeps Play on that screen. Leave the square that size.
+
+The green ring is 44×44 around a 20px dot, on the right. The purple point is on the bottom. A drag of the ring set the real part to about 0.70, left the angle at \(-\pi/2\), and the claim said the radius is \(e^{x}\), larger than 1. The stage was focused, `:focus-visible` was false, and the outline was none. Reduced motion opens on Next step, 44px, at the bottom of the phone.
+
+The Book link is 44px, from y = 57 to 101. Chapter 4’s camp titles are headings. The two chips are 44px and they are the door. On `#chapter-4-4-2` the stills sit under one sentence, 161px on the phone and 174px at 1280. The pins are 44px. §5.4’s five lines keep their pages, with no empty row and no second copy of the formula. The book status is "Next is §4.1, Exercise 3, in Chapters 4 and 5. 0 of 10 exercises." Chapter 4, flagged Next, is on the first screen at 390 and at 1280. Continue is 111×44. §§5.2, 5.3, and 5.5 read Later.
+
+The where-line stays, tracked small caps under the title. Light paper is rgb(246, 243, 236), the title rgb(26, 34, 48) at 25.85px on the phone and 36px at 1280, weight 600, Iowan Old Style. The lede is rgb(81, 91, 108) on that paper, contrast 6.2. Dark paper is rgb(13, 18, 28), the claim rgb(233, 237, 245), contrast 16, the lede rgb(166, 176, 195), contrast 8.6. Blue is `#0b63ad`, orange `#a84300`, green `#006e53`, purple `#9d3a8a` in the light, and `#62adf2`, `#ff9d5c`, `#3fd0a0`, `#e48fd2` in the dark, on the axes, the dashed circle and the ray, the ring, and the point.
+
+The chapter-end pad stays, so an opened row can sit under The Book. The §§5.2, 5.3, and 5.5 pictures stay off this pass. No new chrome, no second clock, no slider.
+
+Test prep’s flash status says "42 due." The card under it says New, and "New card." That count treats every unseen definition as due. It is the line after these six.
