@@ -2017,3 +2017,57 @@ After the mark, the stage flag’s text is “Done” and `.book-flag` still upp
 ### What to keep
 
 The four colours, the Iowan title, the muted lede, the paper, and the button, in light and in dark. On the phone, Times i from y = 680 to 724, the stage title from y = 724 to 751, and Page 1 ending at y = 782. On the walk door, Times i ending at y = 506 and the whole why on the screen. On the laptop, the 400×400 plane, Times i ending at y = 742, the stage title a whole line ending at y = 769, and Page 1 on the 800 edge. The plane and the claim on one left edge, with the empty field to the right of the square. The in-page Book hidden from the sidebar breakpoint up, and the sidebar Book at 263×44. The phone Book at 109×44, at the top and at the end of 1.6, with the footer 40px under the last one. One Next: the 1.1 row until the six are marked, then only 4.1, with Walk Chapter 4. Later and Open in sentence case. The drawer named Chapters, chapters 1 through 7, a later chapter staying on `#book` with the card at y = 56. Go to 1.2 alone after the mark, the 1.2 title 40px under the header, and Back returning to the stage scroll. The 44px coarse hit, the 4 + 3i chip, Next root, and the 1.6 place buttons waiting for the green point. The 1.3 break “It is not 5.” The claim that waits for the second press, and “Back at 1.” on the fourth, with the tick still waiting for 4 and 0. The fold on every stage: the opener cards, the summit, the action row, then the rest. No colour caption, no tracked section label, no second border on a practice card.
+
+## appllama (chapter-1 batch 6)
+
+Preview https://ch1-preview.complexanalysis.pages.dev, tip `295e9e2` on `cursor/chapter-1` (PR #44). The pinned skill is appllama-app-design-skill at `dd5caaec`. Kit rules win where they meet that skill: one paint, the four teaching colours, the source tag, and no motion added for its own sake. The Appllama MCP was not connected. Headless Chrome, 390×844 then 1280×800, light then dark. The drag was measured in the 390px window. A separate check with touch emulation made `(pointer: coarse)` match, and the handle was then 44×44 around the 14px dot. No product code was changed. No console errors. No failed requests. No sideways scroll (`scrollWidth` 390 at 390, 1265 at 1280). Not merged. `gh-pages` was not touched. A copy commit landed on the branch during the walk. It restores the punctured-disk pin and names the exponential form. It does not change the plane, the snap, or the first-screen stack measured here.
+
+## Verdict
+
+ANOTHER BATCH. The first screen already holds the turn, and the page does not move unless the finger does. Times i lands in one frame. A drag on 1.4 and on 1.6 stays on the finger. A drag on 1.2 and on 1.3 hops by a half unit.
+
+That hop is the one cut. Then this lens rests. Do not tween the quarter turn, and do not slide the drawer.
+
+## The finger
+
+At rest the purple point is 1, on the real axis. A press on the green dot, held, leaves the value at 1 + 0i. Letting go leaves it. With touch emulation the target is 44×44 and the drawn dot is 14px. A press 36px off the dot hits the canvas and leaves the value.
+
+On 1.2 the finger walked right in 8px steps. The real part went 1, 1, 1.5, 1.5, 2, 2, 2, 2.5, 2.5, 3, 3. The miss from the finger to the centre of the dot was 8, 4.1, 3.9, 8.3, 0.3, 7.8, 4.4, 3.6, 8.5, 0.5 pixels. The worst miss is 8.5px. The plane is 324px across a range of 8, so a half unit is about 20px and the dot can sit 10px off the finger before it jumps to the nearest half. The outline stayed none. While the finger was down the dot scaled to 1.15, on the 80ms transform the plane already uses.
+
+On 1.3 the same hop is smaller, about 5 to 7px, until the finger leaves the square. At the corner the real part stopped at 5.5 and the imaginary part at 5, and the miss grew to 32px. That last miss is the clamp. The half-unit hop is the part before it.
+
+On 1.4 the miss was 0 on every sample. The real part moved from −1 through −0.91, −0.81, −0.72, and on, with no jump. On 1.6 the miss was 0 from 1.5 down to 0.25, and the sentence changed from “Outside” to “Inside the open unit disk” without the claim box moving. Both claims stayed 53px at the same y.
+
+A drag that starts on the empty 1.2 plane scrolls. Scroll went from 2094 to 2159 and the real part stayed 3. A drag that starts on the handle does not scroll. Scroll stayed 2159 and the real part went from 3 to 4.
+
+The 4 + 3i chip is 67×44, and pressed it is 68×44 with `aria-pressed` true. The claim stays 53px and the chip stays at y = 436. The 1 + i chip stays at y = 573, 44px, and that claim stays 53px too. Next root’s button stays at y = 436. Each press schedules one frame. The claim height stays 53.
+
+## The first screen
+
+On the phone, light and dark, the boxes match. Paper is rgb(246, 243, 236) in the light and rgb(13, 18, 28) in the dark. The title is 25.85px. The lede is “Press Times i. The purple point turns.” The plane is 324×324, from y = 314 to 638. The claim ends at 672. Times i is 94×44, from y = 680 to 724. The stage title runs from y = 724 to 751. Page 1 ends at 782. The fold cuts the why paragraph, which is the next thing. The Book is 109×44. The menu button is 44×44, named Chapters, titled “Show the chapters.”
+
+On the laptop, light and dark, the plane is 400×400 at x = 321, the same edge as the claim and Times i. Times i ends at y = 742. The stage title ends at 769. Page 1 ends at 800, on the last pixel of the window, and the words are on the screen. The field to the right of the square is the rest of the column. That is the cap that keeps the title a whole line.
+
+The book door, on the phone, puts “Next is stage 1.1. 0 of 6 stages.” above Walk Chapter 1. That button is 163×44 and ends at y = 343. No sideways scroll.
+
+A press on Times i moves the button 1px down and puts it back. The four sentences stay one line. The claim box goes from 26px to 27px, and the button follows by 1px. The picture does not move to make room.
+
+## What does not move
+
+Idle, the page scheduled 0 frames in 500ms, at both widths, in both themes. Each Times i schedules one frame. Each Next root schedules one frame. Reduced motion is the same: 0 frames while it sits, one frame on the press, and the button still says Times i. The dot’s transform duration drops to 0.01ms.
+
+The drawer opens with `transition-duration` 0s. Two frames, then it is there. The rows are 44px: The Book and chapters 1 through 7. It covers the page. The theme toggle is not a fade. The dark sentence is rgb(233, 237, 245). Blue, orange, green, and purple stay the teaching colours.
+
+## Cut
+
+- The half-unit snap on the 1.2 and 1.3 pointer. The green dot stays under the finger, as it already does on 1.4 and on 1.6. The keyboard step stays 0.5. On 1.3 the “length is 5” sentence holds while the point is within about 0.15 of radius 5, so the dashed circle is a place the finger can rest. The 4 + 3i chip still sets that point, and it stays pressed only while the value matches.
+
+## Add
+
+Nothing. No spring, no tween on the quarter turn, no drawer slide, no scale on Times i. The 1px press and the 1.15 dot stay.
+
+## Another batch
+
+Yes. One cut, then this lens rests.
+
+The turn, the 44px handle, the one-frame paint, and the first screen are the lesson, and they already hold. Something real is left, and it is the hop under the finger on 1.2 and 1.3. After that snap is gone, nothing of this walk’s touch is left.
