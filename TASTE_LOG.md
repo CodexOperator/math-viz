@@ -2092,3 +2092,59 @@ Back. Go writes the camp hash and returns to the scroll you left. The Book, then
 The Book kicker and Back to the book, the words at the size they were. Walk Chapter 6 at 163×44. Section rows that wrap the title and keep the page on the first line, on Chapter 4 and Chapter 6. Next beside p. 163, with space between them.
 
 Wrapped choices, the whole sentence on the button, Check at 85×44, inputs at 266×44. The flash count at the flag's size, the question as the heading, and "Still this card." The type, the paper, the 6px button, the 10px card, the same on chapter 4 and chapter 5.
+
+## appllama (chapter-6 batch 6)
+
+Branch `cursor/chapter-6`, tip `a501fb1`. Preview https://ch6-preview.complexanalysis.pages.dev. The served `js/stations/chapter-6.js`, `js/stations/ch6-pictures.js`, `js/stations/ch6-cards.js`, `js/app.js`, `js/book/ch6-math.js`, `css/components.css`, and `css/theme.css` match that commit byte for byte. `version.json` still names `fa0f69f`. Headless Chrome, fresh storage. 390×844 with a touch, then 1280×800 with the mouse. Light, then dark, at each size. No console errors. No failed assets. `scrollWidth` was 390 and 1280. The phone page is 24609px. The laptop page is 19575px. No product code was changed.
+
+This pass is the phone and the clock. The paper, the Iowan title, the four teaching colours, and the 6px button stay.
+
+### Verdict
+
+ANOTHER BATCH. The clock holds a steady frame, the finger picks up the mark, and Play stays on the first screen while the half-turn line fills. Three things are still in the way of the hand. The 6.1 answer field is cut by the fold. On 6.3, Pause sits on a triangle that is not moving. On 6.6, the sentence under the circle is a new fraction every frame. One batch, the four cuts below. When the field is whole, the triangle's press lands on the next still, and the bound can be read while the radius moves, this lens rests.
+
+### What the walk showed
+
+First screen, `#chapter-6`, both themes. The two themes share the same boxes. The header leaves the kicker at y = 80. The title is the display stack, 25.85px, weight 600. The lede is the six stages, two lines on the phone and one line on the laptop. The flag reads `6.1 · 0 OF 6`. One gesture sits above the square. The square is 284×284 at y = 385 on the phone and 272×272 at y = 345 on the laptop. The claim "The total has left 0." is one line, 26px. `#ch6-real-half` is in the stack from the first paint, empty, 26px, width 0. Play is 70×44. It ends at y = 789 in the 844 window and at y = 737 in the 800 window.
+
+The phone blank starts at y = 789. The prompt "From 0 to π the integral is" is on the screen. The input is 266×44 at y = 816 and ends at y = 860, so 16px of the field is past the fold, in both themes. Check, 85×44, starts at y = 860. On the laptop the input is on the prompt's row and ends at y = 781. Check starts at y = 781 and ends at y = 825, so 19px of the 44px button is in the 800 window and the rest is past it. The same clip in the dark.
+
+The half slot does its job. A full turn, both themes, both widths, keeps the claim at 26px and Play at 789 and at 737, including the moment the line fills and the moment the claim becomes "A full turn brings the point home." Pause at a third of a second holds the handle: on the phone the centre is still (197.38, 158.12) after 400ms, the button says Play, and Play's bottom is still 789. The laptop hold is the same, at (198.98, 157.31), Play at 737. The next press says Pause and continues. The turn is 16.7ms a frame, 95th percentile 16.8ms, none over 20ms. With the CPU slowed to 4×, 1.2 seconds of Play is 72 frames, the same median, none over 20ms, and Play stays at 789.
+
+The finger. A 2px nudge leaves the point. A press 30px off the dot leaves it. A press 18px from the centre, then a move, picks the point up, on the phone and on the laptop. A press 26px from the centre does not. Along the orange circle the handle stays on the finger's angle, 0.2° off on the phone and 0° on the laptop. A press in the middle of the square while Play is running leaves the button on Pause and the point moving. A press on the green dot says Play and the angle stays. After the drag the stage is focused, `:focus-visible` is false, and the outline is none. The same in the dark.
+
+Reduced motion, phone, dark, from a fresh load. The button says Next step. The presses land on the left, the bottom, the right, and then Start again returns to the top. It never says Pause. The left side fills "The point is on the left side." and Play stays at 789. The line is still there on the right-hand still, where the claim says the point is home.
+
+6.3, both widths. The page opens on the whole triangle. Play says Pause for 550ms on that same triangle, then the midpoints are in for 517ms, then the inner triangle is in for the rest of the clock and the claim stays "The midpoints are in." The button is Pause through all three stills. Frames are 16.7ms, and Play's bottom stays 629 on the phone and 564 on the laptop. Nothing in the picture moves during those waits. The camp's own first screen, phone, has the flag at y = 73, the bridge, "Play subdivides the triangle.", the triangle, the claim, Play, the blank, and Check. The summit names Theorem 6.5, page 183, analytic in a simply connected domain, and a simple closed contour in that domain.
+
+6.4, both themes, both widths. The why on the camp's first screen is "In a simply connected domain, two ends use an antiderivative." On the phone it is two lines, 53px, and Play ends at 683. On the laptop it is one line and Play ends at 564. The summit, below that screen on the phone, is the same hypothesis: the integral is the antiderivative at the end minus the antiderivative at the start. A drag of the green bend stays under the finger, 0.1px off, and the claim becomes "The path has bent. The integral is the same as on the straight segment." Play stays at 683.
+
+6.5. A drag to the centre leaves the handle 0.1px from the finger, `data-where` is inside, and the claim is "Inside, the formula applies." Play stays at 630. The outside claim, from the batch already on the page, is "Outside, the formula does not apply."
+
+6.6. At rest the claim is "On this circle \(|f'|\le 1\). That is one circle." Play ends at 630 on the phone and 539 on the laptop. During Play the purple mark moves in and the claim is a different quotient on every frame: \(385/401\), \(8000/8833\), \(16/17\), \(4/5\), \(2/3\), \(1/2\), and the ones between them, across the 900ms sample. The claim box stays 53px on the phone and Play moves by 0.3px. A drag keeps the handle on the axis and clamps at the outer radius. Past that clamp the finger leaves the handle. The claim at the clamp was \(403/1041\).
+
+The drawer, phone, light. Places opens on The Book and chapters 1–7. Each row is 44×358. Chapters 1, 2, 3, and 7 say Later. Chapter 6 is the current row. The page behind the drawer is `overflow: hidden`, and `scrollWidth` stays 390.
+
+Light paper `rgb(246, 243, 236)`, ink `rgb(26, 34, 48)`. Dark paper `rgb(13, 18, 28)`, ink `rgb(233, 237, 245)`. Blue, orange, green, and purple on the marks are the same four in both themes. Play's radius is 6px.
+
+### Ranked cuts
+
+1. **The 6.1 field is a whole control on the first screen.** At 390, both themes, the input is 266×44 and ends at y = 860 in the 844 window. The prompt is on the screen and the field is not. After the full turn the same 16px is still past the fold, and the half line has filled the slot that was already reserved, so the clip is not the latch. At 1280, both themes, Check is 85×44, starts at y = 781, and ends at y = 825, so the window shows 19px of the button. Change: the phone input ends at or above 844, and Check starts at or below 844. The laptop Check ends inside 800. The square is the height that does that. `#ch6-real-half` stays 26px from the first paint. Play's bottom stays inside 844 and inside 800.
+
+2. **6.3 lands on the next still.** Play says Pause for 550ms on the triangle already on the screen, then 517ms on the midpoints, then the inner triangle, and the claim does not change for that last still. The picture is three stills. Change: the first press draws the midpoints, the next press draws the inner triangle, and the button says Play between them. Pause is for a mark that is moving. Reduced motion keeps Next step and Start again on those same stills.
+
+3. **The 6.6 sentence holds while the radius moves.** Across 900ms of Play the claim is a new fraction every frame, on the phone and on the laptop, while the purple mark is the thing that is moving. A drag writes \(403/1041\) at the clamp. Change: while Play is running, and while the finger is down, the claim is "Purple is \(1/R\) on this circle." When the radius rests, on pointer-up, on Pause, and on Next step, the claim prints the sharp fraction for that radius. After every circle on this picture the claim stays "The purple mark is still \(1/R\) on this circle. These circles do not send the derivative to \(0\)."
+
+4. **The latched line names the latch.** After the full turn the green point is on the right, the claim is "A full turn brings the point home.", and the line under it is "The point is on the left side." Reduced motion's right-hand still is the same pair. The line is one line, and Play does not move when it fills. Change: the line reads "The point passed the left side." It still fills on the left, it still stays after the point moves on, it still does not print \(2i\), and it stays one line at 390 and at 1280. The slot stays in the stack from the first paint.
+
+### What to keep
+
+The six planes, the four colours on the marks, and the one clock. Play, Pause, Play, on every picture whose mark moves. Pause holds the angle, and the next press continues. A full turn says the point is home. Frames at 16.7ms, including at 4×. Reduced motion steps the quarter turns and never says Pause.
+
+The half slot, empty and 26px from the first paint, so Play stays at 789 and at 737 when the line fills. The 6.1 claim stays one line. The phone claim box on 6.2 through 6.6 stays the two-line height, and Play does not move when "The midpoints are in." replaces the longer sentence.
+
+The finger. A press 18px from the centre picks the point up. A press 26px away leaves it. A 2px nudge leaves it. The circle follows the angle. The bend and the 6.5 point follow the finger. A press off the dot during Play leaves the clock running. A press on the dot stops it. A drag leaves the square unframed.
+
+6.4. The why and the summit keep a simply connected domain, Theorem 6.9, page 194. On the camp's first screen the why is already that sentence, two lines on the phone and one line on the laptop, and Play is on that screen. The 6.3 summit keeps Theorem 6.5's simply connected domain and the simple closed contour.
+
+The first screen before the fold: the lede, `6.1 · 0 of 6`, the one gesture, the square, "The total has left 0.", and Play, both themes, both widths. The drawer. Chapters 1–7, Later on the chapters that are still cards, every row 44px, the page behind it held still. Check at 85×44. The type, the paper, the 6px button. No new type, no new colour, no new chrome.
