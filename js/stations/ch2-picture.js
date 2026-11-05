@@ -6,8 +6,8 @@ import { createFrame } from '../core/anim.js';
 import { h, appendRich } from './test2-ui.js';
 
 const SIZE = 320;
-const HIT = 44;
-const DOT_R = 14;
+// About 22px across on the phone square (158px of a 320 view).
+const DOT_R = 22;
 const NS = 'http://www.w3.org/2000/svg';
 
 function svgEl(name, attrs) {
@@ -137,6 +137,7 @@ function mountPair(parent, opts) {
   const zView = opts.zView;
   const wView = opts.wView;
   const zSvg = plane(`${opts.id}-stage`, opts.aria);
+  zSvg.classList.add('ch2-drag');
   const wSvg = plane(`${opts.id}-image`, opts.imageAria);
   wSvg.setAttribute('tabindex', '-1');
   zSvg.setAttribute('aria-keyshortcuts', 'ArrowLeft ArrowRight ArrowUp ArrowDown');
@@ -188,7 +189,7 @@ function mountPair(parent, opts) {
     zSvg.dataset.re = String(here.re);
     zSvg.dataset.im = String(here.im);
     zSvg.dataset.holds = spoken.holds ? 'true' : 'false';
-    if (opts.onClaim) opts.onClaim(spoken.holds === true);
+    if (opts.onClaim) opts.onClaim(spoken);
   }
 
   function snap(next) {
@@ -205,29 +206,18 @@ function mountPair(parent, opts) {
     return snap({ re: zView.re(px), im: zView.im(py) });
   }
 
-  function onDot(ev) {
-    const rect = zSvg.getBoundingClientRect();
-    const cx = Number(green.getAttribute('cx'));
-    const cy = Number(green.getAttribute('cy'));
-    const x = rect.left + (cx / SIZE) * rect.width;
-    const y = rect.top + (cy / SIZE) * rect.height;
-    return Math.hypot(ev.clientX - x, ev.clientY - y) <= HIT;
-  }
-
   let drag = null;
   function onDown(ev) {
     if (ev.button != null && ev.button !== 0) return;
-    if (!onDot(ev)) return;
     drag = { id: ev.pointerId };
-    zSvg.style.cursor = 'grabbing';
+    z = at(ev);
+    frame.stop();
+    paint();
     zSvg.setPointerCapture(ev.pointerId);
     ev.preventDefault();
   }
   function onMove(ev) {
-    if (!drag || ev.pointerId !== drag.id) {
-      zSvg.style.cursor = onDot(ev) ? 'grab' : 'default';
-      return;
-    }
+    if (!drag || ev.pointerId !== drag.id) return;
     z = at(ev);
     frame.arm(paint);
   }
@@ -235,7 +225,6 @@ function mountPair(parent, opts) {
     if (!drag || ev.pointerId !== drag.id) return;
     z = at(ev);
     drag = null;
-    zSvg.style.cursor = onDot(ev) ? 'grab' : 'default';
     frame.stop();
     paint();
     try { zSvg.releasePointerCapture(ev.pointerId); } catch { /* already released */ }
@@ -377,16 +366,32 @@ export function principalSqrt(z) {
 // real number, where Arg is near π from above and near −π from below.
 // Anywhere in the left half-plane is not “near π”.
 export function branchClaim(z) {
+  const r = Math.hypot(z.re, z.im);
+  if (r < 1e-6) {
+    return { holds: false, side: 'origin', text: 'The origin is the branch point.' };
+  }
   const arg = Math.atan2(z.im, z.re);
-  const nearAxis = z.re < -0.05 && Math.hypot(z.re, z.im) > 0.15;
-  if (nearAxis && z.im > 0 && Math.PI - arg <= 0.55) {
-    return { holds: true, text: 'Above the cut, Arg $z$ is near $\\pi$, and the principal square root is in the upper half-plane.' };
+  // "Cross the blue ray" only while the point is still on the right of the origin.
+  if (z.re > 0) {
+    return { holds: false, side: 'right', text: 'Off the cut, Arg does not jump. Cross the blue ray.' };
   }
-  if (nearAxis && z.im < 0 && arg + Math.PI <= 0.55) {
-    return { holds: false, text: 'Below the cut, Arg $z$ is near $-\\pi$, and the principal square root is in the lower half-plane.' };
+  if (z.re < -0.05 && Math.abs(z.im) <= 0.08) {
+    return { holds: false, side: 'cut', text: 'On the negative real axis, Arg jumps.' };
   }
-  if (nearAxis && Math.abs(z.im) <= 0.08) return { holds: false, text: 'On the negative real axis, Arg jumps.' };
-  return { holds: false, text: 'Off the cut, Arg does not jump. Cross the blue ray.' };
+  const nearPi = Math.PI - Math.abs(arg) <= 0.55;
+  if (z.im > 0) {
+    if (nearPi && z.re < -0.05) {
+      return { holds: true, side: 'upper', text: 'Above the cut, Arg $z$ is near $\\pi$, and the principal square root is in the upper half-plane.' };
+    }
+    return { holds: true, side: 'upper', text: 'The principal square root is in the upper half-plane, and Arg is not yet near $\\pi$. Move toward the ray.' };
+  }
+  if (z.im < 0) {
+    if (nearPi && z.re < -0.05) {
+      return { holds: false, side: 'lower', text: 'Below the cut, Arg $z$ is near $-\\pi$, and the principal square root is in the lower half-plane.' };
+    }
+    return { holds: false, side: 'lower', text: 'The principal square root is in the lower half-plane, and Arg is not yet near $-\\pi$. Move toward the ray.' };
+  }
+  return { holds: false, side: 'cut', text: 'On the negative real axis, Arg jumps.' };
 }
 
 export function mountBranch(parent, hooks) {
@@ -422,7 +427,12 @@ export function reciprocal(z) {
 
 export function recipClaim(z) {
   const d = z.re * z.re + z.im * z.im;
-  if (d < 1e-6) return { holds: false, text: 'At $0$, $1/z$ is not a point of the plane.' };
+  if (d < 1e-6) {
+    return {
+      holds: false,
+      text: 'At $0$, $1/z$ is not a point of the plane. Equation (2.32), page 74, sends it to $\\infty$, the north pole.',
+    };
+  }
   if (Math.abs(z.re - 1) <= 1e-9) return { holds: true, text: 'On the blue line, $1/z$ sits on the orange circle.' };
   return { holds: false, text: 'Off the blue line, $1/z$ has left the orange circle.' };
 }

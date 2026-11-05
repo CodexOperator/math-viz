@@ -1741,3 +1741,25 @@ House rules the inspector also failed, and this pass leaves, because the kit and
 ### Keep
 
 The paper, the serif title, and the four teaching colours. Light paper `#f6f3ec`, dark paper `#0d121c`, the same blue, orange, green, and purple on the planes in both themes. The phone chapter’s first screen: both squares, the captions “z plane” and “w plane,” and a claim that ends at y = 694 and flips when the green point crosses the line. The 544px cap can stay only until the claim moves beside the pair. Until then it is what keeps that sentence inside 800px. The kickers stay. They are the book path, and the kit beats the inspector’s ban on them. Show the back stays full width, and the back stays closed. The four root choices stay one row of 44px targets. The parabola, the disks, the dashed cut, and the circle stay the pictures. One drag, no chips, no clock. The lede stays muted: 6.2:1 and 8.6:1 are readable, and it is the colour key once. No sideways scroll, no console errors, light and dark, 390 and 1280.
+
+## Chapter 2, batch 4
+
+Started from `607522e`, which already contains the reviewer fixes at `2cd1380`. Items 1–7 from the merged batch 3 list.
+
+The book’s first card says “Chapter 2 is open. 0 of 5 stages marked.” The status is 26px on a phone, not a 256px hole. Walk Chapter 4 sits on the Chapter 4 card. §2.1–§2.5 are 44px rows. The drawer lists chapters 1–7. Open Chapter 2 still opens the chapter in progress.
+
+Stage complete stays hidden with the summit until the drag has been both ways and one card is right. Until then the line says “Drag until the sentence changes” or “Finish one practice card.” Go to 2.2 is a 44px button that writes the stage mark, then moves. The Book and Back to the book are 44px. Browser Back returns to the scroll the student left.
+
+The memory sheet is one block after Practice, closed until asked, and a finished card does not append a second line without its page. §2.4 says “Cross the blue ray” only to the right of the origin. Deep in the lower half, the square root is in the lower half-plane and Arg is not yet near −π. The origin says it is the branch point. Stage complete on §2.4 waits for the two half-plane sentences. A press anywhere in the z square moves the green point. The mark is about 22px across on a phone. At 0, §2.5 names ∞ and the north pole, Equation (2.32), page 74. Another on the roots card reaches moduli other than 1.
+
+`0-6i` is still rejected for −6. It is −6i. −6, −6+0i, and −6.0 still count.
+
+Checked in headless Chrome at 390 and 1280, light and dark. No sideways scroll. No console errors. `node tools/check_vectors.mjs` (234/234), `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed.
+
+## Next
+
+- At 1280 the two planes still sit in the left of a wide card. The claim ends inside the 800px window (y = 743) and does not yet sit beside them.
+- The quarter-turn arc is still small next to the sentence that names it. The practice choices do not yet stretch to the card.
+- On a book chapter the footer colour key is still the Test 1 key.
+- The roadmap page still lists chapters 8–11. The drawer stops at 7.
+- The practice engine on `cursor/practice-engine` still needs `ch2-maps` before its catalog will accept this file.

@@ -11,6 +11,14 @@ function rich(el, text) {
   appendRich(el, src);
 }
 
+function withPage(item) {
+  const line = item && item.memory ? String(item.memory) : '';
+  if (!line) return '';
+  if (/page\s+\d+/i.test(line.replace(/\\\(|\\\)/g, ''))) return line;
+  const page = item.cite && item.cite.page;
+  return page ? `${line} Page ${page}.` : line;
+}
+
 function asMath(choice) {
   const s = String(choice);
   if (/^[A-Za-z][A-Za-z ]+$/.test(s) && !/[=^|]/.test(s)) return s;
@@ -43,13 +51,12 @@ export function mountPractice(host, items, store, hooks) {
     return function unmount() {};
   }
   const done = () => { if (hooks && hooks.onItem) hooks.onItem(); };
-  const memory = (line) => { if (hooks && hooks.onMemory && line) hooks.onMemory(line); };
-  for (const item of work) host.append(card(item, store, done, memory));
-  if (flashes.length) host.append(flashDeck(flashes, store, host.dataset.section || 'stage', memory));
+  for (const item of work) host.append(card(item, store, done));
+  if (flashes.length) host.append(flashDeck(flashes, store, host.dataset.section || 'stage'));
   return function unmount() {};
 }
 
-function card(item, store, onDone, onMemory) {
+function card(item, store, onDone) {
   const id = item.id;
   const node = h('article', { class: 'card problem-card chapter-card ch2-card', id: `ch2-card-${id}` });
   const cite = item.cite ? `${item.cite.ref}, page ${item.cite.page}` : item.section;
@@ -58,7 +65,7 @@ function card(item, store, onDone, onMemory) {
   node.append(prompt);
   const why = h('p', { class: 'hint-note', id: `ch2-card-why-${id}`, hidden: '' });
   const memory = h('p', { class: 'ch2-memory', id: `ch2-card-memory-${id}`, hidden: '' });
-  if (item.memory) rich(memory, item.memory);
+  if (item.memory) rich(memory, withPage(item));
 
   let seed = 1;
   let made = item.generator ? generate(seed, item.generator.params || {}) : null;
@@ -96,7 +103,6 @@ function card(item, store, onDone, onMemory) {
     } else {
       memory.hidden = false;
       onDone();
-      onMemory(item.memory);
     }
   }
 
@@ -183,7 +189,7 @@ function card(item, store, onDone, onMemory) {
   return node;
 }
 
-function flashDeck(items, store, section, onMemory) {
+function flashDeck(items, store, section) {
   let at = 0;
   const sid = String(section).replace(/\./g, '-');
   const node = h('article', { class: 'card problem-card chapter-card ch2-card', id: `ch2-flash-deck-${sid}` });
@@ -212,7 +218,7 @@ function flashDeck(items, store, section, onMemory) {
     why.replaceChildren();
     memory.hidden = true;
     memory.replaceChildren();
-    if (item.memory) rich(memory, item.memory);
+    if (item.memory) rich(memory, withPage(item));
     again.hidden = true;
     knew.hidden = true;
     const dueNow = items.filter((it) => loadFlashBox(store, it.id).due <= Date.now());
@@ -243,7 +249,6 @@ function flashDeck(items, store, section, onMemory) {
   function grade(knewIt) {
     const item = current();
     saveFlashBox(store, item.id, knewIt, Date.now());
-    if (onMemory) onMemory(item.memory);
     const now = Date.now();
     let next = -1;
     for (let k = 1; k <= items.length; k += 1) {

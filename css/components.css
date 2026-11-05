@@ -1043,6 +1043,8 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 
 @media (max-width: 40rem) {
   #book-next { flex-direction: column; align-items: stretch; }
+  /* 16rem is the width basis in a row. In this column it was a 256px hole. */
+  #book-status { flex: 0 1 auto; }
 }
 
 .book-path,
@@ -1207,6 +1209,23 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   min-width: 0;
 }
 
+#book-sections-2 > li {
+  flex-wrap: nowrap;
+  align-items: center;
+  min-height: var(--tap);
+}
+
+#book-sections-2 > li > a {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.92rem;
+  line-height: 1.2;
+}
+
+#book-sections-2 .book-section-page,
+#book-sections-2 .book-section-mark { white-space: nowrap; }
+
 .book-section-page { margin-left: auto; font-variant-numeric: tabular-nums; }
 .book-section-mark { font-size: 0.82rem; font-weight: 700; }
 .book-section-mark:empty { display: none; }
@@ -1240,6 +1259,37 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .ch2-path { padding-bottom: var(--space-4); }
 
 .ch2-complete:disabled { opacity: 0.45; }
+
+.ch2-drag { cursor: grab; }
+.ch2-drag:active { cursor: grabbing; }
+
+.ch2-memory-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.ch2-memory-block .book-read { margin: 0; }
+
+.ch2-waiting { margin-top: var(--space-3); }
+
+.ch2-done {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.ch2-done .btn { min-height: var(--tap); }
+
+a.book-tap {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+}
 
 .ch2-plane {
   margin: 0;

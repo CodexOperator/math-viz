@@ -1,6 +1,7 @@
 // Chapter 2 as a mountain of five stages.
-// Order on a stage: why, picture, claim, worked, practice, summit, stage complete, then the pins.
-// The summit and the button wait until the claim has been true and false and one problem is right.
+// Order on a stage: why, picture, claim, worked, practice, memory, then the summit.
+// The summit and Stage complete stay hidden until the claim has been both ways and one problem is right.
+// Until then a line names the missing piece. Go to the next stage writes the mark, then moves.
 // mount(el, ctx) also reads ctx.book.focus, so a one-line registry entry can open this page.
 
 import { sectionHref } from '../data/book.js';
@@ -87,12 +88,13 @@ const COPY = {
       { pin: 'Definition 2.1, principal square root, page 55', href: sectionHref(S22, 'sec_z_n-6') },
       { pin: 'A branch of a function, page 68', href: sectionHref(S24, 'sec_branches-2-5') },
       { pin: 'The branch cut along the negative real axis, page 68', href: sectionHref(S24, 'sec_branches') },
+      { pin: 'The origin is the branch point, page 69', href: sectionHref(S24) },
     ],
   },
   '2.5': {
     why: '$1/z$ sends the line $x = 1$ to a circle.',
     summit: '$1/z$ sends the line $x = 1$ to the circle $|w - 1/2| = 1/2$.',
-    example: 'Example 2.24, page 76. On the line $x = 1$, $u = 1/(1+y^2)$ and $v = -y/(1+y^2)$, which is the circle $|w - 1/2| = 1/2$. At $0$, $1/z$ is not a point of the plane.',
+    example: 'Example 2.24, page 76. On the line $x = 1$, $u = 1/(1+y^2)$ and $v = -y/(1+y^2)$, which is the circle $|w - 1/2| = 1/2$. At $0$, $1/z$ is not a point of the plane. Equation (2.32), page 74, sends it to $\\infty$, the north pole.',
     picture: mountReciprocal,
     next: null,
     sheet: [
@@ -126,6 +128,11 @@ export function mount(el, ctx, focusArg) {
   const path = h('ol', { class: 'chapter-path ch2-path', id: 'chapter-path' });
   const status = h('p', { class: 'book-page', id: 'chapter-status' });
 
+  function dragged(id, row) {
+    if (id === '2.4') return row.sawUpper === true && row.sawLower === true;
+    return row.sawTrue === true && row.sawFalse === true;
+  }
+
   function paint() {
     const done = CH2_STAGES.filter((id) => marks[id] === true).length;
     status.textContent = `${done} of ${CH2_STAGES.length} stages marked.`;
@@ -134,29 +141,38 @@ export function mount(el, ctx, focusArg) {
       const row = live[id];
       if (!node || !row) continue;
       const finished = marks[id] === true;
-      const earned = finished || (row.sawTrue && row.sawFalse && row.item);
+      const both = dragged(id, row);
+      const earned = finished || (both && row.item);
       node.setAttribute('data-state', finished ? 'done' : 'ahead');
+      row.waiting.hidden = earned;
+      if (!earned) row.waiting.textContent = both ? 'Finish one practice card' : 'Drag until the sentence changes';
       row.summitLabel.hidden = !earned;
       row.summit.hidden = !earned;
+      row.mark.hidden = !earned;
       row.mark.disabled = !earned;
       row.mark.setAttribute('aria-pressed', finished ? 'true' : 'false');
       row.mark.textContent = finished ? 'Marked' : 'Stage complete';
+      if (row.go) row.go.hidden = !earned;
     }
   }
 
   for (const section of chapter.sections) {
     const copy = COPY[section.id];
     const scope = `chapter-section-${slug(section.id)}`;
-    const row = { sawTrue: false, sawFalse: false, item: false };
+    const row = { sawTrue: false, sawFalse: false, sawUpper: false, sawLower: false, item: false };
     live[section.id] = row;
 
     const why = h('p', { class: 'section-idea', id: `${scope}-why` });
     richLine(why, copy.why);
     const picture = h('div', { class: 'ch2-picture', id: `${scope}-picture` });
     stops.push(copy.picture(picture, {
-      onClaim(holds) {
-        if (holds) row.sawTrue = true;
-        else row.sawFalse = true;
+      onClaim(spoken) {
+        const side = spoken && typeof spoken === 'object' ? spoken.side : '';
+        const holds = spoken === true || (spoken && spoken.holds === true);
+        if (side === 'upper') row.sawUpper = true;
+        else if (side === 'lower') row.sawLower = true;
+        else if (holds) row.sawTrue = true;
+        else if (!side) row.sawFalse = true;
         paint();
       },
     }));
@@ -166,14 +182,11 @@ export function mount(el, ctx, focusArg) {
       class: 'chapter-exercises', id: `${scope}-practice`, 'data-practice': '', 'data-section': section.id,
     });
     practice.append(h('p', { class: 'book-page' }, 'Practice is loading.'));
-    const sheetLabel = h('h3', { class: 'book-label', id: `${scope}-memory-label`, hidden: '' }, 'Memory');
     const sheet = h('ul', { class: 'book-read', id: `${scope}-sheet`, hidden: '' });
-    const seen = new Set();
     for (const line of copy.sheet || []) {
       const li = h('li');
       richLine(li, line.text);
       sheet.append(li);
-      seen.add(line.text.replace(/\s+/g, ' ').trim());
     }
     const memBtn = h('button', {
       type: 'button', class: 'btn', id: `${scope}-memory-open`, 'aria-expanded': 'false', 'aria-controls': `${scope}-sheet`,
@@ -182,21 +195,17 @@ export function mount(el, ctx, focusArg) {
       const open = memBtn.getAttribute('aria-expanded') === 'true';
       memBtn.setAttribute('aria-expanded', open ? 'false' : 'true');
       sheet.hidden = open;
-      sheetLabel.hidden = open;
     });
     const summit = h('p', { class: 'ch2-summit', id: `${scope}-summit`, hidden: '' });
     richLine(summit, copy.summit);
-    if (copy.next) {
-      summit.append(document.createTextNode(' Next is '));
-      summit.append(h('a', { href: `#chapter-2-${slug(copy.next)}` }, copy.next));
-      summit.append(document.createTextNode('.'));
-    }
     row.summit = summit;
     const summitLabel = h('h3', { class: 'book-label', id: `${scope}-summit-label`, hidden: '' }, 'Summit');
     row.summitLabel = summitLabel;
+    const waiting = h('p', { class: 'book-page ch2-waiting', id: `${scope}-waiting` }, 'Drag until the sentence changes');
+    row.waiting = waiting;
     const mark = h('button', {
       type: 'button', class: 'btn ch2-complete', id: `${scope}-complete`, 'data-stage': section.id,
-      'aria-pressed': 'false', disabled: '',
+      'aria-pressed': 'false', disabled: '', hidden: '',
     }, 'Stage complete');
     row.mark = mark;
     mark.addEventListener('click', () => {
@@ -205,24 +214,29 @@ export function mount(el, ctx, focusArg) {
       saveChapter2Marks(store, marks);
       paint();
     });
+    const go = copy.next
+      ? h('a', {
+        class: 'btn', id: `${scope}-next`, href: `#chapter-2-${slug(copy.next)}`, hidden: '',
+      }, `Go to ${copy.next}`)
+      : null;
+    if (go) {
+      go.addEventListener('click', () => {
+        if (marks[section.id] === true) return;
+        marks = { ...marks, [section.id]: true };
+        saveChapter2Marks(store, marks);
+        paint();
+      });
+    }
+    row.go = go;
     const read = h('ul', { class: 'book-read', id: `${scope}-read` });
     copy.read.forEach((item, i) => {
       read.append(h('li', null, h('a', {
         href: item.href, target: '_blank', rel: 'noopener noreferrer', id: `${scope}-read-${i + 1}`,
       }, item.pin)));
     });
-    row.note = (line) => {
-      const key = String(line).replace(/\\\(|\\\)/g, '').replace(/\s+/g, ' ').trim();
-      if (!seen.has(key)) {
-        seen.add(key);
-        const li = h('li');
-        richLine(li, line);
-        sheet.append(li);
-      }
-      sheet.hidden = false;
-      sheetLabel.hidden = false;
-      memBtn.setAttribute('aria-expanded', 'true');
-    };
+
+    const done = h('div', { class: 'ch2-done', id: `${scope}-done` }, mark);
+    if (go) done.append(go);
 
     path.append(h('li', {
       class: 'section-node', id: scope, 'data-section': section.id, 'data-state': 'ahead',
@@ -232,31 +246,35 @@ export function mount(el, ctx, focusArg) {
       h('p', { class: 'book-page' }, `Page ${section.page}`),
       why,
       picture,
-      memBtn,
       h('h3', { class: 'book-label', id: `${scope}-worked` }, 'Worked'),
       example,
       h('h3', { class: 'book-label', id: `${scope}-faded` }, 'Practice'),
       practice,
+      h('div', { class: 'ch2-memory-block', id: `${scope}-memory` }, memBtn, sheet),
+      waiting,
       summitLabel,
       summit,
-      h('div', { class: 'problem-actions' }, mark),
+      done,
       h('h3', { class: 'book-label', id: `${scope}-pins` }, 'Further reading'),
-      read,
-      sheetLabel,
-      sheet));
+      read));
   }
 
   paint();
 
   el.append(
     h('header', { class: 'station-header' },
-      h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back' }, 'The Book')),
+      h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back', class: 'book-tap' }, 'The Book')),
       h('h1', { id: 'chapter-title' }, 'Chapter 2. Complex Functions'),
       h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Five stages. Drag the green point. Purple is where it lands. Blue is the line or circle you test, and orange is the curve it maps to.'),
       sourceTag({ pin: 'Chapter 2, Complex Functions, page 43', href: sectionHref(S21) })),
     path,
     status,
-    h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
+    h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end', class: 'book-tap' }, 'Back to the book')));
+
+  const restoring = Number.isFinite(ctx && ctx.restoreY);
+  const restore = () => {
+    if (restoring) window.scrollTo(0, ctx.restoreY);
+  };
 
   const url = new URL('../../data/practice/ch2.json', import.meta.url);
   fetch(url).then((res) => {
@@ -274,25 +292,25 @@ export function mount(el, ctx, focusArg) {
           row.item = true;
           paint();
         },
-        onMemory(line) {
-          if (row) row.note(line);
-        },
       }));
     }
+    restore();
   }).catch(() => {
     if (!alive) return;
     for (const host of el.querySelectorAll('[data-practice]')) {
       host.replaceChildren(h('p', { class: 'book-page' }, 'The practice file did not load.'));
     }
+    restore();
   });
 
   const target = focus ? el.querySelector(`#chapter-section-${slug(String(focus).split('.').slice(0, 2).join('.'))}`) : null;
   const exact = focus ? el.querySelector(`#chapter-section-${slug(focus)}`) : null;
   const node = exact || target;
-  if (node) {
+  if (node && !restoring) {
     node.classList.add('is-target');
     node.scrollIntoView({ block: 'start' });
   }
+  restore();
 
   return function unmount() {
     alive = false;

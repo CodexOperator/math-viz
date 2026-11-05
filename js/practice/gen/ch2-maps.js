@@ -225,24 +225,40 @@ function recipLine(rng, seed) {
   };
 }
 
-function rootItem(seed) {
-  // Equation (1.45), page 32. Every case here has modulus 1, so each root is e^{i(Arg+2πk)/n}.
-  const cases = [
-    { n: 2, label: '-1', arg: Math.PI },
-    { n: 2, label: '1', arg: 0 },
-    { n: 4, label: '1', arg: 0 },
-  ];
-  const row = cases[(Number(seed) >>> 0) % cases.length];
+// Equation (1.45), page 32. rho is |z|, not 1 for every row, so Another is not three unit lists.
+const ROOT_CASES = Object.freeze([
+  { n: 2, label: '-1', arg: Math.PI, rho: 1 },
+  { n: 2, label: '1', arg: 0, rho: 1 },
+  { n: 4, label: '1', arg: 0, rho: 1 },
+  { n: 2, label: '4', arg: 0, rho: 4 },
+  { n: 2, label: '-4', arg: Math.PI, rho: 4 },
+  { n: 4, label: '16', arg: 0, rho: 16 },
+  { n: 2, label: '9', arg: 0, rho: 9 },
+  { n: 2, label: '-9', arg: Math.PI, rho: 9 },
+]);
+
+function rootList(row, rho) {
+  const rad = Math.pow(rho, 1 / row.n);
   const roots = [];
   for (let k = 0; k < row.n; k += 1) {
     const t = (row.arg + 2 * Math.PI * k) / row.n;
-    const re = Math.abs(Math.cos(t)) < 1e-9 ? 0 : Math.cos(t);
-    const im = Math.abs(Math.sin(t)) < 1e-9 ? 0 : Math.sin(t);
-    const q = (x) => (Math.abs(Math.abs(x) - 1) < 1e-9 ? Math.sign(x) : x);
+    const re = rad * Math.cos(t);
+    const im = rad * Math.sin(t);
+    const q = (x) => {
+      const nearest = Math.round(x);
+      return Math.abs(x - nearest) < 1e-8 ? nearest : x;
+    };
     roots.push(fmtComplex(q(re), q(im)));
   }
+  return roots;
+}
+
+function rootItem(seed) {
+  const row = ROOT_CASES[(Number(seed) >>> 0) % ROOT_CASES.length];
+  const roots = rootList(row, row.rho);
   const answer = roots.join(' and ');
   const principal = roots[0];
+  const unit = rootList(row, 1).join(' and ');
   const miss = {};
   const choices = [answer];
   const add = (choice, why) => {
@@ -251,23 +267,28 @@ function rootItem(seed) {
     miss[choice] = why;
   };
   add(principal, 'That keeps k = 0 and drops the roots from Arg + 2πk.');
+  if (row.rho !== 1) add(unit, 'That list has modulus 1. Equation (1.45) also takes the modulus to the 1/n.');
   add('1 and -1', row.n === 4
     ? 'That is only k = 0 and k = 2. Equation (1.45) also needs k = 1 and k = 3.'
     : 'Those are the square roots of 1.');
   add('i and -i', row.n === 4
     ? 'That is only k = 1 and k = 3. The fourth roots also include 1 and -1.'
     : 'Those are the square roots of -1.');
+  add(row.arg === 0 ? rootList({ n: row.n, arg: Math.PI }, row.rho).join(' and ') : rootList({ n: row.n, arg: 0 }, row.rho).join(' and '),
+    'That uses the opposite argument.');
   add(`only ${principal}`, 'That keeps k = 0 and drops the roots from Arg + 2πk.');
+  const name = row.n === 2 ? 'square' : `${row.n}th`;
+  const modNote = row.rho === 1 ? 'modulus 1' : `modulus ${row.rho}, to the power 1/${row.n}`;
   return {
     kind: 'mc',
-    prompt: `The ${row.n === 2 ? 'square' : `${row.n}th`} roots of \\(${row.label}\\) are`,
+    prompt: `The ${name} roots of \\(${row.label}\\) are`,
     answer,
     accept: [answer],
     choices: choices.slice(0, 4),
     miss,
-    why: `Equation (1.45), page 32: modulus 1, argument \\((\\operatorname{Arg} + 2\\pi k)/${row.n}\\) for \\(k = 0\\) through \\(${row.n - 1}\\).`,
+    why: `Equation (1.45), page 32: ${modNote}, argument \\((\\operatorname{Arg} + 2\\pi k)/${row.n}\\) for \\(k = 0\\) through \\(${row.n - 1}\\).`,
     memory: 'The other roots come from Arg + 2πk.',
-    values: { n: row.n, arg: row.arg },
+    values: { n: row.n, arg: row.arg, rho: row.rho },
   };
 }
 
@@ -384,8 +405,8 @@ export function selfCheck() {
     if (reversed !== root.answer && answerMatches(reversed, root)) throw new Error(`root reverse ${seed}`);
     const parts = root.answer.split(' and ');
     if (parts.length !== root.values.n) throw new Error(`root count ${seed}`);
-    const wantRe = Math.cos(root.values.arg);
-    const wantIm = Math.sin(root.values.arg);
+    const wantRe = root.values.rho * Math.cos(root.values.arg);
+    const wantIm = root.values.rho * Math.sin(root.values.arg);
     for (const part of parts) {
       const z = parseComplex(part);
       if (!z) throw new Error(`root part ${seed} ${part}`);
@@ -414,6 +435,9 @@ export function selfCheck() {
   if (!answerMatches('right triangle', { answer: 'triangle', accept: ['a triangle', 'right triangle', 'a right triangle'] })) throw new Error('shape');
   if (!answerMatches('|f(z)-w₀|', { answer: '|f(z) - w_0|', accept: ['sqrt((u-u0)^2+(v-v0)^2)'] })) throw new Error('modulus');
   if (!answerMatches('sqrt((u-u_0)^2+(v-v_0)^2)', { answer: '|f(z) - w_0|', accept: ['sqrt((u-u0)^2+(v-v0)^2)'] })) throw new Error('sqrt modulus');
+  const rhos = new Set();
+  for (let seed = 1; seed <= ROOT_CASES.length; seed += 1) rhos.add(generate(seed, { kind: 'root' }).values.rho);
+  if (rhos.size < 3 || ![...rhos].some((rho) => rho > 1)) throw new Error(`roots stayed on three unit lists: ${[...rhos].join(',')}`);
   const lines = new Set();
   for (let seed = 1; seed <= 4; seed += 1) lines.add(generate(seed, { kind: 'power-line' }).values.a);
   if (lines.size < 4) throw new Error('another did not change the line');

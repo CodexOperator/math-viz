@@ -176,7 +176,10 @@ export function start() {
   if (!view || !nav) throw new Error('index.html must contain #view and #site-nav');
 
   const store = createStore('mv:');
-  const state = { seq: 0, current: null, first: true, loadingTimer: 0, stopIds: null };
+  const state = { seq: 0, current: null, first: true, loadingTimer: 0, stopIds: null, hash: '' };
+  const scrollMemory = new Map();
+  let fromHistory = false;
+  let viaClick = false;
   const cleanups = [];
   const listen = (target, type, fn, opts) => {
     target.addEventListener(type, fn, opts);
@@ -229,7 +232,9 @@ export function start() {
         el('span', { class: 'nav-title' }, 'The Book'),
       ])));
     const list = el('ul', { class: 'nav-list', id: 'nav-chapters', 'aria-label': 'Chapters' });
+    // The course stops at Chapter 7. Later chapters stay on the roadmap, not in the drawer.
     for (const ch of BOOK_CHAPTERS) {
+      if (ch.n > 7) continue;
       list.append(el('li', {}, el('a', {
         class: 'nav-link', id: `nav-chapter-${ch.n}`, href: `#chapter-${ch.n}`, 'data-chapter': String(ch.n),
       }, [
@@ -433,7 +438,7 @@ export function start() {
     if (!first) view.focus({ preventScroll: true });
   }
 
-  async function renderBook(seq, route, first) {
+  async function renderBook(seq, route, first, restoreY) {
     const spec = route.book;
     const label = spec.kind === 'chapter' ? `Chapter ${spec.chapter}` : 'The Book';
     view.dataset.state = 'loading';
@@ -453,6 +458,7 @@ export function start() {
         store,
         book: spec,
         map: activeMap,
+        restoreY,
       }));
       if (seq !== state.seq) {
         runUnmount('book', unmount);
@@ -473,9 +479,19 @@ export function start() {
   async function render() {
     const seq = ++state.seq;
     clearTimeout(state.loadingTimer);
+    const arriving = location.hash || '#';
+    const restoreY = fromHistory ? (scrollMemory.has(arriving) ? scrollMemory.get(arriving) : 0) : null;
+    fromHistory = false;
+    viaClick = false;
+    state.hash = arriving;
     teardown();
     const first = state.first;
     state.first = false;
+
+    const settleScroll = () => {
+      if (restoreY == null || seq !== state.seq) return;
+      window.scrollTo(0, restoreY);
+    };
 
     const route = parseRoute(location.hash);
     const st = route.station ? stationById(route.station) : null;
@@ -503,7 +519,8 @@ export function start() {
     markCurrent(st ? st.id : null, route.book);
 
     if (route.book) {
-      await renderBook(seq, route, first);
+      await renderBook(seq, route, first, restoreY);
+      settleScroll();
       return;
     }
 
@@ -512,6 +529,7 @@ export function start() {
       document.title = documentTitle('No such place');
       view.append(buildNoSuchPlace(route.raw));
       finish(first, 'No such place');
+      settleScroll();
       return;
     }
 
@@ -562,6 +580,7 @@ export function start() {
       state.current = { id: st.id, unmount: both };
       view.dataset.state = 'ready';
       finish(first, st.title);
+      settleScroll();
     } catch (err) {
       // A superseded navigation must not touch the timer: it now belongs to the newer one.
       if (seq !== state.seq) return;
@@ -570,6 +589,7 @@ export function start() {
       section.replaceChildren(buildUnderConstruction(st, err));
       view.dataset.state = 'error';
       finish(first, `${st.title}: under construction`);
+      settleScroll();
     }
   }
 
@@ -625,6 +645,22 @@ export function start() {
     });
   }
 
+  // A hash link scrolls the window to the top before hashchange, so the position
+  // has to be saved on the click. Back keeps the old position through popstate.
+  listen(document, 'click', (e) => {
+    const link = e.target instanceof Element ? e.target.closest('a[href^="#"]') : null;
+    if (!link || !state.hash) return;
+    viaClick = true;
+    scrollMemory.set(state.hash, window.scrollY);
+  }, true);
+  listen(window, 'popstate', () => {
+    if (viaClick) {
+      viaClick = false;
+      return;
+    }
+    fromHistory = true;
+    if (state.hash) scrollMemory.set(state.hash, window.scrollY);
+  });
   listen(window, 'hashchange', render);
 
   const mv = (window.__mv = window.__mv || { planes: new Map() });
