@@ -1843,3 +1843,57 @@ Theorem 4.9, page 113: the Julia set is connected iff the orbit of 0 is bounded.
 1. The §4.1 stay sentence says modulus 1 means the terms do not settle. At \(z=1\) the powers are \(1, 1, 1, \ldots\), which settles at 1. The same line is in `films/film-settle.html`. Split that sentence: \(z=1\) settles at 1, and every other point on the circle does not settle at one point.
 2. The memory line for Exercise 1(a), page 108, states the general fact "if \(|w|<1\), then \(w^n\to 0\)." That exercise is the one limit \(\bigl(\tfrac12+\tfrac i4\bigr)^n=0\), and the answer 0 is right. The general fact is §4.3, Exercise 6, page 123. Point the memory line there.
 3. §§5.2, 5.3, and 5.5 are still Later rows. Not a batch-4 error.
+
+## appllama (chapter-4-5 batch 4)
+
+Branch `cursor/chapter-4-5-2649`, tip `c0102e6`. Preview https://book-preview.complexanalysis.pages.dev. `js/stations/book.js`, `js/stations/exp-picture.js`, `css/components.css`, and `js/practice/recipe.js` on that host are the same bytes as this tip. Fresh storage. Phone first, 390×844, light and then dark, then 1280×800, light and dark. The finger was a touch. A press on the green ring with no move, a 2px nudge, a drag along the axis, a drag straight up, a press off the ring, a press 18px out and a press 26px out. Play through one turn, a pause, a drag while the turn was running. Reduced motion from a fresh load, through the steps and once around again. The book, the drawer, Chapter 4, the §5.4 stage, Practice 5.4, and the section title that scrolls back to the picture. No console errors. No failed requests. `scrollWidth` was 390, and 1265 at 1280.
+
+Appllama app design skill at `dd5caaec`, the mobile-feel and motion laws only. kit/SKILL.md wins where they meet: the four teaching colours, the one clock, the one gesture, and the drag that stays under the finger. No Appllama MCP.
+
+### Verdict
+
+ANOTHER BATCH. The turn, the grab, and the reduced-motion steps are the lesson, and they hold at both sizes in both themes. Two landings are wrong. The §5.1 title scrolls the square under The Book, and a resize while that picture is scrolled changes the square and leaves the new size in place. One batch, those two. Then this lens can rest.
+
+### The finger
+
+At rest the real part is 0 and the angle is −π/2. The claim is "The point sits on the bottom of the unit circle." The purple point is on the bottom of the dashed circle. The green ring is on the right, 44×44, around a 20px dot.
+
+A press on the ring, held, leaves both numbers where they are. A 2px nudge leaves them. A press off the ring, and a drag that starts there, leave the real part where it was. A press 18px from the center picks the ring up. A press 26px from the center does not.
+
+Along the axis the center of the dot stays on the finger, miss 0, and the angle stays −π/2. The claim becomes the radius line, \(e^{x}\), larger than 1. Letting go leaves the real part at 0.88. A quarter of a second later it is the same number. Play stays at y = 777. A drag straight up leaves the dot on the axis, miss in x of 0, and the page stays at scroll 0.
+
+During Play the button says Pause and the angle keeps moving while the dot stays on the finger. The real part went 0, 0.15, 0.28, 0.39, 0.50, 0.59, 0.68, and the angle moved from −1.27 to −0.88 after the release. The button was still Pause.
+
+### The clock
+
+Play from the bottom, radius 1. The claim leaves "the bottom" for "The point sits on the unit circle." and stays that sentence while the point is between the axes. At the end the angle is π, the claim is "The point sits on the left of the unit circle, on the real axis.", and the button says Play again. Play's top stays at y = 777 for the whole turn.
+
+On this machine that turn is a steady 60 frames a second. Ninety frames in the first second and a half, median 16.7ms, 95th percentile 16.7ms, the longest 16.8ms, none over 20ms. The same 1.5 seconds with the CPU slowed to 4× are 89 frames, median 16.7ms, none over 20ms. A pause at angle −1.11 puts the label back to Play. Four hundred milliseconds later the angle is −1.11.
+
+Reduced motion, fresh load, opens on Next step at the bottom. Idle, the picture is still. The presses land on the right (angle 0, "on the right of the unit circle, on the real axis."), the top, and the left, and the button says Start again. The next press is the bottom again. The button never says Pause.
+
+### The page
+
+On the phone the square is 358×358, from y = 350 to 708. The claim is two lines. Play is 70×44 and ends at 821. The status card starts at y = 845, one line under the 844 window. The same boxes in the dark. Dark paper is rgb(13, 18, 28). The claim is rgb(233, 237, 245). The lede is rgb(166, 176, 195). Light paper is rgb(246, 243, 236) and the title is rgb(26, 34, 48).
+
+At 1280×800, scroll 0, the square is the same 358px, from y = 344. The title is on the screen at y = 158. Play ends at 788. The column is 937px, so the paper to the right of the square is the rest of that column. The same frame in the dark.
+
+The book at scroll 0 puts Chapter 4 on the first screen: top 590 at 390, top 524 at 1280. The three closed chapters are one line each, 44px. Continue is 111×44. §5.4 reads Open. §5.2 reads Later. The drawer is eight rows, each 44×358, and the last row reads Test prep. While it is open the page does not scroll.
+
+Chapter 4's two chips are 44px. The stills are 161 CSS pixels and 161 bitmap pixels on the phone, 174 and 174 at 1280. There is no line above them. Six presses of Next landing write `0 → i → −1+i → −i → −1+i → −i → −1+i`, and the connected line appears on the fourth press. The button is 44px tall. The §5.4 card is five rows, each with its page: 150, 150, 149, 150, 152. Practice 5.4 opens at scroll 0. The heading is the derivative question. The three mode chips are 44px on one row. The choices are 44×324.
+
+### Ranked cuts
+
+1. **The section title parks the axes under The Book.** The 5.1 title is a 44px control, "The Complex Exponential Function." On the phone it scrolls the page to 277. The square's top lands at y = 73. The Book link is sticky from y = 57 to 101, so 28px of the square, the top of both axes, sits under that link. The same landing at 1280: square top 73, Book bottom 101, overlap 28, and the title has gone to y = −113. The circle, the claim, and Play stay visible. The first screen, at scroll 0, does not do this. The stage sections already clear the link, by 8px on §5.4 (the flag at y = 109). The picture has no such margin. Change: give the picture the scroll margin the stage already uses, so the square lands clear of The Book. The link stays sticky and 44px.
+
+2. **A resize while the picture is scrolled keeps the wrong square.** The size is taken from the square's viewport top. At 390×844, scroll 0, the square is 358 and Play ends at 821. Scroll the picture up, then set the window to 844×390. The square becomes 229. Scroll back to 0 and it is still 229, with Play ending at 656 in a 390px window. A resize at the top leaves that 229, because the room then comes out under 96px and the measure returns without writing a new size. A scroll by itself does not resize it: the width stayed 358. Change: measure the room from the square's place under the title, the place it has at scroll 0, and write that size. At 390×844 and at 1280×800 that is the 358 already on the first screen, with Play inside the window.
+
+### What to keep
+
+The grab, the clock, and the steps. The ring is 44px. A press keeps the radius until the finger moves, and then the dot stays under the finger. A press off the ring changes nothing. Play turns the angle, Pause holds it, and a drag during the turn leaves the angle running. The frame clock holds 60 frames a second, including at 4×. Reduced motion steps the bottom, the right, the top, and the left, and the button says Next step and Start again. The claim names the bottom at rest, the unit circle while the point is between the axes, and the left when the turn ends. Play does not move when the claim changes.
+
+The phone's first screen: the lede, the 358px square, the claim, and Play, in both themes. The laptop's first screen is that same square, with Play ending at 788, and the paper beside it is the room that keeps Play on the screen. The status card stays under Play.
+
+The book: closed chapters as one line, Chapter 4 on the first screen, Continue at 44px, §5.4 marked Open, the later sections marked Later. The drawer row reads Test prep. Chapter 4's chips, the stills drawn at the size they are shown, and the orbit printed as `i`, `−1+i`, `−i`. The five-line §5.4 recipe, with the page on each line. Practice opening at the top, on the question, with three chips. The four teaching colours, the paper, the serif title, and the white card.
+
+No slider, no scrubber, no second clock, no new chrome. The §§5.2, 5.3, and 5.5 pictures stay out of this fix.
