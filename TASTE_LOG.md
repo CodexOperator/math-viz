@@ -1330,3 +1330,603 @@ Nothing. No slider, no scrubber, no spring, no second clock.
 Yes. One batch, then stop. It is the one cut above.
 
 The hold, the button, and the frame clock are the lesson, and they hold. Something real is left, and it is the frame a mouse drag draws around the square. A touch does not draw it. After that frame is gone, nothing real is left of this walk's touch.
+
+# Practice engine — batch 1
+
+Branch `cursor/practice-engine`. The practice page uses the book cards, the same buttons, and the same type. No new palette. Checked in headless Chrome at 390px and at a wide window: test prep, a worked proof then a wrong step and its reason, the hint ladder, a right choice on §5.1 exercise 2(c), Generate another on a radius, the memory sheet, one Leitner promotion, Chapter 4, Chapter 5, the roadmap, Test 1 `#problems`, and Test 2 `#index`. No console errors. No horizontal scroll at 390px.
+
+## What is on the page
+
+Test prep is a book route, so it does not switch the remembered test. The roadmap, Chapter 4, and Chapter 5 each link to it. A section link walks that section: the proof is filled in, then the same proof is blank, then the choices, then the exercises. The chapter-level Test prep mixes sections. Check is immediate. The reason shows after the attempt. A generator item can draw another seed, and Endless keeps drawing when the fixed list ends. The memory sheet is the `memory` lines plus the formulas, and it prints. Flashcards use five Leitner boxes in `mv:practice.leitner`. `mergeLeitner` keeps the card with more reviews so a later sign-in can merge two devices. Test 1 and Test 2 stay their own maps, linked from the bottom of the prep page.
+
+## What is still thin
+
+The mix does not change from visit to visit. The seed is the chapter number. A student can learn the order. Choices stay in the order they were written. A hint clears whatever was already typed, because the card is drawn again. Practice attempts other than flashcards are not stored. Chapters other than 4 and §5.1 have no items yet. The print sheet was not held up on paper, only opened in the page.
+
+## Next
+
+Vary the interleave by day. Keep the typed answer when a hint opens. Shuffle choices. Store a short record of which steps were missed, in the same mergeable shape as the boxes. Leave chapter files to the chapter loops.
+
+# Practice engine — batch 2, the shell
+
+The drawer is one list on every page: Chapters 1–7, then Test prep. The menu button says Chapters. `#home` opens the status card and one Continue button, and the count is the exercises in Chapters 4 and 5 together (10), not Chapter 4 alone. Chapter and section rows are links. Chapters 8–11 stay in the data and off the list. The line under a title is the part-label type. The way up is the 44px station link. A chapter hash is a history entry, and Back puts the book back where it was scrolled. The site name wraps instead of truncating at 360px. Test prep is the one door: the practice set, then Test 1, then Test 2. `#problems` and `#index` still open, and their ticks stay in `progress` and `progress.test2`. Chapter loops add one line to `js/book/registry.js`.
+
+Checked in headless Chrome at 360×780: the full site name, the seven chapters, Continue, the labelled drawer, the Chapter 5 up control, scroll restored after Back, both indexes inside Test prep, and the 2 of 10 count after a Chapter 4 tick and a Chapter 5 tick. No console errors.
+
+## Next
+
+The home map and the Test 2 map still exist behind a thread hash. Pictures for Chapters 1–3 and 6–7 are not inside those chapter pages yet; those loops register the pages. The interleave seed, choice order, and unsaved practice attempts are unchanged from batch 1.
+
+# Practice engine — batch 3
+
+Pulled the reviewer tip `4030750` first. Test prep is the practice card only. Test 1 and Test 2 are 44px rows to `#problems` and `#index`. A closed chapter is one line, and Chapter 4 sits under the status card at 390, 360, and 1280, light and dark. Continue opens `#chapter-4` at the top. The first miss on a blank shows the hint, and the answer waits for the second miss. The mixed set opens on a worked proof. Flashcards on a first visit say “1 of N”, front the name, back the sentence. Julia’s two way-up links read The Book (`#book`) and Chapter 4 (`#chapter-4`). The catalog loads whichever of `ch1.json`–`ch7.json` exist. A generator whose first argument is not `seed` throws. Continue can count a walk registered beside the module line. Chapter 2 is `2: './stations/chapter2.js'`, with `ch2-maps` and a page that reads `ctx.book.focus`.
+
+## Still open
+
+Chapter 2’s page is the shell the loop fills, not the five sections. Chapters 1, 3, 6, and 7 are still closed. Film panels still say Story Map. The mix after the worked proof uses a fixed seed. A miss is not stored past the card. Choices stay in written order.
+
+## skeptical-student (practice batch 2)
+
+Branch `cursor/practice-engine`, tip `e02fc859`. Preview https://practice-preview.complexanalysis.pages.dev. Fresh storage. Headless Chrome, touch, 390×844 light, then the same pages with the theme pinned dark, then 1280×800 light and dark, and the home at 360×780 in the OS dark theme. No product code was changed. No console errors. No failed requests. `scrollWidth` matched the window (390, 360, 1280).
+
+I have never seen this course. I opened the link the way I would on a phone, looking for where I am, where to go next, and how to get to test prep.
+
+### Verdict
+
+ANOTHER BATCH. The home answers the first question. The Chapters drawer answers the third, once I think to open a button that says Chapters. The page Continue opens, and Test prep itself on a phone, answer none of the three. I was asked to prove a theorem I had not been shown, and the old problem indexes start before I have finished the card.
+
+### Cold open, 390×844, light
+
+The first screen is the site name on two lines (the words "One Point, Two Addresses", 37px tall, 141px wide, the full name), a 44×44 theme button, and a 44×118 button that says Chapters. Under that: "THE BOOK · CHAPTERS 1–7", the title The Book, "Chapters 1 to 7, in the order Howell and Mathews print them.", and the source line naming Howell & Mathews, Complex Analysis, the 202 Updated Edition. Then a card: "Next is §4.1, Exercise 3. 0 of 10 exercises." and Continue, 44×111. Then three cards flagged LATER: 1 Complex Numbers (page 1), 2 Complex Functions (page 43), 3 Analytic and Harmonic Functions (page 79, the title wraps). Chapter 4 starts under the 844px edge. The footer that says MAT 412 is below that.
+
+I can tell this is a book of seven chapters of that textbook. I can tell the button wants exercise 3 of §4.1. I cannot tell why the first three chapters, the ones on the screen, say LATER, or what a complex number is. The count "0 of 10" sits next to a §4.1 exercise and the 10 is chapters 4 and 5 together.
+
+Continue goes to `#chapter-4-4-1-3`. The first screen there is the tail of a sentence about disks, two links (Definition 4.1, page 103; Theorem 4.1, page 103), a text link "Practice 4.1" at 91×23, then the card "§4.1, Exercise 3": "Suppose that lim z_n = z_0. Show that the limit of the conjugates is the conjugate of the limit." Then a chip "The disk in Definition 4.1", Show the hint, and Tick, both 44px and the width of the card. The chapter title and the where-line are above the window. Tick is live before I do anything. I still don't know what the bar over z means, and nothing on the screen says what I would have learned if I pressed Tick. Browser Back returned to the book at the top, Continue at y = 325, the same first screen.
+
+Tapping the Chapter 1 card, or "1 Complex Numbers" in the drawer, sets `#chapter-1` and scrolls to 353. "The Book" sits at y = −247. The screen is the same LATER card, "1 Complex Numbers, Page 1", and that card has no section links. I asked for a chapter and got a scrolled table of contents.
+
+Opening Chapter 4 from the drawer is the page that does say where I am: a 44×134 "The Book", the title, "CHAPTER 4 · SEQUENCES, SERIES, AND FRACTALS" (the same words again), and "Four sections. Tick an exercise when you have worked it. The hint stays closed until you ask." Practice 4.1 is on that first screen and it is still 91×23. The same link for 4.2, 4.3, and 4.4 is 91×23 further down (y = 1744, 3547, 4574).
+
+Chapter 5 from the drawer: "The Book", "Chapter 5. The exponential", the same line in small caps, a circle with a purple dot on the left and a green dot on the right, the sentence "The point sits on the left of the unit circle, on the real axis.", and Play (y = 640, 44px tall, on the screen). The lede under Play says a blank fills when the picture makes it true. The blank, and "Practice 5.1" (91×23), start at y = 1202 on a page 2818px tall. The only sentence that says "drag the green dot" is the picture's aria-label. The green dot is the one on the right. The sentence calls the left-hand dot "the point".
+
+### How I got to test prep
+
+The words "test prep" are absent from the home first screen. The Chapters drawer is one list, every row 44×358: chapters 1–7, then "· Test prep" at y = 382, on that same drawer screen. The dot is sitting where the chapter number sits on the other rows. One tap from there opens `#test-prep`. On the 1280 window the same row is in the sidebar at y = 388, so I don't have to open anything.
+
+That is the door. The section links are a second door, with a different first card, and they don't use the words Test prep.
+
+### What test prep did on the phone
+
+Opening it focuses the answer box and moves the page. Measured on arrival, light: "The Book" button at y = −279, the Practice / Memory sheet / Flashcards chips at y = −194, Endless at y = −142. The proof's heading starts at y = 9, under a header that ends at 58, so the screen shows the tail "then ∑ z^n = 1/(1−z)". Check and Hint are on the screen (both 44×324). Under the card, at y = 648, a second page has already started: "Test 1. Every problem and proof from the handout is a card. Read the question, say the place, the address and the aha out loud…" The whole document is 41567px. The Test 1 block starts at y = 1239, is 25558px tall, and holds 41 cards. Test 2 starts at y = 26845, is 14587px tall, and holds 30 cards. The same clip, and the same Test 1 lede, is what the dark phone shows on arrival.
+
+Scrolling back to 0 shows the page I was supposed to land on, in both themes. "THE BOOK" (a 69×17 link), the title Test prep, "TEST PREP", "Items from more than one section, mixed. Check, then read the reason.", "Chapters 4 and 5. 1 of 14.", a 44px The Book button, then the chips. The proof heading is then fully on screen: "Prove the sum half of Theorem 4.12, page 118." Step 1 of 3 is the current line, in rgb(26, 34, 48). Steps 2 and 3 are also blanks, in rgb(81, 91, 108). The box is labelled "Your answer". On the 1280 light window this heading is on screen at scroll 0, and Check starts at y = 819 in an 800px window, so the button is past the bottom edge. `scrollWidth` there is 1280.
+
+I typed `idk` and pressed Check. The card said "Not that one.", filled the first blank with 1 − z^n, and gave the reason: "The middle terms cancel. This is the first identity in the proof on page 118." There is no second try. Next step stays on "1 of 14" and asks for the next blank with the same box label. Hint, opened on a fresh load, says "Multiply the partial sum by z and subtract." and the button becomes Next hint. Test 1 is still directly under that hint.
+
+The chip Memory sheet is the page I would actually use. Status: "The sheet for this set. It prints without the menu." Five blocks: 4.1, 4.2, 4.3, 4.4, 5.1. The first formula is the ε-disk. The first takeaway is a sentence: the terms eventually sit in every disk around ζ, Definition 4.1, page 103. Print is 44×358. On arrival this chip is above the window, so I never saw the sheet until I scrolled up and hunted for it.
+
+Flashcards: the status says "36 due." The card says NEW and "New card", then "Corollary 4.1, absolute convergence implies convergence", which is already the fact. Show the back (44px) reveals "If ∑ |z_n| converges, then ∑ z_n converges." and "Corollary 4.1, page 107." Again and Got it are on the screen. Test 1 starts under this card too. I did not have to remember anything, and the count says I am already behind on 36 cards.
+
+`#test-prep-4-4-1`, which is what Practice 4.1 opens, is a different first screen, and it stays at the top because that card has no box to focus. Title Test prep, lede "A worked proof, then the same proof with the steps missing, then the exercises.", status "Section 4.1. 1 of 6.", back button "Chapter 4" at 44px. The card is flagged WORKED EXAMPLE, Theorem 4.1, pages 103–104, and the button says Try these steps. That is the only door that told me what I was about to do before it asked me to fill a blank. The mixed set, the one in the drawer, skips it and opens on the geometric-series proof.
+
+Dark, pinned, is the same layout. The page is rgb(13, 18, 28) and the text is rgb(233, 237, 245). Light paper is rgb(246, 243, 236) and the title is rgb(26, 34, 48). At 360 the name still wraps onto two lines, in the dark, and the same Continue card is the first screen.
+
+### What to keep
+
+The home is one book, one status line, and one Continue. I could read that I was in chapters 1–7 of Howell and Mathews. The drawer is that same list on every page, rows at 44px, and Test prep is on the first drawer screen. On a wide window it is in the sidebar. Back from the exercise returned to the book at the top. The name wraps. Open chapter pages put a 44px "The Book" over the title. Chapter 4's lede says to tick an exercise after working it. When Test prep is scrolled to the top, the lede says to check and then read the reason, and the reason on the geometric step was one sentence with a page. The memory sheet is five sections of a formula plus a one-line takeaway with a page, and Print is a real button. The section door (Practice 4.1) starts with a worked proof and says so in the lede.
+
+### Ranked fixes
+
+1. **Land Test prep at the top of the page.** On open, the title, the "1 of 14", and the three chips are above the window (The Book button at y = −279, chips at y = −194), the proof starts at y = 9 under a 58px header, and Test 1 is already at y = 648. The answer box took focus and moved the page. Same clip in the dark. Change: opening the page leaves the scroll at 0, which is the screen I got only after scrolling back — title, count, chips, then the question. The box sits under the question and does not pull itself up.
+
+2. **The practice card is the page.** The document is 41567px. Test 1 is 41 cards from y = 1239, and its lede ("say the place, the address and the aha") is on the arrival screen. Test 2 is 30 cards from y = 26845. I thought the handout cards were the next question. Change: under the card, two links, "Test 1" and "Test 2", to the indexes that already open on their own. The indexes stay off this scroll.
+
+3. **Show the worked proof before the blank, and point the box at one blank.** The drawer opens on "Prove the sum half of Theorem 4.12", three blanks, one box labelled "Your answer". Steps 2 and 3 are a quieter grey, rgb(81, 91, 108) against rgb(26, 34, 48), and they still look like blanks. Typing `idk` printed 1 − z^n on the first miss. Practice 4.1 already does the other thing: "A worked proof, then the same proof with the steps missing", card flagged WORKED EXAMPLE, button "Try these steps", status "Section 4.1. 1 of 6." Change: the mixed set leads with that worked card, then the blank. The box's label is the current line, and the other lines wait. The first miss shows the hint ("Multiply the partial sum by z and subtract."). The filled answer shows on the next miss.
+
+4. **Continue opens the chapter at the top, and a closed chapter says it is closed.** Continue is `#chapter-4-4-1-3`. The first screen has the exercise and a live Tick, and the title "Chapter 4" is above the window. The home screen I can see is three LATER chapters and a status line that names §4.1. Tapping chapter 1 sets `#chapter-1`, scrolls to 353, hides The Book (title at y = −247), and the card is still "LATER 1 Complex Numbers Page 1" with no sections. Change: Continue opens `#chapter-4` at the top, where the idea sentence already is. The status line says the first three chapters are closed and names §4.1 as the start. A closed row leaves the title on screen, and the line on the card says the chapter is closed.
+
+5. **Make the section door a button, and drop the dot.** Practice 4.1 and Practice 5.1 are 91×23. Practice 5.1 is at y = 1202, past an 844px screen, so from Chapter 5 the way to test prep is a short text link under a picture. The drawer row reads "· Test prep" because the number slot is a middot; the row itself is 44px and on the first screen at y = 382. Change: the section door is a 44px button, "Test prep · 4.1", beside the section title. The drawer row reads "Test prep", still last, still 44px.
+
+6. **A new flashcard is one new card.** The status says "36 due" on a first visit. The card says NEW and "New card", and the front is already the corollary ("absolute convergence implies convergence"). The back is that sentence in symbols. Test 1 starts under the card. Change: the count is "1 of 36" until a card has been graded. The front is the name, "Corollary 4.1". The back is the sentence. One card fills the screen.
+
+## ux-veteran (practice batch 2)
+
+Preview https://practice-preview.complexanalysis.pages.dev at `e02fc859`. Headless Chrome, touch, fresh storage. Phone first: 390×844 and 360×780, light and dark. Then 1280×800, light and dark. Re-checked fixes 1, 2, 3, and 8 from `## ux-veteran (mobile audit)` on `cursor/ux-veteran-audit`. No product code was changed. No console errors. No sideways scroll (`scrollWidth` matched the window at 360, 390, and 1280, both themes).
+
+The walk, the way a student would do it. Land on the preview. Read the first screen. Open Chapters. Tap a chapter row, a section row, Continue, Test prep, and Back. Then the same shell in the dark and at 1280, where the list is a sidebar and the Chapters button is gone.
+
+### Verdict
+
+ANOTHER BATCH. The drawer, the count, the chapter up control, the wrapped name, and Back are in. Two of the original phone failures are still the first thing a thumb hits: Test prep opens with the question under the header, and the landing still names §4.1 while the screen shows three Later chapters.
+
+### Ranked
+
+1. **Test prep opens on the answer box.** Fresh `#test-prep` at 390×844, scroll is already 559 and the focused control is the answer field. "Test prep", the up link, and the words "Prove the sum half of Theorem" sit above the window. The first line a student can read is "4.12, page 118", then the three blanks, then Your answer, Check, and Hint. The same page at 1280×800 shows the title and the whole prompt, because the card fits. Change: when the card is drawn, leave focus where it is. The first screen is the title, one up control, and the whole question. The field takes focus when the thumb taps it.
+
+2. **The landing names a chapter the phone does not show.** At 390×844 the status says "Next is §4.1, Exercise 3. 0 of 10 exercises." and the only button is Continue, 111×44, to `#chapter-4-4-1-3`. Chapter 4's card starts at y = 841, so the word Next is the sliver at the bottom edge. The cards on the screen are Later: Complex Numbers, Complex Functions, and Analytic and Harmonic Functions. At 360×780 Chapter 4 starts at y = 867, below a 780px window, and Chapter 3 is cut off mid-title. At 1280×800 the Next card just clears the fold. Change: a Later chapter is one line, the number and the title. Book order stays. Chapter 4, with the word Next, then sits under the status card at 390 and at 360.
+
+3. **5.2, 5.3, 5.4, and 5.5 open the exponential.** Each row is a link at least 44px tall. All four point at `#chapter-5`. Tapping "5.2 The Complex Logarithm" lands on "Chapter 5. The exponential", square and Play. The logarithm is a Later heading at y = 1971, and that heading has no link. Change: a section with no page is text, with the Later flag it already has. The row stops being a link. 5.1 keeps its link to `#chapter-5-5-1`.
+
+4. **Test 2 is a heading thirty-two screens down.** On the prep page, Test 1 starts at y = 1239 and Test 2 at y = 26845. The page is 41,567px. The practice set is the first block. The whole Test 1 index is the next block. Test 2 is past every one of those cards. Change: under the practice set, two rows, Test 1 and Test 2, each a 44px link to the index that already opens at `#problems` and `#index`. The indexes stay their own pages.
+
+5. **The Book on Test prep is 69×17.** That is the box the audit measured on Chapter 5. Chapter 4 and Chapter 5 now use the station link: 134×44, label "The Book", on the first screen, under the header. Test prep still has the 17px kicker, and a second control in the status card that also says The Book, this one 113×44. Change: one up control, the station link, 44px, "The Book". The kicker goes.
+
+6. **The Map opens the book.** On Julia, Story Map and The Map both go to `#home`. That page is The Book. The heading is The Book, and Which test is absent. The where-line on Julia already says Chapter 4, and the drawer marks Chapter 4, so the way back is the one the picture does not offer. Change: those two links read The Book and Chapter 4. Chapter 4 goes to `#chapter-4`.
+
+### What to keep
+
+The drawer is the same eight rows on the book, on Chapter 4, on Chapter 5, on Test prep, on both indexes, on Julia, and on the address plane. Chapters 1 through 7, then Test prep. Each row is 44px tall and the width of the phone. Chapters 8–11 are off the list and off the roadmap. The words Residue, Laplace, and "eleven chapters" are absent. `#chapter-8` opens the book. At 1280 the same eight rows are the sidebar, Chapter 5 is marked while you are on it, and Test prep is marked on its own page.
+
+The Chapters button is labeled and is 118×44. The site name wraps to two lines, "One Point, Two" and "Addresses", at 360 and at 390, light and dark. It is the whole name. The where-line is the part-label type, 12.5px, uppercase. On the book it reads "The book · Chapters 1–7". On the chapter it sits under the title and reads "Chapter 5 · The exponential" and "Chapter 4 · Sequences, Series, and Fractals". Contrast is 6.2 on the light paper and 8.6 in the dark. The type, the paper, and the blue Continue button are the ones the station pages already use.
+
+Chapter rows and the section rows that have a page are real doors. 4.1 opens with "Sequences and Series" under the header. Continue, after a Chapter 4 tick and a Chapter 5 tick, says "Next is §4.1, Exercise 13. 2 of 10 exercises" and opens that card with the title at 163px, below the 58px header. A lone 5.1.2 tick is "1 of 10", and Chapter 5 reads Open. Back puts the book back at the 900px it left, and puts a chapter back at the 1600px it left. On `#home-t1`, Test 2 pushes `#home-f2`, and Back returns with Test 1 pressed.
+
+Chapter 5's first screen is the 44px up link, the title, the where-line, the square, and Play, at 390 and at 1280. That screen can stay.
+
+## appllama (practice-engine batch 3)
+
+Branch `cursor/practice-engine`, tip `dba0ac6`. Preview https://practice-preview.complexanalysis.pages.dev. The practice files on that preview match this tip. Used like a student the night before the exam. Headless Chrome, touch, fresh storage. Phone first: 390×844, light, then the same walk in the dark. Then 1280×800, light and dark. The Book, Continue, a closed chapter, Chapter 2, Test prep, the mixed set (worked proof, then the blank, then a miss, then the hint, then the answer, then a right answer), flashcards, and the Test 1 and Test 2 rows. No product code was changed. `scrollWidth` matched the window (390 and 1280) in both themes. The catalog logs a blocked `node:fs` import and a 404 for each chapter file that is not on the server. The set still draws.
+
+The lens is the mobile feel and the motion. Four teaching colours, the existing type, and the existing buttons stay. Nothing here asks for a new gesture, a spring, or a second clock.
+
+### Verdict
+
+ANOTHER BATCH. The book, Continue, and the doors are a phone a tired student can start. The blank they then have to answer is a column of single words, and Check sits past the fold at both widths, in both themes. One batch, the six changes below. Then stop.
+
+### The Book, and Continue
+
+390×844, light, scroll 0. The name wraps to "One Point, Two" and "Addresses", 180×37. Theme is 44×44. Chapters is 118×44. The title is The Book. The status is "Chapters 1, 3, 6, and 7 are closed. Next is §4.1, Exercise 3. 0 of 10 exercises." Continue is 111×44 at y = 352. Chapter 1 is one row, 358×44, CLOSED. Chapter 2 is 358×44, OPEN. Chapter 4, flagged Next, starts at y = 609, so it is on the 844px screen. The same screen in the dark: paper rgb(13, 18, 28), sentence rgb(233, 237, 245), Continue light on the dark accent. At 1280 the eight rows are the sidebar, Continue sits on the status line, and Chapter 4's four sections are on the screen.
+
+Chapter 3's title is long. On the phone, in both themes, CLOSED drops onto the line under "Analytic and Harmonic Functions". At 1280 the flag stays on the title's line.
+
+Continue opens `#chapter-4` at scroll 0. The Book is 134×44. "Test prep · 4.1" is 150×44 at y = 542, on the screen. The two read links under the idea are 23px. Back returns to `#book` at scroll 0.
+
+Tapping the closed Chapter 1 row sets `#chapter-1` and leaves The Book where it was. The row does not open. Chapter 2 does open. The page is "Five sections, from linear maps to the reciprocal.", the line "The chapter, from the start.", and The Book a second time. The document is 844px. Continue's sentence leaves 2 out of the closed list, so the row reads as a chapter that has started.
+
+### Test prep, the mixed set
+
+`#test-prep` opens at scroll 0. Focus stays on the page. The title, "TEST PREP", the line "Items from more than one section, mixed. Check, then read the reason.", and "Chapters 4 and 5. 1 of 16." are on the screen. The chips are Practice, Memory sheet, Flashcards, and Endless on a second row. The card is WORKED EXAMPLE, Step 1 of 2, Theorem 4.1, pages 103–104. The step is one paragraph. "Try these steps" is 44px at y = 1193, under the proof. At 1280 the worked proof, the filled line, and the reason fit in the 800px window, and step 2 starts at the bottom edge.
+
+Try these steps replaces that card with the blank. The step is still one paragraph. Under it, the same sentence is the label of the box, and that label is a column. The field is `inline-flex` in a column, so each word and each piece of the formula is its own row: Given, then ε > 0, then ", choose", then N, then and, then M, and so on down to the blank. The field measures 623px at 390 and at 1280, light and dark. The input is the last 44px of it. On the phone that input is at y = 823 and Check is at y = 875, past an 844px window. On the laptop Check is at y = 987 in an 800px window. Hint is another 44px under Check. The typed answer is a 17px field, 44px tall.
+
+A wrong Check on `idk` clears the box. The card grows from 1184px to 1301px in one frame (the sample at 32ms). "Not that one." lands at y = 979 and the hint, "Split the one modulus into the two coordinates.", at y = 1025. Both are past the phone. The screen the finger is looking at does not change. Tapping Hint prints that same sentence a second time, once as the miss and once as the hint, and the button says Next hint. A second miss fills the step with |x_n − u| + |y_n − v| and also writes "The answer is" that expression. The reason is the green bar. Next step is 44px. "Not that one." is rgb(179, 38, 30), contrast 5.9 on the light paper. In the dark it is rgb(255, 129, 120), contrast 7.7.
+
+A right answer, `|x_n-u|+|y_n-v|`, says "Yes." in the body colour, weight 700, and the step still ends "is at most ___." The typed text is gone. The reason shows. Next step is the button.
+
+Cutting the window to 480px while the box is focused leaves the input at y = 570, bottom 614, and Check at 622. The scroll moves 1px. The keyboard covers the box and the button. A second click in the same turn, at the Check point, does not reveal the answer. Reduced motion still shows the verdict. There is no spatial animation on this card. The swap is one frame.
+
+### Flashcards, Test 1, Test 2
+
+Flashcards, first visit: status "1 of 36", the card says NEW and "1 of 36", the front is "Corollary 4.1", Show the back is 44px. The back is "If ∑ |z_n| converges, then ∑ z_n converges." Again and Got it sit side by side, each 158×44, on the phone screen. Test 1 and Test 2 are under the card. The line under the title still says to check and then read the reason.
+
+Got it. The next front is Definition 4.2, and the status is "2 of 35". The unseen card that followed Corollary 4.1 was Definition 4.1. The cursor stepped forward on a list that had also dropped the card just graded, so one card is skipped, and the total shrinks.
+
+The Test 1 row is 358×44 on the phone and 952×44 at 1280. Test 2 matches. They sit under the card, at y = 1294 and y = 1346 on the worked proof, document 1525px. Test 1 opens `#problems` at scroll 0. Test 2 opens `#index` at scroll 0. Both pages are titled The Problem Index. Back from Test 1 returns to `#test-prep`.
+
+### Ranked
+
+1. **The answer label is a column of atoms.** At 390 and at 1280, light and dark, the field is 623px and each word of the step is its own row. The step above is already one paragraph. Check is at y = 875 on the phone and y = 987 on the laptop. Change: the visible label is "Your answer", one line. The step stays the only copy of the sentence. The box and Check sit under that step.
+
+2. **A miss paints below the fold, and the hint is said twice.** `idk` clears the box. "Not that one." is at y = 979 and the hint at y = 1025, both past 844, so the screen does not change. Hint then repeats "Split the one modulus into the two coordinates." A second miss fills the blank and adds "The answer is" the same expression. Change: the verdict and the hint render under Check, in view. The first miss is hint 1, and the button moves to the next hint without printing hint 1 again. The second miss fills the blank, shows the reason, and stops there.
+
+3. **Yes leaves the blank empty.** `|x_n-u|+|y_n-v|` is accepted, the line still ends in ___, and "Yes." is body colour. The miss path is the one that fills the line. Change: a hit fills the blank the way the second miss already does, and "Yes." uses the ok token so it reads as clearly as the red "Not that one."
+
+4. **The keyboard covers the box.** The input is 17px and 44px tall. A viewport cut to 480 leaves it at y = 570, bottom 614, and Check at 622. Scroll moves 1px. Change: focus scrolls the box and Check into the space above the keyboard.
+
+5. **Chapter 2 says Open, and a closed row goes nowhere.** Chapter 1 sets `#chapter-1` and the screen stays The Book. Chapter 2 opens on two sentences and a second The Book, and the status names 1, 3, 6, and 7 as the closed chapters. Change: a chapter with no section on the page is text, flagged Closed, the way the sentence already treats 1, 3, 6, and 7.
+
+6. **The card count skips, and the instruction is the wrong verb.** "1 of 36" becomes "2 of 35", and Definition 4.1 is skipped. The line under the title says "Check, then read the reason" on the worked card, whose button is "Try these steps", and on the flashcards, whose button is "Show the back". Change: the next card is the next unseen one, and the count is "2 of 36". The line matches the mode: a worked proof, then check, then the cards.
+
+### Keep
+
+The Book is one status sentence, one Continue at 44px, and Chapter 4 on the phone screen, in both themes. At 1280 the same list is the sidebar. Continue opens Chapter 4 at the top, The Book is 44px, and "Test prep · 4.1" is 44px. Test prep lands at scroll 0 on the worked proof, with the step in one paragraph. Test 1 and Test 2 are 44px rows under the card. Flashcards are one card: the name, then the sentence, Again and Got it at 44px, no flip. The paper, the type, the accent button, and the dark theme are the ones the station pages already use. Back from Chapter 4 returns to the book.
+
+# Practice engine — batch 4
+
+The answer label is the one line "Your answer". The step stays the only copy of the sentence, and Check sits under the box. On the Theorem 4.1 blank, Check is inside 390×844 and inside 1280×800, light and dark. A first miss says "Not that one." and hint 1 under Check, in view. Next hint adds the next line and does not print hint 1 again. A second miss fills the blank, shows the reason, and does not add "The answer is". The miss is stored at `mv:practice.misses`, merged the same way as the Leitner boxes. A hit fills the blank and "Yes." uses the ok token. Focusing the box scrolls it and Check above a short viewport. A chapter with no section is plain text flagged Closed, on the book and in the drawer. Continue is the first control and opens Chapter 4. The drawer is chapters 1–7, then Test prep. Chapter 3's closed title stays on one line at 360. Flashcards walk the unseen order: Corollary 4.1, then Definition 4.1, "2 of 36". The line under the title is "Try these steps.", "Check, then read the reason.", or "Show the back." A visit draws a new seed. New set draws another. The same seed rebuilds the same order, and choices shuffle from that seed. `#film-settle-story` says The Book and opens `#book`.
+
+Checked: `node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, `node kit/smoke.mjs`. Headless Chrome at 390×844 and 1280×800, light and dark, plus the closed title at 360×780. No console errors.
+
+## Still open
+
+Typing `#chapter-2` still opens the stub. The book and the drawer no longer link it. Film panels other than the settle film still say Story Map. A stored miss is not a review queue yet. Chapters 1, 3, 6, and 7 still have no practice of their own.
+
+## unslop (practice-engine batch 4)
+
+Branch `cursor/practice-engine`, tip `189988c`. Preview https://practice-preview.complexanalysis.pages.dev. The practice files on that preview match this tip. Used like a student. Headless Chrome, touch, fresh storage. Phone first: 390×844, light, then the same walk in the dark. Then 1280×800, light and dark, and the book at 360×780. The Book, the drawer, Continue, Chapter 4, Test prep (the worked proof, the blank, a hit, a miss, the second hint, the filled line), flashcards, the memory sheet, and the §4.1 door. No product code was changed. `scrollWidth` matched the window at 360, 390, and 1280, in both themes. The console reports the catalog's blocked `node:fs` import and a 404 for each chapter file that is not on the server. The set still draws.
+
+The page is a textbook: calm, exact, paper. The chrome stays the paper, the serif title, and one accent button. The moment is the sentence with the formula in it. The small-caps kicker and the four teaching colours stay with the shell. This card does not need a new picture.
+
+### Verdict
+
+ANOTHER BATCH. The answer fit landed, and the shell is already this site. What is left is six cuts. One batch, then rest.
+
+### What the hand meets
+
+390×844, light, scroll 0. The name wraps. Theme is 44×44. Chapters is 118×44. The title is The Book. Continue is 111×44 at y = 291. The status is "Chapters 1, 2, 3, 6, and 7 are closed. Next is §4.1, Exercise 3. 0 of 10 exercises." Chapter 4, flagged Next, is on the 844px screen. The same screen in the dark: paper rgb(13, 18, 28), sentence rgb(233, 237, 245), Continue dark on the off-white accent. At 1280 the eight rows are the sidebar, Continue sits on the status line, and Chapter 3's name fits on the content row.
+
+The drawer, and the sidebar, keep a closed chapter as text. Chapters 1, 2, 3, 6, and 7 are spans, muted, 44px, with no href. Chapters 4 and 5 and Test prep are links. Test prep is on the first drawer screen, at y = 382.
+
+`#test-prep` opens at scroll 0 on the worked proof. "Try these steps." is the line. The card is Theorem 4.1, pages 103–104. Try these steps is at y = 1167 on the phone, under the proof, and at y = 835 on the laptop, just past an 800px window.
+
+The blank is one label and one box. "Your answer" is 14px, weight 600, rgb(81, 91, 108), one line, contrast 6.9 on the white card. The input is 44px tall and the width of the card. Check is 44px under it: y = 460 on the phone, y = 440 at 1280, inside both windows, light and dark. A 390×480 viewport, with the box focused, leaves the input bottom at 411 and Check's bottom at 471.
+
+A hit on `|x_n-u|+|y_n-v|` fills the blank and says "Yes." in the ok token, weight 700: rgb(38, 112, 42) in the light, contrast 6.1 on white, and rgb(99, 208, 138) in the dark. Next step is 44px. A first miss on `idk` says "Not that one." in rgb(179, 38, 30), contrast 6.5 on white and 5.9 on the paper, and the hint "Split the one modulus into the two coordinates." sits under Check, in view. Next hint adds "Bound |A+B| by |A|+|B|." and does not print the first line again. A second miss fills the blank, shows the triangle-inequality reason, and does not add "The answer is".
+
+Flashcards, first visit: "1 of 36", the front is Corollary 4.1, Show the back is 44px. The back is the convergence sentence. Again and Got it sit side by side at 44px. No flip.
+
+`#test-prep-4-4-1` says "Section 4.1. 1 of 6." Its sheet has one heading, 4.1 Sequences and Series. That door has Practice, Memory sheet, Flashcards, and New set. Endless is absent there.
+
+### Ranked cuts
+
+1. **The formula breaks in the middle of the modulus.** On the phone, light and dark, the filled answer `|x_n-u|+|y_n-v|` is two pieces: a 52×23 fragment at the end of the line and a 110×23 fragment on the next. The KaTeX box is 268px in a 305px line, and the step's overflow wrap is anywhere, so the question breaks the same way: `|(x_n −` then `u) + i(y_n − v)|`. At 1280 the same answer is one line, 162×23. Change: the step wraps at a space. A formula stays whole, in the question and in the filled answer.
+
+2. **Chapter 3's name is cut off.** The closed title is one line, and the line is shorter than the name. At 390 the book row is 358×44 and the title is 281px in a 264px box, so the screen reads "Analytic and Harmonic Funct…" with CLOSED. At 360 the box is 234px and the screen reads "Analytic and Harmonic Fu…". At 1280 the content row shows the full name, and the sidebar title is 239px in a 217px box, so the list reads "Analytic and Harmonic Func…". The drawer at 390 shows the full name. Chapter 4, which is a link, wraps to two lines. Change: a closed title wraps the way an open one does. The CLOSED flag stays on the row. The name stays whole.
+
+3. **The mixed set says chapters 4 and 5, then opens on chapter 2.** On the preview the status is "Chapters 4 and 5. 1 of 16." The 16 is the worked proof plus 15 live items, and one of those is the §2.1 generator. The memory sheet's first heading is "2.1 Functions and Linear Mappings", and the first takeaway is `w = az + b`, page 50. Endless sits on the Theorem 4.1 card, a second pill row at y = 392 on the phone and in the chip row at 1280, because that generator is in the pool. The §4.1 door does not do this. Commit `6505456`, on the branch after this preview and not part of the walk, names the chapters in the pool, so that line would read "Chapters 2, 4, and 5." The sheet still opens on 2.1, and Endless is still on the proof. The book still flags chapter 2 closed. Change: the mixed pool is the open chapters. The sheet starts at 4.1. Endless shows on a generated card only. The count matches that pool.
+
+4. **The last hint leaves a button that says Hint and does nothing.** After Next hint, both lines are on the card. The button is disabled, opacity 0.55, label "Hint", at y = 659 in the 844px window, bottom 703. Change: when the last hint is showing, the button is gone.
+
+5. **The flashcard says the cite twice, and the count twice.** The status card says "1 of 36" and the card says it again. The source line is "Corollary 4.1, page 107." The back is the sentence, and under it a green bar says "Corollary 4.1, page 107." The line under the title still says "Show the back." after the back is open. Change: the count lives on the card. The back is the sentence. The source line keeps the page. The line under the title matches the buttons that are on the screen.
+
+6. **The sheet says its lede twice.** Under the title the line is "The formulas and the one-line versions." Under the heading Memory sheet, the same sentence comes back, then the print sentence, then Print. Change: that sentence lives once, as the lede. Print and the sections stay.
+
+### Keep
+
+The answer is one line, "Your answer", one box, and Check under the box, inside 390×844 and inside 1280×800, light and dark. A short viewport keeps the box and Check on screen. A hit fills the blank and "Yes." uses the ok token. A miss paints "Not that one." and hint 1 under Check, in view, and the next hint adds a line. The second miss fills the blank and shows the reason.
+
+The Book is one status sentence, one Continue at 44px, and Chapter 4 on the phone screen. A closed chapter in the drawer is text. Test prep is a 44px row. The §4.1 door is that section: "1 of 6", a sheet of 4.1, no Endless. Flashcards are one card, the name then the sentence, Again and Got it at 44px, no flip. Test 1 and Test 2 are 44px rows under the card.
+
+The paper, the serif title, the sans text, the accent button, and the dark off-white primary are the station pages. No emoji, no gradient, no glow, no pulse. The small-caps kicker stays. The four teaching colours stay on the pictures. Nothing here asks for a new type, a second clock, or a hero.
+
+## pedagogy (practice-engine batch 4)
+
+Branch `cursor/practice-engine`, tip `189988c`. Preview https://practice-preview.complexanalysis.pages.dev. The practice files on that preview match this tip. Walked as a student who has the chapter open and wants the practice to teach the move. Headless Chrome, touch, fresh storage. Phone first: 390×844, light, then the same doors in the dark. Then 1280×800, light and dark. Chapter 4 into Test prep · 4.1 (worked proof, a wrong line, the hint, a second miss, a right line, the next step, the memory sheet, the cards). Then §4.2 through to the end card, the §4.3 and §4.4 and §5.1 openers, and the mixed set from the drawer, all 16 cards. No product code was changed. `scrollWidth` was 390 on the phone and 1265 at 1280, both themes. No console errors. This walk is that preview. After it, `6505456` landed on the branch and renamed the mixed status to "Chapters 2, 4, and 5," and corrected four memory lines. The queue still contains the closed chapter. The worked proof, the cold sections, and the missed step are the ones walked below.
+
+### Verdict
+
+ANOTHER BATCH. A proof the student has been shown does fade, and the feedback on that fade is a real hint and a real reason. The worked card itself is below the fold, the sections that are not a proof have no model, a miss is written down and left there, and the end of the set does not say what was learned.
+
+### Worked, then faded
+
+§4.1 is the door that has the shape. Status "Section 4.1. 1 of 6.", flag WORKED EXAMPLE, lede "Try these steps." The item is Theorem 4.1, pages 103–104. Pressing the button lands on "2 of 6.", flag PROOF, the same theorem, one blank: the modulus is at most ___. Step 2 stays off the card until step 1 is filled. That second card is the fade.
+
+The first card is not a model the phone can study. At 390×844, scroll 0, light and dark, the step starts at y = 742 and the screen ends at 844, so the line cuts at `|(x_n − u) + i(y_n − v)| = |(x_n −`. The filled bound and both reasons are below that. "Try these steps" is at y = 1167, on a document 1499px tall. The count says "Step 1 of 2" while step 2 is already printed further down. At 1280×800, scroll 0, light and dark, step 1 and its reason fit (y = 622–734), step 2 starts at y = 742 and runs to 827, and the button is at y = 835 in an 800px window. §4.3 is the same shape one size larger: "Step 1 of 3", the geometric series, the button at y = 1285 on the phone and y = 900 at 1280. The phone's first screen cuts the reason at "The middle terms cancel. This is".
+
+§4.2 has no such first card. It opens "Section 4.2. 1 of 1.", lede "Check, then read the reason.", flag NEXT STEP, and the line is already `N(z) = z − f(z)/f'(z)` simplifies to ___. §4.4 opens "1 of 1.", flag RECALL, a seeded series, "The radius is ___", with Endless already in the chip row. §5.1 opens "1 of 2." on Exercise 2(c), the landing of ±iπ, four choices and no filled example. The chapter page is where the model for that one actually sits: the square, Play, and the idea "the modulus is e^x and the angle is y" at y = 1121, under the practice door at y = 1051.
+
+The mixed door, `#test-prep`, says "Chapters 4 and 5. 1 of 16." and opens on the same Theorem 4.1 worked card. Card 2 is that proof faded. Card 3 is Theorem 4.12 already blank. Then Newton's method, a radius, the ±iπ choice, and card 7: "The map is w = 3z + 1. Find w when z = 2." The book's status on this visit reads "Chapters 1, 2, 3, 6, and 7 are closed." The practice status on that preview says "Chapters 4 and 5." New set keeps Theorem 4.1 first and changes the rest.
+
+### Feedback
+
+On the faded line, `idk` clears the box and prints "Not that one." with hint 1, "Split the one modulus into the two coordinates." On the light phone the hint ends at y = 836. In the dark the same words sit under Check, and the verdict is rgb(255, 129, 120) on rgb(13, 18, 28). A second miss, the product `|x_n−u|·|y_n−v|`, fills the blank with `|x_n−u| + |y_n−v|` and gives the page: "The triangle inequality is the step the book asks you to justify on page 104. Then |i| = 1." The choices on the same theorem are the product, the difference, and `|z_n| − |ζ|`. The first wrong choice shows "The bound adds the two pieces." The second fills the sum, and the reason names both usual wrong turns.
+
+A right answer, `|x_n-u|+|y_n-v|`, fills that same line and says "Yes." Light rgb(38, 112, 42), dark rgb(99, 208, 138). On a first try at 390 the Next step button is at y = 843, bottom 887, past the window. After a miss the page is already at scroll 307 and that button sits at y = 764, on screen, in both themes. At 1280 the first-try button is at y = 667.
+
+Finishing §4.2 by missing twice on each line ends on "Set complete. You retrieved this set. The memory sheet is the short version of the same facts." The line under the title still says "Check, then read the reason." The card does not say that Newton's method lands on the root in one step.
+
+### Retrieval
+
+The miss is stored. After one wrong check, `mv:practice.misses` holds `ch4-4.1-thm-4.1-blank` step 0. Reload draws "Section 4.1. 1 of 6." and the worked card again. The record is unchanged, and the missed line is not the next ask.
+
+Flashcards on a first visit to §4.1 say "1 of 17". The front is "Corollary 4.1". Show the back gives "If ∑|z_n| converges, then ∑ z_n converges." and "Corollary 4.1, page 107." Again stores box 1, due 2026-11-06, one lapse. The next front is Definition 4.1, then 4.2 through 4.8, then Theorem 4.1. The corollary does not come back in those nine cards. The prompt stored on the card is "Corollary 4.1, absolute convergence implies convergence." The screen shows the number.
+
+Midway through step 2 of the proof ("strictly less than ___"), Memory sheet opens on the §4.1 formulas, including `|z_n − ζ| ≤ |x_n − u| + |y_n − v|` and `|z_n − ζ| < ε`. Practice returns to the same empty blank, still "2 of 6."
+
+### Cognitive load
+
+The faded card is one line, the label "Your answer", and Check. Check ends at y = 831 on the phone and y = 788 at 1280. Later steps stay hidden. That is the load that fits.
+
+The worked card prints every step and every reason before the attempt, and the count names one step. The chip row on a generator section is Practice, Memory sheet, Flashcards, New set, Endless, above a question that has no filled example. On §5.1 at 390, scroll 0, the four choices start at y = 784 and the fourth is at y = 940. At 1280 the fourth runs y = 828–872, past 800. Chapter 4's first screen already holds the idea, "A sequence settles when its terms eventually sit in every disk around the limit," at y = 612, with "Test prep · 4.1" at y = 542. The practice page never says that sentence back.
+
+### Ranked
+
+1. **Show the worked proof one step at a time, and keep the button on the screen.** At scroll 0 the phone cuts Theorem 4.1 at the start of the modulus and puts "Try these steps" at y = 1167. At 1280 the button is at y = 835 in an 800px window, and the count says "Step 1 of 2" while step 2 is already on the page. §4.3 puts the button at y = 1285 and y = 900. A first-try Yes on the phone leaves Next step at y = 843. Change: the worked card uses the faded card's frame. One step, the filled line, the reason, and the button, all in the window. The next press shows the next worked step. The last press is the faded blank. The count is the step on the card. The Yes card keeps Next step in view the way the second-miss card already does.
+
+2. **A section that is not a proof still needs a filled example first.** §4.2 opens on the Newton blank, "1 of 1." §4.4 opens on "The radius is ___" with Endless already offered. §5.1 opens on the ±iπ choices, and the fourth choice is past the fold at both widths. The identity those choices depend on is on the chapter page, under the door. Change: the first card of §4.2, §4.4, and §5.1 is that item filled in, reason under it, button "Try this." The blank is the next card. The four choices sit in two rows under the sentence.
+
+3. **The mixed set is one model, then whatever the seed draws, including a closed chapter.** Cards 1 and 2 are Theorem 4.1 worked and faded. Card 3 is Theorem 4.12 already blank. Card 7 is w = 3z + 1, while the book says Chapter 2 is closed and the status says "Chapters 4 and 5." Change: the mix is the chapters the book has open. A section enters as its worked card and then its blanks, the way §4.1 already enters.
+
+4. **Ask the miss again this sitting.** The miss record survives a reload, and the reload starts over at the worked card. Again on Corollary 4.1 is due 2026-11-06, and the next card is Definition 4.1. Change: a missed step is asked once more before Set complete can show. Again puts that card later in today's pile and leaves it due today until Got it.
+
+5. **Deal the cards in book order, and use the gloss as the front.** The §4.1 pile runs Corollary 4.1, Definition 4.1, the rest of the definitions, then Theorem 4.1. The front is the number. The prompt on the card is "absolute convergence implies convergence," and the back is the formal sentence. Change: definition, then theorem, then corollary, in the order the pages go. The front is that prompt. The back stays the sentence.
+
+6. **The last card says the fact, and the formula sheet lives there.** Giving up on §4.2 produces "You retrieved this set." The lede still says "Check, then read the reason." It does not say that the method lands in one step. Opening the sheet during step 2 prints `|z_n − ζ| < ε`, which is the blank, and Practice comes back to that empty blank. Change: Set complete quotes the section's memory line, and the lede is that line. A set finished by second-miss reveals says the lines were shown. The formula list opens from that card's button. While a blank is empty, the help on the card is the hint ladder.
+
+### What to keep
+
+The fade after a shown proof is the right shape. §4.1 goes worked example, then the same proof, one blank, later lines hidden, "Your answer", Check on the screen at both widths. A first miss is "Not that one." plus one hint, in view, in both themes, and the box is empty for a second try. A second miss fills the line and gives one sentence with a page. A hit fills the line and "Yes." is the green token, light and dark. The choices are the real mistakes, and the reason names them. The memory sheet is the formulas, the one-line takeaways, the pages, and Print. Flashcards are one card, front then back, Again and Got it, no flip, and the count stays "1 of 17" then "2 of 17". Chapter 4's first screen has the idea sentence and a 44px "Test prep · 4.1". The book says which chapters are closed. The paper, the type, and the dark theme are the station pages' own. Test 1 and Test 2 stay two rows under the card.
+
+## ux-veteran (practice batch 5)
+
+Branch `cursor/practice-engine`, tip `87c474d`. Preview https://practice-preview.complexanalysis.pages.dev. The practice files on that preview match this tip (`js/practice/mount.js`, `js/practice/render.js`, `css/components.css`). Walked as a student. Headless Chrome, touch, fresh storage. Phone first: 390×844, light, then the same doors in the dark. Then 1280×800, light and dark. The book, the drawer, Chapter 4, Test prep (worked step, proof blank, a miss, the next hint), flashcards, the memory sheet, and §5.1's four choices. No product code was changed. No console errors. No failed requests. `scrollWidth` matched the window on the book, on Test prep, and on the flashcards, at 390 and at 1280, in both themes.
+
+### Verdict
+
+ANOTHER BATCH. The shell is the site's own, and the worked step, the box, and Check now fit. What a thumb still misses is the hint control on the proof, the way back to the chapter, and a count that moves while the card stays put.
+
+### First screen, 390×844
+
+Light, scroll 0. The document title is "The Map · One Point, Two Addresses". The heading is The Book. The name wraps, 180×37. Theme is 44×44. Chapters is 118×44. The where-line is "The book · Chapters 1–7". Continue is 111×44 at y = 291, and it opens `#chapter-4`. The status is "Chapters 1, 2, 3, 6, and 7 are closed. Next is §4.1, Exercise 3. 0 of 10 exercises." Chapter 4, flagged Next, is on the screen. Chapter 3's name is whole on its row. The same screen in the dark is the station paper, rgb(13, 18, 28), with the sentence rgb(233, 237, 245) and the accent button dark on the off-white. At 1280 the eight rows are the sidebar, the Chapters button is gone, and Continue sits with the status.
+
+The drawer is eight rows, each 358×44. Chapters 1, 2, 3, 6, and 7 are text. Chapters 4 and 5 and Test prep are links. Test prep is on that first drawer screen, at y = 382. Tapping a closed row leaves the hash on `#book`.
+
+Chapter 4 opens at the top. The Book is 134×44. "Test prep · 4.1" is 150×44 at y = 544, on the screen, above the idea sentence.
+
+### Test prep, the mixed deck, the blank
+
+`#test-prep` opens at scroll 0. Focus stays on the page. The up control is The Book, 134×44. The line under the title is "Next." The status is "Chapters 4 and 5. 1 of 18." The chips are 44px: Practice, Memory sheet, and Flashcards, then New set and Endless. The card is Worked example, Step 1 of 2, Theorem 4.1. The step, the reason, and Next are on the phone: Next is 324×44, bottom 825 in an 844px window. At 1280, Next is at y = 495 and the five chips share one row. The same card in the dark matches, including "Next." and Endless.
+
+The next press is Step 2 of 2, and the button reads "Try these steps", bottom 696. The blank that follows is "2 of 18.", "Your answer", an input 324×44 at 17px, and Check, bottom 808. Hint is 324×44 with its bottom at 858, 14px past the window. At 1280 that Hint is at y = 583, inside the 800px window. A 390×480 viewport, with the box focused, leaves the input bottom at 413 and Check's bottom at 471.
+
+Typing `idk` and pressing Check scrolls to 85. The status becomes "Chapters 4 and 5. 2 of 19." on that same step. "Not that one." is at y = 729, rgb(179, 38, 30), contrast 6.5 on the white card and 5.9 on the paper. In the dark it is rgb(255, 129, 120), contrast 7.7 on rgb(13, 18, 28). The hint, "Split the one modulus into the two coordinates.", ends at y = 836. Next hint is at y = 841, bottom 885, so 3px of the 44px button shows. The dark phone does the same. At 1280, Next hint is at y = 669, inside the window, and the status is still "2 of 19." Pressing Endless on that proof sets the chip pressed and leaves the status, the line, and the card as they were. After Next hint, the hint button is gone. §4.1's own door does not show Endless. §5.1 opens on a worked card, "Try these steps" at bottom 692, then four choices in two columns, each 44px tall, all inside 390×844 and inside 1280×800.
+
+### Flashcards, the sheet, Back
+
+Flashcards, first visit, scroll 0. The line is "Show the back." The card says New and "1 of 36". The front is "limit of a sequence". The source line is "Definition 4.1, page 103", 36px tall. Show the back is 324×44. The back is the ε-N sentence. The line becomes "Again, or got it." Again and Got it are 158×44, side by side. The page is 844px, so the card and the two test rows fill the phone. The same card in the dark matches. No flip.
+
+The memory sheet's line, "The formulas and the one-line versions.", is said once. The status is "The sheet for this set. It prints without the menu." Print is 358×44. The headings run 4.1, 4.2, 4.3, 4.4, 5.1. The first screen fits. Lower down, the partial-sum identity is a 386px KaTeX line whose right edge is at 438. The sheet's client width is 390 and its scroll width is 438, so the phone pans sideways. At 1280 the sheet's scroll width is 1280.
+
+Browser Back agrees with the scroll you left. The book at 640, then §4.1, then Back, returns to `#book` at 640. Chapter 4 at 500, then Test prep · 4.1, then Back, returns to `#chapter-4` at 500. The arrow on that section page is a different control: "The Book", 134×44, href `#book`. From the book, Test prep, then Flashcards, then Back, returns to `#book`. The Practice chip is what returns to the deck.
+
+### Ranked
+
+1. **Next hint is off the phone, and Hint is already short of the window.** On the Theorem 4.1 blank at 390×844, light and dark, Hint's bottom is 858. After `idk`, the hint sentence ends at 836 and Next hint's bottom is 885, with 3px of the button in the window. At 1280 both buttons sit inside 800. Change: Hint shares the screen with Check. A miss scrolls until Next hint's bottom is above the window.
+
+2. **The section arrow skips the chapter.** "Test prep · 4.1" is 150×44 on Chapter 4's first screen. The page it opens has one up control, "The Book", and that control opens `#book`. Browser Back returns to `#chapter-4` at the scroll the chapter had (500, and 640 on a second pass). Change: a section set's up control reads Chapter 4 and links to `#chapter-4`. The mixed set keeps The Book.
+
+3. **A miss changes the count on the card that is still open.** "2 of 18" becomes "2 of 19" on the same proof step, on the phone and at 1280, in both themes. The card does not say the step comes back. Change: the count waits until the next card. One line under the hint says this step comes back once.
+
+4. **The first line is "Next.", and Endless is on a proof.** At scroll 0, 390 and 1280, light and dark, the line under Test prep is the word "Next." The card is a worked example and the button says Next too. Endless is 83×44 on that card. Pressing it marks the chip and leaves the proof as it was. §4.1 does not show the chip. Change: a worked step's line says to read the step. Endless shows on a generated card only.
+
+5. **One formula widens the memory sheet.** At 390 the sheet's client width is 390 and its scroll width is 438, light and dark. The partial-sum identity is 386px wide, right edge 438, at y = 4192. The book, the practice card, and the flashcards stay at 390. At 1280 the sheet matches the window. Change: that formula wraps, or it scrolls inside the sheet. The page width stays 390.
+
+6. **The landing is titled The Map.** The first screen's heading is The Book. The document title is "The Map · One Point, Two Addresses", and the route status announces that station name. Change: when the landing draws the book, the document title and the route status say The Book.
+
+### What to keep
+
+The book is one status sentence, one Continue at 44px, and Chapter 4 on the phone, in both themes. A closed chapter is text, in the drawer and on the page, and Chapter 3's name is whole. At 1280 the same eight rows are the sidebar, with Test prep marked on its page. The name wraps. The where-line on the book and on the chapter is the small-caps line, contrast 6.2 on the light paper and 8.6 in the dark.
+
+Test prep lands at scroll 0, and the answer box does not take focus. The worked step, its reason, and Next fit in 390×844 and in 1280×800, light and dark. The blank is one line, "Your answer", a 44px box at 17px, and Check on the screen. A short viewport keeps the box and Check on screen. "Not that one." uses the danger token, and the hint sentence is one line. The extra hint removes the button once it is the last one. §5.1's four choices are 44px, in two columns, on the screen at both widths. Test 1 and Test 2 are 44px rows under the card.
+
+Flashcards are one card. The front is the gloss, the count is "1 of 36" on the card, the back is the sentence, and Again and Got it are 44px. The line matches the buttons. The memory sheet starts at 4.1, says its line once, and Print is 44px. Browser Back restores the book at 640 and the chapter at 500.
+
+The paper, the serif title, the sans text, the accent button, and the dark off-white primary are the station pages. The source line stays the small textbook link the book already uses. No emoji, no gradient, no glow. The four teaching colours stay on the pictures.
+
+## skeptical-student (practice batch 5)
+
+Branch `cursor/practice-engine`, tip `87c474d`. Preview https://practice-preview.complexanalysis.pages.dev. Fresh storage. Headless Chrome, touch, 390×844 light, then the same doors in the dark, then 1280×800 light and dark. No product code was changed. No console errors. No failed requests. `scrollWidth` matched the window at 390 and at 1280, both themes, on the book, the chapter, and the practice cards. The mixed memory sheet is the exception: 438 on the phone, both themes.
+
+I have never seen this course. I opened the link tired, on a phone, and tried to answer three things: what am I being asked, what do I do, and what did I just learn?
+
+### Verdict
+
+ANOTHER BATCH. I can press Continue, I can press Check, and one sentence on Chapter 4 actually teaches. The practice card then asks me to finish a line of symbols, and the only instruction on that card is "Next."
+
+### Cold open
+
+390×844, light, scroll 0. The name wraps. The title is The Book. Continue is 111×44 at y = 291 and goes to `#chapter-4`. The status says "Chapters 1, 2, 3, 6, and 7 are closed. Next is §4.1, Exercise 3. 0 of 10 exercises." Chapter 4, flagged Next, is on that screen. The same words in the dark: paper rgb(13, 18, 28), title rgb(233, 237, 245). At 1280 the eight rows are the sidebar, Continue is at y = 259, and Chapter 3's name is whole. A closed row is a span. Tapping "1 Complex Numbers" leaves the hash empty.
+
+The drawer row is "Test prep", 358×44 at y = 382, on the first phone screen. I know this is a book, I know some chapters are closed, and I know the next exercise number. I do not know what a complex number is. Continue is the thing to press.
+
+Continue opens Chapter 4 at scroll 0. The Book is 134×44. The lede says to tick an exercise when I have worked it. "Test prep · 4.1" is 150×44 at y = 542. Under it, at y = 612, the one sentence I understood: "A sequence settles when its terms eventually sit in every disk around the limit." The status still says the next thing is §4.1, Exercise 3. That title is at y = 768. The citation under it runs y = 814–851, past an 844px window, and the question ("Suppose that the limit is z_0…") is below the citation. The disk chip is at y = 920. The button on the screen opens the proof.
+
+### The card
+
+`#test-prep-4-4-1`, scroll 0, light and dark, and the same card at 1280. Status "Section 4.1. 1 of 6." The lede is "Next." The flag is WORKED EXAMPLE, Step 1 of 2. The line is already filled: given ε > 0, choose N and M, and the modulus is at most |x_n − u| + |y_n − v|. Each formula is one piece. The long modulus sits on one line, y = 628 on the phone and y = 396 at 1280. Next is 44px, bottom 825 on the phone and bottom 539 at 1280, inside both windows, both themes. Step 2 says the sum is strictly less than ε, and the lede becomes "Try these steps."
+
+I still do not know what ε, N, or ζ are. The disk sentence from the chapter is not on this card. "Next." does not tell me to read the filled line.
+
+The blank is "2 of 6.", one box labelled "Your answer", Check at y = 764 (bottom 808). Hint is 44px at y = 814, bottom 858, so the last 14px is past the phone, light and dark. At 1280 Hint is at y = 583, inside the 800px window. I typed `idk`. The count became "2 of 7." "Not that one." is rgb(179, 38, 30), contrast 6.5 on the white card. The hint "Split the one modulus into the two coordinates." ends at y = 836, on the phone. In the dark the same words end at y = 836, and "Not that one." is rgb(255, 129, 120) on the card rgb(21, 28, 43), contrast 7.0. Next hint adds "Bound |A+B| by |A|+|B|." and the button is gone. A second miss fills the blank and the reason names the triangle inequality, page 104. A right answer, `|x_n-u|+|y_n-v|`, fills the same blank, says "Yes." in rgb(38, 112, 42), contrast 6.1, and Next step ends at y = 835.
+
+I can tell I was wrong. I cannot tell what the line was asking, beyond "finish the formula."
+
+### The other doors
+
+§4.2 opens "1 of 2.", lede "Next.", Newton's method, and the filled line N(z) simplifies to −b/a. The title asks how many iterations reach the root. That answer is step 2: "1, or 0 if the guess is already the root." Step 1 is the algebra. Typing `idk` on the blank changes "2 of 2" to "2 of 3." Reload keeps the miss (`pending: true`) and opens "1 of 3." on the worked card, lede "Next.", the −b/a line already filled. The blank I missed is not the card on screen.
+
+Giving up through the reasks ends on a real sentence. The lede is "These lines were shown. For f(z) = az + b, Newton's method reaches −b/a in one step, or in zero steps if the guess is already the root. Exercise 3, page 117." The card says "These lines were shown." and then the same sentence. Open the memory sheet is 44px at y = 536. That sentence is the thing I learned. It is said twice, and the worked card never led with it.
+
+§4.4, light and dark, both widths. Lede "Try these steps." The filled line is "The radius is 5." The reason says dividing by (−4 − 3i)^n makes the radius |−4 − 3i|, and the centre does not change it. A second seed's reason names |−2i| and still does not say the number. Endless is on this card. On the mixed set, Endless is on the Theorem 4.1 worked card. Pressing it sets `aria-pressed` to true. The card stays "1 of 18.", lede "Next."
+
+§5.1 is the door I could do. The worked line says both points land at −1, and they meet at the left-hand point of the unit circle. The blank is four choices, 44px, two rows: on the phone y = 526 and y = 578, at 1280 y = 426 and y = 478, light and dark. Hint is on the screen. I could tap −1 because the card before said −1.
+
+The mixed set, fresh storage, is "Chapters 4 and 5. 1 of 18." Chapter 2 is not in that line. The lede is "Next." The first card is the same Theorem 4.1 worked step.
+
+Flashcards, first visit to the mixed set: "1 of 36", flag NEW, front "limit of a sequence", source "Definition 4.1, page 103." Show the back is 44px. The back is the ε sentence. Got it. The next front is "real and imaginary parts", then "bounded sequence", then "convergent sequences are bounded", and the count is "2 of 36", "3 of 36", "4 of 36". The lede is "Show the back." I know the name of the card. The back is the sentence I cannot use yet.
+
+The memory sheet's lede is "The formulas and the one-line versions." Print is 44px. While the Theorem 4.1 blank is empty, the triangle-inequality formula is off the §4.1 sheet. The mixed sheet, the one under Test prep, is 438px wide on a 390px phone, light and dark. The wide line is 1/(1 − z) = 1 + z + ⋯ + z^{n−1} + z^n/(1 − z), a 386px formula from x = 52 to x = 438. At 1280 that sheet's `scrollWidth` is 1280.
+
+### What to keep
+
+The book is one status sentence, one Continue at 44px, and Chapter 4 on the phone screen, light and dark. A closed chapter is text. Test prep is a 44px row on the first drawer screen, and at 1280 it is in the sidebar. Continue opens Chapter 4 at the top. The idea sentence is on that screen, and "Test prep · 4.1" is 44px.
+
+The practice card is one step. The formula stays one piece, in the question and in the filled answer, at both widths. Check is on the screen. A miss paints "Not that one." and one hint on the screen, light and dark, and the next hint adds a line. A hit fills the blank and "Yes." is the green token. §4.2, §4.4, and §5.1 open on a filled line. The §5.1 choices sit in two rows, on the screen, both widths, both themes. The mixed status names chapters 4 and 5. Flashcards are one card, the plain name then the sentence, in book order, "1 of 36" then "2 of 36". The live answer stays off the section sheet. Set complete does say the fact. The paper, the type, and the dark theme are the station pages.
+
+### Ranked fixes
+
+1. **Say what the line is, in the words from the chapter.** On the phone and at 1280, light and dark, the worked card's lede is "Next." and the step is the ε line. Chapter 4 already has the sentence, at y = 612: the terms sit in every disk around the limit. The hint after `idk` is "Split the one modulus into the two coordinates." Change: the lede is "Read this filled line." Under the title, that disk sentence. The symbols stay the step.
+
+2. **A miss adds a question, and a reload starts over.** On §4.2, `idk` turns "2 of 2" into "2 of 3." Reload opens "1 of 3.", lede "Next.", on the filled −b/a line. The missed blank is still pending and is not the card on screen. The theorem does the same thing: "2 of 6" becomes "2 of 7." Change: the count stays "2 of 2", with one line that this step comes back at the end. Reload opens on that blank.
+
+3. **The status names Exercise 3, and the button opens the proof.** The status is "Next is §4.1, Exercise 3." "Test prep · 4.1" is at y = 542. The exercise title is at y = 768, and the question is below the citation that ends at y = 851. The button opens "Given ε > 0…". Change: the exercise the status names is on the screen, question included. The practice button says it is the proof.
+
+4. **The radius card gives two answers, and Endless does nothing there.** §4.4 says "The radius is 5." The reason says the radius is |−4 − 3i|. A second seed's reason says the radius is |−2i| and still omits the number. Endless is on that card and on the mixed worked proof. Pressing it leaves "1 of 18." and "Next." Change: the reason ends "|−4 − 3i| = 5." Endless shows on a generated blank.
+
+5. **The mixed sheet is wider than the phone.** Memory sheet at 390, light and dark, `scrollWidth` 438. The geometric line runs to x = 438. At 1280 the sheet fits. Change: that formula wraps inside the card. The phone stays 390 wide.
+
+6. **The end says the one sentence twice.** After giving up on §4.2, the lede is the Newton sentence, and the card repeats "These lines were shown" and the same sentence. The worked card's title asks how many iterations, and that answer is step 2, under a lede that says "Next." Change: the sentence is the lede, once. The card is the heading and "Open the memory sheet." The filled line that answers the title is the first line of the worked card.
+
+## Practice engine, batch 6
+
+Branch `cursor/practice-engine`. Headless Chrome, touch, fresh storage, 390×844 and 1280×800, light and dark. The landing title and the route status say The Book. Chapter 4 puts Exercise 3's question on the phone (y 772–826) and the section button reads "Test prep · the proof". A worked proof's line is "Read this filled line." and the disk sentence sits under the title. Next on that card ends at 840 in the 844px window. Hint sits beside Check (both bottom 785). After `idk`, the count stays "2 of 18." and "This step comes back." is under the hint. Next hint ends at 835. A reload of §4.2 opens the missed blank as "1 of 3.", not the worked card. Endless is hidden on the worked proof and on the radius card. The radius reason ends with the modulus equal to the number. The memory sheet's page width is 390. The Corollary 4.3 identity and its takeaway scroll inside the line. Set complete says the Newton sentence once, in the lede. The card is the heading and "Open the memory sheet." Theorem 4.9 stays the connectedness statement on page 113. Theorem 4.11's flash stays the inequality on page 116. The sheet keeps the cardioid reading.
+
+Left for a later batch: `#chapter-2` is still the stub, Chapters 1, 3, 6, and 7 still have no practice file, and the playground doors still say Story Map. A section set's up control still says The Book.
+
+## unslop (practice batch 6)
+
+Branch `cursor/practice-engine`, tip `35d7f53`. Preview https://practice-preview.complexanalysis.pages.dev. `js/practice/mount.js` and `js/practice/render.js` on that preview match this tip. Walked as a student. Headless Chrome, touch, fresh storage. Phone first: 390×844, light, then the same doors in the dark. Then 1280×800, light and dark. The book, Chapter 4, the worked proof, the blank, a miss, Newton through Set complete, the radius card, the §4.3 memory sheet, and the mixed set. No product code was changed. `scrollWidth` matched the window at 390 and at 1280, both themes, on the book, the practice cards, and the memory sheet. No console errors.
+
+The page is a textbook: calm, exact, paper. The chrome stays the paper, the serif title, and one accent button. The moment is the filled line. The small-caps kicker and the four teaching colours stay with the shell.
+
+### Verdict
+
+ANOTHER BATCH. The seven things this batch named are on the screen, and the shell is already this site. What is left is six cuts of copy and hierarchy. One batch, then these surfaces can rest.
+
+### What the hand meets
+
+390×844, light, scroll 0. The document title is "The Book · One Point, Two Addresses". The name wraps. Continue is 111×44 at y = 291. The status names §4.1, Exercise 3. Chapter 4 is on the screen. The same screen in the dark is the station paper, the sentence rgb(233, 237, 245), and Continue dark on the off-white accent rgb(207, 216, 234). At 1280 the eight rows are the sidebar, and Continue sits with the status.
+
+Chapter 4, scroll 0. "Test prep · the proof" is 204×44 at y = 542 on the phone and y = 413 at 1280. The disk sentence sits under it. Exercise 3's question ends at y = 826 on the phone, inside the 844px window, and at y = 626 at 1280. Further down, §4.3's button reads "Test prep · the proof" again (y = 3430 on the phone, y = 2518 at 1280). §4.2 and §4.4 read "Test prep · 4.2" and "Test prep · 4.4", both 150×44.
+
+`#test-prep-4-4-1`, scroll 0, both themes. The lede is "Read this filled line.", muted, 16.8px, light rgb(81, 91, 108) and dark rgb(166, 176, 195). The status is "Section 4.1. 1 of 6." The card is Worked example, Step 1 of 2. The disk sentence sits under the theorem in that same muted colour. The modulus is one piece, 283×25. The filled bound is one piece, 162×23, weight 700. Next is 324×44, bottom 840 on the phone. At 1280 Next is at y = 464. Endless is hidden. Step 2 of 2 keeps the line filled, and the lede and the button both say "Try these steps".
+
+The blank is "2 of 6.", the label "Your answer", and Check beside Hint. On the phone both are 158×44, bottom 785. Check is the accent, rgb(47, 62, 92) in the light and rgb(207, 216, 234) in the dark. Hint is the quiet button. At 1280 each is 455×44.
+
+Typing `idk` leaves the count at "Section 4.1. 2 of 6." "Not that one." is weight 700, rgb(179, 38, 30) in the light and rgb(255, 129, 120) in the dark. The hint and "This step comes back." share the note, the same 17px, and "This step comes back." uses the primary text colour. Next hint is 324×44, bottom 835 on the phone and y = 668 at 1280. A reload of §4.2 after the same miss opens that missed blank: "Section 4.2. 1 of 3.", the box on the screen, the worked card gone.
+
+Newton's first card says "Read this filled line." The filled line is "1, or 0 if the guess is already the root." The next worked step is still filled, and the lede and the button both say "Try these steps". Set complete puts the Newton sentence in the lede once: 358×105 on the phone, 595×52 at 1280, muted. The status is "Set complete." The card heading is "Set complete". The button is "Open the memory sheet", on the screen in both windows, both themes.
+
+The radius card is Step 1 of 1. The lede is "Try these steps." The button is "Try these steps". The reason ends "|−20 + 21i| = 29." Endless is hidden on that worked card. On the blank it is 83×44 beside New set, y = 283 on the phone and y = 243 at 1280, on the chip row. After the answer is filled, "This step comes back." sits under the reason, and "Generate another" wraps onto two lines in a 158×44 button beside Next.
+
+The §4.3 sheet keeps the page at 390. The corollary formula row is 313px in a 305px line. The takeaway is 386px in a 305px line, both themes. The visible words cut the last term and then print the page twice: "… + z" and, under it, ". Corollary 4.3, page 119. (Corollary 4.3, page 119)". At 1280 that takeaway fits, 899/899, and the cite is still there twice. The same parenthesis follows Theorem 4.12, Exercise 1(b), and Exercise 2.
+
+The mixed set opens "Chapters 4 and 5. 1 of 22.", lede "Read this filled line.", Endless hidden, Next bottom 840.
+
+### Ranked cuts
+
+1. **The corollary line reads as a shorter formula, and the page is named twice.** On the phone, light and dark, the takeaway's row is 305px wide and 386px long. What shows is `1/(1−z) = 1 + z + ··· + z^{n−1} + z`, then a new line ". Corollary 4.3, page 119. (Corollary 4.3, page 119)". The fraction `z^n/(1−z)` is off the edge, and the period sits under the cut as if the identity had ended. The formula row above it is 313px in that same 305px line. At 1280 the takeaway fits on one line and still ends "Corollary 4.3, page 119. (Corollary 4.3, page 119)". Theorem 4.12, Exercise 1(b), and Exercise 2 on that sheet do the same doubled cite. The page itself stays 390 wide. Change: the cite is the parenthesis, once. The identity stays whole on the line you can read. The words after a formula do not wrap under a cut term. The formula row fits in the card.
+
+2. **A filled line says "Try these steps." twice.** On Theorem 4.1 step 2, on Newton's second worked step, and on the radius card (Step 1 of 1), the lede is "Try these steps." and the button is "Try these steps", at 390 and at 1280, light and dark. The line is still filled. The radius card never says "Read this filled line." Step 1 of the proof does: the lede is that sentence, and the button says Next. Change: every worked step's lede is "Read this filled line." The button is the only "Try these steps", and only on the last worked step.
+
+3. **"Set complete" is the status and the heading.** After §4.2, the Newton sentence is the lede, once, muted, in both themes. On the phone it is three lines, 105px. At 1280 it is two lines, 52px. Under it the status says "Set complete." The card heading says "Set complete" again, then "Open the memory sheet". Change: the status stays "Section 4.2." The card heading is the one "Set complete". The lede stays the sentence. The button stays.
+
+4. **"This step comes back." sits in the hint's voice.** On the Theorem 4.1 miss the count stays "2 of 6.", and the line is in the hint note at 17px in the primary text colour, under "Split the one modulus into the two coordinates." Next hint ends at 835 on the phone and at 712 at 1280. On the revealed radius card the answer is already "29", the reason already ends with the modulus equal to 29, and "This step comes back." is under that reason, both widths, both themes. Change: the line is muted, under the hint, on the first miss only. The revealed card is the filled answer, the reason, and Next.
+
+5. **Hint grows to half the card.** On the phone, Check and Hint are a fair pair, 158×44, bottom 785, and the accent is on Check. At 1280 each is 455×44, so Hint is a second slab. After the miss, Check becomes the full card (324px on the phone, 918px at 1280) and Next hint is a second full-width button. On the revealed radius card, "Generate another" wraps onto two lines inside 158×44 beside Next. Change: Hint, Next hint, and Generate another stay on the row, one line, as wide as their words, at least 44px tall. Check and Next keep the accent and the rest of the row.
+
+6. **Two sections share one button name.** §4.1 and §4.3 both say "Test prep · the proof", 204×44. §4.2 and §4.4 say "Test prep · 4.2" and "Test prep · 4.4", 150×44. The §4.1 button is on Chapter 4's first screen. The §4.3 button is the same words again, at y = 3430 on the phone and y = 2518 at 1280. Change: "Proof · 4.1" and "Proof · 4.3".
+
+### Keep
+
+The book is one status sentence, one Continue at 44px, and Chapter 4 on the phone, in both themes. The document title says The Book. A closed chapter is text. At 1280 the same rows are the sidebar.
+
+The worked proof opens on one filled step. "Read this filled line." is the lede on that first step. The disk sentence sits under the theorem, muted. The modulus and the filled bound are each one piece. Next fits, bottom 840 in the 844px window and at y = 464 at 1280. Newton's first filled line is the answer the title asks, "1, or 0 if the guess is already the root."
+
+The blank is one line, "Your answer", a box, and Check on the screen. Hint is beside Check on the phone, 44px, inside the window. A miss leaves the count where it was and paints "Not that one." in the danger token, light and dark. Next hint stays inside 844 and inside 800. A reload of §4.2 opens the missed blank.
+
+Endless is hidden on the worked proof, on the mixed proof, and on the radius worked card. It shows on the generated blank, 83×44, beside New set. The radius reason ends with the modulus equal to the number. The sheet's page width is the window, 390 and 1280. Set complete says the Newton sentence once, in the lede, and "Open the memory sheet" is on the screen. Exercise 3's question is on Chapter 4's first screen, ending at y = 826 on the phone and y = 626 at 1280.
+
+The paper, the serif title, the sans text, the accent button, and the dark off-white primary are the station pages. No emoji, no gradient, no glow. The four teaching colours stay on the pictures. Nothing here asks for a new type, a second clock, or a hero.
+
+## ux-veteran (practice batch 6)
+
+Branch `cursor/practice-engine`, tip `35d7f53`. Preview https://practice-preview.complexanalysis.pages.dev. The practice files on that preview match this tip. Walked as a student. Headless Chrome, touch, fresh storage. Phone first: 390×844, light, then the same doors in the dark. Then 1280×800, light and dark. The book, the drawer, Chapter 4, Chapter 5, Test prep (worked step, the blank, a miss, a hit), §4.2 through §5.1, the memory sheet, flashcards, and the disk the exercise opens. No product code was changed. No console errors. No failed requests. `scrollWidth` matched the window on the book, on both chapters, on Test prep, and on the sheet, at 390 and at 1280, both themes.
+
+### Verdict
+
+ANOTHER BATCH. The phone can start, check, and read the hint. The way back from a section still skips the chapter, the sheet hides the end of one identity, and Chapter 5's next action sits past the first screen.
+
+### First screen, 390×844
+
+Light, scroll 0. The document title is "The Book · One Point, Two Addresses". The route status says The Book. The name wraps, 180×37. Theme is 44×44. Chapters is 118×44. The where-line is "The book · Chapters 1–7", 12.48px, contrast 6.2 on the paper. Continue is 111×44 at y = 291 and opens `#chapter-4`. The status is "Chapters 1, 2, 3, 6, and 7 are closed. Next is §4.1, Exercise 3. 0 of 10 exercises." Chapter 3's name is whole, on two lines, 55px tall. Chapter 4, flagged Next, starts at y = 621, with 4.1 on the screen. The same screen in the dark is the station paper, rgb(13, 18, 28), title rgb(233, 237, 245), contrast 16, where-line contrast 8.6, Continue dark on the off-white accent.
+
+The drawer is eight rows, each 358×44. Chapters 1, 2, 3, 6, and 7 are text. Chapters 4 and 5 and Test prep are links. Test prep is on that first screen, at y = 382. Opened from Chapter 4, the drawer marks Chapter 4. At 1280 the Chapters button is gone, the same eight rows are the sidebar, Chapter 3's name wraps and stays whole, and Test prep is marked on its page.
+
+Chapter 4 opens at the top. The Book is 134×44. "Test prep · the proof" is 204×44 at y = 542. The disk sentence sits under it, y = 586–665. Exercise 3's question runs y = 772–826, inside the 844px window, light and dark. At 1280 that question, the disk chip, Show the hint, and Tick are all inside the 800px window.
+
+### The card
+
+`#test-prep`, scroll 0, light and dark. Focus stays off the answer box. The line is "Read this filled line." The card is Worked example, Step 1 of 2, Theorem 4.1, and the disk sentence is under the title. Next is 324×44, bottom 840 in the 844px window, and bottom 534 at 1280. §4.3's Next ends at 740. §4.4 and §5.1 open on a filled line, "Try these steps" inside both windows. Endless is hidden on those worked cards and shows on the radius blank, 44px.
+
+The blank puts Hint beside Check. Both are 158×44, bottom 785, on the phone, light and dark. At 1280 each is 455×44. The input is 44px tall. A 390×480 viewport, with the box focused, leaves the input bottom at 299 and both buttons' bottom at 354.
+
+Typing `idk` and pressing Check scrolls to 134. The status stays "Chapters 4 and 5. 2 of 18." "Not that one." is on the card. In the dark it is rgb(255, 129, 120), contrast 7 on the card rgb(21, 28, 43) and 7.7 on the paper. "This step comes back." sits under the hint. Next hint is 324×44, bottom 835. On §4.2 the same button ends at 836, and the count stays "2 of 2." At 1280 the miss does not scroll, and Next hint ends at 712. A hit on `|x_n-u|+|y_n-v|` fills the line, says "Yes.", and Next step ends at 828 on the phone and 542 at 1280.
+
+§5.1's four choices are 158×44 in two columns, and Hint under them is 324×44, bottom 648, inside 390×844 and inside 1280×800. Flashcards are one card: "limit of a sequence", "1 of 36", Show the back 324×44. The sheet's page is 390 wide. Print is 358×44.
+
+Browser Back on the phone puts the book back at 640 and Chapter 4 back at 500.
+
+### Ranked
+
+1. **A section's up control skips the chapter.** On `#test-prep-4-4-1`, `#test-prep-4-4-2`, `#test-prep-4-4-3`, `#test-prep-4-4-4`, and `#test-prep-5-5-1`, the up control is "The Book", 134×44, href `#book`, light and dark, both widths. The where-line is `display: none`. The status is the only line that names the section. The mixed set's up control is The Book, and that one should stay. Browser Back is the control that returns to the chapter. Change: a section set's up control reads Chapter 4 or Chapter 5 and links to that chapter.
+
+2. **The sheet hides the end of the partial-sum identity.** At 390, light, the page `scrollWidth` is 390. The Corollary 4.3 takeaway is a line whose scroll width is 386 and whose box is 305. What the phone shows is "1/(1 − z) = 1 + z + ⋯ + z^{n−1} + z" and then the citation, and the citation is on the line twice: "Corollary 4.3, page 119. (Corollary 4.3, page 119)". The rest of the identity sits past that box. At 1280 the same sheet fits, with no overflowing row. Change: that identity wraps at a plus, in the line, so the last term is on the page. The corollary is named once. The page stays 390 wide.
+
+3. **The picture chip and the way back from it are under 44px.** On Chapter 4, "The disk in Definition 4.1" is 205×36. On the phone it starts at y = 834, so the 844px window shows the top 10px, under a question that ends at 826. At 1280 the same chip is 36px tall and fully on screen, above Show the hint and Tick, which are 44px. Opening it lands on "A Sequence Has a Fate". The return there is "§4.1, Exercise 3", 121×23, at y = 302 on the phone and y = 262 at 1280. The Book on that page is 134×44 at y = 2632. The two sequence chips are 44px and on the phone screen. Change: the exercise chip and that return link are the 44px station link. The chip's bottom sits inside the 844 window. The textbook line under the title stays the small citation.
+
+4. **Chapter 5's next action is past the first screen.** At 390, light and dark, Play is 70×44 and ends at 684, and the lede ends at 786. The status "Next is §5.1, Exercise 1, page 135. 0 of 2 exercises." starts at y = 843. "Test prep · 5.1" is 150×44 at y = 1051. At 1280×800 Play ends at 792, the lede starts at 816, and the practice door is at y = 1009. Chapter 4's first screen, at both widths, holds the proof button, the disk sentence, and Exercise 3's question. Change: the square stays, and it shortens so the claim, Play, the status, and "Test prep · 5.1" sit inside 390×844 and inside 1280×800.
+
+5. **A reload walks backward into the worked line.** On §4.2, `idk` leaves the count at "2 of 2." and prints "This step comes back." Reload opens the missed blank as "Section 4.2. 1 of 3.", with the box empty. Giving up on that blank and pressing Next lands on "2 of 3.", Worked example, "Read this filled line.", the iteration count already filled. Change: the reload stays on the missed blank, and the next card is the step that was still ahead. The worked line stays behind. The count is the cards still ahead.
+
+### What to keep
+
+The book is one status sentence, one Continue at 44px, and Chapter 4 on the phone, in both themes. A closed chapter is text, in the drawer and on the page, and Chapter 3's name is whole. At 1280 the same eight rows are the sidebar. The name wraps. The where-line is the small-caps line, contrast 6.2 on the light paper and 8.6 in the dark. The landing title and the route status say The Book.
+
+Test prep lands at scroll 0, and the answer box does not take focus. The worked line says "Read this filled line.", the disk sentence sits under the theorem, and Next fits: bottom 840 on the phone, 534 at 1280, light and dark. Hint shares the row with Check, both 44px, inside 390×844, 1280×800, and a 480px-tall viewport. A miss keeps the count, says "This step comes back.", and puts Next hint in the window, bottom 835 on the phone. "Not that one." is the danger token. A hit fills the line, "Yes." shows, and Next step ends at 828. Endless is on the generated blank. §5.1's four choices are 44px, in two columns, on the screen at both widths. Test 1 and Test 2 are the rows under the card.
+
+Flashcards are one card. The front is the gloss, the count is on the card, and Show the back is 44px. The memory sheet's page is 390 wide, the lede is said once, and Print is 44px. Browser Back restores the book at 640 and the chapter at 500.
+
+The paper, the serif title, the sans text, the accent button, and the dark off-white primary are the station pages, on the book, on Chapter 4, on Chapter 5, and on the practice card. The source line stays the small textbook link. No emoji, no gradient, no glow. The four teaching colours stay on the pictures.
+
+## Practice engine, batch 7
+
+Branch `cursor/practice-engine`. Headless Chrome, touch, fresh storage, 390×844 and 1280×800, light and dark. No sideways scroll (`scrollWidth` matched the window at 390 and 1265). No console errors on those pages.
+
+A section set's up control is Chapter 4 or Chapter 5 (`#chapter-4`, `#chapter-5`). The mixed set stays The Book. §4.1 and §4.3 read "Proof · 4.1" and "Proof · 4.3", 118×44. Every worked step's lede is "Read this filled line." The button says "Try these steps" only on the last worked step. Hint is 71×44 beside Check at 1280, one line. Next hint is 114×44. Generate another is 185×44, one line, and Next keeps the accent. A first miss keeps the count and puts "This step comes back." in the muted colour under the hint. The revealed card is the filled answer, the reason, and Next.
+
+Set complete: the status is "Section 4.2." The card heading is "Set complete". The Newton sentence is the lede, once. The button is "Open the memory sheet."
+
+A reload of §4.2 opens the missed blank, "Section 4.2. 1 of 2.", kind Next step. Next lands on the step still ahead, not the worked line. The worked line stays behind those two cards.
+
+The §4.3 sheet stays 390 wide. Corollary 4.3 breaks at a plus, so the last term is its own line, and the cite is the parenthesis once: "(Corollary 4.3, page 119)". Theorem 4.12, Exercise 1(b), and Exercise 2 are named once the same way. The formula row fits the card (305/305).
+
+Chapter 4's picture chip is 205×44 and ends at y = 822, inside the 844 window, under Exercise 3's question. The return on that picture is "§4.1, Exercise 3", 180×44. The textbook line stays 13px. Chapter 5's first screen holds the claim, Play, the status, and "Test prep · 5.1": the button ends at 830 on the phone and at 782 in the 800px window, light and dark. The square is 358px on the phone and 384px at 1280.
+
+Playground doors say The Book and open `#book`. Theorem 4.9 stays connectedness on page 113. Theorem 4.11's flash stays the inequality on page 116. The sheet keeps the cardioid.
+
+Deferred: Chapters 1, 3, 6, and 7 still have no practice file, and `#chapter-2` is still the stub. Those pages belong to the chapter loops. This track does not register them. `ch2.json` stays the generator the mixed set can use once that chapter is open.
+
+## taste-skill (practice batch 7)
+
+Branch `cursor/practice-engine`, tip `3234354`. Preview https://practice-preview.complexanalysis.pages.dev. `js/practice/render.js`, `js/practice/mount.js`, and `js/stations/book.js` on that preview match this tip. Walked as a student. Headless Chrome, touch, fresh storage. Phone first: 390×844, light, then the same doors in the dark. Then 1280×800, light and dark. Chapter 4, Chapter 5, the worked proof, the blank, a miss, a reveal, Newton through Set complete, the radius card, and the §4.3 memory sheet. No product code was changed. `scrollWidth` matched the window at 390 and at 1280, both themes, on those pages. No console errors.
+
+The page is a working screen: one question, the line that answers it, one accent button. The shell stays the paper, the serif title, the sans text, and the four teaching colours on the picture. Grey is the secondary note. The accent is the one next action.
+
+### Verdict
+
+ANOTHER BATCH. Five of the six things this batch named read in the right order, at both widths, in both themes. The sixth is the right sentence in the right colour, and on the phone's first proof it sits under the window. One scroll, then these surfaces can rest.
+
+### What the hand meets
+
+390×844, light, scroll 0. Chapter 4. "Proof · 4.1" is 118×44 at y = 494. The disk sentence sits under it, y = 538–617. Exercise 3's question is on that screen, and "The disk in Definition 4.1" is 205×44, bottom 822, inside the 844 window. "Proof · 4.3" is the same 118×44 further down. "Test prep · 4.2" and "Test prep · 4.4" stay 150×44. The same boxes in the dark. At 1280 the proof button is at y = 413 and the disk chip ends at 678, inside the 800 window.
+
+`#test-prep-4-4-1`, scroll 0. The lede is "Read this filled line.", muted, 16.8px, light rgb(81, 91, 108) contrast 6.2 and dark rgb(166, 176, 195) contrast 8.6. Step 1 of 2: the button is "Next", 324×44, bottom 840 on the phone and bottom 534 at 1280. Step 2 of 2: the lede is still "Read this filled line." The button is "Try these steps", bottom 712 on the phone and 508 at 1280. The radius card is Step 1 of 1. The lede is "Read this filled line." The button is "Try these steps", bottom 636 on the phone and 531 at 1280. Newton's first card shows the iteration count, lede "Read this filled line.", button "Next". The next worked card shows the simplification, lede "Read this filled line.", button "Try these steps".
+
+The blank puts Hint beside Check. Hint is 71×44, one line, at 390 and at 1280. Check keeps the accent and the rest of the row. Typing `idk` on Theorem 4.1 leaves the count at "Section 4.1. 2 of 6." "Not that one." is weight 700, light rgb(179, 38, 30) contrast 6.5 and dark rgb(255, 129, 120) contrast 7.0, bottom 814. Next hint is 114×44, bottom 785. "This step comes back." is muted, 14.72px, contrast 6.9 on the light card and 7.8 on the dark card. On the phone its top is y = 898 and its bottom is 918. The window is 844. The hint's first line is the last ink on that screen, cut off. The same miss on the radius card puts the line at y = 742, bottom 762, under the hint, inside 844, light and dark. At 1280 the proof line is at y = 641, bottom 661, inside the 800 window. A second miss clears the line. The card is the filled answer, the reason, and Next. "Generate another" on the revealed radius card is 185×44, one line, beside Next.
+
+Set complete, after §4.2. The lede is the Newton sentence, once: 358×105 on the phone, 595×52 at 1280, muted, light rgb(81, 91, 108) and dark rgb(166, 176, 195). The status is "Section 4.2." The card is the heading "Set complete" and "Open the memory sheet", 324×44, bottom 484 on the phone and bottom 392 at 1280. The sentence is not in the card. The same screen in the dark: the button is dark type on the off-white accent.
+
+The §4.3 sheet stays 390 wide on the phone and 1280 wide on the laptop. No row overflows. Corollary 4.3 breaks at a plus. The last term is its own piece, `+z^n/(1-z)`, 108px in a 305px line on the phone. The cite is the parenthesis once: "(Corollary 4.3, page 119)". Theorem 4.12, Exercise 1(b), and Exercise 2 are named once the same way. The formula row fits the card: the partial sum is 237px and the last term is 67px, in that 305px line. At 1280 the takeaway fits, 899/899, and the cite is still there once.
+
+Chapter 5, scroll 0, both themes. The square is 358×358 on the phone, y = 213–571, and 384×384 at 1280, y = 225–609. The claim is full ink, two lines on the phone (bottom 632) and one line at 1280 (bottom 644): "The point sits on the left of the unit circle, on the real axis." Play is 70×44, bottom 684 on the phone and 696 at 1280. The status and "Test prep · 5.1" (150×44) end at 830 on the phone and at 781 in the 800 window. The lede starts at y = 871 on the phone and y = 822 at 1280.
+
+### Ranked cuts
+
+1. **On the phone, the proof's return line is under the window.** At 390×844, light and dark, scroll 0, a first miss on Theorem 4.1 keeps "Section 4.1. 2 of 6." "Not that one." ends at 814. Next hint ends at 785. "This step comes back." is the muted line, 14.72px, contrast 6.9 in the light and 7.8 in the dark, and its bottom is 918. The 844 window shows the top of the hint and cuts it. The radius miss on that same phone shows the line whole, at y = 742, under the hint. At 1280 the proof line ends at 661, inside the 800 window. A second miss removes the line. Change: the first-miss scroll brings "This step comes back." inside the 844 window. The line stays muted, under the hint, on the first miss only. The revealed card stays the filled answer, the reason, and Next.
+
+### Keep
+
+"Proof · 4.1" and "Proof · 4.3" are 118×44, and the section number is the difference. On Chapter 4's first screen the disk sentence, Exercise 3's question, and the 44px disk chip sit with that button: the chip ends at 822 on the phone and at 678 at 1280, light and dark. "Test prep · 4.2" and "Test prep · 4.4" stay their own labels.
+
+Every worked step's lede is "Read this filled line." The button is "Next" until the last worked step, and that last button is the only "Try these steps". Theorem 4.1, the radius card, and Newton all do this, at both widths, in both themes. Newton's first filled line is still the answer the title asks, "1, or 0 if the guess is already the root.", and that card's button is Next.
+
+Set complete puts the Newton sentence in the lede, once. The status is "Section 4.2." The card heading is "Set complete". The button is "Open the memory sheet", on the screen in both windows, both themes. The sentence is not repeated in the card.
+
+Hint, Next hint, and Generate another stay on the row, one line, as wide as their words, at least 44px. Check and Next keep the accent. A second miss drops the return line. Endless stays hidden on the worked card and shows on the generated blank.
+
+The §4.3 sheet names Corollary 4.3, Theorem 4.12, Exercise 1(b), and Exercise 2 once, in the parenthesis. The identity breaks at a plus, the last term is on the page, and the formula row fits the card. The page width is the window.
+
+Chapter 5's first screen is the square, the claim, Play, the status, and "Test prep · 5.1", in both windows, both themes. The square stays 358px on the phone and 384px at 1280. The claim is the sentence in full ink. Play is the gesture. The practice door is the button in the status row.
+
+The paper, the serif title, the sans text, the accent button, and the dark off-white primary are the station pages. The small-caps line stays with the shell. No emoji, no gradient, no glow. The four teaching colours stay on the picture. Nothing here asks for a new type, a second clock, or a second accent.

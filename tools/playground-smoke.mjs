@@ -702,7 +702,7 @@ async function main() {
       && chord.cite.includes('T1') && chord.cite.includes('F2')
       && /L6/.test(chord.level) && /metric/.test(chord.level)
       && /L6/.test(chord.placesLabel)
-      && chord.places.includes('Story Map') && chord.places.includes('1/z and the Sphere')
+      && chord.places.includes('The Book') && chord.places.includes('1/z and the Sphere')
       && chord.threads.includes('T1') && chord.threads.includes('T2') && chord.threads.includes('T3')
       && chord.katex >= 2,
       JSON.stringify({ view: chord.view, layout: chord.layout, canvas: chord.canvas, cite: chord.cite, level: chord.level, places: chord.places, threads: chord.threads, katex: chord.katex, caption: chord.caption }));
@@ -735,7 +735,7 @@ async function main() {
       && sliceSnap.cite.includes('Figure 4.6, page 114') && sliceSnap.cite.includes('Exercise 4')
       && sliceSnap.cite.includes('not in the book') && sliceSnap.cite.includes('F2')
       && /L7/.test(sliceSnap.level) && /family/.test(sliceSnap.level)
-      && sliceSnap.places.includes('Story Map') && sliceSnap.places.includes('The Orbit of 0')
+      && sliceSnap.places.includes('The Book') && sliceSnap.places.includes('The Orbit of 0')
       && sliceSnap.places.includes('When c Is 0, a Disk')
       && sliceSnap.places.includes('The 4D Graph of w = f(z)')
       && sliceSnap.cite.includes('with the mappings')
@@ -872,7 +872,7 @@ async function main() {
       && bendSnap.cite.includes('triangle does not use it')
       && bendSnap.cite.includes('not the curvature colour')
       && /L8/.test(bendSnap.level) && /bend/.test(bendSnap.level)
-      && bendSnap.places.includes('Story Map') && bendSnap.places.includes('1/z and the Sphere')
+      && bendSnap.places.includes('The Book') && bendSnap.places.includes('1/z and the Sphere')
       && bendSnap.places.includes('The Derivative Is a Move')
       && !bendSnap.places.includes('Slide, Spin')
       && !bendSnap.places.includes('The 4D Graph')
@@ -995,7 +995,7 @@ async function main() {
       && !unitySnap.threads.includes('F2')
       && unitySnap.cite.includes('Test 1 is Chapters 1 to 3')
       && unitySnap.cite.includes('Test 2 is Chapter 4')
-      && unitySnap.places.includes('Story Map') && unitySnap.places.includes('Newton Fractals')
+      && unitySnap.places.includes('The Book') && unitySnap.places.includes('Newton Fractals')
       && unitySnap.places.includes('Roots: Divide the Staircase')
       && unitySnap.places.includes('Powers') && unitySnap.places.includes('Derivative')
       && !unitySnap.places.includes('1/z') && !unitySnap.places.includes('Mandelbrot')
@@ -1265,7 +1265,7 @@ async function main() {
       && /writes dust/.test(diaryBadge) && !/is dust/.test(diaryBadge)
       && diarySnap.formula.includes('Which c keep the walk from 0 bounded?')
       && diarySnap.formula.includes('What Julia set does this c write back?')
-      && diarySnap.places.includes('Story Map') && diarySnap.places.includes('Julia')
+      && diarySnap.places.includes('The Book') && diarySnap.places.includes('Julia')
       && diarySnap.places.includes('Mandelbrot') && diarySnap.places.includes('Orbit of 0')
       && diarySnap.places.includes('Powers') && diarySnap.places.includes('Disk')
       && !diarySnap.places.includes('Newton')
@@ -1437,7 +1437,7 @@ async function main() {
       && twinSnap.threads.includes('T1') && twinSnap.threads.includes('T2')
       && twinSnap.threads.includes('F1') && twinSnap.threads.includes('F2')
       && !twinSnap.threads.includes('F3') && !twinSnap.threads.includes('T3')
-      && twinSnap.places.includes('Story Map') && twinSnap.places.includes('Powers')
+      && twinSnap.places.includes('The Book') && twinSnap.places.includes('Powers')
       && twinSnap.places.includes('Julia') && twinSnap.places.includes('Mandelbrot')
       && twinSnap.places.includes('Orbit of 0') && twinSnap.places.includes('Disk')
       && !twinSnap.places.includes('Newton')
@@ -1664,7 +1664,7 @@ async function main() {
       && bulbPhone.threads.includes('F1') && bulbPhone.threads.includes('F2')
       && !bulbPhone.threads.includes('T3') && !bulbPhone.threads.includes('F3')
       && !bulbPhone.threads.includes('Square')
-      && bulbPhone.places.includes('Story Map') && bulbPhone.places.includes('The Cardioid and the Period')
+      && bulbPhone.places.includes('The Book') && bulbPhone.places.includes('The Cardioid and the Period')
       && bulbPhone.places.includes('The Orbit of 0') && !bulbPhone.places.includes('Newton')
       && /Theorem 4.11, page 116/.test(bulbPhone.doors.card) && /orbit of 0/.test(bulbPhone.doors.card)
       && /cycle it falls into/.test(bulbPhone.doors.zero)
@@ -1865,7 +1865,7 @@ async function main() {
       && cascadePhone.chips.some((b) => b.text === 'Period 2' && b.pressed === 'true')
       && cascadePhone.juliaSpan === 2.6
       && cascadePhone.xr.includes('stays in the void') && cascadePhone.xr.includes('was not used')
-      && cascadePhone.places.includes('Story Map') && cascadePhone.places.includes('Cardioid')
+      && cascadePhone.places.includes('The Book') && cascadePhone.places.includes('Cardioid')
       && cascadePhone.doorsAbove
       && cascadePhone.citeFold === 'fold'
       && cascadePhone.gaps.length >= 3 && cascadePhone.gaps.every((g) => g >= 12)
@@ -2740,7 +2740,7 @@ async function main() {
       && /The left pane is the basins/.test(fallPhone.cite)
       && fallPhone.threads.join() === 'T2,T3,F3'
       && !fallPhone.threads.includes('T1') && !fallPhone.threads.includes('F1') && !fallPhone.threads.includes('F2')
-      && fallPhone.doors.join(',') === 'Map,Newton,Roots,Move,Sphere'
+      && fallPhone.doors.join(',') === 'Book,Newton,Roots,Move,Sphere'
       && fallPhone.chips.length === 7 && fallPhone.chips.every((c) => c.h >= 44 && c.w >= 44)
       && fallPhone.xr === 'untried' && /headset was not used/.test(fallPhone.note)
       && fallPhone.noteBox.top >= 0 && fallPhone.noteBox.bottom <= fallPhone.noteBox.ih && fallPhone.noteBox.h >= 12
@@ -2900,7 +2900,7 @@ async function main() {
       && /It moves when c moves/.test(leanPhone.cite)
       && leanPhone.threads.join() === 'T3,F3'
       && !leanPhone.threads.includes('T2') && !leanPhone.threads.includes('T1') && !leanPhone.threads.includes('F1') && !leanPhone.threads.includes('F2')
-      && leanPhone.doors.join(',') === 'Map,Newton,Roots,Move,Sphere'
+      && leanPhone.doors.join(',') === 'Book,Newton,Roots,Move,Sphere'
       && leanPhone.chips.length === 5 && leanPhone.chips.every((c) => c.h >= 44 && c.h <= 48 && c.w >= 44 && c.right <= 392)
       && leanPhone.gaps.every((g) => g >= 12)
       && leanPhone.xr === 'untried' && /headset was not used/.test(leanPhone.note)
@@ -2920,7 +2920,7 @@ async function main() {
     check('equal spacing wears the staircase, and the question names z³ − 1',
       leanEqual.threads.join() === 'T2,T3,F3'
       && /z³ − 1/.test(leanEqual.ask)
-      && leanEqual.doors.join(',') === 'Map,Newton,Roots,Move,Sphere',
+      && leanEqual.doors.join(',') === 'Book,Newton,Roots,Move,Sphere',
       JSON.stringify(leanEqual));
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="leanmid"]').click()` });
     await waitFor(live.send, `/roots lean/.test(document.getElementById('caption').textContent || '') && [...document.querySelectorAll('#threads a')].map((a) => a.dataset.thread).join() === 'T3,F3'`, 15000);
@@ -2934,7 +2934,7 @@ async function main() {
     check('a line of roots drops the staircase and keeps the same doors',
       leanLine.threads.join() === 'T3,F3'
       && /sit on a line/.test(leanLine.ask)
-      && leanLine.doors.join(',') === 'Map,Newton,Roots,Move,Sphere',
+      && leanLine.doors.join(',') === 'Book,Newton,Roots,Move,Sphere',
       JSON.stringify(leanLine));
     await live.send('Runtime.evaluate', { expression: `window.__leanWords = []` });
     await live.send('Runtime.evaluate', { expression: `document.querySelector('[data-act="leanbrk"]').click()` });
@@ -3075,9 +3075,9 @@ async function main() {
       warpPhone.stageH >= 300 && warpPhone.overlap <= 1
       && /Where does this point sit/.test(warpPhone.ask)
       && warpPhone.threads.join() === ''
-      && warpPhone.doors === 'Map,Sphere,Length,4D'
+      && warpPhone.doors === 'Book,Sphere,Length,4D'
       && warpPhone.doorW.length === 4 && warpPhone.doorW.every((w) => w >= 44)
-      && warpPhone.labels.includes('Story Map') && warpPhone.labels.includes('Sphere') && warpPhone.labels.includes('Length')
+      && warpPhone.labels.includes('The Book') && warpPhone.labels.includes('Sphere') && warpPhone.labels.includes('Length')
       && warpPhone.doorTop >= warpPhone.stageBottom - 1
       && warpPhone.chips.length === 4 && warpPhone.chips.every((c) => c.h >= 44 && c.h <= 46)
       && warpPhone.chips.some((c) => c.text === '1' && c.pressed === 'true')
@@ -3160,7 +3160,7 @@ async function main() {
       && /Where does this point sit/.test(warpWide.ask)
       && warpWide.threads === ''
       && warpWide.next === '#cross' && /the crossing/.test(warpWide.caption)
-      && warpWide.doors.includes('Story Map') && warpWide.doors.includes('Sphere')
+      && warpWide.doors.includes('The Book') && warpWide.doors.includes('Sphere')
       && warpWide.chips.length === 4 && warpWide.chips.every((c) => c.w >= 44 && c.h >= 44 && c.h <= 48)
       && warpWide.gaps.every((g) => g >= 12)
       && warpWide.xr === 'untried'
@@ -3231,7 +3231,7 @@ async function main() {
       crossWide.scroll <= 1 && crossWide.stageH >= 270 && crossWide.overlap <= 1
       && /each plane/.test(crossWide.ask)
       && crossWide.threads === 'F1,F2'
-      && crossWide.doors.includes('Story Map') && crossWide.doors.includes('Mandelbrot') && crossWide.doors.includes('Julia') && crossWide.doors.includes('Orbit')
+      && crossWide.doors.includes('The Book') && crossWide.doors.includes('Mandelbrot') && crossWide.doors.includes('Julia') && crossWide.doors.includes('Orbit')
       && /Test 2 map/.test(crossWide.story)
       && /Figure 4\.6/.test(crossWide.cite) && /Theorem 4\.9/.test(crossWide.cite)
       && /Theorem 4\.11, page 116/.test(crossWide.cite) && /Example 4\.11, page 115/.test(crossWide.cite) && /Example 4\.12, page 116/.test(crossWide.cite)
@@ -3298,7 +3298,7 @@ async function main() {
       crossPhone.stageH >= 300 && crossPhone.overlap <= 1
       && /each plane/.test(crossPhone.ask)
       && crossPhone.threads === 'F1,F2'
-      && crossPhone.doors === 'Map,Set,Julia,Orbit'
+      && crossPhone.doors === 'Book,Set,Julia,Orbit'
       && crossPhone.chips.length === 4 && crossPhone.chips.every((c) => c.h >= 44 && c.h <= 46 && c.right <= 390)
       && crossPhone.chips.some((c) => c.text === 'i' && c.pressed === 'true')
       && crossPhone.xr === 'untried'

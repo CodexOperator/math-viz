@@ -5941,3 +5941,120 @@ While this review was open, `5ea585b`, `4445063`, `58e9ccc`, and `deff16c` lande
 `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the shared tick and the quarter sentences, after the move. `node kit/smoke.mjs` exits 0.
 
 **ACCEPT WITH FIXES**
+
+
+## Practice engine, batch 4 — review
+
+Verdict: **ACCEPT WITH FIXES**. Pull request 43, branch `cursor/practice-engine`, reviewed from `189988c8d156369185191907b14b3e24187f30b7`. Not merged. Nothing was deployed, and `gh-pages` was not touched. Four corrections landed on the branch after that tip. They are the sentences a student would memorize.
+
+The published preview https://practice-preview.complexanalysis.pages.dev is that tip. The checks below were run on the branch after the corrections, in headless Chrome against a local copy of the same pages.
+
+### What was checked
+
+Howell & Mathews, Complex Analysis, 202 Updated Edition (the PDF at complexanalysis.org, 471 pages, edition line on the title page). Printed page P is PDF page P+9. Every practice cite in `data/practice/ch2.json`, `ch4.json`, and `ch5.json` was read against the printed page: the definition or theorem statement, and the exercise wording where an item names one.
+
+Pages that hold the statements: linear transformation \(w=Az+B\) on page 50 (Section 2.1 starts on 43). Definitions 4.1 and Theorem 4.1 on 103, the triangle-inequality step of the proof on 104. Definitions 4.2 through 4.5 and Theorems 4.2 and 4.3 on 104–105. Definitions 4.6 and 4.7 and Theorems 4.4 and 4.5 on 106. Theorem 4.6, Definition 4.8, Theorems 4.7 and 4.8, and Corollary 4.1 on 107. §4.1 Exercise 1(a) on 108, selected answer 0 on 437. Theorem 4.9 on 113. Definitions 4.9 and 4.10 and Theorem 4.10 on 115. Theorem 4.11 and Definitions 4.11 and 4.12 on 116. §4.2 Exercise 3 on 117, selected answer on 438. Theorem 4.12 and Equation (4.14) on 118. Corollaries 4.2 and 4.3 on 119. Theorem 4.13 on 120. Definition 4.13 on 121. Theorem 4.14 and §4.3 Exercises 1(b) and 2 on 122. Exercise 6, \(z^n\to 0\) when \(|z|<1\), on 123. Theorem 4.15 on 124. Theorems 4.16 and 4.17 on 125. Definition 5.1 and the start of Theorem 5.1 on 130. Theorem 5.1(iii) on 131. Identity (5.1) on 132. Equations (5.5)–(5.7) and Figure 5.2 on 133. §5.1 Exercise 2(c) on 135. Definition 1.11, \(\operatorname{Arg} z\in(-\pi,\pi]\), on 23.
+
+The HTML anchor `#th15` is the radius theorem. The HTML numbers it 4.4.3. The PDF numbers it Theorem 4.16, page 125. The practice cite uses the PDF number and that anchor.
+
+Generators were checked by computing the value, not by trusting the printed TeX. Every inside ratio with \(a,b\in[-4,4]\) and denominator \(2\) through \(6\) has `geometricSum` equal to \(1/(1-z)\). Seeds 1 through 400 keep the inside/outside flag, the sum, and an integer radius. Seeds 1 through 200 keep \(|e^z|=e^x\) symbolic (a decimal is not accepted) and \(\operatorname{Arg}\) in \((-\pi,\pi]\), with both ends \(\pm\pi\) returning \(\pi\). Seeds 1 through 200 keep \(w=az+b\). A swapped `generate(params, seed)` still throws. No live file imports `kit/`. `js/core/map-route.js` matches `kit/template/js/core/map-route.js`.
+
+### Fixed
+
+The memory line for Theorem 4.11 said the attracting fixed points of \(z^2+c\) are the points inside the cardioid. The fixed points are \(z\)-values. The cardioid is a set of parameters \(c\). Exercise 10 on page 118 says the \(c\) that solve the inequalities form the cardioid. The sheet now says \(z^2+c\) has an attracting fixed point precisely when \(c\) lies inside that cardioid. The flash answer was already the inequality on page 116.
+
+The Corollary 4.3 sheet said the finite sum is \((1-z^n)/(1-z)\). That partial sum is Equation (4.14), page 118. Corollary 4.3, page 119, is \(1/(1-z)=1+z+\cdots+z^{n-1}+z^n/(1-z)\). The card, the formula, and the sheet now say that.
+
+The exponential generator told the student to reduce \(y\) into \((-\pi,\pi]\) and called that Equation (5.7). Equation (5.7), page 133, is \(\arg(e^z)=\{\operatorname{Arg}(e^z)+2n\pi\}\). Equation (5.5) on the same page is \(y+2n\pi\). The interval is Definition 1.11, page 23, and the strip on page 133 uses it. The why and the sheet now cite those. \(|e^z|=e^x\) stays Equation (5.6).
+
+Newton’s Exercise 3 accepted only “1”. The selected answer on page 438 is \(z_1=-b/a\), and a guess that is already the root stops at \(z_0\). The blank now reads “1, or 0 if the guess is already the root.” Typing 1, or “0 or 1”, is accepted. Typing 0 alone is not. The sheet says the same thing.
+
+The mixed set’s status said “Chapters 4 and 5” while the queue is 16 cards from chapters 2, 4, and 5. It now says “Chapters 2, 4, and 5.” A chapter with no file says those three are on the mixed page. A section walk still says “Section 4.1.”
+
+### Walked
+
+Headless Chrome, 390×844 and 1280×800. `#test-prep` opens at scroll 0 on the worked proof of Theorem 4.1. The status is “Chapters 2, 4, and 5. 1 of 16.” Try these steps, then `|x_n-u|+|y_n-v|`, returns “Yes.” and fills the blank. `idk` returns “Not that one.” and hint 1, “Split the one modulus into the two coordinates.” The blank stays empty, and the verdict is inside the 844px window. The memory sheet shows the corrected cardioid line, the corollary, the Newton caveat, page 50 for \(w=Az+B\), and Definition 1.11 for the argument. `#test-prep-3` says nothing is filed and names chapters 2, 4, and 5. `#test-prep-4-4-1` says “Section 4.1. 1 of 6.” `scrollWidth` matched the window at 390 and at 1280. The console lines are the ones the catalog already logs: a blocked `node:fs` import, then a 404 for each chapter file that is not on the server. The set still draws.
+
+### Smoke
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the practice catalog, the three generators, the Leitner merge, and the miss merge. `node kit/smoke.mjs` exits 0.
+
+**ACCEPT WITH FIXES**
+
+## Practice engine, batch 5 — review
+
+Verdict: **ACCEPT WITH FIXES**. Pull request 43, branch `cursor/practice-engine`, reviewed from `87c474de9a6b50a3741790eb428b4071fa02fc4e`. Not merged. Nothing was deployed, and `gh-pages` was not touched. No practice line was rewritten. One layout fix landed after the walk: a sheet formula wider than the phone now scrolls inside its line, and the page stays 390 wide.
+
+The preview at https://practice-preview.complexanalysis.pages.dev serves this tip: `js/practice/catalog.js` fetches only the chapter files on disk, and the Definition 4.13 card names a sequence of positive real numbers.
+
+### The two pins, against the 202 Updated Edition
+
+Printed page P is PDF page P+9. The title page is the 202 Updated Edition. Theorem 4.9 is printed on page 113. The page defines \(K_c\) as the set of points whose orbit under \(f_c(z)=z^2+c\) stays bounded, and it defines the Julia set as the boundary of \(K_c\). The theorem is two sentences: the boundary of \(K_c\) is connected if and only if \(0\in K_c\), and the Julia set is connected if and only if the orbit of 0 is bounded. The flash back is the second sentence. The sheet line, “Connected Julia set exactly when \(0\) is in \(K_c\)”, is the first. The anchor is `#Kc_Connected`.
+
+Theorem 4.11 is printed on page 116. The numbered statement is: \(f_c(z)=z^2+c\) has attracting fixed points if and only if \(|1+\sqrt{1-4c}|<1\) or \(|1-\sqrt{1-4c}|<1\), principal square root. The flash back is that statement. The paragraph immediately before the theorem says the main cardioid-shaped body of the Mandelbrot set is made of those \(c\), and that Theorem 4.11 characterizes them. Exercise 10 on page 118 asks the student to show that the solutions of those inequalities form that cardioid. The sheet line, “an attracting fixed point precisely when \(c\) lies inside the main cardioid”, is that page’s reading. “Inside” matches the strict inequality: at the cusp \(c=1/4\) the modulus is 1, so the fixed point does not attract. The fixed point is a \(z\)-value. The cardioid is a set of \(c\).
+
+### The rest of the cites
+
+Every practice cite in `ch2.json`, `ch4.json`, and `ch5.json` was read against the printed page. The batch 5 edit is Definition 4.13, page 121: the sequence is positive real numbers, \(L\) is the smallest real number such that only finitely many terms exceed \(L+\varepsilon\), and the limit supremum is infinity when no such \(L\) exists. The card says that.
+
+The other statements still sit where the batch 4 review put them. Linear \(w=Az+B\) is page 50. Definitions 4.1 and Theorem 4.1 are page 103, and the triangle-inequality step is page 104. Definitions 4.2 through 4.5 and Theorems 4.2 and 4.3 are pages 104–105. Definitions 4.6 and 4.7 and Theorems 4.4 and 4.5 are page 106. Theorem 4.6, Definition 4.8, Theorems 4.7 and 4.8, and Corollary 4.1 are page 107. Exercise 1(a) is page 108, and the selected answer on page 437 is 0. Definitions 4.9 and 4.10 and Theorem 4.10 are page 115. Definitions 4.11 and 4.12 are page 116. Exercise 3 is page 117, and the selected answer on page 438 is one step to \(-b/a\), or zero steps when the guess is already the root. Theorem 4.12 and Equation (4.14) are page 118. Corollaries 4.2 and 4.3 are page 119. Theorem 4.13 is page 120. The note that \(L=1\) decides nothing is on page 122, under Theorems 4.13 and 4.14. Exercise 1(b) on page 122 is \(\sum (1/(2+i))^n\), which sums to \((3-i)/2\). Exercise 2 on that page is the disk \(|z+i|<2\). Exercise 6 on page 123 is \(z^n\to 0\) when \(|z|<1\). Theorem 4.15 is page 124. Theorems 4.16 and 4.17 are page 125. The HTML anchor `#th15` is the radius theorem; the HTML numbers it 4.4.3 and the PDF numbers it Theorem 4.16. Definition 5.1 and the start of Theorem 5.1, including part (i), are page 130. Parts (ii) and (iii) are printed on page 131. Identity (5.1) is page 132. Equations (5.5), (5.6), and (5.7) and Figure 5.2 are page 133. Exercise 2(c) is page 135. Definition 1.11, \(\operatorname{Arg} z\in(-\pi,\pi]\), is page 23.
+
+### Generators
+
+Seeds 1 through 400 were recomputed. Every inside ratio has `geometricSum` equal to \(1/(1-z)\). Every outside ratio is marked diverges, including \(|z|=1\). Every radius is \(|c|\) for \(\sum (z-\alpha)^n/c^n\), and the centre does not enter it. Every exponential keeps \(|e^z|=e^x\) symbolic and \(\operatorname{Arg}(e^z)\) in \((-\pi,\pi]\), with both ends \(\pm\pi\) returning \(\pi\). Every linear image is \(ax+b\) and \(ay\).
+
+### Walked
+
+Headless Chrome, local copy of this tip, 390×844 and 1280×800, light and dark, plus the book at 360×780. The mixed status is “Chapters 4 and 5. 1 of 18.” The only practice files requested are `ch2.json`, `ch4.json`, and `ch5.json`. Nothing under `kit/` is requested. The console is quiet. The sheet lede is one sentence, the sections are 4.1 through 5.1, and chapter 2 is not on it. Both theorem lines above are on the sheet.
+
+The worked proof of Theorem 4.1 is one filled step. The count is “Step 1 of 2”. Next ends at 825px on the phone and at 539px at 1280, in both themes, at scroll 0. Each formula is one line, about 25px tall. The page does not scroll sideways. The closed title “Analytic and Harmonic Functions” is the full string at 360, 390, and 1280, on the book row and in the chapter list.
+
+`#test-prep-4-4-2`, `#test-prep-4-4-4`, and `#test-prep-5-5-1` open on a filled example. On the faded proof, Hint becomes Next hint, and after the second hint the button is gone. The sheet opened on that empty blank does not print \(|x_n-u|+|y_n-v|\).
+
+A wrong check on Exercise 3 stores `ch4-4.2-ex-3` step 0 as pending and the status becomes “2 of 3”. Reload comes back as “Section 4.2. 1 of 3” with the flag still pending. The third card is that step again. A correct \(-b/a\) clears the flag. Set complete names the one-step Newton fact.
+
+Section 4.1 flashcards open on “limit of a sequence”, cite Definition 4.1, page 103, and show one counter, “1 of 17”. The back is the \(\varepsilon\)-\(N\) sentence and does not repeat the cite. Again stores box 1, due today, and the next front is Theorem 4.1. The same card returns later in the pile. The Definition 4.13 back says “a sequence of positive real numbers”.
+
+The multiply film’s way up is The Book, linking `#book`. The note does not say Story Map.
+
+### The sheet
+
+At `87c474d` the mixed sheet on a 390px phone had `scrollWidth` 438. The Corollary 4.3 identity is one KaTeX line about 386px wide, and the page panned sideways. The practice cards and the book stayed inside the window. The formula now scrolls inside its own line. After the change, the page `scrollWidth` is 390 in light and dark, and 1280 at the wide window. The line is still the printed identity.
+
+### Smoke
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the open-chapter mix, the positive-sequence card, book-order flashcards, Again due today, and the pending miss. `node kit/smoke.mjs` exits 0. `js/core/map-route.js` is byte-identical to `kit/template/js/core/map-route.js`. No file under `js/` imports `kit/`. The same three checks were run again after the sheet change.
+
+**ACCEPT WITH FIXES**
+
+## Practice engine, batch 6 — review
+
+Verdict: **ACCEPT**. Pull request 43, branch `cursor/practice-engine`, reviewed at `35d7f53`. Not merged. `gh-pages` was not touched. No practice line was rewritten on this pass.
+
+The preview at https://practice-preview.complexanalysis.pages.dev serves this tip: `js/practice/mount.js`, `js/practice/render.js`, `js/practice/gen/geometric-series.js`, `js/app.js`, `js/stations/book.js`, and `css/components.css` match the commit byte for byte.
+
+### The two pins, against the 202 Updated Edition
+
+Printed page P is PDF page P+9. The title page is the 202 Updated Edition (PDF page 3). Theorem 4.9 is printed on page 113: the boundary of \(K_c\) is connected if and only if \(0\in K_c\), and the Julia set of \(f_c\) is connected if and only if the orbit of 0 is bounded. The flash back is the second sentence. The sheet line is the first. The live card cites Theorem 4.9, page 113.
+
+Theorem 4.11 is printed on page 116: \(f_c(z)=z^2+c\) has attracting fixed points if and only if \(|1+\sqrt{1-4c}|<1\) or \(|1-\sqrt{1-4c}|<1\), principal square root. The flash back is that inequality and does not say cardioid. The sheet line keeps the cardioid, which is the paragraph before the theorem and Exercise 10 on page 118. The two cards are not swapped.
+
+The batch 6 edit does not move any other cite. The statements checked in the batch 5 review still sit on those printed pages, including the triangle-inequality step on page 104, Corollary 4.3’s identity on page 119, Exercise 3’s selected answer on page 438, and Identity (5.1) on page 132. A fresh radius reason ends with the modulus equal to the number. Seeds on the preview gave \(|-20-21i|=29\), \(|-6+8i|=10\), and \(|1|=1\), each a Pythagorean modulus from Theorem 4.16, page 125.
+
+### Walked
+
+Headless Chrome, touch, fresh storage, the preview. 390×844 then 1280×800, light and dark. No console errors. No failed requests. Nothing under `kit/` was requested. Document `scrollWidth` matched the window on the book, on Chapter 4, on Test prep, and on the memory sheet.
+
+The landing and `#book` title the document and the route status “The Book”. Chapter 4’s §4.1 and §4.3 buttons read “Test prep · the proof” (204×44). §4.2 and §4.4 keep their section numbers. Exercise 3’s question sits at y 772–826 on the phone, in both themes, inside the 844px window. The button is above it.
+
+Test prep opens on the Theorem 4.1 worked step. The line is “Read this filled line.” The disk sentence sits under the title. Next ends at 840 on the phone and at 534 at 1280, in both themes. Endless is hidden on that proof and on the faded proof blank. Hint sits beside Check, both 44px, both bottom 785 on the phone and 554 at 1280. Typing `idk` leaves the count at “2 of 18.” and adds “This step comes back.” Next hint ends at 771 on the phone and at 711 at 1280.
+
+A fresh §4.2 opens on the filled iteration count, then the algebra. A miss on the blank stays “2 of 2.” Reload opens that blank as “1 of 3.”, not the worked card. `-b/a` and then `1` are accepted. Set complete puts the Newton sentence in the lede once. The card is the heading and “Open the memory sheet.”
+
+The radius card hides Endless while the example is filled, and shows it on the generated blank. The memory sheet’s page width is 390. The Corollary 4.3 identity and its takeaway scroll inside the line (the takeaway’s own scroll width is 386 against a 305px line). At 1280 the same lines fit. §4.2 flashcards open on Theorem 4.9, page 113, and the fifth card is Theorem 4.11, page 116.
+
+### Smoke
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the two theorem pins and the radius sentence. `node kit/smoke.mjs` exits 0. `js/core/map-route.js` is byte-identical to `kit/template/js/core/map-route.js`. No live file imports `kit/`.
+
+**ACCEPT**

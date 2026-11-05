@@ -6,7 +6,7 @@
 // stations. The iteration stays in fractal.js. Each station fills the sentences
 // and the math.
 
-import { MAP_STORAGE_KEY, stationById, threadLabel, threadLinkPrefix, threadsOn } from '../registry.js';
+import { stationById, threadLabel, threadLinkPrefix, threadsOn } from '../registry.js';
 import { citationText } from '../data/textbook.js';
 import { prose } from './katex.js';
 
@@ -147,7 +147,7 @@ function mountLinks(ctx) {
   };
 
   const add = (st, dir, thread, linkId) => {
-    if (!st || st.id === id || seen.has(st.id)) return;
+    if (!st || st.id === id || st.id === 'home' || seen.has(st.id)) return;
     seen.add(st.id);
     const a = h('a', { class: 'station-link', href: `#${st.id}`, 'data-dir': dir, id: linkId });
     if (thread) a.dataset.thread = thread;
@@ -155,7 +155,7 @@ function mountLinks(ctx) {
     nav.append(a);
   };
 
-  if (here > 0) add(list[here - 1], 'prev', onThread(list[here - 1]), `${id}-link-prev`);
+  if (here > 0 && list[here - 1].id !== 'home') add(list[here - 1], 'prev', onThread(list[here - 1]), `${id}-link-prev`);
   if (here >= 0 && here + 1 < list.length) add(list[here + 1], 'next', onThread(list[here + 1]), `${id}-link-next`);
   for (const t of mine) {
     let before = null;
@@ -168,7 +168,10 @@ function mountLinks(ctx) {
     if (before) add(before, 'prev', t, `${id}-link-${t}-prev`);
     if (after) add(after, 'next', t, `${id}-link-${t}-next`);
   }
-  add(list.find((s) => s.id === 'home') || null, 'prev', null, `${id}-link-home`);
+  const chapter = h('a', {
+    class: 'station-link', href: '#chapter-4', 'data-dir': 'prev', id: `${id}-link-chapter`,
+  }, 'Chapter 4');
+  nav.append(chapter);
   return nav;
 }
 
@@ -241,14 +244,10 @@ function mountEarlier(ctx, spec) {
   const maps = h('nav', { class: 'station-links', id: `${id}-maps`, 'aria-label': 'Maps' });
   const story = h('a', {
     class: 'station-link',
-    href: '#home',
+    href: '#book',
     id: `${id}-link-story`,
     'data-dir': 'prev',
-    'data-map': 'test1',
-  }, 'Story Map');
-  story.addEventListener('click', () => {
-    if (ctx && ctx.store) ctx.store.set(MAP_STORAGE_KEY, 'test1');
-  });
+  }, 'The Book');
   maps.append(story);
   section.append(maps);
   return section;

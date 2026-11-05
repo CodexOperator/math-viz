@@ -111,8 +111,13 @@ function shell(el, ctx, spec) {
   const fromChapter = chapterExerciseId(ctx.preset);
   if (fromChapter) {
     const problem = test2ProblemById(fromChapter);
-    bits.push(h('p', { id: `${id}-chapter-back` },
-      h('a', { href: `#${chapterHash(4, fromChapter)}` }, problem ? problem.pin : fromChapter)));
+    bits.push(h('p', { class: 'chapter-return', id: `${id}-chapter-back` },
+      h('a', {
+        class: 'station-link',
+        id: `${id}-return`,
+        href: `#${chapterHash(4, fromChapter)}`,
+        'data-dir': 'prev',
+      }, problem ? problem.pin : fromChapter)));
   }
   for (const cite of spec.cites) bits.push(sourceTag(cite));
   el.append(h('header', { class: 'station-header' }, ...bits));

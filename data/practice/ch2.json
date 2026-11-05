@@ -1,0 +1,17 @@
+[
+  {
+    "id": "ch2-2.1-gen-map",
+    "chapter": 2,
+    "section": "2.1",
+    "cite": {
+      "ref": "Section 2.1",
+      "page": 50,
+      "href": "https://complexanalysis.org/web/sec_functions-linear-mappings.html"
+    },
+    "kind": "blank",
+    "prompt": "A linear map with a seeded z.",
+    "steps": [],
+    "generator": { "template": "ch2-maps", "params": {} },
+    "memory": "For real $a$ and $b$, $w=az+b$ multiplies by $a$, then adds $b$. The book’s linear transformation $w=Az+B$ is Section 2.1, page 50."
+  }
+]

@@ -1,0 +1,1172 @@
+[
+  {
+    "id": "ch4-4.1-definition-4-1",
+    "chapter": 4,
+    "section": "4.1",
+    "cite": {
+      "ref": "Definition 4.1",
+      "page": 103,
+      "href": "https://complexanalysis.org/web/sec_sequences-series.html#Seq_Lim_Def"
+    },
+    "kind": "flash",
+    "prompt": "Definition 4.1, limit of a sequence",
+    "steps": [
+      {
+        "text": "Definition 4.1, limit of a sequence",
+        "answer": "For every $\\varepsilon>0$ there is an integer $N$ such that $|z_n-\\zeta|<\\varepsilon$ whenever $n>N$.",
+        "why": "Definition 4.1, page 103."
+      }
+    ],
+    "generator": null,
+    "memory": "$z_n\\to\\zeta$ means the terms eventually sit in every disk around $\\zeta$.",
+    "formula": "$|z_n-\\zeta|<\\varepsilon$ for all $n>N_\\varepsilon$."
+  },
+  {
+    "id": "ch4-4.1-theorem-4-1",
+    "chapter": 4,
+    "section": "4.1",
+    "cite": {
+      "ref": "Theorem 4.1",
+      "page": 103,
+      "href": "https://complexanalysis.org/web/sec_sequences-series.html#Lim_Zn_Thm"
+    },
+    "kind": "flash",
+    "prompt": "Theorem 4.1, real and imaginary parts",
+    "steps": [
+      {
+        "text": "Theorem 4.1, real and imaginary parts",
+        "answer": "If $z_n=x_n+iy_n$ and $\\zeta=u+iv$, then $z_n\\to\\zeta$ if and only if $x_n\\to u$ and $y_n\\to v$.",
+        "why": "Theorem 4.1, page 103."
+      }
+    ],
+    "generator": null,
+    "memory": "A complex limit is the two real limits of the coordinates.",
+    "formula": "$z_n\\to\\zeta$ iff $x_n\\to u$ and $y_n\\to v$."
+  },
+  {
+    "id": "ch4-4.1-definition-4-2",
+    "chapter": 4,
+    "section": "4.1",
+    "cite": {
+      "ref": "Definition 4.2",
+      "page": 104,
+      "href": "https://complexanalysis.org/web/sec_sequences-series.html"
+    },
+    "kind": "flash",
+    "prompt": "Definition 4.2, bounded sequence",
+    "steps": [
+      {
+        "text": "Definition 4.2, bounded sequence",
+        "answer": "There is an $R>0$ and an $N$ such that $|z_n|<R$ for every $n>N$.",
+        "why": "Definition 4.2, page 104."
+      }
+    ],
+    "generator": null,
+    "memory": "Bounded means the tail sits in some disk about $0$."
+  },
+  {
+    "id": "ch4-4.1-theorem-4-2",
+    "chapter": 4,
+    "section": "4.1",
+    "cite": {
+      "ref": "Theorem 4.2",
+      "page": 105,
+      "href": "https://complexanalysis.org/web/sec_sequences-series.html"
+    },
+    "kind": "flash",
+    "prompt": "Theorem 4.2, convergent sequences are bounded",
+    "steps": [
+      {
+        "text": "Theorem 4.2, convergent sequences are bounded",
+        "answer": "If $\\{z_n\\}$ converges, then $\\{z_n\\}$ is bounded.",
+        "why": "Theorem 4.2, page 105."
+      }
+    ],
+    "generator": null,
+    "memory": "Convergence implies bounded. The converse is false."
+  },
+  {
+    "id": "ch4-4.1-definition-4-3",
+    "chapter": 4,
+    "section": "4.1",
+    "cite": {
+      "ref": "Definition 4.3",
+      "page": 105,
+      "href": "https://complexanalysis.org/web/sec_sequences-series.html"
+    },
+    "kind": "flash",
+    "prompt": "Definition 4.3, Cauchy sequence",
+    "steps": [
+      {
+        "text": "Definition 4.3, Cauchy sequence",
+        "answer": "For every $\\varepsilon>0$ there is an $N$ such that $|z_n-z_m|<\\varepsilon$ whenever $n,m>N$.",
+        "why": "Definition 4.3, page 105."
+      }
+    ],
+    "generator": null,
+    "memory": "Cauchy: the terms get close to each other, not yet to a named limit."
+  },
+  {
+    "id": "ch4-4.1-theorem-4-3",
+    "chapter": 4,
+    "section": "4.1",
+    "cite": {
+      "ref": "Theorem 4.3",
+      "page": 105,
+      "href": "https://complexanalysis.org/web/sec_sequences-series.html"
+    },
+    "kind": "flash",
+    "prompt": "Theorem 4.3, Cauchy sequences converge",
+    "steps": [
+      {
+        "text": "Theorem 4.3, Cauchy sequences converge",
+        "answer": "Every Cauchy sequence of complex numbers converges.",
+        "why": "Theorem 4.3, page 105."
+      }
+    ],
+    "generator": null,
+    "memory": "Cauchy implies convergent. Split into real and imaginary parts and use Theorem 4.1."
+  },
+  {
+    "id": "ch4-4.1-definition-4-4",
+    "chapter": 4,
+    "section": "4.1",
+    "cite": {
+      "ref": "Definition 4.4",
+      "page": 105,
+      "href": "https://complexanalysis.org/web/sec_sequences-series.html"
+    },
+    "kind": "flash",
+    "prompt": "Definition 4.4, infinite series",
+    "steps": [
+      {
+        "text": "Definition 4.4, infinite series",
+        "answer": "The formal sum $z_1+z_2+z_3+\\cdots$ is an infinite series.",
+        "why": "Definition 4.4, page 105."
+      }
+    ],
+    "generator": null,
+    "memory": "A series is the sequence of its partial sums, not yet a number."
+  },
+  {
+    "id": "ch4-4.1-definition-4-5",
+    "chapter": 4,
+    "section": "4.1",
+    "cite": {
+      "ref": "Definition 4.5",
+      "page": 105,
+      "href": "https://complexanalysis.org/web/sec_sequences-series.html"
+    },
+    "kind": "flash",
+    "prompt": "Definition 4.5, convergent series",
+    "steps": [
+      {
+        "text": "Definition 4.5, convergent series",
+        "answer": "The series sums to $S$ when the partial sums $S_n$ tend to $S$.",
+        "why": "Definition 4.5, page 105."
+      }
+    ],
+    "generator": null,
+    "memory": "The sum is the limit of the partial sums, when that limit exists."
+  },
+  {
+    "id": "ch4-4.1-definition-4-6",
+    "chapter": 4,
+    "section": "4.1",
+    "cite": {
+      "ref": "Definition 4.6",
+      "page": 106,
+      "href": "https://complexanalysis.org/web/sec_sequences-series.html"
+    },
+    "kind": "flash",
+    "prompt": "Definition 4.6, absolute convergence",
+    "steps": [
+      {
+        "text": "Definition 4.6, absolute convergence",
+        "answer": "The series is absolutely convergent when $\\sum |z_n|$ converges.",
+        "why": "Definition 4.6, page 106."
+      }
+    ],
+    "generator": null,
+    "memory": "Absolute convergence is convergence of the real series of moduli."
+  },
+  {
+    "id": "ch4-4.1-definition-4-7",
+    "chapter": 4,
+    "section": "4.1",
+    "cite": {
+      "ref": "Definition 4.7",
+      "page": 106,
+      "href": "https://complexanalysis.org/web/sec_sequences-series.html"
+    },
+    "kind": "flash",
+    "prompt": "Definition 4.7, divergent series",
+    "steps": [
+      {
+        "text": "Definition 4.7, divergent series",
+        "answer": "A series that does not converge is divergent.",
+        "why": "Definition 4.7, page 106."
+      }
+    ],
+    "generator": null,
+    "memory": "Divergent means the partial sums have no limit."
+  },
+  {
+    "id": "ch4-4.1-theorem-4-4",
+    "chapter": 4,
+    "section": "4.1",
+    "cite": {
+      "ref": "Theorem 4.4",
+      "page": 106,
+      "href": "https://complexanalysis.org/web/sec_sequences-series.html"
+    },
+    "kind": "flash",
+    "prompt": "Theorem 4.4, series of real and imaginary parts",
+    "steps": [
+      {
+        "text": "Theorem 4.4, series of real and imaginary parts",
+        "answer": "The series of $z_n=x_n+iy_n$ sums to $U+iV$ if and only if the real series sums to $U$ and the imaginary series sums to $V$.",
+        "why": "Theorem 4.4, page 106."
+      }
+    ],
+    "generator": null,
+    "memory": "A complex series converges exactly when both real series do."
+  },
+  {
+    "id": "ch4-4.1-theorem-4-5",
+    "chapter": 4,
+    "section": "4.1",
+    "cite": {
+      "ref": "Theorem 4.5",
+      "page": 106,
+      "href": "https://complexanalysis.org/web/sec_sequences-series.html"
+    },
+    "kind": "flash",
+    "prompt": "Theorem 4.5, terms of a convergent series",
+    "steps": [
+      {
+        "text": "Theorem 4.5, terms of a convergent series",
+        "answer": "If $\\sum z_n$ converges, then $z_n\\to 0$.",
+        "why": "Theorem 4.5, page 106."
+      }
+    ],
+    "generator": null,
+    "memory": "The terms of a convergent series go to $0$. The converse is false.",
+    "formula": "$z_n=S_n-S_{n-1}\\to S-S=0$."
+  },
+  {
+    "id": "ch4-4.1-theorem-4-6",
+    "chapter": 4,
+    "section": "4.1",
+    "cite": {
+      "ref": "Theorem 4.6",
+      "page": 107,
+      "href": "https://complexanalysis.org/web/sec_sequences-series.html"
+    },
+    "kind": "flash",
+    "prompt": "Theorem 4.6, sums and scalar multiples",
+    "steps": [
+      {
+        "text": "Theorem 4.6, sums and scalar multiples",
+        "answer": "If the two series converge and $c$ is constant, then $\\sum cz_n=c\\sum z_n$ and $\\sum(z_n+w_n)=\\sum z_n+\\sum w_n$.",
+        "why": "Theorem 4.6, page 107."
+      }
+    ],
+    "generator": null,
+    "memory": "You may add convergent series and multiply them by a constant."
+  },
+  {
+    "id": "ch4-4.1-definition-4-8",
+    "chapter": 4,
+    "section": "4.1",
+    "cite": {
+      "ref": "Definition 4.8",
+      "page": 107,
+      "href": "https://complexanalysis.org/web/sec_sequences-series.html"
+    },
+    "kind": "flash",
+    "prompt": "Definition 4.8, Cauchy product",
+    "steps": [
+      {
+        "text": "Definition 4.8, Cauchy product",
+        "answer": "The Cauchy product has coefficients $c_n=\\sum_{k=0}^{n} a_k b_{n-k}$.",
+        "why": "Definition 4.8, page 107."
+      }
+    ],
+    "generator": null,
+    "memory": "The Cauchy product is the series you get by multiplying the two series term by term."
+  },
+  {
+    "id": "ch4-4.1-theorem-4-7",
+    "chapter": 4,
+    "section": "4.1",
+    "cite": {
+      "ref": "Theorem 4.7",
+      "page": 107,
+      "href": "https://complexanalysis.org/web/sec_sequences-series.html"
+    },
+    "kind": "flash",
+    "prompt": "Theorem 4.7, sum of a Cauchy product",
+    "steps": [
+      {
+        "text": "Theorem 4.7, sum of a Cauchy product",
+        "answer": "If the Cauchy product converges, its sum is the product of the two sums.",
+        "why": "Theorem 4.7, page 107."
+      }
+    ],
+    "generator": null,
+    "memory": "When the product series converges, it equals $\\bigl(\\sum a_n\\bigr)\\bigl(\\sum b_n\\bigr)$."
+  },
+  {
+    "id": "ch4-4.1-theorem-4-8",
+    "chapter": 4,
+    "section": "4.1",
+    "cite": {
+      "ref": "Theorem 4.8",
+      "page": 107,
+      "href": "https://complexanalysis.org/web/sec_sequences-series.html"
+    },
+    "kind": "flash",
+    "prompt": "Theorem 4.8, comparison test",
+    "steps": [
+      {
+        "text": "Theorem 4.8, comparison test",
+        "answer": "If $|z_n|\\le M_n$ and $\\sum M_n$ is a convergent series of nonnegative real terms, then $\\sum z_n$ converges.",
+        "why": "Theorem 4.8, page 107."
+      }
+    ],
+    "generator": null,
+    "memory": "A nonnegative real majorant that converges forces the complex series to converge."
+  },
+  {
+    "id": "ch4-4.1-corollary-4-1",
+    "chapter": 4,
+    "section": "4.1",
+    "cite": {
+      "ref": "Corollary 4.1",
+      "page": 107,
+      "href": "https://complexanalysis.org/web/sec_sequences-series.html"
+    },
+    "kind": "flash",
+    "prompt": "Corollary 4.1, absolute convergence implies convergence",
+    "steps": [
+      {
+        "text": "Corollary 4.1, absolute convergence implies convergence",
+        "answer": "If $\\sum |z_n|$ converges, then $\\sum z_n$ converges.",
+        "why": "Corollary 4.1, page 107."
+      }
+    ],
+    "generator": null,
+    "memory": "Absolute convergence implies convergence."
+  },
+  {
+    "id": "ch4-4.2-theorem-4-9",
+    "chapter": 4,
+    "section": "4.2",
+    "cite": {
+      "ref": "Theorem 4.9",
+      "page": 113,
+      "href": "https://complexanalysis.org/web/sec_julia-mandelbrot.html#Kc_Connected"
+    },
+    "kind": "flash",
+    "prompt": "Theorem 4.9, when the Julia set is connected",
+    "steps": [
+      {
+        "text": "Theorem 4.9, when the Julia set is connected",
+        "answer": "The Julia set of $f_c(z)=z^2+c$ is connected if and only if the orbit of $0$ stays bounded.",
+        "why": "Theorem 4.9, page 113."
+      }
+    ],
+    "generator": null,
+    "memory": "Connected Julia set exactly when $0$ is in $K_c$."
+  },
+  {
+    "id": "ch4-4.2-definition-4-9",
+    "chapter": 4,
+    "section": "4.2",
+    "cite": {
+      "ref": "Definition 4.9",
+      "page": 115,
+      "href": "https://complexanalysis.org/web/sec_julia-mandelbrot.html"
+    },
+    "kind": "flash",
+    "prompt": "Definition 4.9, fixed point",
+    "steps": [
+      {
+        "text": "Definition 4.9, fixed point",
+        "answer": "The point $z_0$ is a fixed point of $f$ when $f(z_0)=z_0$.",
+        "why": "Definition 4.9, page 115."
+      }
+    ],
+    "generator": null,
+    "memory": "A fixed point is sent to itself."
+  },
+  {
+    "id": "ch4-4.2-definition-4-10",
+    "chapter": 4,
+    "section": "4.2",
+    "cite": {
+      "ref": "Definition 4.10",
+      "page": 115,
+      "href": "https://complexanalysis.org/web/sec_julia-mandelbrot.html"
+    },
+    "kind": "flash",
+    "prompt": "Definition 4.10, attracting point",
+    "steps": [
+      {
+        "text": "Definition 4.10, attracting point",
+        "answer": "The point $z_0$ is attracting for $f$ when $|f'(z_0)|<1$.",
+        "why": "Definition 4.10, page 115."
+      }
+    ],
+    "generator": null,
+    "memory": "Attracting means the derivative has modulus strictly less than $1$."
+  },
+  {
+    "id": "ch4-4.2-theorem-4-10",
+    "chapter": 4,
+    "section": "4.2",
+    "cite": {
+      "ref": "Theorem 4.10",
+      "page": 115,
+      "href": "https://complexanalysis.org/web/sec_julia-mandelbrot.html"
+    },
+    "kind": "flash",
+    "prompt": "Theorem 4.10, basin of an attracting fixed point",
+    "steps": [
+      {
+        "text": "Theorem 4.10, basin of an attracting fixed point",
+        "answer": "If $z_0$ is an attracting fixed point, some punctured disk about $z_0$ is pulled toward $z_0$, and the iterates of those points tend to $z_0$.",
+        "why": "Theorem 4.10, page 115."
+      }
+    ],
+    "generator": null,
+    "memory": "An attracting fixed point has a disk of starts whose iterates go to it."
+  },
+  {
+    "id": "ch4-4.2-theorem-4-11",
+    "chapter": 4,
+    "section": "4.2",
+    "cite": {
+      "ref": "Theorem 4.11",
+      "page": 116,
+      "href": "https://complexanalysis.org/web/sec_julia-mandelbrot.html"
+    },
+    "kind": "flash",
+    "prompt": "Theorem 4.11, attracting fixed points of $z^2+c$",
+    "steps": [
+      {
+        "text": "Theorem 4.11, attracting fixed points of $z^2+c$",
+        "answer": "$f_c(z)=z^2+c$ has an attracting fixed point if and only if $|1+\\sqrt{1-4c}|<1$ or $|1-\\sqrt{1-4c}|<1$, with the principal square root.",
+        "why": "Theorem 4.11, page 116."
+      }
+    ],
+    "generator": null,
+    "memory": "$z^2+c$ has an attracting fixed point precisely when the parameter $c$ lies inside the main cardioid. Theorem 4.11, page 116."
+  },
+  {
+    "id": "ch4-4.2-definition-4-11",
+    "chapter": 4,
+    "section": "4.2",
+    "cite": {
+      "ref": "Definition 4.11",
+      "page": 116,
+      "href": "https://complexanalysis.org/web/sec_julia-mandelbrot.html"
+    },
+    "kind": "flash",
+    "prompt": "Definition 4.11, $n$-cycle",
+    "steps": [
+      {
+        "text": "Definition 4.11, $n$-cycle",
+        "answer": "An $n$-cycle is $n$ distinct points cycled by $f$: each goes to the next, and the last returns to the first.",
+        "why": "Definition 4.11, page 116."
+      }
+    ],
+    "generator": null,
+    "memory": "A cycle is a finite orbit that closes."
+  },
+  {
+    "id": "ch4-4.2-definition-4-12",
+    "chapter": 4,
+    "section": "4.2",
+    "cite": {
+      "ref": "Definition 4.12",
+      "page": 116,
+      "href": "https://complexanalysis.org/web/sec_julia-mandelbrot.html"
+    },
+    "kind": "flash",
+    "prompt": "Definition 4.12, attracting cycle",
+    "steps": [
+      {
+        "text": "Definition 4.12, attracting cycle",
+        "answer": "The cycle is attracting when $|g_n'(z_0)|<1$, where $g_n$ is $f$ composed with itself $n$ times.",
+        "why": "Definition 4.12, page 116."
+      }
+    ],
+    "generator": null,
+    "memory": "Test the multiplier of the whole loop, not of one step."
+  },
+  {
+    "id": "ch4-4.3-theorem-4-12",
+    "chapter": 4,
+    "section": "4.3",
+    "cite": {
+      "ref": "Theorem 4.12",
+      "page": 118,
+      "href": "https://complexanalysis.org/web/sec_convergence-theorems.html#Geometric_Series"
+    },
+    "kind": "flash",
+    "prompt": "Theorem 4.12, geometric series",
+    "steps": [
+      {
+        "text": "Theorem 4.12, geometric series",
+        "answer": "If $|z|<1$, then $\\sum_{n=0}^{\\infty} z^n=1/(1-z)$. If $|z|\\ge 1$, the series diverges.",
+        "why": "Theorem 4.12, page 118."
+      }
+    ],
+    "generator": null,
+    "memory": "Inside the unit disk the geometric series sums to $1/(1-z)$. On and outside it, the series diverges.",
+    "formula": "$\\sum_{n=0}^{\\infty} z^n=\\dfrac{1}{1-z}$ for $|z|<1$."
+  },
+  {
+    "id": "ch4-4.3-corollary-4-2",
+    "chapter": 4,
+    "section": "4.3",
+    "cite": {
+      "ref": "Corollary 4.2",
+      "page": 119,
+      "href": "https://complexanalysis.org/web/sec_convergence-theorems.html"
+    },
+    "kind": "flash",
+    "prompt": "Corollary 4.2, series of negative powers",
+    "steps": [
+      {
+        "text": "Corollary 4.2, series of negative powers",
+        "answer": "If $|z|>1$, then $\\sum_{n=1}^{\\infty} z^{-n}=1/(z-1)$. If $|z|\\le 1$, the series diverges.",
+        "why": "Corollary 4.2, page 119."
+      }
+    ],
+    "generator": null,
+    "memory": "Outside the closed unit disk, the negative powers sum to $1/(z-1)$."
+  },
+  {
+    "id": "ch4-4.3-corollary-4-3",
+    "chapter": 4,
+    "section": "4.3",
+    "cite": {
+      "ref": "Corollary 4.3",
+      "page": 119,
+      "href": "https://complexanalysis.org/web/sec_convergence-theorems.html"
+    },
+    "kind": "flash",
+    "prompt": "Corollary 4.3, the expansion of $1/(1-z)$",
+    "steps": [
+      {
+        "text": "Corollary 4.3, the expansion of $1/(1-z)$",
+        "answer": "If $z\\ne 1$, then $1/(1-z)=1+z+\\cdots+z^{n-1}+z^n/(1-z)$.",
+        "why": "Corollary 4.3, page 119. The partial sum $(1-z^n)/(1-z)$ is the line before this identity, Equation (4.14)."
+      }
+    ],
+    "generator": null,
+    "memory": "If $z\\ne 1$, then $1/(1-z)=1+z+\\cdots+z^{n-1}$\n$+z^n/(1-z)$. Corollary 4.3, page 119.",
+    "formula": "$\\dfrac{1}{1-z}=1+z+\\cdots+z^{n-1}$\n$+\\dfrac{z^n}{1-z}$ for $z\\ne 1$."
+  },
+  {
+    "id": "ch4-4.3-theorem-4-13",
+    "chapter": 4,
+    "section": "4.3",
+    "cite": {
+      "ref": "Theorem 4.13",
+      "page": 120,
+      "href": "https://complexanalysis.org/web/sec_convergence-theorems.html"
+    },
+    "kind": "flash",
+    "prompt": "Theorem 4.13, d'Alembert ratio test",
+    "steps": [
+      {
+        "text": "Theorem 4.13, d'Alembert ratio test",
+        "answer": "If $\\lim |\\zeta_{n+1}/\\zeta_n|=L$, the series converges absolutely when $L<1$ and diverges when $L>1$.",
+        "why": "Theorem 4.13, page 120."
+      }
+    ],
+    "generator": null,
+    "memory": "Ratio test: limit of successive moduli. $L<1$ converges absolutely, $L>1$ diverges, $L=1$ says nothing."
+  },
+  {
+    "id": "ch4-4.3-definition-4-13",
+    "chapter": 4,
+    "section": "4.3",
+    "cite": {
+      "ref": "Definition 4.13",
+      "page": 121,
+      "href": "https://complexanalysis.org/web/sec_convergence-theorems.html"
+    },
+    "kind": "flash",
+    "prompt": "Definition 4.13, limit supremum of a positive sequence",
+    "steps": [
+      {
+        "text": "Definition 4.13, limit supremum of a positive sequence",
+        "answer": "Let $\\{t_n\\}$ be a sequence of positive real numbers. The limit supremum is the smallest real number $L$ such that, for every $\\varepsilon>0$, only finitely many terms exceed $L+\\varepsilon$. If no such $L$ exists, the limit supremum is infinity.",
+        "why": "Definition 4.13, page 121. The sequence is positive."
+      }
+    ],
+    "generator": null,
+    "memory": "The limit supremum of a sequence of positive real numbers is its eventual ceiling."
+  },
+  {
+    "id": "ch4-4.3-theorem-4-14",
+    "chapter": 4,
+    "section": "4.3",
+    "cite": {
+      "ref": "Theorem 4.14",
+      "page": 122,
+      "href": "https://complexanalysis.org/web/sec_convergence-theorems.html"
+    },
+    "kind": "flash",
+    "prompt": "Theorem 4.14, root test",
+    "steps": [
+      {
+        "text": "Theorem 4.14, root test",
+        "answer": "If $\\limsup |\\zeta_n|^{1/n}=L$, the series converges absolutely when $L<1$ and diverges when $L>1$.",
+        "why": "Theorem 4.14, page 122."
+      }
+    ],
+    "generator": null,
+    "memory": "Root test: the limit supremum of the $n$th roots. $L=1$ is inconclusive."
+  },
+  {
+    "id": "ch4-4.4-theorem-4-15",
+    "chapter": 4,
+    "section": "4.4",
+    "cite": {
+      "ref": "Theorem 4.15",
+      "page": 124,
+      "href": "https://complexanalysis.org/web/sec_power-series.html#Regions_of_Convergence"
+    },
+    "kind": "flash",
+    "prompt": "Theorem 4.15, disk of convergence",
+    "steps": [
+      {
+        "text": "Theorem 4.15, disk of convergence",
+        "answer": "A power series $\\sum c_n(z-\\alpha)^n$ converges at the single point $\\alpha$, or on a disk about $\\alpha$ (and maybe some of the boundary circle), or on the whole plane.",
+        "why": "Theorem 4.15, page 124."
+      }
+    ],
+    "generator": null,
+    "memory": "A power series converges inside a disk and diverges outside it."
+  },
+  {
+    "id": "ch4-4.4-theorem-4-16",
+    "chapter": 4,
+    "section": "4.4",
+    "cite": {
+      "ref": "Theorem 4.16",
+      "page": 125,
+      "href": "https://complexanalysis.org/web/sec_power-series.html#th15"
+    },
+    "kind": "flash",
+    "prompt": "Theorem 4.16, formulas for the radius",
+    "steps": [
+      {
+        "text": "Theorem 4.16, formulas for the radius",
+        "answer": "The radius is $1/\\lim |c_n|^{1/n}$ when the limit exists, $1/\\limsup |c_n|^{1/n}$ in general, and $1/\\lim |c_{n+1}/c_n|$ when that limit exists.",
+        "why": "Theorem 4.16, page 125."
+      }
+    ],
+    "generator": null,
+    "memory": "Three formulas for the radius. Use the one whose limit you can see.",
+    "formula": "$\\rho=1/\\limsup |c_n|^{1/n}$."
+  },
+  {
+    "id": "ch4-4.4-theorem-4-17",
+    "chapter": 4,
+    "section": "4.4",
+    "cite": {
+      "ref": "Theorem 4.17",
+      "page": 125,
+      "href": "https://complexanalysis.org/web/sec_power-series.html"
+    },
+    "kind": "flash",
+    "prompt": "Theorem 4.17, derivatives of a power series",
+    "steps": [
+      {
+        "text": "Theorem 4.17, derivatives of a power series",
+        "answer": "Inside the disk of convergence the sum is infinitely differentiable, the derivative is the differentiated series, and $c_k=f^{(k)}(\\alpha)/k!$.",
+        "why": "Theorem 4.17, page 125."
+      }
+    ],
+    "generator": null,
+    "memory": "Inside the disk you may differentiate term by term. The coefficients are the Taylor coefficients."
+  },
+  {
+    "id": "ch4-4.1-thm-4.1-blank",
+    "chapter": 4,
+    "section": "4.1",
+    "cite": {
+      "ref": "Theorem 4.1",
+      "page": 104,
+      "href": "https://complexanalysis.org/web/sec_sequences-series.html#Lim_Zn_Thm"
+    },
+    "kind": "proof-blank",
+    "prompt": "Theorem 4.1, pages 103–104. Assume $x_n\\to u$ and $y_n\\to v$, with $z_n=x_n+iy_n$ and $\\zeta=u+iv$. Show $z_n\\to\\zeta$.",
+    "steps": [
+      {
+        "text": "Given $\\varepsilon>0$, choose $N$ and $M$ so that $|x_n-u|<\\varepsilon/2$ for $n>N$ and $|y_n-v|<\\varepsilon/2$ for $n>M$. For $n>\\max\\{N,M\\}$, $|z_n-\\zeta|=|(x_n-u)+i(y_n-v)|$ is at most ___.",
+        "answer": "$|x_n-u|+|y_n-v|$",
+        "why": "The triangle inequality is the step the book asks you to justify on page 104. Then $|i|=1$.",
+        "hints": [
+          "Split the one modulus into the two coordinates.",
+          "Bound $|A+B|$ by $|A|+|B|$."
+        ],
+        "accept": [
+          "|x_n-u|+|y_n-v|",
+          "|xn-u|+|yn-v|"
+        ]
+      },
+      {
+        "text": "That sum is strictly less than ___.",
+        "answer": "$\\varepsilon$",
+        "why": "Each half is under $\\varepsilon/2$. Definition 4.1, page 103, asks for a strict inequality.",
+        "hints": [
+          "Each coordinate was kept under half the allowance.",
+          "Add the two halves."
+        ],
+        "accept": [
+          "\\varepsilon",
+          "epsilon"
+        ]
+      }
+    ],
+    "generator": null,
+    "memory": "To pass from the two real limits to $|z_n-\\zeta|$, use the triangle inequality and split $\\varepsilon$ in half. Theorem 4.1, page 104.",
+    "formula": "$|z_n-\\zeta|\\le |x_n-u|+|y_n-v|$."
+  },
+  {
+    "id": "ch4-4.1-thm-4.1-mc",
+    "chapter": 4,
+    "section": "4.1",
+    "cite": {
+      "ref": "Theorem 4.1",
+      "page": 104,
+      "href": "https://complexanalysis.org/web/sec_sequences-series.html#Lim_Zn_Thm"
+    },
+    "kind": "proof-mc",
+    "prompt": "Same direction of Theorem 4.1, page 104. Pick the bound, then the allowance.",
+    "steps": [
+      {
+        "text": "For $n$ large, $|z_n-\\zeta|$ is at most ___.",
+        "answer": "$|x_n-u|+|y_n-v|$",
+        "why": "Triangle inequality on page 104. The product and the difference are the usual wrong turns.",
+        "hints": [
+          "The bound adds the two pieces.",
+          "It is not a product."
+        ],
+        "choices": [
+          "$|x_n-u|+|y_n-v|$",
+          "$|x_n-u|\\cdot|y_n-v|$",
+          "$|x_n-u|-|y_n-v|$",
+          "$|z_n|-|\\zeta|$"
+        ]
+      },
+      {
+        "text": "The sum of the two halves is strictly less than ___.",
+        "answer": "$\\varepsilon$",
+        "why": "Half plus half is the $\\varepsilon$ from Definition 4.1, page 103.",
+        "hints": [
+          "You spent half of $\\varepsilon$ on each coordinate.",
+          "The total has to be the original $\\varepsilon$."
+        ],
+        "choices": [
+          "$\\varepsilon$",
+          "$\\varepsilon/2$",
+          "$2\\varepsilon$",
+          "$0$"
+        ]
+      }
+    ],
+    "generator": null,
+    "memory": "To pass from the two real limits to $|z_n-\\zeta|$, use the triangle inequality and split $\\varepsilon$ in half. Theorem 4.1, page 104.",
+    "formula": "$|z_n-\\zeta|\\le |x_n-u|+|y_n-v|$."
+  },
+  {
+    "id": "ch4-4.3-thm-4.12-blank",
+    "chapter": 4,
+    "section": "4.3",
+    "cite": {
+      "ref": "Theorem 4.12",
+      "page": 118,
+      "href": "https://complexanalysis.org/web/sec_convergence-theorems.html#Geometric_Series"
+    },
+    "kind": "proof-blank",
+    "prompt": "Prove the sum half of Theorem 4.12, page 118: if $|z|<1$, then $\\sum_{n=0}^{\\infty} z^n=1/(1-z)$.",
+    "steps": [
+      {
+        "text": "Let $S_n=1+z+\\cdots+z^{n-1}$. Subtract $zS_n$ from $S_n$. Then $(1-z)S_n=$ ___.",
+        "answer": "$1-z^n$",
+        "why": "The middle terms cancel. This is the first identity in the proof on page 118.",
+        "hints": [
+          "Multiply the partial sum by $z$ and subtract.",
+          "Only the first term and the last term survive."
+        ],
+        "accept": [
+          "1-z^n",
+          "1-z^{n}"
+        ]
+      },
+      {
+        "text": "So $S_n=$ ___.",
+        "answer": "$\\dfrac{1-z^n}{1-z}$",
+        "why": "Divide by $1-z$. Equation (4.14), page 118, writes the same quantity as $1/(1-z)-z^n/(1-z)$.",
+        "hints": [
+          "Divide the previous line by $1-z$.",
+          "Keep the $z^n$ term. It is not zero yet."
+        ],
+        "accept": [
+          "(1-z^n)/(1-z)",
+          "\\frac{1-z^n}{1-z}",
+          "1/(1-z)-z^n/(1-z)",
+          "\\frac{1}{1-z}-\\frac{z^n}{1-z}"
+        ]
+      },
+      {
+        "text": "Because $|z|<1$, the powers $z^n$ tend to $0$, so the sum is ___.",
+        "answer": "$\\dfrac{1}{1-z}$",
+        "why": "The second term dies. Exercise 6 of §4.3, page 123, asks you to prove $z^n\\to 0$ when $|z|<1$.",
+        "hints": [
+          "Send $n$ to infinity in the partial-sum formula.",
+          "The surviving piece is the first term of that formula."
+        ],
+        "accept": [
+          "1/(1-z)",
+          "\\frac{1}{1-z}"
+        ]
+      }
+    ],
+    "generator": null,
+    "memory": "If $|z|<1$, the geometric series sums to $1/(1-z)$. Theorem 4.12, page 118.",
+    "formula": "$S_n=\\dfrac{1-z^n}{1-z}\\to\\dfrac{1}{1-z}$ when $|z|<1$."
+  },
+  {
+    "id": "ch4-4.3-thm-4.12-mc",
+    "chapter": 4,
+    "section": "4.3",
+    "cite": {
+      "ref": "Theorem 4.12",
+      "page": 118,
+      "href": "https://complexanalysis.org/web/sec_convergence-theorems.html#Geometric_Series"
+    },
+    "kind": "proof-mc",
+    "prompt": "Same proof as Theorem 4.12, page 118, one choice at a time.",
+    "steps": [
+      {
+        "text": "$(1-z)S_n=$ ___.",
+        "answer": "$1-z^n$",
+        "why": "Subtract $zS_n$ from $S_n$. Page 118.",
+        "hints": [
+          "The middle terms cancel.",
+          "The last term is $-z^n$, not $-z$."
+        ],
+        "choices": [
+          "$1-z^n$",
+          "$1+z^n$",
+          "$1-z$",
+          "$z^n$"
+        ]
+      },
+      {
+        "text": "$S_n=$ ___.",
+        "answer": "$\\dfrac{1-z^n}{1-z}$",
+        "why": "Keep $z^n$ until the limit. Equation (4.14), page 118, is $1/(1-z)-z^n/(1-z)$, the same fraction.",
+        "hints": [
+          "Divide by $1-z$.",
+          "Do not drop $z^n$ on this line."
+        ],
+        "choices": [
+          "$\\dfrac{1-z^n}{1-z}$",
+          "$\\dfrac{1}{1-z}$",
+          "$\\dfrac{1-z^n}{1+z}$",
+          "$1-z^n$"
+        ]
+      },
+      {
+        "text": "The sum of the series is ___.",
+        "answer": "$\\dfrac{1}{1-z}$",
+        "why": "$z^n\\to 0$ when $|z|<1$, so only $1/(1-z)$ remains. Page 118.",
+        "hints": [
+          "Now let $n$ grow.",
+          "The sign in the denominator stays $1-z$."
+        ],
+        "choices": [
+          "$\\dfrac{1}{1-z}$",
+          "$\\dfrac{1}{1+z}$",
+          "$1-z$",
+          "$\\dfrac{z}{1-z}$"
+        ]
+      }
+    ],
+    "generator": null,
+    "memory": "If $|z|<1$, the geometric series sums to $1/(1-z)$. Theorem 4.12, page 118.",
+    "formula": "$S_n=\\dfrac{1-z^n}{1-z}\\to\\dfrac{1}{1-z}$ when $|z|<1$."
+  },
+  {
+    "id": "ch4-4.1-ex-1a",
+    "chapter": 4,
+    "section": "4.1",
+    "cite": {
+      "ref": "§4.1, Exercise 1(a)",
+      "page": 108,
+      "href": "https://complexanalysis.org/web/sec_sequences-series.html#x4_1_1"
+    },
+    "kind": "next-step-blank",
+    "prompt": "Find $\\lim_{n\\to\\infty}\\left(\\frac{1}{2}+\\frac{i}{4}\\right)^n$. Exercise 1(a), page 108.",
+    "steps": [
+      {
+        "text": "The modulus of the base is ___.",
+        "answer": "$\\dfrac{\\sqrt{5}}{4}$",
+        "why": "$\\left|\\frac12+\\frac i4\\right|=\\sqrt{\\frac14+\\frac{1}{16}}=\\sqrt5/4<1$. The book’s selected answer, page 437, is $0$.",
+        "hints": [
+          "Square the real part and the imaginary part, then add.",
+          "$\\sqrt{1/4+1/16}$ simplifies by a common denominator of 16."
+        ],
+        "accept": [
+          "\\sqrt{5}/4",
+          "sqrt(5)/4",
+          "\\frac{\\sqrt{5}}{4}"
+        ]
+      },
+      {
+        "text": "Because that modulus is less than $1$, the limit is ___.",
+        "answer": "$0$",
+        "why": "Powers of a number inside the unit disk go to $0$. Exercise 1(a), page 108.",
+        "hints": [
+          "A modulus under $1$ forces the powers inward.",
+          "The limit is the origin, not the base itself."
+        ],
+        "accept": [
+          "0"
+        ]
+      }
+    ],
+    "generator": null,
+    "memory": "If $|w|<1$, then $w^n\\to 0$. Exercise 1(a), page 108."
+  },
+  {
+    "id": "ch4-4.2-ex-3",
+    "chapter": 4,
+    "section": "4.2",
+    "cite": {
+      "ref": "§4.2, Exercise 3",
+      "page": 117,
+      "href": "https://complexanalysis.org/web/sec_julia-mandelbrot.html#x4_2_3"
+    },
+    "kind": "next-step-blank",
+    "prompt": "Newton’s method for $f(z)=az+b$ with $a\\ne 0$. Exercise 3, page 117. How many iterations reach the root?",
+    "steps": [
+      {
+        "text": "$N(z)=z-f(z)/f'(z)$ simplifies to ___.",
+        "answer": "$-\\dfrac{b}{a}$",
+        "why": "$f'(z)=a$, so $z-(az+b)/a=-b/a$. The value does not depend on the guess.",
+        "hints": [
+          "The derivative of $az+b$ is the constant $a$.",
+          "Subtract $(az+b)/a$ from $z$."
+        ],
+        "accept": [
+          "-b/a",
+          "-\\frac{b}{a}"
+        ]
+      },
+      {
+        "text": "The number of iterations needed is ___.",
+        "answer": "$1$, or $0$ if the guess is already the root",
+        "why": "The selected answer, page 438, computes $z_1=-b/a$, and notes that a guess which is already the root stops at $z_0$. Exercise 3, page 117.",
+        "hints": [
+          "The simplified map ignores the guess.",
+          "Count the steps from $z_0$ to the root. The book’s answer also allows the guess that is already the root."
+        ],
+        "accept": [
+          "1",
+          "one",
+          "0 or 1",
+          "1 or 0"
+        ]
+      }
+    ],
+    "generator": null,
+    "memory": "For $f(z)=az+b$, Newton’s method reaches $-b/a$ in one step, or in zero steps if the guess is already the root. Exercise 3, page 117."
+  },
+  {
+    "id": "ch4-4.3-ex-1b",
+    "chapter": 4,
+    "section": "4.3",
+    "cite": {
+      "ref": "§4.3, Exercise 1(b)",
+      "page": 122,
+      "href": "https://complexanalysis.org/web/sec_convergence-theorems.html#exercises_convergence-theorems-2"
+    },
+    "kind": "next-step-blank",
+    "prompt": "Evaluate $\\sum_{n=0}^{\\infty}\\left(\\dfrac{1}{2+i}\\right)^n$. Exercise 1(b), page 122.",
+    "steps": [
+      {
+        "text": "Does the series converge? ___",
+        "answer": "yes",
+        "why": "$|1/(2+i)|=1/\\sqrt5<1$, so Theorem 4.12, page 118, applies.",
+        "hints": [
+          "Compute the modulus of $1/(2+i)$.",
+          "It is under $1$, so the geometric series converges."
+        ],
+        "accept": [
+          "converges"
+        ]
+      },
+      {
+        "text": "The sum is ___.",
+        "answer": "$\\dfrac{3-i}{2}$",
+        "why": "$1/(1-1/(2+i))=(2+i)/(1+i)$. Rationalize to get $(3-i)/2$. Theorem 4.12, page 118.",
+        "hints": [
+          "The closed form is $1/(1-z)$ with $z=1/(2+i)$.",
+          "Multiply numerator and denominator by the conjugate of $1+i$."
+        ],
+        "accept": [
+          "(3-i)/2",
+          "\\frac{3-i}{2}",
+          "(2+i)/(1+i)"
+        ]
+      }
+    ],
+    "generator": null,
+    "memory": "A geometric series with ratio $1/(2+i)$ sums to $(3-i)/2$. Exercise 1(b), page 122.",
+    "formula": "$\\sum_{n=0}^{\\infty} z^n=\\dfrac{1}{1-z}$ for $|z|<1$."
+  },
+  {
+    "id": "ch4-4.3-ex-2",
+    "chapter": 4,
+    "section": "4.3",
+    "cite": {
+      "ref": "§4.3, Exercise 2",
+      "page": 122,
+      "href": "https://complexanalysis.org/web/sec_convergence-theorems.html#x4_3_2"
+    },
+    "kind": "next-step-mc",
+    "prompt": "Where does $\\sum_{n=0}^{\\infty}(z+i)^n/2^n$ converge? Exercise 2, page 122.",
+    "steps": [
+      {
+        "text": "Write the terms as a geometric series in $w=(z+i)/2$. The series converges when ___.",
+        "answer": "$|z+i|<2$",
+        "why": "$|w|<1$ is the disk in Theorem 4.12, page 118, which is $D_2(-i)$.",
+        "hints": [
+          "Convergence needs $|w|<1$.",
+          "Multiply that inequality by $2$."
+        ],
+        "choices": [
+          "$|z+i|<2$",
+          "$|z|<2$",
+          "$|z+i|>2$",
+          "$|z+i|<1$"
+        ]
+      }
+    ],
+    "generator": null,
+    "memory": "The series in $(z+i)/2$ converges on the disk $|z+i|<2$ and diverges outside it. Exercise 2, page 122."
+  },
+  {
+    "id": "ch4-4.1-thm-4.5-blank",
+    "chapter": 4,
+    "section": "4.1",
+    "cite": {
+      "ref": "Theorem 4.5",
+      "page": 106,
+      "href": "https://complexanalysis.org/web/sec_sequences-series.html"
+    },
+    "kind": "blank",
+    "prompt": "If $\\sum z_n$ converges, then $\\lim z_n=$ ___. Theorem 4.5, page 106.",
+    "steps": [
+      {
+        "text": "The limit of the terms is ___.",
+        "answer": "$0$",
+        "why": "$z_n=S_n-S_{n-1}$, and both partial sums tend to the same sum. Page 106, with the hint from Exercise 9.",
+        "hints": [
+          "Write the general term as a difference of partial sums.",
+          "Those two partial sums share a limit."
+        ],
+        "accept": [
+          "0"
+        ]
+      }
+    ],
+    "generator": null,
+    "memory": "The terms of a convergent series go to $0$. Theorem 4.5, page 106."
+  },
+  {
+    "id": "ch4-4.1-thm-4.8-mc",
+    "chapter": 4,
+    "section": "4.1",
+    "cite": {
+      "ref": "Theorem 4.8",
+      "page": 107,
+      "href": "https://complexanalysis.org/web/sec_sequences-series.html"
+    },
+    "kind": "mc",
+    "prompt": "The comparison test needs a real series that bounds $|z_n|$. Theorem 4.8, page 107.",
+    "steps": [
+      {
+        "text": "The majorant $M_n$ must be ___.",
+        "answer": "nonnegative",
+        "why": "Theorem 4.8, page 107, asks for a convergent series of nonnegative real terms.",
+        "hints": [
+          "The comparison test for real series needs terms you can compare as sizes.",
+          "Negative terms are not a majorant."
+        ],
+        "choices": [
+          "nonnegative",
+          "negative",
+          "complex",
+          "increasing"
+        ]
+      }
+    ],
+    "generator": null,
+    "memory": "Comparison: $|z_n|\\le M_n$ with $M_n\\ge 0$ and $\\sum M_n$ convergent. Theorem 4.8, page 107."
+  },
+  {
+    "id": "ch4-4.3-gen-sum",
+    "chapter": 4,
+    "section": "4.3",
+    "cite": {
+      "ref": "Theorem 4.12",
+      "page": 118,
+      "href": "https://complexanalysis.org/web/sec_convergence-theorems.html#Geometric_Series"
+    },
+    "kind": "blank",
+    "prompt": "A geometric series with a seeded ratio.",
+    "steps": [],
+    "generator": {
+      "template": "geometric-series",
+      "params": {
+        "kind": "sum"
+      }
+    },
+    "memory": "If $|z|<1$, then $\\sum_{n=0}^{\\infty} z^n=1/(1-z)$. If $|z|\\ge 1$, the series diverges. Theorem 4.12, page 118.",
+    "formula": "$\\sum_{n=0}^{\\infty} z^n=\\dfrac{1}{1-z}$ for $|z|<1$."
+  },
+  {
+    "id": "ch4-4.4-gen-radius",
+    "chapter": 4,
+    "section": "4.4",
+    "cite": {
+      "ref": "Theorem 4.16",
+      "page": 125,
+      "href": "https://complexanalysis.org/web/sec_power-series.html#th15"
+    },
+    "kind": "blank",
+    "prompt": "A power series with a seeded radius.",
+    "steps": [],
+    "generator": {
+      "template": "geometric-series",
+      "params": {
+        "kind": "radius"
+      }
+    },
+    "memory": "For $\\sum (z-\\alpha)^n/c^n$ the radius is $|c|$. The centre does not change it. Theorem 4.16, page 125.",
+    "formula": "$\\rho=|c|$ for $\\sum (z-\\alpha)^n/c^n$."
+  }
+]

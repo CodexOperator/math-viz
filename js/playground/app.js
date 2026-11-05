@@ -4567,7 +4567,7 @@ export function start() {
   }
 
   const DOOR_SHORT = {
-    story: 'Map', powers: 'Powers', julia: 'Julia', mandelbrot: 'Set',
+    story: 'Book', powers: 'Powers', julia: 'Julia', mandelbrot: 'Set',
     zero: 'Orbit', disk: 'Disk', bulbs: 'Cardioid', reciprocal: 'Sphere',
     newton: 'Newton', roots: 'Roots', derivative: 'Move', slide: 'Slide',
     arithmetic: 'Slide', motion: 'Motion', mappings: 'Motion', graph4d: '4D',
@@ -4632,7 +4632,7 @@ export function start() {
     };
   }
 
-  // Story Map opens Test 1. That is the three threads. F2, on the family, opens Test 2.
+  // The Book is the way up. A warp or a crossing still remembers Test 2.
   // A fractal split adds the Test 1 station the thread names. The bend does not:
   // its T1 is the sphere, and its T3 is the derivative, the move that keeps angles.
   // The roots picture does not inherit the sphere or the cardioid. Its doors are
@@ -4802,8 +4802,8 @@ export function start() {
     const items = cross
       ? [
         ['story', {
-          href: 'index.html#home',
-          label: 'Story Map',
+          href: 'index.html#book',
+          label: 'The Book',
           dir: 'prev',
           map: 'test2',
           pin: 'pg-cross',
@@ -4818,8 +4818,8 @@ export function start() {
         // The other rooms open Test 1 from this door. This card is not on
         // Test 1. The header Story Map remembers Test 2, the same map as this door.
         ['story', {
-          href: 'index.html#home',
-          label: 'Story Map',
+          href: 'index.html#book',
+          label: 'The Book',
           dir: 'prev',
           map: 'test2',
           pin: 'pg-warp',
@@ -4831,7 +4831,7 @@ export function start() {
       ]
       : (fall || lean)
       ? [
-        ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
+        ['story', { href: 'index.html#book', label: 'The Book', dir: 'prev', map: 'test1' }],
         ['newton', newtonDoor],
         ['roots', rootsDoor],
         ['derivative', derivDoor],
@@ -4839,7 +4839,7 @@ export function start() {
       ]
       : diary
       ? [
-        ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
+        ['story', { href: 'index.html#book', label: 'The Book', dir: 'prev', map: 'test1' }],
         ['powers', powersDoor],
         ['julia', juliaDoor],
         ['mandelbrot', mandelDoor],
@@ -4849,14 +4849,14 @@ export function start() {
       ]
       : unity
       ? [
-        ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
+        ['story', { href: 'index.html#book', label: 'The Book', dir: 'prev', map: 'test1' }],
         ['newton', stationPlace('newton')],
         ['roots', stationPlace('roots', 'T2')],
         ['powers', stationPlace('powers', 'T2')],
         ['derivative', stationPlace('derivative', 'T3')],
       ]
       : [
-        ['story', { href: 'index.html#home', label: 'Story Map', dir: 'prev', map: 'test1' }],
+        ['story', { href: 'index.html#book', label: 'The Book', dir: 'prev', map: 'test1' }],
         ['reciprocal', sphereLink],
         ['julia', stationPlace('julia')],
         ['mandelbrot', stationPlace('mandelbrot')],
@@ -4895,7 +4895,7 @@ export function start() {
     const shown = comp ? comp.level : level(state);
     const learnerNow = level(state);
     const named = comp && learnerNow > shown ? learnerNow : shown;
-    places.setAttribute('aria-label', `${levelWords(named)}. Story Map and the same move`);
+    places.setAttribute('aria-label', `${levelWords(named)}. The Book and the same move`);
     for (const [id, spec] of items) places.append(placeAnchor(id, spec));
   }
 

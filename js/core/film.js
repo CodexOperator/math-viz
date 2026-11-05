@@ -292,13 +292,20 @@ export function mountFilm(host, film, ctx, opts = {}) {
   }
   const cites = filmCitations(film, book);
   const linkEntries = filmLinkEntries(film);
-  // Same row the stations use: a Story Map link, then the places this move comes back to.
-  // Thread badges above use the same "T1 · title" cut as threadLabel. A label that names
-  // Test 1 or Test 2 is the chip that switches the map.
-  const links = el('nav', { class: 'station-links', id: `${id}-links`, 'aria-label': 'Story Map and the same move' });
-  const linkNote = el('p', { class: 'muted', id: `${id}-links-note` }, 'Story Map is the whole course. A link that names Test 1 or Test 2 switches the map. The switch at the top brings you back.');
-  if (!linkEntries.some((link) => link.href === '#home')) {
-    links.append(el('a', { class: 'station-link', href: '#home', id: `${id}-story`, 'data-dir': 'prev' }, 'Story Map'));
+  // The way up from a film is The Book. Thread badges above use the same
+  // "T1 · title" cut as threadLabel. A label that names Test 1 or Test 2
+  // is the chip that switches the map.
+  const links = el('nav', {
+    class: 'station-links', id: `${id}-links`,
+    'aria-label': 'The Book and the same move',
+  });
+  const linkNote = el('p', { class: 'muted', id: `${id}-links-note` },
+    'The Book is chapters 1 to 7. A link that names Test 1 or Test 2 switches the map.');
+  const storyHref = '#book';
+  if (!linkEntries.some((link) => link.href === storyHref)) {
+    links.append(el('a', {
+      class: 'station-link', href: storyHref, id: `${id}-story`, 'data-dir': 'prev',
+    }, 'The Book'));
   }
   for (const link of linkEntries) {
     links.append(el('a', { class: 'station-link', href: link.href, id: `${id}-link-${String(link.href).replace(/^#/, '')}` }, link.label));
