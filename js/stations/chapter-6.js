@@ -67,7 +67,7 @@ const STAGES = [
   },
   {
     id: '6.3',
-    why: '6.2 computes one path. A closed analytic path integrates to $0$.',
+    why: '6.2 computes one path. An analytic function on a simple closed curve integrates to $0$.',
     next: 'Next camp is 6.4, the fundamental theorems.',
     go: '6.4',
     goLabel: 'Go to 6.4',

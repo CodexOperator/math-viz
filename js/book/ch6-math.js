@@ -506,12 +506,22 @@ export function liouvilleEstimate(radius) {
   return LIOUVILLE_M / R;
 }
 
+function boundFrac(n, d) {
+  const g = rgcd(n, d);
+  const nn = n / g;
+  const dd = d / g;
+  return dd === 1 ? String(nn) : `${nn}/${dd}`;
+}
+
+// The printed number is a true upper bound. A nearest tenth can fall under 1/R,
+// and |f'| ≤ 0.99 is false when Cauchy's estimate is 1/1.006.
 export function liouvilleBoundTex(radius) {
   const R = Math.max(0.4, Number(radius) || 0);
-  const n = Math.round(R);
-  if (Math.abs(R - n) < 1e-6 && n >= 1) return n === 1 ? '1' : `1/${n}`;
+  const twice = Math.round(R * 2);
+  if (Math.abs(R * 2 - twice) < 1e-6 && twice > 0) return boundFrac(2, twice);
   const v = LIOUVILLE_M / R;
-  return v.toFixed(2);
+  const up = Math.ceil((v - 1e-12) * 100) / 100;
+  return up.toFixed(2);
 }
 
 export function claim66(radius, every) {

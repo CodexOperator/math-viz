@@ -52,6 +52,21 @@ function dollars(src) {
   return String(src || '').replace(/\\\(/g, '$').replace(/\\\)/g, '$');
 }
 
+// Parentheses around one factor are optional. Parentheses around a sum are not:
+// 1/(z−i√2) is not 1/z−i√2.
+function stripAtomParens(src) {
+  let s = src;
+  let prev;
+  do {
+    prev = s;
+    s = s.replace(/\(([^()]*)\)/g, (whole, inner) => {
+      const body = inner.replace(/^[+-]/, '');
+      return /[+-]/.test(body) ? whole : inner;
+    });
+  } while (s !== prev);
+  return s;
+}
+
 function canon(src) {
   let s = dollars(src).toLowerCase().replace(/\$/g, '');
   s = s.replace(/\\,/g, '').replace(/\\ /g, '');
@@ -66,7 +81,8 @@ function canon(src) {
   s = s.replace(/[{}]/g, '');
   s = s.replace(/\\pi/g, 'π');
   s = s.replace(/\\/g, '');
-  s = s.replace(/[*_()]/g, '');
+  s = s.replace(/[*_]/g, '');
+  s = stripAtomParens(s);
   s = s.replace(/\s+/g, '');
   s = s.replace(/π/g, 'pi');
   if (s === '0+0i') s = '0';
@@ -192,10 +208,12 @@ function workCard(item, stops) {
   const body = h('div', { id: `ch6-card-${item.id}-prompt` });
   const steps = h('div', { class: 'ch6-steps', id: `ch6-card-${item.id}-steps` });
   const tag = h('div', { id: `ch6-card-${item.id}-cite` });
+  const title = h('h3', { id: `ch6-card-${item.id}-title` }, item.cite.ref);
   const again = h('button', { type: 'button', class: 'btn', id: `ch6-card-${item.id}-again` }, 'Another');
   again.hidden = !item.generator;
   function paint() {
     const view = prepared(item, seed);
+    title.textContent = (view.cite && view.cite.ref) || item.cite.ref;
     const cite = view.cite
       ? { pin: `${view.cite.ref}, page ${view.cite.page}`, href: HREF[view.cite.ref] || citeOf(item).href }
       : citeOf(item);
@@ -208,7 +226,7 @@ function workCard(item, stops) {
   stops.push(() => again.removeEventListener('click', () => {}));
   paint();
   return h('article', { class: 'card chapter-card', id: `ch6-card-${item.id}`, 'data-kind': item.kind },
-    h('h3', null, item.cite.ref),
+    title,
     tag,
     body,
     steps,

@@ -252,10 +252,10 @@
     "section": "6.2",
     "cite": {
       "ref": "§6.2, Exercise 5",
-      "page": 178
+      "page": 179
     },
     "kind": "next-step-blank",
-    "prompt": "Exercise 5, page 178. Evaluate \\(\\int_C x\\,dz\\) from \\(-4\\) to \\(4\\).",
+    "prompt": "Exercise 5, page 179. Evaluate \\(\\int_C x\\,dz\\) from \\(-4\\) to \\(4\\).",
     "steps": [
       {
         "text": "The polygonal path through \\(-4\\), \\(-4+4i\\), \\(4+4i\\), and \\(4\\) gives ___ .",
@@ -286,10 +286,10 @@
     "section": "6.2",
     "cite": {
       "ref": "§6.2, Exercise 9",
-      "page": 179
+      "page": 180
     },
     "kind": "next-step-blank",
-    "prompt": "Exercise 9, page 179. Use the circle parametrization from Exercise 8.",
+    "prompt": "Exercise 9, page 180. Use the circle parametrization from Exercise 8.",
     "steps": [
       {
         "text": "\\(\\int_{C_R^+(z_0)} dz/(z-z_0)\\) equals ___ .",
@@ -806,7 +806,7 @@
     "section": "6.4",
     "cite": {
       "ref": "Example 6.17",
-      "page": 194
+      "page": 195
     },
     "kind": "next-step-blank",
     "prompt": "Example 6.17. \\(C\\) joins \\(4\\) to \\(8+6i\\), and \\(z^{1/2}\\) is the principal branch. The integrand is \\(1/(2z^{1/2})\\).",
