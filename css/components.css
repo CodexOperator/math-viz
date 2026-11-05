@@ -1055,6 +1055,9 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   gap: var(--space-3);
 }
 
+/* A later chapter card can scroll up under the header, the way a section can. */
+.book-path { padding-bottom: calc(100dvh - var(--header-h)); }
+
 /* The last section can still scroll its title up under the header. */
 .chapter-path { padding-bottom: calc(100dvh - var(--header-h)); }
 
@@ -1207,8 +1210,30 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .book-sections [data-state="next"] .book-section-mark { color: var(--text); }
 .book-sections [data-state="done"] .book-section-mark { color: var(--ok); }
 
-.book-read { margin: 0; padding-left: 1.2rem; }
-.book-read li { margin: 0.15rem 0; }
+.book-read {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.book-read li { margin: 0; }
+.book-read a {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap);
+  min-width: 0;
+  max-width: 100%;
+}
+.book-door a {
+  display: inline;
+  min-height: 0;
+}
+.chapter-card a.chip { min-height: var(--tap); }
+.book-door {
+  display: block;
+  min-height: var(--tap);
+  padding: 0.55rem 0;
+  line-height: 1.35;
+}
 .book-label {
   margin: var(--space-3) 0 var(--space-1);
   font-family: var(--font);
@@ -1220,6 +1245,257 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 }
 
 .section-idea { max-width: 62ch; margin: 0; }
+
+.ch7-picture {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.ch7-stage {
+  position: relative;
+  touch-action: none;
+}
+
+/* The opening square uses the same cap as the later camps. The card padding is
+   what makes 7.2 smaller than the column, so the hero matches that width. */
+.ch7-hero .exp-stage {
+  width: min(calc(100% - 2 * var(--space-3)), calc(100dvh - 20rem));
+}
+
+/* The phone stack is the picture, then the claim, the readout, and Play.
+   The wrapper disappears there so those three stay in that order. */
+.ch7-side { display: contents; }
+
+/* At 1280 the square is 480 again, and the claim, the readout, and Play
+   sit in a column beside it. */
+@media (min-width: 56.25rem) {
+  .ch7-picture {
+    display: grid;
+    grid-template-columns: minmax(0, 30rem) minmax(0, 1fr);
+    column-gap: var(--space-4);
+    row-gap: var(--space-2);
+    align-items: start;
+  }
+  .ch7-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    align-self: center;
+    justify-content: center;
+    gap: var(--space-2);
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+  }
+  .ch7-hero .exp-stage.ch7-stage,
+  .ch7-picture > .exp-stage.ch7-stage {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+    max-width: 30rem;
+    min-width: 0;
+    justify-self: start;
+  }
+  .ch7-picture > .ch7-wait,
+  .ch7-picture > .ch7-key,
+  .ch7-picture > .ch7-card {
+    grid-column: 1 / -1;
+  }
+  .ch7-hero > .ch7-where {
+    grid-column: 1;
+    grid-row: 2;
+    margin-top: var(--space-2);
+  }
+  .ch7-hero > .ch7-wait { grid-column: 1 / -1; grid-row: 3; }
+  .ch7-hero > .ch7-card { grid-column: 1 / -1; grid-row: 4; }
+  .ch7-hero > .ch7-key { grid-column: 1 / -1; grid-row: 5; }
+}
+
+.ch7-head { margin-bottom: 0; }
+.ch7-head .station-lede { margin-bottom: var(--space-2); }
+.ch7-where { margin: 0; }
+.ch7-up { width: max-content; max-width: 100%; margin-bottom: var(--space-2); }
+.chapter-path.ch7-path { padding-bottom: var(--space-4); }
+
+.ch7-pins {
+  list-style: none;
+  padding: 0;
+}
+.ch7-pins a {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap);
+}
+.book-row {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: var(--tap);
+  color: inherit;
+  text-decoration: none;
+}
+
+.ch7-stage svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ch7-stage:focus:not(:focus-visible) { outline: none; }
+
+.ch7-claim,
+.ch7-observe,
+.ch7-key,
+.ch7-summit,
+.ch7-memory,
+.ch7-read,
+.ch7-flash-face {
+  max-width: 62ch;
+  margin: 0;
+}
+
+.ch7-claim { line-height: 1.55; min-height: calc(1.0625rem * 1.55 * 2); font-weight: 600; }
+.ch7-read:not(.ch7-wait) { font-weight: 600; }
+
+.ch7-key,
+.ch7-read,
+.ch7-memory { color: var(--text-muted); }
+
+@media (max-width: 56.24rem) {
+  /* The status used to be its own row in the station, with the station's gap
+     under it. Inside the picture, that gap has to be put back so Play stays
+     the last control on the first screen. */
+  .ch7-hero > .ch7-where { margin-bottom: calc(var(--space-4) - var(--space-2)); }
+  .section-node .ch7-picture > .ch7-key { margin-top: 6rem; }
+  .ch7-picture.ch7-asking { gap: 0.15rem; }
+}
+
+.ch7-summit { font-weight: 600; }
+
+.ch7-memory { padding-left: 1.2rem; }
+
+.ch7-slot { min-width: 0; max-width: 40rem; }
+.ch7-slot:has(> [hidden]:only-child) { display: none; }
+.ch7-inline {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.ch7-inline > h3,
+.ch7-inline > .ch7-prompt {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.ch7-sheet summary {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.ch7-observe { font-weight: 400; }
+
+.ch7-steps { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+
+.ch7-step-text { margin: 0; max-width: 62ch; }
+
+.ch7-choices {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.ch7-choices .ch7-choice {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  height: auto;
+  min-height: var(--tap);
+  padding-top: 0.55rem;
+  padding-bottom: 0.55rem;
+  white-space: normal;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.ch7-choice[data-right="false"] { border-color: var(--polar); }
+
+.ch7-blank-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  max-width: 40rem;
+}
+
+.ch7-blank {
+  flex: 1 1 12rem;
+  min-width: 0;
+  min-height: var(--tap);
+  padding: 0 var(--space-2);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.ch7-blank[data-right="false"] { border-color: var(--polar); }
+
+.ch7-miss { margin: 0; max-width: 62ch; color: var(--text-muted); }
+
+.ch7-path .btn {
+  white-space: normal;
+  text-align: center;
+  max-width: 100%;
+  height: auto;
+}
+
+.ch7-answered { margin: 0; max-width: 62ch; }
+
+.ch7-flash { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); min-width: 0; }
+
+.section-node[data-state="later"] {
+  background: transparent;
+  box-shadow: none;
+}
+
+.section-node,
+.ch7-card,
+.ch7-picture,
+.chapter-exercises,
+.ch7-steps,
+.ch7-step,
+.ch7-flash,
+.ch7-blank-row {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.section-node.is-target { outline: 2px solid var(--focus); outline-offset: 2px; }
 .chapter-exercises { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
 .chapter-card { min-width: 0; }
 .chapter-card p { min-width: 0; }

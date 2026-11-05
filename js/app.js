@@ -213,7 +213,7 @@ export function start() {
     const note = document.getElementById('site-footer-note');
     if (!note) return;
     if (bookRoute) {
-      note.textContent = 'The book path for MAT 412. Chapters 4 and 5 are open. The other chapters are later. It runs in your browser and works offline.';
+      note.textContent = 'The book path for MAT 412, Chapters 1 to 7. It runs in your browser and works offline.';
       return;
     }
     note.textContent = mapId === 'test2'
@@ -230,6 +230,7 @@ export function start() {
       ])));
     const list = el('ul', { class: 'nav-list', id: 'nav-chapters', 'aria-label': 'Chapters' });
     for (const ch of BOOK_CHAPTERS) {
+      if (ch.n > 7) continue;
       list.append(el('li', {}, el('a', {
         class: 'nav-link', id: `nav-chapter-${ch.n}`, href: `#chapter-${ch.n}`, 'data-chapter': String(ch.n),
       }, [
@@ -305,7 +306,7 @@ export function start() {
     for (const a of nav.querySelectorAll('a.nav-link')) {
       let on = false;
       if (bookRoute) {
-        on = bookRoute.kind === 'chapter'
+        on = bookRoute.chapter
           ? a.dataset.chapter === String(bookRoute.chapter)
           : a.id === 'nav-book';
       } else {
@@ -499,7 +500,8 @@ export function start() {
     view.dataset.route = route.raw || 'home';
     view.dataset.station = st ? st.id : '';
     view.dataset.map = mapId;
-    window.scrollTo(0, 0);
+    const landOnChapter = route.book && route.book.kind === 'roadmap' && route.book.chapter;
+    if (!landOnChapter) window.scrollTo(0, 0);
     markCurrent(st ? st.id : null, route.book);
 
     if (route.book) {

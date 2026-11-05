@@ -10,6 +10,14 @@ import { chapterTally, sectionFinished, foldLegacyExercises, saveSharedTicks, to
 import { EXP_DURATION, expFrame, finishedStops } from '../js/core/live-film.js';
 import { compile } from '../js/core/parse.js';
 import { parseBookRoute } from '../js/book/route.js';
+import { uniformClaim, taylorClaim, laurentClaim, answerMatches, windingFrame, poleFrame, removableClaim } from '../js/core/ch7-series.js';
+import { chapter7WalkSections } from '../js/data/chapter-7.js';
+import { id as laurentGenId } from '../js/practice/gen/laurent-annulus.js';
+import { id as orderGenId } from '../js/practice/gen/singularity-order.js';
+import { generate as laurentProblem, sampleAgrees } from '../js/practice/gen/laurent-annulus.js';
+import { generate as orderProblem } from '../js/practice/gen/singularity-order.js';
+import { generate as threeProblem, sampleAgrees as threeAgrees } from '../js/practice/gen/laurent-three.js';
+import { generate as classProblem, exercise3Samples } from '../js/practice/gen/singularity-class.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
 import { parsePath, evalPath } from '../js/core/path-expr.js';
 import { smoothLoop, presetById, compileFormula } from '../js/core/path-geom.js';
@@ -118,7 +126,9 @@ check('#chapter-4 opens chapter 4', parseRoute('#chapter-4').book.kind === 'chap
 check('#chapter-4-4-1-3 focuses exercise 4.1.3', parseRoute('#chapter-4-4-1-3').book.focus === '4.1.3');
 check('#chapter-1 stays on the roadmap', parseRoute('#chapter-1').book.kind === 'roadmap' && parseRoute('#chapter-1').book.chapter === 1);
 check('a junk token on a later chapter is not a page', parseRoute('#chapter-1-extra').station == null && parseRoute('#chapter-1-extra').book == null);
-check('eleven chapters, 4 and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_CHAPTERS.join() === '4,5' && BOOK_CHAPTERS.filter((ch) => ch.open).map((ch) => ch.n).join() === '4,5');
+check('eleven chapters, 4, 5, and 7 open', BOOK_CHAPTERS.length === 11 && OPEN_CHAPTERS.join() === '4,5,7' && BOOK_CHAPTERS.filter((ch) => ch.open).map((ch) => ch.n).join() === '4,5,7');
+check('#chapter-7 opens chapter 7', parseRoute('#chapter-7').book.kind === 'chapter' && parseRoute('#chapter-7').book.chapter === 7 && parseRoute('#chapter-7').book.focus == null);
+check('#chapter-7-7-3 focuses section 7.3', parseRoute('#chapter-7-7-3').book.focus === '7.3');
 check('chapter 4 sections follow the contents', CHAPTER_4.sections.map((s) => `${s.id} ${s.page}`).join() === '4.1 102,4.2 109,4.3 118,4.4 123');
 check('chapter 4 exercises are the homework set plus 4.4.6', chapter4ExerciseIds().join() === '4.1.3,4.1.13,4.2.3,4.2.4,4.2.5,4.3.1,4.3.2,4.4.6');
 {
@@ -204,6 +214,191 @@ check('One Newton Step keeps Example 4.7', /Example 4\.7, page 110/.test(readFil
 }
 check('the live router does not import kit', !/from\s+['"][^'"]*kit\//.test(readFileSync(new URL('../js/app.js', import.meta.url), 'utf8')));
 check('book route parser matches the router', parseBookRoute('chapter-5').kind === 'chapter' && parseRoute('#chapter-5').book.chapter === 5);
+{
+  const book = readFileSync(new URL('../js/stations/book.js', import.meta.url), 'utf8');
+  const practice = JSON.parse(readFileSync(new URL('../data/practice/ch7.json', import.meta.url), 'utf8'));
+  const kinds = new Set(['proof-blank', 'proof-mc', 'next-step-blank', 'next-step-mc', 'blank', 'mc', 'flash']);
+  const annulus = practice.find((item) => item.id === 'ch7-7.3-annulus');
+  const order = practice.find((item) => item.id === 'ch7-7.4-order');
+  const made = laurentProblem(1, annulus.generator.params);
+  const madeOrder = orderProblem(1, order.generator.params);
+  check('chapter 7 is mounted from the book page', book.includes('mountChapter7') && book.includes('book-open-${ch.n}') && book.includes('OPEN_CHAPTERS'));
+  check('chapter 7 practice matches the schema',
+    practice.length >= 16
+    && practice.every((item) => item.chapter === 7 && kinds.has(item.kind) && item.cite && item.cite.page && item.memory && Array.isArray(item.steps))
+    && practice.some((item) => item.kind === 'proof-blank' && item.cite.ref === 'Theorem 7.1')
+    && practice.some((item) => item.kind === 'proof-mc' && item.cite.ref === 'Theorem 7.1')
+    && practice.some((item) => item.section === '7.3' && item.kind.startsWith('next-step') && item.cite.page === 230)
+    && practice.some((item) => item.section === '7.4' && item.kind.startsWith('next-step') && item.cite.page === 238));
+  check('the annulus generator matches its stored instance',
+    annulus.prompt === made.prompt
+    && annulus.steps[0].answer === made.steps[0].answer
+    && annulus.steps[1].answer === '-\\frac{1}{35}'
+    && sampleAgrees(1, annulus.generator.params, 40) < 1e-6
+    && answerMatches('-1/7', made.steps[0])
+    && answerMatches('1/-7', made.steps[0])
+    && answerMatches('-2/14', made.steps[0])
+    && answerMatches('−1/7', made.steps[0])
+    && answerMatches('-0.14', made.steps[0]) === false
+    && answerMatches(made.steps[0].answer, made.steps[0])
+    && JSON.stringify(laurentProblem(2, annulus.generator.params)) === JSON.stringify(laurentProblem(2, annulus.generator.params))
+    && laurentProblem(2, annulus.generator.params).seed === 2);
+  check('the order generator matches its stored pole',
+    order.prompt === madeOrder.prompt
+    && madeOrder.order === 3
+    && madeOrder.poleAt === -1
+    && answerMatches('pole of order 3', madeOrder.steps[0]));
+  const ex10 = practice.find((item) => item.id === 'ch7-7.3-ex10-blank');
+  const ex10mc = practice.find((item) => item.id === 'ch7-7.3-ex10-mc');
+  const ex3 = practice.find((item) => item.id === 'ch7-7.4-ex3');
+  const made10 = threeProblem(1, ex10.generator.params);
+  const made10mc = threeProblem(1, ex10mc.generator.params);
+  const made3 = classProblem(1, ex3.generator.params);
+  const made3b = classProblem(2, ex3.generator.params);
+  check('exercise 10 is the three annuli of (z^2-5z+6)^{-1}',
+    ex10.cite.page === 230
+    && ex10.kind === 'next-step-blank'
+    && ex10mc.kind === 'next-step-mc'
+    && ex10.prompt === made10.prompt
+    && JSON.stringify(ex10.steps) === JSON.stringify(made10.steps)
+    && JSON.stringify(ex10mc.steps) === JSON.stringify(made10mc.steps)
+    && made10.a === 2 && made10.b === 3
+    && made10.steps[0].answer === '-1'
+    && made10.steps[1].answer === '\\frac{1}{6}'
+    && made10.steps[2].answer === '5'
+    && threeAgrees(1, ex10.generator.params, 80) < 1e-6
+    && threeProblem(2, ex10.generator.params).a !== 2
+    && /Exercise 10/.test(made10.prompt)
+    && !/Exercise 10/.test(threeProblem(2, ex10.generator.params).prompt));
+  check('exercise 3 classifies sin(1/z) and z exp(1/z) from the series',
+    ex3.cite.page === 238
+    && ex3.kind === 'next-step-mc'
+    && JSON.stringify(ex3.steps) === JSON.stringify(made3.steps)
+    && made3.kind === 'essential'
+    && made3b.kind === 'essential'
+    && /z\\exp/.test(made3b.prompt)
+    && classProblem(4, ex3.generator.params).kind === 'pole'
+    && classProblem(4, ex3.generator.params).order === 1
+    && /Corollary 7\.8/.test(classProblem(4, ex3.generator.params).steps[0].why)
+    && /Exercise 3/.test(classProblem(3, ex3.generator.params).prompt)
+    && classProblem(3, ex3.generator.params).kind === 'removable'
+    && !/Exercise 3/.test(classProblem(5, ex3.generator.params).prompt)
+    && classProblem(5, ex3.generator.params).order === 1
+    && ex3.steps[0].choiceWhy.length === 4
+    && /winding does not draw it/.test(ex3.prompt)
+    && /winding does not draw it/.test(classProblem(1, ex3.generator.params).prompt));
+  const hop = practice.find((item) => item.id === 'ch7-7.5-lhopital');
+  const hopB = practice.find((item) => item.id === 'ch7-7.5-lhopital-b');
+  const divide = practice.find((item) => item.id === 'ch7-7.5-divide');
+  const ex3a = practice.find((item) => item.id === 'ch7-7.4-ex3a');
+  const hopC = practice.find((item) => item.id === 'ch7-7.5-lhopital-c');
+  const hopD = practice.find((item) => item.id === 'ch7-7.5-lhopital-d');
+  const ex1 = practice.find((item) => item.id === 'ch7-7.3-ex1-mc');
+  check('theorem 7.14 is pinned and L\'Hôpital has a next step',
+    readFileSync(new URL('../js/data/chapter-7.js', import.meta.url), 'utf8').includes('Theorem 7.14, page 240')
+    && hop && hop.cite.ref === 'Exercise 6(a)' && hop.cite.page === 243 && hop.kind === 'next-step-blank'
+    && hop.steps.length === 2
+    && answerMatches('-8+8i', hop.steps[0])
+    && answerMatches('8i-8', hop.steps[0])
+    && answerMatches('(-1-i)/16', hop.steps[1])
+    && answerMatches('-(1+i)/16', hop.steps[1])
+    && answerMatches('(-1\u2212i)/16', hop.steps[1])
+    && answerMatches('1/(\u22128+8i)', hop.steps[1])
+    && hop.steps[1].miss === 'Divide the derivatives and simplify.'
+    && hopB && hopB.cite.page === 243 && hopB.steps.length === 2
+    && answerMatches('0/0', hopB.steps[0])
+    && answerMatches('-1/4', hopB.steps[1])
+    && hopC && hopC.cite.page === 243 && answerMatches('2i', hopC.steps[0]) && answerMatches('3', hopC.steps[1])
+    && hopD && hopD.cite.page === 243 && answerMatches('5', hopD.steps[0]) && answerMatches('1/60', hopD.steps[1])
+    && answerMatches('2/120', hopD.steps[1])
+    && /Pr_Series_Division/.test(readFileSync(new URL('../js/data/chapter-7.js', import.meta.url), 'utf8'))
+    && /Bd__Analytic_Thm/.test(readFileSync(new URL('../js/data/chapter-7.js', import.meta.url), 'utf8'))
+    && divide && divide.cite.ref === 'Example 7.15' && divide.cite.page === 240 && divide.steps.length === 3
+    && /\\sec z/.test(divide.prompt)
+    && !/Theorem 7\.14/.test(divide.prompt)
+    && /Laurent/.test(divide.memory)
+    && answerMatches('1', divide.steps[0])
+    && answerMatches('1/2', divide.steps[1])
+    && answerMatches('5', divide.steps[2])
+    && divide.steps[0].why === '' && divide.steps[1].why === '' && /5\/24/.test(divide.steps[2].why)
+    && ex3a && ex3a.steps[0].answer === 'a pole of order 1'
+    && /^Classify/.test(ex3a.prompt)
+    && answerMatches('6/z', ex3a.steps[1])
+    && answerMatches('\\frac{6}{z}', ex3a.steps[1])
+    && /448/.test(ex3a.steps[0].why)
+    && practice.some((item) => item.id === 'ch7-7.4-ex3c' && item.steps[0].answer === 'essential' && /^Classify/.test(item.prompt))
+    && practice.some((item) => item.id === 'ch7-7.4-ex3g' && item.steps[0].answer === 'removable' && /^Classify/.test(item.prompt))
+    && ex1 && /0<\|z\|<1/.test(ex1.prompt) && /0<\|z\|<1/.test(ex1.steps[0].text) && !/For \$\|z\|<1/.test(ex1.steps[0].text));
+  const samples = exercise3Samples();
+  check('exercise 3(d)(e)(f)(h) cards match the series',
+    samples.tanOrder === 1
+    && Math.abs(samples.eLimit - 1) < 1e-3
+    && samples.ePole === true
+    && Math.abs(samples.fLimit - 1) < 1e-3
+    && Math.abs(samples.fPole - Math.PI) < 1e-2
+    && samples.diffOrder === 2
+    && practice.find((item) => item.id === 'ch7-7.4-tan').steps[0].answer.includes('order 1')
+    && practice.find((item) => item.id === 'ch7-7.4-sin-over-quadratic').steps[0].answer.includes('removable at $0$')
+    && practice.find((item) => item.id === 'ch7-7.4-z-over-sin').steps[0].answer.includes('removable at $0$')
+    && practice.find((item) => item.id === 'ch7-7.4-cos-diff').steps[0].answer === 'a pole of order 2'
+    && practice.findIndex((item) => item.id === 'ch7-7.3-ex10-blank') < practice.findIndex((item) => item.id === 'ch7-7.3-ex1-mc')
+    && practice.some((item) => item.id === 'ch7-7.1-log' && item.cite.page === 214));
+  check('uniform convergence leaves the band near 1 and holds near 0',
+    uniformClaim(0.4, 4).holds === true
+    && uniformClaim(0.85, 4).holds === false
+    && /left the band/.test(uniformClaim(0.85, 4).text));
+  check('taylor partial sums agree inside the disk and not past ±i',
+    taylorClaim(0.3, 0, 1).holds === true
+    && taylorClaim(1.3, 0, 8).holds === false
+    && /circle through/.test(taylorClaim(1.3, 0, 8).text)
+    && taylorClaim(0.3, 0, 1, false).text === 'The partial sum has settled near 0.'
+    && taylorClaim(1, 0, 4).holds === false);
+  check('uniform play changes the sentence at the opening point',
+    uniformClaim(0.35, 4).holds === true
+    && /still leaves it/.test(uniformClaim(0.35, 4).text)
+    && /still leaves it/.test(uniformClaim(0.35, 16).text)
+    && /brought the curve back/.test(uniformClaim(0.35, 44).text));
+  check('taylor agreement is withheld until the partial sum has caught the value',
+    taylorClaim(0.9, 0, 0, false).holds === false
+    && /not caught/.test(taylorClaim(0.9, 0, 0, false).text)
+    && taylorClaim(0.2, 0, 0, false).text === 'The partial sum has settled near 0.'
+    && taylorClaim(0.2, 0, 1, false).text === 'The partial sum has settled near 0.'
+    && taylorClaim(0.2, 0, 12, false).text === 'The purple has filled in near 0.'
+    && /caught the value/.test(taylorClaim(0.9, 0, 12, false).text)
+    && !/near 0/.test(taylorClaim(0.9, 0, 12, false).text)
+    && taylorClaim(0.6, 0, 12, false).holds === true);
+  check('chapter 7 exports five stages and the generators are seed-first',
+    chapter7WalkSections().map((s) => s.id).join() === '7.1,7.2,7.3,7.4,7.5'
+    && chapter7WalkSections()[0].exercises[0] === 'ch7-stage-7.1'
+    && laurentGenId === 'laurent-annulus'
+    && orderGenId === 'singularity-order'
+    && windingFrame(0.4, 0).holds === false
+    && windingFrame(Math.PI * 2, Math.PI * 2).text.includes('order 2')
+    && windingFrame(0, Math.PI * 2).text.includes('twice')
+    && windingFrame(0, -(Math.PI * 2)).text.includes('twice')
+    && windingFrame(0, Math.PI).holds === false
+    && poleFrame(0.4, 0).holds === false
+    && poleFrame(0, Math.PI * 2).text.includes('order 1')
+    && poleFrame(0, Math.PI * 2).text.includes('other way')
+    && answerMatches('positive', practice.find((item) => item.id === 'ch7-7.3-picture').steps[0]) === false
+    && answerMatches('non-negative', practice.find((item) => item.id === 'ch7-7.3-picture').steps[0])
+    && !/page 241/.test(JSON.stringify(practice))
+    && /connected domain/.test(practice.find((item) => item.id === 'ch7-7.5-flash-zeros').steps[0].answer)
+    && removableClaim(1.4).holds === false
+    && /removable/.test(removableClaim(0.1).text)
+    && /slip/.test(practice.find((item) => item.id === 'ch7-7.1-mtest-blank').steps[2].why)
+    && readFileSync(new URL('../js/app.js', import.meta.url), 'utf8').includes('if (ch.n > 7) continue')
+    && !/next batch|cards are written|opposite winding/.test(readFileSync(new URL('../js/data/chapter-7.js', import.meta.url), 'utf8')));
+  const inside = laurentClaim(0.4, 0.1, 8);
+  const between = laurentClaim(1.5, 0, 12);
+  const outside = laurentClaim(2.8, 0.1, 12);
+  check('laurent regions are the disk, the annulus, and the exterior',
+    inside.region === 'disk' && /non-negative/.test(inside.text)
+    && between.region === 'annulus' && /negative powers from the inner/.test(between.text) && /non-negative powers/.test(between.text)
+    && outside.region === 'out' && /negative/.test(outside.text)
+    && laurentClaim(1, 0, 4).region === 'wall' && laurentClaim(1, 0, 4).holds === false
+    && between.settled === true);
+}
 check('the shipped route rule matches the kit helper',
   readFileSync(new URL('../js/core/map-route.js', import.meta.url), 'utf8')
   === readFileSync(new URL('../kit/template/js/core/map-route.js', import.meta.url), 'utf8'));

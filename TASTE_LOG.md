@@ -1330,3 +1330,684 @@ Nothing. No slider, no scrubber, no spring, no second clock.
 Yes. One batch, then stop. It is the one cut above.
 
 The hold, the button, and the frame clock are the lesson, and they hold. Something real is left, and it is the frame a mouse drag draws around the square. A touch does not draw it. After that frame is gone, nothing real is left of this walk's touch.
+
+## Chapter 7, batch 1
+
+Branch `cursor/chapter-7`. Chapter 7 is a page of five stages. 7.1, 7.2, and 7.3 are drawn. 7.4 and 7.5 are titles, pins, a memory line, and the cards that were already specified. The winding picture and the applications walk are not on the page yet.
+
+The three pictures use the four teaching colours and one clock. Drag the green point. Play raises the number of terms and says Pause while it runs. A second click leaves the term where it is. At 390px the page does not scroll sideways.
+
+7.1 opens with the geometric partial sum inside the ε band. Dragging toward 1 leaves the band. 7.2 opens with the partial sum of \(1/(1+z^2)\) agreeing near 0. Dragging past the circle through \(\pm i\) makes the partial sum stop settling. 7.3 opens in the annulus between the poles of Example 7.7, with purple only in that annulus. Dragging inside the inner circle switches the series to non-negative powers.
+
+Practice is `data/practice/ch7.json`, rendered by a local card until `js/practice/` has an engine. The M-test proof (blank, then the choice) marks stage 7.1 complete and the status moves to 7.2. Another rational function recomputes the Laurent coefficients. The checks `node tools/check_vectors.mjs`, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. Headless Chrome at 390 and 1280, light theme, no console errors.
+
+## Next
+
+- 7.4 as a stage: the winding picture for zero and pole order, not only the classify cards.
+- 7.5 as a stage: isolated zeros, L'Hôpital, division of series, Riemann's removable singularity.
+- More book exercises as next-step items (7.3.10's three annuli, 7.4.3's essential singularities).
+- Drop the local card when the shared practice engine lands. The generators are already `js/practice/gen/laurent-annulus.js` and `js/practice/gen/singularity-order.js`.
+- The footer colour key still describes the test maps. Each stage carries its own line.
+
+## skeptical-student (ch7 batch 1)
+
+Preview https://ch7-preview.complexanalysis.pages.dev/#chapter-7, branch `cursor/chapter-7` at `897d8d13`. Phone 390×844 first, then 1280×800, light and dark. Touched the page like a student who has not seen this chapter. No product code changed.
+
+I opened the link tired, on a phone, and I could not tell what the page was asking. The pictures do move, and one of them taught me something once I already knew where to drag. The chapter talks about its own draft, the practice is a different lesson from the picture, and 7.4 and 7.5 cannot be finished.
+
+### What I actually did
+
+Light, 390×844, scroll 0. The first screen is the site name, a 69×17 "THE BOOK", the title, then "Five stages. The first three are drawn. Sections 7.4 and 7.5 are marked for the next pass." Then the source line, then "Stage 7.1 of 5. 0 of 3 drawn stages complete." and a button, "Go to 7.1". Under that, 7.1 is already on screen: "A series can converge at every point of a disk and still refuse to settle at one speed. Integrating term by term needs the stronger promise." Then, in bold, "Drag the green point along the partial sum." The graph is the bottom-right corner of some curves. The green dot is at y=914, 9px across. The claim is at y=979. Play is at y=1074. The window ends at 844. I had the instruction and I did not have the point.
+
+"Go to 7.1" does scroll (to y=435, the 7.1 title landing at y=96, under a 56px header). I had no reason to tap it. The heading it names was already in front of me. Same first screen in the dark, paper `rgb(13, 18, 28)`, and at 1280×800 in both themes: the picture's bottom is y=813, the claim y=821, Play y=916, and the window is 800px. The dot sits on the bottom edge. The sentence under the picture is off the screen.
+
+Once the picture was in the middle, a touch on the dot dragged it to about x=0.82 and the claim flipped to "At this x, the same partial sum has left the band." Play at that spot ran to n=20, the claim flipped back to "sits inside the band," and the button said "Play again." On a separate run, a second tap while Play was going froze it at n=4 and the label returned to Play. That sequence is a real lesson. The page never says to drag toward 1 and then let Play finish.
+
+Pressing Play at the opening point (x=0.2) ran n from 1 through 20 and the claim never changed. It stayed "inside the band." Dragging the curves, missing the 9px dot, left x at 0.2. At n=1 the green "partial sum" is the constant 1, a flat line in the same green as the dot. I could not see a handle.
+
+Then the page asks me to fill the Weierstrass M-test. "If n>m, then |S_n(z)−S_m(z)| is at most the sum of the ___." I typed "terms" and got "Not yet." The why stayed hidden. "Stage complete" stayed disabled, and it still said "Stage complete," so I could not tell what it was waiting for. The Memory list, which already states the M-test, is at y=1754. The card starts at y=2059. The next card is already open, and its first choice is the M-test. The summit sentence, about one N and an integral, is at y=3250. The picture never draws an integral.
+
+7.2 opens at n=0 already saying the partial sum agrees and that the agreement stops at the circle through ±i. A few purple dots sit near the origin. Dragging out to about 1.30 does change the sentence to "Past the nearest singularity, this partial sum does not settle." The instruction is "Drag the green point. Play raises the partial sum." It does not mention the circle. 7.3 is the one that taught me. It opens in the annulus at n=8, purple dots between two orange circles, and dragging inside the inner circle moves those dots and the sentence becomes "Inside both poles, every power in this series is non-negative." The instruction is again "Drag the green point across a circle," the same gesture as the two stages before it. 7.2 starts at y=3231. 7.3 starts at y=6157. The phone page is 12921px tall.
+
+7.4 ends its opening with "The winding picture is the next batch." Under Practice: "The cards are written. The picture for this stage is the next batch." 7.5 says "That walk is the next batch," offers one flashcard ("Show the back"), and then the word "Later." Neither stage has a Stage complete. The menu lists chapters 8 through 11 (`#chapter-8` and on). The footer says the other chapters are later. No console errors. No request failed. `scrollWidth` matched the window at 390 and at 1280, light and dark. The curves stay readable on the dark paper.
+
+### Verdict
+
+ANOTHER BATCH
+
+### Ranked cut or fix
+
+1. **Put the picture on the first screen and say what I am supposed to see.** Evidence: at 390×844, light and dark, the lede is "Five stages. The first three are drawn," the status says "0 of 3 drawn stages complete," and the green dot, the claim, and Play sit below y=844. At 1280×800 the claim and Play are below y=800. "Go to 7.1" scrolls to a heading that is already visible. Change: the lede is the move, in student words: "Drag the green point toward 1 until it leaves the orange band. Press Play and watch it come back." That picture, the claim, and Play are on the first screen. The status says "Stage 7.1 of 5." The button scrolls to the picture until this stage is done, then it says "Go to 7.2".
+
+2. **Make the drag obvious, and make Play change something.** Evidence: Play at x=0.2 never changed the claim, n=1 through n=20. A drag that missed the 9px dot did nothing. At n=1 the partial sum is a flat green line. The lesson only appeared when a touch hit the dot, moved it to x≈0.82 (claim: "left the band"), and Play ran out to n=20 (claim: "inside the band", button "Play again"). Change: the sentence under the title is those two steps, in that order. A drag on the graph sets the point. Open at a small n where the green curve is visibly a curve, and the claim talks only about the band.
+
+3. **Ask me what the picture just showed, and help me when I miss.** Evidence: the first card is "Fill the proof the way the book builds it." "terms" got "Not yet." and no why. The M-test is already in the Memory list at y=1754 and in the next card, which is open while the blank is empty. The summit at y=3250 is about an integral the picture does not draw. "Stage complete" stays disabled with that same label. Change: the first blank is the picture ("near 1 the partial sum leaves the band until n is large enough"). A miss shows that stage's memory line. The next card waits until this one is right. The summit is the sentence the picture earned: one N works for the whole set. The button, while it is disabled, says "Answer the practice to finish this stage."
+
+4. **Take the draft notes off the page.** Evidence: 7.4 says "The winding picture is the next batch" and "The cards are written. The picture for this stage is the next batch." 7.5 says "That walk is the next batch," then "Later." Neither can be marked done, so after three stages the chapter points at a stage that cannot be finished. Change: delete those sentences. 7.4 opens with the line it already has in Memory: no negative powers, a finite string, or an infinite tail. When its two cards are right, Stage complete turns on and the status moves. 7.5's flashcard can finish the same way. A stage with no picture still tells me to read the memory line and answer the card.
+
+5. **Hold 7.2 and 7.3's punchline until the drag.** Evidence: 7.2 at n=0 already says the agreement stops at the circle through ±i. Dragging past the circle does change the sentence, and the observe never says to cross it. 7.3 at n=8 already states both powers. Dragging into the inner disk is what actually moves the purple dots and earns "every power in this series is non-negative." All three observes say "drag the green point." Change: 7.2 opens with "This partial sum agrees with the function." The circle sentence appears when the point crosses the orange circle, and the observe says "Drag past the orange circle." 7.3 opens with "You are between the two orange circles." The sentence about powers appears after the point crosses one.
+
+6. **Give the chapter a way back and a last line.** Evidence: "THE BOOK" is 69×17 on the phone. The menu still links chapters 8–11 while the footer says those chapters are later. 7.5 ends on "Later," so I never get a sentence that means the chapter is done. Change: the back control is the 44px "The Book" row the menu already uses. This page's menu stops at Chapter 7. The last stage ends with the line I can say: a non-zero analytic function has isolated zeros. Stage complete counts it.
+
+### What to keep
+
+The uniform picture is a real demonstration once the dot is found. A touch drag to x≈0.82 flips the claim. Play to n=20 flips it back. Pause froze n=4 and the label returned to Play. Play is 44px tall.
+
+Laurent is the picture that taught me. Crossing into the inner disk moves the purple dots and changes the sentence. The same drawing is readable in the dark, on the phone and at 1280.
+
+No console errors, no failed loads, no sideways scroll at 390 or 1280, light or dark.
+
+A right blank ("M_k") shows the why and opens the next step. The choice buttons are full width and at least 44px tall. "Show the back" keeps the flashcard to one card.
+
+Each stage carries its own colour sentence. The Test 1 colour key stays hidden here (`display: none` while `data-book` is set), so orange means the band or the circle on this page.
+
+The 7.4 memory lines are worth keeping word for word: no negative powers means removable, lowest power −k means a pole of order k, infinitely many means essential. The citations on the cards (Theorem 7.1, page 212, and the rest) stay.
+
+## ux-veteran (ch7 batch 1)
+
+Preview https://ch7-preview.complexanalysis.pages.dev/#chapter-7, branch `cursor/chapter-7` at `897d8d1`. Headless Chrome, touch, 390×844 and 1280×800, light and dark. No product code was changed. No console errors. No failed requests. No sideways scroll (`scrollWidth` matched the window at 390; at 1280 the page was 1265 wide).
+
+### Verdict
+
+ANOTHER BATCH
+
+The three pictures do the job once you can touch them. A phone lands on a status line written for the build ("0 of 3 drawn stages"), with the green point and Play below the fold, and the only way back is a 17px link that forgets where you were. The book, after a finished stage, still says to walk Chapter 4.
+
+### How the walk went
+
+**390×844, light, fresh storage.** The first screen is the site name (full, not cut), the theme and menu icons at 44×44, then THE BOOK at 69×17, the Iowan title, and the lede "Five stages. The first three are drawn. Sections 7.4 and 7.5 are marked for the next pass." The status card says "Stage 7.1 of 5. 0 of 3 drawn stages complete." Go to 7.1 is a 44px accent button. Under it, 7.1's title, the why, and "Drag the green point along the partial sum" are on screen. The graph starts at y = 755 and is 216px tall, so an 844px window keeps 89px of it: the rising tips, not the axis and not the point. Play is at y = 1074, 70×44. Tapping Go to 7.1 scrolls to 435. The section title stays clear of the header (title top 96, header bottom 56) and Play comes up into the window. The button's words say you are leaving for 7.1 while 7.1 is already the card on screen.
+
+A touch 40px from the point does nothing (the probe stays at 0.2, "inside the band"). A touch on the point, which is drawn 9×9, runs it to 0.92 and the sentence becomes "At this x, the same partial sum has left the band." Play switches to Pause, the term moves (n = 1 to n = 2), and a second click leaves the label Play and freezes n at 2. The same 9px point on the Taylor picture crosses the circle through ±i and the sentence stops agreeing. On the Laurent picture the region goes from the annulus to the disk and the sentence changes to non-negative powers. With reduced motion the three buttons say Next step.
+
+The M-test blank rejects "nope" with "Not yet." The field is 197×44 and Check is 85×44. The right blanks, then the two choices (the first choice is 290×97), store `ch7-7.1-mtest-blank` and `ch7-7.1-mtest-mc`. Stage complete then presses. The flag, the button, and the summit sentence are on one screen, and the button still says Stage complete. The status, off the top of that screen, becomes "Stage 7.2 of 5. 1 of 3 drawn stages complete" with Go to 7.2. Show the back is 157×44 and reveals the card. The pinned rows (Definition 7.1 and the four that follow) are 23px tall and 29px apart. Stage 7.4 says "The winding picture is the next batch" and "The cards are written. The picture for this stage is the next batch." The chapter is 12921px. The path's bottom padding is 788px, and the last screen is blank paper with "Back to the book" at 134×23.
+
+The menu is twelve rows, each 44px, and chapter 7 is the current one, on the first screen of the drawer. Chapter 6 opens `#chapter-6` on the roadmap, scrolled to 1324, on the Later card. Back from there returns to `#chapter-7` at scroll 0. From 7.3 at scroll 6146, THE BOOK opens `#book` and Back returns to scroll 0.
+
+**The book, after that tick.** The tick is in `mv:progress.test2`. The roadmap still says "Next is §4.1, Exercise 3. 0 of 8 exercises." and the accent button still says Walk Chapter 4. Chapter 7's card is at y = 1510 on a page 2385px tall. The heading is not a link. Open Chapter 7 is 126×23. The flag says Open.
+
+**Dark, both widths.** Paper `rgb(13, 18, 28)`, title `rgb(233, 237, 245)`, the accent button `rgb(207, 216, 234)` with dark type. The green edge on the finished stage, the orange band, the purple curve, and the green point still separate. Same first screen, same clip of the graph.
+
+**1280×800.** The menu is the sidebar, 280px, and chapter 7 is in view and current. The title is Iowan at 36px, the same size as Chapter 5. The graph is 352×235 in a 985px column, top at y = 578, so its bottom sits 13px past an 800px window. Play is at y = 916. Chapter 5 on the same window puts a 480px square at y = 179 and Play at y = 701.
+
+### Where the page already matches
+
+Title Iowan Old Style, 25.85px, weight 600, `rgb(26, 34, 48)` at 390. Lede 16.8px, `rgb(81, 91, 108)`. Accent button 17px, 44px tall, radius 6px, `rgb(47, 62, 92)`. Card white, 1px `rgb(216, 210, 196)`, radius 10px, 16px of padding. Paper `rgb(246, 243, 236)`. Those are the station numbers. The footer colour key is hidden on the book route. Each stage has its own colour sentence under Play.
+
+### Ranked fixes
+
+1. **Put the point and Play on the first phone screen.** Evidence: at 390 the graph starts at y = 755 and Play at y = 1074; the visible strip is the tips of the curves. The lede and the status say "drawn" and "0 of 3 drawn stages." At 1280 Play is at y = 916 and the graph is capped at 352px while Chapter 5's square is 480px and on the screen. Change: size this picture the way the exponential square is sized, so the point and Play sit above the fold at 390. The status line reads "Uniform convergence. Stage 1 of 5."
+
+2. **Make the point a target a finger can hit.** Evidence: the dot is 9×9. A touch 40px off its center leaves the probe at 0.2. A touch on it moves the sentence, on all three pictures. Change: a drag may start on the curve, and the drawn point is at least 44px across.
+
+3. **Give Back a 44px control and the place you left.** Evidence: THE BOOK is 69×17. From scroll 6146, Back lands at scroll 0. The same reset happens from the chapter 6 row. "Back to the book" is 134×23 under 788px of empty padding. Change: one up control with the 44px of Play. Returning to the chapter keeps the scroll. The empty viewport under 7.5 goes.
+
+4. **The book should show the stage you just finished.** Evidence: after 7.1 is stored, `#book` still says "Next is §4.1, Exercise 3" and Walk Chapter 4. The chapter 7 row is at y = 1510, the heading is not a link, and Open Chapter 7 is 126×23. In the menu, chapter 6 is the same kind of row as chapter 7 and opens a Later card. Change: the status card counts the Chapter 7 stages and its button opens Chapter 7. The row itself is the link, at 44px. A Later chapter stays a Later card and does not wear the current-page mark of an open one.
+
+5. **A finished stage should say the next one, and 7.4 should stop talking about the batch.** Evidence: after the press the button still says Stage complete, the flag says Stage complete, and the summit sentence is on that same screen. Go to 7.2 exists only in the status card at the top. Stage 7.4 says the picture is "the next batch." Change: the press reveals the summit sentence and the button says Go to 7.2. On 7.4 and 7.5, keep the title, the page, and Later.
+
+6. **Give the pins a row a thumb can land on.** Evidence: Definition 7.1 through Example 7.2 are 23px tall and stacked 29px apart, and the same list repeats under 7.2, 7.3, 7.4, and 7.5. Change: each pin is a 44px row, the height the chapter links in the menu already are.
+
+### What to keep
+
+The four colours, and the sentence that flips: inside the band, then outside it; agreement that stops at the circle through ±i; the annulus, then the disk of non-negative powers. Play, Pause, and the freeze on the second click. Next step when motion is reduced. Check, the choices, Show the back, and Go to, all at 44px, and a wrong blank that says "Not yet." The type, the paper, the white card, and the accent button, in light and in dark. The menu row that marks chapter 7 while you are on it. The green edge on a stage that is done.
+
+## Chapter 7, batch 2
+
+Pulled `1ffe343` (the three 202-edition corrections) before editing. The first screen is the move, then the picture, the claim, and Play. At 390×844 Play ends at y=793. At 1280×800 the square is 304px so the lede can sit above it and Play still ends at y=785. The green point is 44px. A tap anywhere on the graph moves it. Play from the opening point changes the sentence from “near 1, this n still leaves it” to “a larger n has brought the curve back.”
+
+7.2 opens on “This partial sum agrees with the function.” The circle-through-±i sentence appears when the point crosses. 7.3 opens on “You are between the two orange circles.” The powers sentence appears after a crossing. A miss shows “Not yet” and the memory line. The next card stays hidden. The disabled stage button says “Answer the practice to finish this stage.” After the press the summit appears and the button says “Go to 7.2”.
+
+The Book is a 44px row. Returning to the chapter restores the scroll. The menu stops at Chapter 7. Pin rows are 44px. There is no draft note and no empty viewport under 7.5.
+
+7.4 is the winding of \(z^2\): one lap, the image goes around twice, order 2. 7.5 is \(\sin z/z\). Away from 0 it is analytic. At 0 the values stay near 1 and the singularity is removable. The chapter ends on “A non-zero analytic function has isolated zeros.” `chapter7WalkSections()` exports the five stages for Continue. Generators are `generate(seed, params)`.
+
+Checked in headless Chrome at 390 and 1280, light and dark. No sideways scroll. No console errors.
+
+## Still open
+
+- §7.3 Exercise 10 (three annuli) and §7.4 Exercise 3 (essential singularities) are not cards yet.
+- L'Hôpital (Corollary 7.11, page 240) is pinned and not pictured. Division of power series (Theorem 7.14, page 240) is not pinned and not pictured.
+- The local card stays until the shared practice engine replaces it.
+- The first square is 304px at 1280 so the lede, the claim, and Play share the window. Chapter 5's square is 480 because its lede sits under Play.
+
+## taste-skill (ch7 batch 2)
+
+Preview https://ch7-preview.complexanalysis.pages.dev/#chapter-7, branch `cursor/chapter-7` at `17c034e`. Phone 390×844 first, then 1280×800, light and dark, plus reduced motion on the phone. Walked 7.1 through 7.5: the first screen, a drag or a tap, Play, the crossings, a wrong blank, Stage complete, the summit, and Go to the next camp. Compared the first screen with `#chapter-5` on the same host. No product code changed. No console errors. No failed requests. `scrollWidth` matched the window at 390 and at 1280, light and dark.
+
+The station shell wins where it disagrees with this lens's house bans. The camp labels, the 1px card edge, the 10px radius, and the four teaching colours stay. They are the site. The cuts below are the pictures and the sentences on those pictures.
+
+### Critique
+
+```
+ROUND 1
+Seen in one second: a small rising graph, and a green disc sitting on it.
+Idea (one sentence): one green point climbs five pictures, from a band, through two circles, around a zero, and into a hole.
+Live thing: drag that point; Play raises the terms, or walks the point, on one clock.
+Layout words by section: hero=stamp / 7.1=sheet / 7.2=plane / 7.3=plane / 7.4=plane / 7.5=graph-in-a-square
+Scores: design 6 · usability 7 · creativity 7 · content 8 → overall 6.7
+Caps applied: none from the house list. The eyebrows, the hairline card, and the soft radius are the shell this course already uses.
+Top three problems:
+1. The green disc is the picture. It covers the band, the purple agreement, and the Laurent disk the sentence has just named.
+2. Stage 7.5 is a curve in the top of a square and an axis in the bottom, and Play after a drag jumps back to x = 1.50.
+3. Stage 7.4 ends on the frame it opened on. The sentence says the image went around twice. The still does not.
+```
+
+### What the five camps do
+
+**7.1, first screen.** Light and dark match. At 390 the title is Iowan at 25.85px, two lines, "Chapter 7. Taylor and Laurent Series". The lede is 16.8px in the muted ink, `rgb(81, 91, 108)` in the light and `rgb(166, 176, 195)` in the dark. The status is "Uniform convergence · Stage 1 of 5". The Book is 87×44. The square is 268×268 at x = 16, y = 378, in a column whose title is 358px wide. Play is 70×44 and ends at y = 793, so it is on the 844px screen. The colour sentence starts at y = 801 and is cut: the window keeps "Blue is the axis. Orange is the band of width" and loses the rest of the line. At 1280 the same square is 304×304 at x = 304, in a column 952px wide. Play ends at y = 785 in the 800px window. Chapter 5 on this host is a 358px square on the phone, Play ending at y = 637, and a 480px square at 1280, Play ending at y = 745. Stages 7.2–7.5 are already that larger square: 324px on the phone, 480px at 1280.
+
+The opening claim is "At this x, the partial sum sits inside the band. Near 1, this n still leaves it." The probe is x = 0.35, n = 4. The curves sit in the lower left of the square and run off the top at the right. The 44px green disc covers the place where the green curve meets the orange dashes. Play from that rest flips the second sentence at n = 7, about a second and a half in, to "A larger n has brought the curve back," and the button says Play again at n = 20, about eight seconds. The right-hand curves still leave the top of the frame. A drag to x ≈ 0.90 at n = 4 flips the claim to "has left the band," and Play through n = 20 leaves that sentence in place. A later Play again, with the point at x ≈ 0.83, does leave the band at low n and comes back by n = 16. The lede's "watch it come back" is true of a moderate drag and false of a drag that follows the curves off the top.
+
+Pause held. From n = 6 the button returned to Play, and 400ms later it was still n = 6. Reduced motion opens every camp on Next step. Two presses go n = 5, then n = 6. The button does not say Pause.
+
+**7.2.** The card opens with the 12.5px label 7.2, the title, page 215, the why, and the bold line "Drag past the orange circle." The square, the claim, and Play are on the phone when Go to 7.2 lands. At rest, n = 0, the claim is "This partial sum agrees with the function." A few purple dots sit at the origin, under the green disc. A tap on the orange circle, on the phone, changes the sentence to "The agreement stops at the circle through ±i." On the laptop a drag to re ≈ 0.94 leaves `holds` false and the words still say the partial sum agrees. The crossing is the sentence that tells the truth. The approach to the circle is not.
+
+**7.3.** At rest the point sits in the annulus, n = 8, and the claim is "You are between the two orange circles." Play runs to n = 18, the button says Play again, and the ring fills in. The sentence stays. A tap at the centre moves the purple into the inner disk and the sentence becomes "Inside both poles, every power in this series is non-negative." The disc covers that disk. A tap on a pole clears the purple and says "The point sits on a circle through a pole." A tap past the outer circle, re ≈ 2.56, says "Outside both poles, every power in this series is negative." The four sentences are in the picture. The handle is the mark that hides the one you came to see. In the dark the same four colours separate: blue axes, orange circles, a lighter green disc, purple dots, on `rgb(13, 18, 28)`.
+
+**7.4.** One orange circle, a small purple dot, a large green disc. The claim is "The green point walks a circle about the zero." Play runs the lap, the readout becomes "order 2," and the claim becomes "The purple image went around twice. The zero has order 2." The button says Play again. The still is the opening frame again: the same disc, the same speck, near the upper right of the circle. At 1280 the circle is large enough to follow. The purple mark is still a speck beside the disc, and nothing is left on the plane when the lap ends.
+
+**7.5.** The curve is a shallow hill in the top of the square. The axis and the green disc are in the bottom. The middle is paper, in both themes and at both widths. The orange hole is a small ring at the top of the hill. At rest, x = 1.50, the claim is "Away from 0, sin(z)/z is analytic." Play from rest walks the point to x = 0.00 in about eight seconds, the sentence flips near x = 0.38 to "The values stay near 1. The singularity at 0 is removable," and the button says Play again. A drag to x = 0.03 first, while the button still says Play, sets that removable sentence. The next press jumps to x = 1.41, the sentence returns to "analytic," and the button says Pause. On the laptop the same jump went to x = 1.41. A press that already says Play again may start over at 1.50. That restart is the clock. The drag is not a finished play, and the picture jumps backward.
+
+The why above this picture names both exam lines, isolated zeros and a filled-in singularity. The worked example under it is the zeros of sin z. The summit, once the cards are right on the earlier camps, is the one sentence under the button. On 7.1 it is "One N works for the whole set." On 7.2 it is "The Taylor series fills the disk out to the nearest singularity, and it stops there." Both sit on the same screen as Go to the next camp, and the finished card takes the green left edge. The 7.5 summit in the page is "A non-zero analytic function has isolated zeros." The picture never draws a second zero.
+
+**Practice.** The first blank, "until ___ is large enough," sits under PINNED, the worked example, and the MEMORY list. "terms" answers "Not yet." and then the memory line, in the muted ink at 17px. The next card stays hidden. The field is 197×44 and Check is 85×44. The waiting button is the full width of the card and wraps, "Answer the practice to finish this stage." After the 7.1 cards the summit and "Go to 7.2" are on one screen, with 7.2 already in view under them. The same beat on 7.2 ends "Go to 7.3". Show the back and Next card are 44px. The page ends on the source line, Howell & Mathews, Chapter 7, page 210. There is no empty viewport under 7.5.
+
+### Verdict
+
+ANOTHER BATCH
+
+One polish batch, the eight cuts below, then this lens rests. The climb is already one story: the same paper, the same two faces, the same four colours, one drag, one clock, a summit, and Go to the next camp. What is still wrong is on the pictures. The green disc is larger than the lesson, the opening graph is the small one and it clips the band, the winding still forgets the lap, and the last camp jumps backward into an empty square whose summit is a different theorem.
+
+### Ranked changes
+
+1. **Paint the green point at the size Chapter 5 paints its handle.** Evidence: the disc is 44×44 on every picture, at both widths, both themes. On 7.1 it covers the curve where it meets the band. On 7.2, n = 0, it covers the purple dots at the origin. On 7.3 a tap at the centre sets "every power in this series is non-negative" and the disc covers that disk. On 7.4 the purple image is a speck beside it. Chapter 5's green mark is small on a 358px square, and a tap on the Chapter 7 square already moves the point from anywhere on it. Change: a small green disc, the same green. The square stays the target.
+
+2. **On 7.5, Play continues from the x on the screen.** Evidence: drag to x = 0.03, the claim is the removable sentence, the button still says Play. The next samples are x = 1.41 and then x = 0.56, the claim back to "analytic," the button Pause. The same jump is on the laptop. A walk that has finished, button Play again, may start over at 1.50. Change: Play walks from the dragged x toward 0. It returns to 1.50 only when the label is Play again.
+
+3. **Leave the double wind on the 7.4 still.** Evidence: before Play and after Play again the frame matches, a green disc and a purple speck near the upper right of the orange circle, at 390 and at 1280. The claim and the readout change to order 2. The plane does not. Change: the purple mark is large enough to follow through the lap, and the lap leaves a purple trail. Play again lands on that trail, two turns, and the opening frame stays the frame before Play.
+
+4. **Crop 7.5 to the curve, and give it the summit the curve earned.** Evidence: at 390 and 1280, light and dark, the hill and the hole sit in the top of the square, the axis and the disc sit in the bottom, and the middle is empty. Play from rest ends at x = 0.00 with "The singularity at 0 is removable." The summit on the camp is "A non-zero analytic function has isolated zeros." The worked example is the zeros of sin z, which this graph does not draw. Change: the frame holds the curve, the orange hole, and the axis. The summit under the button is the removable sentence. Isolated zeros stays in Memory.
+
+5. **One square for all five camps, with the band inside it.** Evidence: the hero is 268×268 at 390 and 304×304 at 1280. Stages 7.2–7.5 are 324 and 480. Chapter 5 is 358 and 480, with Play on the first screen. At n = 20 the hero's right-hand curves still run off the top while the claim says the curve came back. A drag to x ≈ 0.90 stays "left the band" through n = 20. Change: the opening square uses the width 7.2 already uses. Scale the graph so the orange band and the partial sum near 1 stay in the frame. A drag toward 1, then Play, comes back inside that frame.
+
+6. **End the first screen on a whole line.** Evidence: at 390, light and dark, Play ends at y = 793 and the colour sentence starts at y = 801, so an 844px window cuts it after "band of width". Scrolled up, the same sentence is complete and names blue, orange, green, and purple. Change: Play is the last thing on the first screen. The colour sentence starts on the next flick, whole.
+
+7. **Put the picture question under Play.** Evidence: "What did the picture just show?" is below the pin list, the worked example, and four memory bullets. "terms" prints "Not yet." and a memory line that is already on the screen above the card. The next card stays hidden, which is right. Change: that one card moves to just under Play. Pinned, the worked example, and Memory follow it. The miss line stays.
+
+8. **On 7.2, the sentence before the circle names the purple at the origin.** Evidence: at n = 0 the words are "This partial sum agrees with the function" while the purple is a few dots under the disc. A laptop drag to re ≈ 0.94 leaves `holds` false and the words unchanged. A phone tap on the circle does flip them to "The agreement stops at the circle through ±i." Change: before the crossing, the sentence is "The partial sum has settled near 0." The circle sentence appears when the point crosses, and stays the sentence after that.
+
+### Keep
+
+The four teaching colours, on the marks, in both themes. Blue axes, orange band or circle or hole, green the point, purple the series. Dark paper `rgb(13, 18, 28)`, title `rgb(233, 237, 245)`. No fifth hue.
+
+One clock. Play, Pause, Play again. A second press froze n at 6, and it was still 6 after 400ms. Reduced motion is Next step on all five camps, and it steps. Laurent's Play, n = 8 to n = 18, fills the ring between the orange circles.
+
+The Book at 87×44. The status line, "Uniform convergence · Stage 1 of 5," and the same shape for the camp you are on. Iowan at 25.85px on the phone and 36px at 1280. Body 17px. Paper `rgb(246, 243, 236)`. White cards, 10px radius, pins at 44px. The menu row that marks Chapter 7. No sideways scroll.
+
+The camp order that already works once the picture is in view: flag, title, page, why, one bold instruction, the square, a claim, the readout, Play. Go to 7.2 lands with that square and Play on the phone. The crossings change the words: out of the band, onto the circle through ±i, into the inner disk, onto a pole, past the outer circle, and, from rest, along sin(z)/z to the removable sentence.
+
+The practice beat. A wrong blank says "Not yet." and the memory line. The next card waits. Stage complete becomes the summit and then "Go to 7.2" or "Go to 7.3", on one screen, with the green edge on the finished card. The two summits that match their pictures: "One N works for the whole set." and "The Taylor series fills the disk out to the nearest singularity, and it stops there."
+
+The source line at the end, Howell & Mathews, Chapter 7, page 210. Nothing under it.
+
+## reviewer (ch7 batch 2)
+
+Branch `cursor/chapter-7`, reviewed at `17c034e` against the 202 Updated Edition PDF (471 pages). Verdict: accept with fixes. The fixes are on this branch.
+
+One lap of the green point on \(z^2\) moves the purple point through \(4\pi\). The sentence "went around twice, order 2" matches that drawing. A wiggle no longer spends path length as if it were a lap. \(\sin z/z\) at 0 is the removable example on page 233: the series \(1 - z^2/3! + \cdots\) has no negative powers for \(z \neq 0\), and the value that fills the hole is 1. Theorem 7.15 is stated on page 240. The closing line now carries Theorem 7.13's hypotheses: a connected domain, and not identically zero.
+
+The uniform sentence says the curve is back only at \(n = 44\), when the drawn edge \(x = 0.92\) is inside the band. Inside the Taylor disk, a partial sum that has not caught the value no longer says that it agrees. The blank grader accepts an equal value (`1/-7` for \(-\frac{1}{7}\)) and rejects "positive" for non-negative powers. Generators stay `generate(seed, params)`. `map-route.js` matches the kit copy. No live import from `kit/`.
+
+`node tools/check_vectors.mjs`, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. Headless Chrome at 390×844 and 1280×800, light and dark: no sideways scroll, no console errors. Play on the first screen ends at y=793 (phone) and y=785 (wide).
+
+## Chapter 7, batch 3
+
+Branch `cursor/chapter-7`, picked up at `36e5e32`. The council list from batch 2.
+
+The green handle is the Chapter 5 dot, radius 6 on the 480 square. The stage is still the drag target. Every camp uses the 7.2 square: 326×326 on the phone, 480×480 at 1280. The 7.1 window now runs up to 14, so \(1/(1-x)\) and the orange band at the right edge stay inside the frame. On a 390×844 phone, Play ends at y=835 and the picture question starts at y=843. Pins and Memory follow that card. At 1280 the shared 480 square fills the window and Play is the next flick.
+
+7.2 opens on "The partial sum has settled near 0." The circle-through-±i sentence appears on the crossing and stays after it. 7.4 draws the image of \(z^2\) as two purple rings. Play again leaves both rings up. 7.5 is cropped to the curve, the hole, and the axis. Play walks from the x on the screen toward 0. It returns to 1.50 only when the button says Play again. The summit under that camp is "The singularity at 0 is removable." Isolated zeros stays in Memory.
+
+§7.3 Exercise 10, page 230, is a next-step blank and a next-step choice for \((z^2-5z+6)^{-1}\) in the three annuli. The generator is `laurent-three`, seed 1 is poles 2 and 3, and the partial sums match the function. §7.4 Exercise 3, page 238, classifies \(\sin(1/z)\) and, on the next seed, \(z\exp(1/z)\), from the computed series, with a why on every choice. \(z^2/(z-\sin z)\) comes out a pole of order 1. The selected answer on page 448 calls it removable. That misses the order-3 zero of \(z-\sin z\). Theorem 7.14, page 240, is pinned. Corollary 7.11 is a next-step blank on Exercise 6(a): the limit is \((-1-i)/16\).
+
+The first button on `#book` opens the chapter that has a mark. A fresh visit still walks Chapter 4. A Chapter 7 tick opens Chapter 7. The phone drawer lists Chapters 1 through 7.
+
+`node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. Headless Chrome at 390×844 and 1280×800, light and dark: no sideways scroll, no console errors.
+
+## reviewer (ch7 batch 3)
+
+Branch `cursor/chapter-7`, reviewed at `27c5ed5` against the 202 Updated Edition PDF (471 pages, printed page \(P\) at PDF index \(P+8\)). Verdict: **accept with fixes**. The fixes are on this branch.
+
+The selected answer for §7.4 Exercise 3(a), page 448, says \(z^2/(z-\sin z)\) has a removable singularity at 0. That is wrong. \(z-\sin z = z^3(1/6 - z^2/120 + \cdots)\) has a zero of order 3, and \(z^2\) has a zero of order 2, so Corollary 7.8, page 236, gives a pole of order 1. The generator already said pole of order 1. The why now names the corollary and the answer key. At \(x=0.01\), \(x\cdot x^2/(x-\sin x)\) is \(6.00003\).
+
+Exercise 3(b) \(\sin(1/z)\) and 3(c) \(z\exp(1/z)\) are essential. Exercise 3(g) \((\exp z-1)/z\) is removable, and the key on page 448 agrees. \(\sin z/z^2\) is a pole of order 1 and is not in Exercise 3, so a later seed no longer calls it Exercise 3. A later seed of the three-annulus generator no longer calls a different pair of poles Exercise 10. Seed 1 is still \((z-2)(z-3)\), constant term \(1/6\), coefficient of \(z^{-3}\) equal to 5.
+
+Inside the Taylor disk, a partial sum that has caught the value at \(|z|=0.6\) or \(|z|=0.9\) no longer says it has settled near 0. Near 0, and only there, that sentence stays. The 7.4 worked line no longer calls a simple pole the opposite of the double winding. \(1/z\) winds once the other way. The colour line says the purple rings follow the direction of \(z^2\). The second ring is not the modulus. Definition 7.6, page 234, is the derivative test: \(z^2\) and its first derivative vanish at 0, and the second derivative is 2.
+
+Checked and left as is. Definition 7.1 is page 211. The M-test is Theorem 7.1, page 212, and the proof's "Theorem 4.2" is the slip the card already names: Theorem 4.2, page 105, says a convergent sequence is bounded, and a Cauchy sequence converges by Theorem 4.3, page 105. Corollary 7.2 is page 213. Example 7.2's prompt on page 214 omits the minus; the calculation gives \(-\mathrm{Log}(1-z_0)=\sum z_0^n/n\). Corollary 7.3, Example 7.4, and Remark 7.1 are pages 218–219, singularities at \(\pm i\). Theorem 7.5 is page 219. Example 7.7, page 228, is \(3/(2+z-z^2)\) with poles at \(-1\) and \(2\). Theorem 7.9, page 228, is uniqueness in one annulus. Definition 7.5, page 232, is the three kinds. \(\sin z/z\) filled in by 1 is page 233. Theorem 7.12 is page 235. Exercise 2(a), page 238, is a pole of order 4 at 1 and order 3 at \(\pm i\), which matches the key. Theorem 7.13, page 239, is on a domain, and page 38 defines a domain as a connected open set. Corollary 7.11 and Theorems 7.14 and 7.15 are page 240. Exercise 6(a), page 243, is \((z-1-i)/(z^4+4)\) at \(1+i\). The denominator's derivative is \(4(1+i)^3=-8+8i\), and the limit is \((-1-i)/16\). The key on page 449 does not list this limit. The drawn edge \(x=0.92\) enters the band of width \(0.35\) at \(n=44\), not at \(n=42\). Partial sums of both Laurent generators stay under \(0.004\) of the function on a sample in each region. Every Chapter 7 HTML anchor used by a pin is present. No live file imports `kit/`. `map-route.js` matches the kit copy. Generators stay `generate(seed, params)`.
+
+On the fix: `node tools/check_vectors.mjs` is 234/234, `node tools/fractal-smoke.mjs` passes, and `node kit/smoke.mjs` passes. Headless Chrome at 390×844, reduced motion, `#chapter-7`: the Taylor claim opens on "settled near 0" at \(n=0\). A drag to \(0.90\) says the partial sum has not caught the value. Twelve Next step presses reach \(n=12\) and say it has caught the value. The 7.4 line says a pole winds the other way. No console exception on that load.
+
+## pedagogy (chapter-7 batch 3)
+
+Preview https://ch7-preview.complexanalysis.pages.dev/#chapter-7, branch `cursor/chapter-7` at `27c5ed5`. The preview's chapter files match that tip. `24f1722` landed on the branch while this note was being written. It was not on the preview. Near 0 the Taylor sentence is still the one this walk saw. Away from 0 that commit stops saying the partial sum settled near 0, and the 7.4 worked line says a pole winds the other way. The picture is still the zero. Phone 390×844 first, then 1280×800, light and dark. Walked the mountain as a student: each camp's why, the picture, a wrong answer, the worked example, the faded cards, the summit, and Go to the next camp, through Back to the book. No product code changed. No console errors. No failed requests. `scrollWidth` matched the window at 390 and at 1280, light and dark.
+
+### Verdict
+
+ANOTHER BATCH
+
+The five camps are a real climb, and the pictures teach once you move them. The fade is open-book. The memory sheet prints the blank's answer on the same phone screen, a miss prints the summit, and two later camps ask for a different theorem than the one the picture just showed. One batch can put the model above its blank, the summit before the cheat sheet, and the last two pictures on the questions they earn.
+
+### How the climb went
+
+**7.1, phone, light.** The first screen is the move. The lede, at y=202, says to drag toward 1 and press Play. The status is "Uniform convergence · Stage 1 of 5". The claim and Play are on the screen: Play ends at y=835. The claim at n=4, x=0.35 is "Near 1, this n still leaves it." A drag to x≈0.90 flips it to "has left the band." Play runs to n=44, the button says Play again, and the claim becomes "A larger n has brought the curve back." That is the lesson, and it holds in the dark. The same drag on the dark paper flips the claim, and the curves still separate.
+
+The picture question starts at y=843, so an 844px window keeps 1px of the card. The field is already live. "terms" gets "Not yet. One N works for the whole set. If N needs z, the convergence is only pointwise." That is the summit, in muted ink, 17px, `rgb(166, 176, 195)` on the dark paper. The why, "Integrating term by term needs the stronger promise," is at y=1232, under the question. The worked example under that is Example 7.2: integrate the geometric series and get the series for Log, ending on the note that the printed prompt omits a minus sign. The memory list under the example states the M-test, including \(M_k\).
+
+With the M-test card centered, that memory list is on the screen (top 22px, bottom 313px) and the blank asks for the sum of the ___. The worked example has scrolled off. "terms" gets "Not yet" and the M-test line, which names \(M_k\). \(M_k\), Cauchy, converges, and uniform then take the card. The why under "converges" is the book's Theorem 4.2 slip. The right choice on the next card explains one tail for the whole set. The wrong choice, "N may depend on z," gets "the convergence is pointwise, not uniform."
+
+The summit stays hidden until the press. The flash is already open above the button, "Card 1 of 2," still on Show the back, and the stage does not wait for it. The press reveals "One N works for the whole set.", the button says Go to 7.2, the card takes a 4px green edge, and the status becomes "Taylor series · Stage 2 of 5". Go to 7.2 lands with the flag, the title, the why, "Drag past the orange circle.", the square, the claim, and Play all on the phone. The status is off that screen.
+
+**7.2.** The opening claim is "The partial sum has settled near 0." Play runs to n=12 and the sentence stays that sentence. A drag to re≈1.09 flips it to "The agreement stops at the circle through ±i," and a tap back at the centre leaves that sentence in place. The picture blank accepts ±i while that claim and the colour key, which also says ±i, are on the screen. A wrong "1" gets the radius rule. The radius blank asks for the disk. Its worked example, which already says \(|z|<1\), sits just above the window, and the memory list is on the screen with the blank. "everywhere" gets "Not yet. The Taylor disk reaches the nearest nonremovable singularity and stops." That is the summit again. The wrong choice "a vertical asymptote at x=1" gets "A smooth real function can still have a Taylor radius of 1. Look for complex singularities." The summit after the press is "The Taylor series fills the disk out to the nearest singularity, and it stops there." The button says Go to 7.3.
+
+**7.3.** It opens on "You are between the two orange circles." A tap in the disk says every power is non-negative. A tap at re≈2.75 says every power is negative. The return tap on this walk landed back in the disk (re≈0.83), and the claim stayed the disk sentence. The blank "negative powers and ___ powers" accepted "non-negative" on that claim. A separate tap that leaves the disk and comes back to re=1.5 does earn "Between the poles, the series uses negative powers from the inner pole and non-negative powers from the outer one." A tap that stays at re=1.5 before any exit keeps the opening sentence. The card grades the annulus blank from the disk sentence.
+
+Exercise 10 is a real fade of the three annuli, and it sits 1450px below the worked example. With that card on screen, the worked example and the memory list are both off it. The wrong choice "non-negative powers from both poles" gets "Not yet. Non-negative powers from both poles is the series for \(|z|<2\)." After the annulus card was right, Another function replaced \((z+2)(z-5)\) with \((z+4)(z-5)\) and brought the blank back. The summit is "Between singularities the Laurent series is a geometric series aimed inward on one side and outward on the other." Go to 7.4.
+
+**7.4.** Before Play the claim is "The green point walks a circle about the zero," the readout is "walking," and the card is already on the page: "The purple image went around twice, so the zero has order ___." Play leaves two purple rings, the claim "The zero has order 2.", and the readout "order 2." The why above the picture is about negative powers and singularities. The cards after the winding are a pole of order 4, a pole of order 3, a generated pole of order 3, and the essential singularity of \(\sin(1/z)\). "removable" on that last card gets "Not yet. Removable means no negative powers. The computed series still has some." The summit is "One trip around a zero of order \(k\) sends the image around \(k\) times." The status becomes "Isolated zeros · Stage 5 of 5".
+
+**7.5.** The arrival screen has the why, which names isolated zeros and a filled-in singularity, then "Drag the green point toward 0.", the curve, the orange hole, and Play. The claim is empty. The readout is empty. The green circle has no position. A tap in the square on the phone walk set x=0.05 and the claim "The values stay near 1. The singularity at 0 is removable." Play from there walked to x=0.00 and kept that sentence. Pressing Play on a fresh arrival, before any drag, does walk from x=1.43, "Away from 0, \(\sin(z)/z\) is analytic," to x=0.00 and the removable sentence. The drag on a blank frame skips that opening sentence.
+
+The next card is Theorem 7.13. The wrong choice, a point every neighbourhood of which contains another zero, gets the isolated-zeros line. The L'Hôpital card already says both functions are 0 at \(1+i\) and that the derivative is \(-8+8i\neq 0\). The blank is the quotient, and \((-1-i)/16\) is accepted. Theorem 7.14 is on the page twice, in the pins and the memory, and there is no card for it. The flash above the button asks what Theorem 7.13 says about zeros. The summit, after the press, is "The singularity at 0 is removable." The button says Back to the book. The status is "Done · 5 of 5 stages." The book shows Open Chapter 7 and that done line, and the list still flags Chapter 4 OPEN.
+
+**1280×800, both themes.** The title is 36px. The square fills the window. The claim starts at y=806 and Play at y=901, so an 800px window has the lede "Press Play" and the graph, and it has neither the claim nor Play. A drag to re≈0.89 still leaves the band, and Play still brings the sentence back. The phone is the screen where that sentence and the button share the first view.
+
+### Ranked cuts
+
+1. **Put the memory sheet and the flash after the summit.** Evidence: with the M-test blank centered on the phone, the memory line \(|u_k(z)|\le M_k\) is on the screen, and the blank asks for that symbol. "terms" on the picture card prints "One N works for the whole set," the summit, before the why has been read. "everywhere" on the radius card prints the 7.2 summit. The flash is open above the summit button and the stage completes while it still says Show the back. Change: Memory and the deck move under the summit. A miss names where to look, the readout or the orange circle, and it leaves the summit for the button. The stage waits until one flash has been turned. Spacing stays with the shared engine. The button, while cards remain, says how many are left.
+
+2. **Put the worked model directly above the blank it trains.** Evidence: the 7.1 worked example is the Log integral, and it ends on the printed prompt's missing minus sign. The faded proof under it is the M-test. Nothing asks the student to integrate. The why that mentions the integral is below the first question, at y=1232. On 7.3, Exercise 10 is 1450px below Example 7.7, and that example is off the screen when the exercise is on it. Another function wipes a solved annulus card and substitutes a new one. The why under the right blank "converges" is the Theorem 4.2 citation slip. Change: 7.1's why moves under the lede, before the graph, where 7.2 already puts its why. One filled M-test step sits immediately above the proof blanks. The Log calculation becomes the next card, and it ends on the series. The citation slip is one clause after the reason the step is right. Example 7.7's three-region sentence repeats immediately above Exercise 10. Another function adds a second card and leaves the solved one in place.
+
+3. **Hold each picture blank until the claim that earns it.** Evidence: the 7.1 field is enabled on arrival, and the opening claim already says "this n still leaves it." The 7.4 card is on the page before Play, and it says the image went around twice. The 7.3 blank accepted "non-negative" while the claim was still the disk sentence. The 7.2 blank accepts ±i with that claim and the colour key both on the screen. Change: the card stays closed until the claim has been the one the blank names. 7.1 waits until the curve has come back. 7.2 waits for the circle sentence. 7.3 waits until the point has come back into the annulus and the claim names both directions. 7.4 waits for "order 2." 7.5 waits for the removable sentence. Until then the line under Play says which sentence is still coming.
+
+4. **Teach the pole on the 7.4 picture before the pole cards.** Evidence: the why says the negative powers name the singularity, and the order is the winding. The picture is \(z^2\), a zero, and Play shows order 2. The next cards are poles of orders 4 and 3 and the essential singularity of \(\sin(1/z)\). The summit returns to the zero. Change: after the zero's two rings, one lap of \(1/z\) winds the other way, and the claim says a pole of order 1. The rational-function cards follow that sentence. The essential card keeps its why, and the prompt says this series does not stop and the winding does not draw it.
+
+5. **Open 7.5 on the sentence the curve earns.** Evidence: on arrival the claim and the readout are empty and the green circle has no position. A tap set x=0.05 and the removable sentence, so this walk never saw "Away from 0, \(\sin(z)/z\) is analytic" until a separate press of Play on a fresh page. The why and the status lead with isolated zeros. The summit is "The singularity at 0 is removable." The L'Hôpital prompt already says both functions vanish and names the derivative. Theorem 7.14 has a pin and a memory line and no card. The book, after Back to the book, says Done · 5 of 5 and still flags Chapter 4 OPEN. Change: the opening frame is painted at x=1.50 with "Away from 0, \(\sin(z)/z\) is analytic." The status names this camp for the picture. The why is the removable fact. Isolated zeros is the card after that summit, using the worked example of the zeros of \(\sin z\). The L'Hôpital card's first blank is that both functions are 0. The quotient is the second blank. One faded step for Theorem 7.14 sits with the other two, or that theorem leaves the why until the step exists. The book's done line for this chapter is the five summit sentences.
+
+6. **Make Play teach on 7.2, and keep the claim on the wide first screen.** Evidence: Play on 7.2 runs from the opening point to n=12 and the sentence stays "The partial sum has settled near 0." The circle sentence is the drag. At 1280×800, light and dark, the claim starts at y=806 and Play at y=901, under an 800px window, while the lede says Press Play. On the phone Play ends at y=835, with the claim above it. Change: Play on 7.2, before any crossing, ends on a new sentence, "The purple has filled in near 0." The circle sentence stays the one that appears on the crossing and remains after it. On the wide window the claim and Play sit above y=800.
+
+### What to keep
+
+The phone's first screen. The lede is the move, the status is "Uniform convergence · Stage 1 of 5", and the claim and Play share the 844px window. A drag to about 0.90 leaves the band at n=4. Play to n=44 brings the curve back. The same drag flips the claim on the dark paper, `rgb(13, 18, 28)`, with the title in `rgb(233, 237, 245)`.
+
+The arrival at the next camp. Go to 7.2 puts the flag, the why, the bold instruction, the square, the claim, and Play on one phone screen. The finished card takes the green edge. The summit sits with the button that names the next camp, and that camp's why is already in view under it. The same beat ends 7.2 and 7.3.
+
+The sentences the pictures earn. The circle sentence stays after the point comes back inside. The disk, the exterior, and a return to the annulus each have their own Laurent sentence. Two purple rings stay up after Play again, with the readout "order 2." Play from a fresh 7.5 walks \(\sin(z)/z\) from about 1.43 to 0 and reaches the removable sentence.
+
+One card at a time. The next card waits. The wrong choices are the mistakes a student makes, and four of them answer in the student's own terms: N depending on z is pointwise, a vertical asymptote is the real-line trap, non-negative powers from both poles belong to \(|z|<2\), and removable means the negative powers are gone. Exercise 10's three steps, and a second rational function from the generator, are the right kind of faded practice once they sit under the model.
+
+The five summit sentences, once the press shows them. One N for the whole set. The Taylor series stops at the nearest singularity. The Laurent series aims inward on one side and outward on the other. One trip around a zero of order k winds the image k times. The singularity at 0 is removable.
+
+## ux-veteran (chapter-7 batch 3)
+
+Preview https://ch7-preview.complexanalysis.pages.dev/#chapter-7, branch `cursor/chapter-7` at `27c5ed5`. Phone 390×844 first, then 1280×800, light and dark. Touched the page the way a student would. No product code was changed. No console errors. No failed requests. `scrollWidth` matched the window at 390 and at 1280, in both themes.
+
+### Verdict
+
+ANOTHER BATCH
+
+The five phone checks this batch named are on the page. The first screen ends on Play. The green point is the Chapter 5 dot, and the square is the target. Play on 7.5 continues from the x already on the screen. The five squares are one size. The picture question sits under Play. What is still in the way: at 1280 the sentence and Play are the next flick, 7.5 arrives with the point in the corner and the sentence blank, and The Book forgets the place you left.
+
+### How the walk went
+
+**390×844, light, fresh storage.** The site name is whole. Theme and menu are 44×44. The Book is 87×44. The title is Iowan at 25.85px, two lines. The lede is the move, in the muted ink `rgb(81, 91, 108)`: drag toward 1, then Play. The status is "Uniform convergence · Stage 1 of 5". The square is 326×326 at y = 362. The claim and "n = 4" are on the screen. Play is 70×44 and ends at y = 835, so an 844px window keeps the whole button, with 9px under it. The picture question, "What did the picture just show?", starts at y = 843. The colour sentence starts at y = 1055, whole, under that card. Pins and Memory follow the card.
+
+The green circle is `r = 6` in a 480 viewBox, drawn 8.1×8.2 on this square. Chapter 5's green circle is the same `r = 6`, drawn 9×9 on its 358px square. A drag that starts in the top-left of the square and ends toward the right sets the probe to 0.92 and the claim to "At this x, the same partial sum has left the band." Play from there switches to Pause, reaches n = 8, and a second press freezes n at 8 with the label Play. Play from the opening point, x = 0.35, keeps the "near 1, this n still leaves it" sentence through n = 40 and, at n = 44, says "A larger n has brought the curve back." The button says Play again. Every drawn point of the curves stays inside the 480 viewBox (the lowest is 44, the highest is 421).
+
+Stages 7.2 through 7.5 are 324×324. At each one the picture question is the next block after Play, an 8px gap, and the colour sentence follows the card. 7.2 opens on "The partial sum has settled near 0." A drag to about 1.39 changes it to the circle through ±i. 7.3 opens between the two orange circles. A tap at the centre says every power is non-negative. 7.4 plays out to "order 2", the button says Play again, and both purple rings stay up (24 points on the inner trail, 25 on the outer). "terms" on the first blank prints "Not yet." and the memory line. The next card stays hidden. The waiting button still says "Answer the practice to finish this stage." and it is disabled. The field is 231×44 and Check is 85×44.
+
+**7.5, before any touch.** The line above the square says "Drag the green point toward 0." The claim is an empty 53px block. The readout is empty. The green circle has no centre, so it sits on the corner of the square, 8px, half a dot past the top-left. The orange hole is at the top of the hill. Play from that rest does the walk the button promises: the first sample is x = 1.43, the button says Pause, the sentence is "Away from 0, sin(z)/z is analytic," and the next samples are 1.35, 1.28, 1.20, stepping toward 0. A drag that lands at x = −0.20, while the button still says Play, sets the removable sentence. The next press moves to x = −0.17 and says Pause. After a walk that has finished, Play again starts near x = 1.46. The same step toward 0, from a dragged x, happens at 1280.
+
+**Back.** Scrolled to 7.3, the page is at y = 4506 and `mv:ch7-scroll` holds 4506. The section title clears the header (title top 97, header bottom 56). The Book then opens `#book`, and the stored value is 0. The Chapter 7 row brings the chapter back at y = 0. The 7.3 title is at y = 4523.
+
+**The book and the menu.** A fresh book says "Next is §4.1, Exercise 3. 0 of 8 exercises." and the button is "Walk Chapter 4", 163×44. One stored Chapter 7 tick changes that button to "Open Chapter 7". The phone drawer is The Book plus Chapters 1 through 7, each row 44px, and Chapter 7 is the current page. Chapters 8 through 11 are absent. At 1280 the same list is a 280px sidebar, and Chapter 7 is in view and current. Chapter 1 and Chapter 6, opened from those rows, mount the book. The first screen there is still Walk Chapter 4. On the book itself the Chapter 7 head is the only link. Chapters 1 through 6 are divs. Chapter 5's flag says Open.
+
+**Dark, both widths.** Paper `rgb(13, 18, 28)`, title `rgb(233, 237, 245)`, lede `rgb(166, 176, 195)`. The same first screen: Play ends at y = 835 and the question starts at y = 843. The green point, the orange band, the purple curve, and the blue axis still separate. At 1280 the dark square is the same 480×480 ending at y = 798.
+
+**1280×800, light.** The title is Iowan at 36px, one line. The square is 480×480 at y = 318 and ends at y = 798. The claim starts at y = 806. Play starts at y = 901 and ends at y = 945. Stages 7.2 through 7.5 are the same 480 square, and the green circle is 12×12, the size Chapter 5 draws on its 480 square. Chapter 5 on this window puts that square at y = 179 and Play ends at y = 745. Reduced motion, on the phone, labels every camp Next step. Two presses go from n = 4 to n = 6 to n = 8, and the button does not say Pause.
+
+### Ranked fixes
+
+1. **Paint 7.5 before the first touch.** Evidence: on arrival the claim is empty, the readout is empty, and the green circle has no centre, so an 8px dot sits at the corner (−4, −4) while the hole is at (159, 37) on a 324px square. The instruction already says to drag that point. Play from the untouched page then walks from x = 1.43 toward 0 and fills the analytic sentence. A drag to −0.20 continues toward 0 on the next press, and Play again is the restart near 1.46. Change: the opening frame is x = 1.50, the point on the axis, the readout, and "Away from 0, sin(z)/z is analytic."
+
+2. **Put the claim and Play on the wide first screen.** Evidence: at 1280, light and dark, the square ends at y = 798 in an 800px window. The claim is at y = 806 and Play ends at y = 945. A drag on that first screen changes a sentence the window does not hold. Chapter 5 on the same window ends Play at y = 745. The phone already ends on Play. Change: cap the wide square so the claim and Play finish inside 800. Leave the phone square as it is.
+
+3. **Keep the chapter scroll when The Book is pressed.** Evidence: at y = 4506 the stored key is 4506. On the book it is 0. The Chapter 7 row returns to y = 0. Change: the value saved is the scroll the chapter had when the student left. The write that happens after the page has jumped to the top has to stop replacing it.
+
+4. **Land a chapter row on that chapter's card.** Evidence: the drawer rows for Chapter 1 and Chapter 6 are 44px, the same row as Chapter 7. Each opens the book, and the first screen is "Walk Chapter 4". Chapter 4, Chapter 5, and Chapter 7 open their own pictures. Change: a row whose chapter is still the roadmap opens the book scrolled to that chapter's card. The three pictured chapters stay on their pictures.
+
+5. **Make an Open or Next head a link.** Evidence: on the book, heads 1 through 6 are divs. Chapter 7's head is the link, 81px tall. Chapter 5's flag says Open and the head has no href. The walk button itself is 44px and, with a Chapter 7 tick, says Open Chapter 7. Change: a head flagged Open or Next is a link, the same row Chapter 7 already is. A Later head stays a card.
+
+### What to keep
+
+The phone first screen, in both themes. The Book, the title, the lede that names the drag and Play, the status line "Uniform convergence · Stage 1 of 5", the square, the claim, the readout, and Play, with Play the last control on the screen. The picture question is the next block, then the colour sentence, whole, then the pins.
+
+The green point at `r = 6`, 8px on the phone square and 12px on the 480 square, the same dot Chapter 5 paints. The square is the drag target. A drag that misses the dot still moves the probe and flips the claim. Play, Pause, and the freeze on the second press. Play again at n = 44, with the curve back inside the frame. Next step on all five camps when motion is reduced.
+
+One square across the camps: 326 and 324 on the phone, 480 at 1280. The 7.1 curves use that square. The right-hand rise stays inside the frame at n = 4 and at n = 44. 7.2 opens on the settled sentence and names the circle when the point crosses it. 7.3's tap at the centre names the non-negative powers. 7.4 leaves two purple rings and the order-2 sentence when the button says Play again. On 7.5, once the point has a place, Play walks toward 0 from that x and returns to the far end only from Play again. The gap between the hill and the axis is the value sitting near 1. The question sits 8px under each Play button.
+
+The type and the paper. Iowan at 25.85px on the phone and 36px at 1280. Body 17px. Paper `rgb(246, 243, 236)` and, in the dark, `rgb(13, 18, 28)`. White cards, 10px radius. The Book, the pins, Play, Check, the blank, and the menu rows, all at least 44px tall. The drawer stops at Chapter 7, and the current row is marked. A fresh book walks Chapter 4. A Chapter 7 tick opens Chapter 7. A wrong blank says "Not yet." and the memory line, and the next card waits. The four teaching colours still separate on the dark paper. No sideways scroll.
+
+## Chapter 7, batch 4
+
+Branch `cursor/chapter-7`, picked up at `404a70a` (reviewer fixes `24f1722` are on that tip). The merged list from batch 3. Draft only. `gh-pages` was not touched.
+
+7.5 arrives already painted at \(x=1.50\): the green point is on the axis, the readout says \(x = 1.50\), and the claim is "Away from 0, \(\sin(z)/z\) is analytic." Play walks from that \(x\) toward 0. The status for this camp is "Removable singularity", the same fact as the summit. The why leads with the filled-in hole.
+
+At 1280×800 the wide squares are capped at 20.25rem. The 7.1 claim starts at y=650 and Play ends at y=789. The phone square is unchanged: Play still ends at y=835. Play on 7.2, before any crossing, ends on "The purple has filled in near 0." The circle sentence is still the one that appears on the crossing and stays after it.
+
+Each picture blank stays closed until the claim that earns it. 7.1 waits until the curve has come back. 7.2 waits for the circle sentence. 7.3 accepts "non-negative" only after the point has left the annulus and come back to the sentence that names both directions. 7.4 does not say "went around twice" on arrival. 7.5 waits for the removable sentence. Until then a line under Play names what is still coming. A miss says where to look. It does not print the summit.
+
+Memory is a closed sheet that appears with the summit, above the button, so Go to the next camp still has that camp's why in view. The stage button stays disabled while a flash says Show the back. The 7.1 worked line is one filled M-test comparison, directly above the proof blanks. The Log integral is the next card and ends on the series. Exercise 10 sits directly under Example 7.7. Another function adds a card and leaves the solved one.
+
+7.4 Play draws the zero's two purple rings, then one lap of \(1/z\) the other way, and the claim says a pole of order 1. The zero card opens on "order 2". The pole cards wait for the pole sentence. The essential card says the series does not stop and the winding does not draw it. The summit is still the zero.
+
+The Book keeps the chapter scroll. A later chapter row scrolls that card under the header: Chapter 1 and Chapter 6 no longer open on Walk Chapter 4. Heads for Chapters 4, 5, and 7 are links. Later heads stay cards. Theorem 7.15 is pinned on 7.5. Theorem 7.14 has a faded division step. Exercise 3(d), 3(e), 3(f), and 3(h) are cards, checked against the series. Practice is still the local card.
+
+`node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. No live `kit/` import. `map-route.js` matches the kit copy. Headless Chrome at 390×844 and 1280×800, light and dark: no sideways scroll, no console errors.
+
+## test-prep-coach (chapter-7 batch 4)
+
+Preview https://ch7-preview.complexanalysis.pages.dev/#chapter-7, branch `cursor/chapter-7` at `46fe648`. Phone 390×844 first, then 1280×800, light and dark. Walked the five camps as a student with the exam in a few days: the first screen, a drag, Play through n=44, a wrong blank, the memory sheet after a stage is marked, and the cards for the M-test, the radius, Exercise 10, Exercise 3, L'Hôpital, and Theorem 7.14. No product code changed. No console errors. No failed requests. `scrollWidth` matched the window at 390 and at 1280, light and dark.
+
+### Verdict
+
+ANOTHER BATCH
+
+The Laurent recipe and the singularity choices are the ones a test asks, and a student can blaze those. L'Hôpital, Exercise 3(a), and the division theorem are still the book's statements with the work already done. The memory sheet that should carry the recipes stays shut until the stage is marked, and then it stays collapsed. One batch can turn those three into drills and open the sheet.
+
+### What a timed pass can use
+
+**390×844, light, fresh storage.** The first screen is the move. The lede says drag toward 1 and press Play. The status is "Uniform convergence · Stage 1 of 5". The claim and Play are on the screen: Play is 70×44 and ends at y=835. The wait line, "Press Play until the curve comes back," starts at y=843. All 25 practice cards are hidden. All five memory sheets are hidden. The button, off this screen, says "4 cards left." A drag on the square set the claim to "has left the band" at n=4. Play ran to n=44, the button said Play again, and the claim became "A larger n has brought the curve back." The picture blank then opened. "terms" got "Not yet. Look at the readout under the picture." The same drag on the dark paper, `rgb(13, 18, 28)`, title `rgb(233, 237, 245)`, flipped the claim the same way.
+
+**7.5 on arrival.** Scrolled to the camp, the claim is "Away from 0, sin(z)/z is analytic," the readout is "x = 1.50," and the green point has a centre. The why names a bounded isolated singularity and says the value stays near 1.
+
+**1280×800, both themes.** The claim starts at y=650 and Play ends at y=789, so both sit in the 800px window. The square is 324×324. The same opening claim is on the screen.
+
+**After 7.1 is marked done.** The summit "One N works for the whole set." sits above a collapsed control whose label is MEMORY. The four lines stay inside until that control is opened: one N, the negation, the M-test bound, and Corollary 7.2's permission to integrate. The Log card above that control is an empty blank again, "Log(1−z) = ___". The deck on the same screen is "Card 1 of 2", with Show the back and Next card both up, and the stage button already says Go to 7.2.
+
+### Where the exam and the cards part
+
+**L'Hôpital.** The rendered step is "Numerator and denominator are both 0 at 1+i, and the derivative of the denominator is −8+8i≠0. The limit equals ___." `-(1+i)/16` and `1/(-8+8i)` both came back "Not yet. Look at the readout near 0." The readout on this camp is the sinc picture, x=1.50. `(-1-i)/16` was accepted, and the why then shows the quotient of the derivatives. Exercise 6 has three more limits. Part (b), at i, has a zero of order 2 in the numerator and the denominator, so one application is still 0/0, and the cancelled limit is −1/4. Part (d) is a series limit, 1/60.
+
+**Exercise 3.** The card on the page is sin(1/z), essential, and "removable" answers "Removable means no negative powers. The computed series still has some." Another function then shows z exp(1/z), then (exp z−1)/z, and the third new card is z^2/(z−sin z). The selected answer on page 448 calls that removable. z−sin z has a zero of order 3 and z^2 has a zero of order 2, so the quotient is a pole of order 1 and the principal part starts at 6/z. Parts (d), (e), (f), and (h) are their own cards. (d)'s choices are simple poles at (n+1/2)π, a removable singularity at 0, an essential singularity at 0, and poles of order 2 at nπ.
+
+**Theorem 7.14.** The rendered prompt is f(z)=1 and g(z)=1−z, with g(0)≠0 already stated, and the first blank is c0 with a0=1 and b0=1 already printed. Both answers are 1. Example 7.5.6 in the section is sec z = 1 + (1/2)z^2 + (5/24)z^4, and the fourth derivative at 0 is 5. Exercise 4 is the same division for tan z.
+
+**Theorem 7.15.** The memory line, once the sheet is opened, says a bounded isolated singularity is removable, and the flash back says the same. The picture blank asks for the value 1, with the word removable already in the sentence. The two tests that follow Riemann in §7.5 are absent from the sheet: |f|→∞ means a pole, and a limit of |f| that fails to exist means essential.
+
+**Miss lines.** "N may depend on z" on the M-test choice returned "Look at the readout under the picture." The readout was n=44. "A pole of order 1" on the isolated-zeros card returned "Look at the readout near 0." The vertical-asymptote choice returned "Look at the orange circle," which is the right place for that card. Exercise 10's swapped annulus returned "That swap puts the inner pole's series on the outside of the annulus."
+
+**The sheet and the deck.** On a fresh load the five sheets and the five decks are hidden. The 7.4 sheet, after the stage mark, is two lines: the principal-part trichotomy, and the pole form h(z)/(z−α)^k. It has no order arithmetic. The 7.1 sheet does not record −∑ z^n/n. The Log grader accepts `-sum z^n/n` and rejects `-sum_{n=1}^infty z^n/n`. One Show the back is the flash gate. Next card is on the screen before the back, so the second recipe can stay unturned. There is no second pass.
+
+### Ranked cuts
+
+1. **Make L'Hôpital the computation, and accept the form a student writes.** Evidence: the step states both functions are 0 and that the derivative is −8+8i≠0. `-(1+i)/16` and `1/(-8+8i)` were marked wrong and told to look at the sinc readout. `(-1-i)/16` passed. Exercise 6(b) is still 0/0 after one differentiation, and the limit is −1/4. Change: the first blank is the check, both zero and g'(1+i). The second blank is the limit. Accept `-(1+i)/16`, `(-1-i)/16`, and `1/(-8+8i)`. A miss says to divide the derivatives and simplify. The next card is 6(b): cancel (z−i)^2, limit −1/4.
+
+2. **Put Exercise 3(a) on the page, with the printed solution named as the trap.** Evidence: sin(1/z) is the card. z^2/(z−sin z) appears on the third Another function, still titled Exercise 3. Page 448 says removable. The series starts at z^{−1}. Change: (a) is its own card, answered "a pole of order 1", with a second blank for the principal part 6/z. The why quotes the page 448 line and the orders 3 and 2. "Removable" stays the distractor. (c) and (g) sit as the next two cards.
+
+3. **Drill Theorem 7.14 on sec z.** Evidence: the card is 1/(1−z), and both blanks are 1, with a0, b0, and g(0)≠0 printed in the prompt. Example 7.5.6 is sec z = 1 + (1/2)z^2 + (5/24)z^4, and f^{(4)}(0)=5. Change: three blanks on that example, constant term 1, coefficient of z^2 equal to 1/2, fourth derivative 5. The memory line keeps a_n = b_0 c_n + … + b_n c_0. One line on the card says a zero of g is where you stop dividing and switch to a Laurent series.
+
+4. **A computational miss names the move.** Evidence: the M-test choice "N may depend on z" and the isolated-zeros choice "a pole of order 1" both returned a picture hint, the readout. Exercise 10 and the essential card returned the reason for that choice. The isolated-zeros stem already says the function is analytic, so "a pole" and "essential" drop out before the accumulation-point choice is doing any work. On tan z, "a removable singularity at 0" names a point where tan z is analytic. Change: every choice carries its own why, and a blank that is not the picture card uses that step's why. The picture card keeps the readout hint. On the zeros card, the other two choices become "f has to be a polynomial" and "the zero has no finite order." On tan z, the removable-at-0 choice becomes "simple poles at nπ."
+
+5. **Open the sheet with the summit, and put the blaze lines on it.** Evidence: every sheet is hidden on arrival. After the stage mark, MEMORY is collapsed and the lines appear on a tap. The open 7.1 sheet is one N, the negation, the M-test bound, and "may be integrated." The Log series is not a line, and the Log blank is empty again on a return. The 7.4 sheet has no ord(f)−ord(g). The 7.5 sheet states 7.13, 7.15, 7.11, and 7.14, and stops before |f|→∞ and the missing limit of |f|. The deck stays hidden until the other cards are right, and one Show the back finishes it. Change: a collapsed Memory at the top of the stage, one tap, so the lines are available the night before and stay off the blank until then. When the summit appears, that sheet is open. Add −∑_{n≥1} z^n/n, the order subtraction, the derivative test for a zero of order k, and the two limit tests. The stage waits until each flash back has been shown. Spacing can arrive with the shared engine. This pass is the one full turn of the ten backs.
+
+6. **Ask for a comparison and for a series.** Evidence: the worked line already gives |z^k|≤(1/2)^k on |z|≤1/2, and the blanks under it are M_k, Cauchy, converges, uniform. The 7.2 worked line states both substitutions, and the blank asks for |z|<1. The Log card accepted `-sum z^n/n` and the grader rejects `-sum_{n=1}^infty z^n/n`. Change: one blank, M_k = (1/2)^k. One blank, 1/(1+z^2) = ∑ (−1)^n z^{2n} for |z|<1. The Log blank accepts the indexed sum and the first three terms, −z − z^2/2 − z^3/3.
+
+### What to keep
+
+The phone first screen, in both themes. The lede is the drag and Play, the status is "Uniform convergence · Stage 1 of 5", and the claim shares the window with Play. A drag leaves the band at n=4. Play to n=44 brings the sentence back. The dark paper keeps the four colours apart.
+
+The picture gate. The blank stays shut until the claim is the one it names, and the line under Play says what is still coming. "terms" points at the readout, which is the right hint for that card.
+
+The Laurent recipe, word for word. Partial fractions, then a geometric series in z inside a pole and in 1/z outside it. Exercise 10's three regions, and the swapped-annulus choice whose why names which region that series actually belongs to. The radius choice "a vertical asymptote at x=1", which is the real-calculus trap in Remark 7.1. The M-test proof skeleton, M_k then Cauchy then one N for the whole set.
+
+The classification line. No negative powers, lowest power −k, infinitely many. Exercise 2(a)'s orders, 4 at z=1 and 3 at z=i. Exercise 3(d), (e), (f), and (h), with the cancellation and the order subtraction written as the reason. The essential card's "this series does not stop."
+
+7.5's opening frame. x=1.50, the point on the axis, "Away from 0, sin(z)/z is analytic." Theorem 7.15's sentence on the sheet and on the flash back: a bounded isolated singularity is removable, and sin z/z is filled in by 1. The four summit sentences that match their pictures.
+
+The citations on the cards, page and all. Play, Check, and the choice buttons at 44px. One card at a time inside a stage, the next card waiting until this one is right. No sideways scroll, no console errors, light or dark.
+
+## reviewer (chapter-7 batch 4)
+
+Branch `cursor/chapter-7`, reviewed at `46fe648` against the 202 Updated Edition PDF (471 pages, printed page \(P\) at PDF index \(P+9\)). Verdict: **accept with fixes**. One sentence was false of the opening frame. The fix is on this branch.
+
+Two graders rejected an equal value. Example 7.2's blank accepts \(-\sum_{n=1}^{\infty} z^n/n\) and now also the plain indexed sum `-sum_{n=1}^infty z^n/n`. Exercise 6(a) accepts `-(1+i)/16` and the unsimplified quotient `1/(-8+8i)`, both equal to \((-1-i)/16\).
+
+The 7.5 why said that on this picture \(\sin(z)/z\) stays near 1. At the painted point \(x=1.50\), \(\sin(1.5)/1.5 \approx 0.665\), and the claim correctly says the function is analytic away from 0. The curve on \([-2.2,2.2]\) sags well below the orange line at height 1. Near 0 it does stay near 1: at \(x=0.44\), the value is about \(0.97\), and that is the sentence the picture earns. The why and the picture's label now say "near 0". Riemann's theorem (Theorem 7.15, page 240) is the bounded punctured disk, and the value that fills the hole is still 1, as on page 233.
+
+Checked and left as is. Definition 7.1 is page 211. The M-test is Theorem 7.1, page 212, and the proof's "Theorem 4.2" is still the slip the card names: Theorem 4.2, page 105, says a convergent sequence is bounded, and a Cauchy sequence converges by Theorem 4.3, page 105. Example 7.2's prompt on page 214 omits the minus; the calculation gives \(-\mathrm{Log}(1-z_0)=\sum z_0^n/n\). Corollary 7.3, Example 7.4, and Remark 7.1 are pages 218–219. Theorem 7.5 is page 219. Example 7.7, page 228, is \(3/(2+z-z^2)\). Theorem 7.9, page 228, is uniqueness in one annulus. Definition 7.5 is page 232. Definition 7.6 is page 234. Theorem 7.12 is page 235. Corollary 7.8 is page 236. Exercise 2(a) and Exercise 3 are page 238. The key on page 448 still calls \(z^2/(z-\sin z)\) removable; the series is a pole of order 1. Exercise 3(d)(e)(f)(h) match the page: simple poles of \(\tan z\), removable at 0 and a simple pole at \(-1\), removable at 0 and simple poles at \(n\pi\) for \(n\neq 0\), and a pole of order 2 for \((\cos z-\cos 2z)/z^4\). Theorem 7.13 is page 239, on a domain, and page 38 defines a domain as a connected open set. Corollary 7.11 and Theorems 7.14 and 7.15 are page 240. Exercise 6(a), page 243, is \((z-1-i)/(z^4+4)\) at \(1+i\), and the limit is \((-1-i)/16\). The drawn edge \(x=0.92\) enters the band of width \(0.35\) at the even step \(n=44\) (the gap at \(n=42\) is still \(0.377\)). Partial sums of both Laurent generators converge to the function. Every Chapter 7 HTML anchor used by a pin is present. No live file imports `kit/`. `map-route.js` matches the kit copy. Generators stay `generate(seed, params)`.
+
+On the fix: `node tools/check_vectors.mjs` is 234/234, `node tools/fractal-smoke.mjs` passes, and `node kit/smoke.mjs` passes. Headless Chrome at 390×844 and 1280×800, light and dark: no sideways scroll, no console errors. Play on the phone ends at y=835. At 1280 the claim starts at y=650 and Play ends at y=789. A drag to about \(0.87\) leaves the band at \(n=4\). Next step reaches \(n=44\) and the curve is back. A miss on that blank says to look at the readout. Taylor opens on "settled near 0", Play reaches "filled in near 0" at \(n=8\), and a drag to real part \(1.1\) keeps the circle through \(\pm i\) after the point comes back. Laurent names non-negative powers in the disk, negative powers outside, and both after a return to the annulus. One reduced-motion walk of 7.4 ends on order 2, then order 1 the other way. 7.5 opens at \(x=1.50\) with the analytic sentence and reaches the removable sentence at \(x=0.44\).
+
+## ux-veteran (chapter-7 batch 4)
+
+Preview https://ch7-preview.complexanalysis.pages.dev/#chapter-7, branch `cursor/chapter-7` at `46fe648`. Phone 390×844 first, then 1280×800, light and dark. Touched the page the way a student would: the first graph, Play, a miss, the later camps, the menu, The Book, and a finished stage. No product code was changed. No console errors. No failed requests. `scrollWidth` matched the window at 390 and at 1280, in both themes.
+
+### Verdict
+
+ANOTHER BATCH
+
+The phone's first screen is the climb. The Book is a 44px row, the picture cards wait for the sentence that earns them, and a finished stage names the next camp. Two returns still drop the student: the menu's way back lands past the heading they left, and one Play on 7.4 spends the zero and stops on the pole. The wide picture is a 324px square in a 952px column.
+
+### How the walk went
+
+**390×844, light, fresh storage.** The site name is whole. Theme and menu are 44×44. The Book is 87×44. The title is Iowan at 25.85px, two lines, `rgb(26, 34, 48)`. The lede is the move, in the muted ink `rgb(81, 91, 108)`. The status is "Uniform convergence · Stage 1 of 5". The square is 326×326 at y = 362. The claim and "n = 4" are on the screen. Play is 70×44 and ends at y = 835. The line "Press Play until the curve comes back" starts at y = 843. Paper is `rgb(246, 243, 236)`.
+
+The green circle is `r = 6`, drawn 8×8. A drag that starts in the left of the square and ends toward the right sets the probe to about 0.79 and the claim to "At this x, the same partial sum has left the band." Play from there switches to Pause at n = 8, and a second press freezes n at 8 with the label Play. Play through to n = 44 says "A larger n has brought the curve back" and the button says Play again. The picture card stays hidden until that sentence. "terms" then prints "Not yet. Look at the readout under the picture." The next card stays hidden. The button says "4 cards left." and it is disabled.
+
+**The next camps, by scrolling the title under the header.** 7.2 lands with the title at y = 96, under a 56px header. The square is 324×324. The claim is "The partial sum has settled near 0." Play ends at y = 756 and the wait "Drag past the orange circle" ends at y = 791, so both sit in the 844px window. The picture card is hidden. Play from the opening point ends on "The purple has filled in near 0." A drag to about 1.15 changes the claim to the circle through ±i, and a drag back to the origin leaves that sentence in place.
+
+7.5 arrives painted. The probe is 1.50, the readout is "x = 1.50", the green point is on the axis, and the claim is "Away from 0, sin(z)/z is analytic." The status, while 7.1 is still the open stage, stays "Uniform convergence · Stage 1 of 5". The camp itself says 7.5, and the why is the filled-in hole. Play walks 1.50, 1.43, 1.35 toward 0 and ends at x = 0.00 with "The values stay near 1. The singularity at 0 is removable." Pins on that camp include Theorem 7.15, page 240. Exercise 10's card is the first card in the 7.3 practice list, under the worked example of Example 7.7.
+
+**7.4.** On arrival the claim is "The green point walks a circle about the zero," the readout is "walking," and the picture card is hidden. One Play runs about eight seconds. At 4 seconds the claim is already "The green point walks a circle about the pole." It ends on "The purple image went around once the other way. The pole has order 1," the readout "order 1," and the button Play again. The still keeps two purple rings (24 points and 25) and a 49-point trail the other way. The card that opens still asks about the image going around twice. The pole cards stay hidden behind that blank.
+
+**Back, from the menu.** After Play had opened the 7.1 card, the page was scrolled so the Laurent title sat at y = 97 and the scroll was 3557. The stored key was 3557. The menu's The Book opens `#book` and the key stays 3557. The Chapter 7 head brings the chapter back at scroll 3557, and the Laurent title is at y = −80, above the window. With the 7.2 card open as well, the same trip left the title at y = 96 on scroll 3814 and brought it back at y = −337. That screen is the lower half of the 7.3 square, the claim "You are between the two orange circles," and Play. The in-page Book link sits at y = 80 and scrolls away with the camp. A student who scrolls up to reach it stores the top, and Chapter 7 opens on the first graph.
+
+**The book and the other chapters.** A fresh book says "Next is §4.1, Exercise 3. 0 of 8 exercises." and Walk Chapter 4 is 163×44. Heads for chapters 4, 5, and 7 are links. Heads for 1, 2, 3, and 6 are cards. From the chapter menu, Chapter 1 lands with its card at y = 56 and the title at y = 97. Walk Chapter 4 is above the window. Chapter 6 lands the same way, on "LATER 6 Complex Integration," with Chapter 7's Open card under it. The drawer on the chapter is The Book plus chapters 1 through 7, each row 44px, and Chapter 7 is the current page. Chapters 8 through 11 are absent. The site title is 237×30. Tapping it opens The Map, and the drawer becomes 25 Test 1 places. Browser Back returns to `#chapter-7` at the stored scroll.
+
+**A finished 7.1.** The worked M-test line sits above the proof blanks. The Log card follows the M-test cards. The button moves from "4 cards left" to "Show the back of a card," still disabled, and after one back it says Stage complete. The press reveals "One N works for the whole set.", a 4px green edge `rgb(38, 112, 42)`, and the status "Taylor series · Stage 2 of 5". MEMORY is a closed 44×321 row in the muted 12.5px label colour. It opens onto the sheet. Go to 7.2 sits with the 7.2 why already on that phone screen. The Log answer line shows the typed source `-sum_{n=1}^{infty} z^n/n`. The why under it is typeset.
+
+**Dark, both widths.** Fresh phone, paper `rgb(13, 18, 28)`, title `rgb(233, 237, 245)`, the same first screen, Play ending at y = 835. At 1280 the dark square is the same 324×324, the claim starts at y = 650, and Play ends at y = 789. The green point, the orange band, the purple curve, and the blue axis still separate.
+
+**1280×800, light.** The sidebar is 280px and Chapter 7 is the current row. The title is Iowan at 36px, one line. The Book is 87×44. Every camp's square is 324×324 at x = 304, in a column 952px wide. The claim starts at y = 650. Play starts at y = 745 and ends at y = 789. Chapter 5 on the same window is a 480 square at y = 179, and its Play ends at y = 745.
+
+**The other chapter pages the menu opens.** Chapter 4's way up is THE BOOK at 69×17. Its pins (Definition 4.1, Theorem 4.1) are 23px, and "The disk in Definition 4.1" is 36px. Chapter 5 opens with the same underlined THE BOOK above the title, on the phone and at 1280. On the book, "A Function Is a Motion" is 178×23 and "The Derivative Is a Move" is 195×23. "One Point, Two Addresses" wraps to 49px.
+
+Reduced motion labels every camp Next step. Two presses on 7.1 go from n = 4 to n = 8, and the button stays Next step.
+
+### Ranked fixes
+
+1. **Come back to the camp heading.** Evidence: from the menu, after the 7.1 card had opened, the Laurent title was at y = 97 on scroll 3557. The Book kept 3557. The Chapter 7 head returned to scroll 3557 with the title at y = −80. With the 7.2 card open too, the title left at y = 96 and returned at y = −337, inside the 7.3 picture. The in-page Book link scrolls away, so the path that keeps a number is the menu, and the number is a pixel from a taller page. Change: store the section whose title is under the header. After the chapter paints, scroll that title to the gap it had, about 40px under the 56px header.
+
+2. **Stop 7.4 on the zero.** Evidence: one Play holds "walks a circle about the zero," then at 4 seconds is already on the pole, and ends on "The purple image went around once the other way. The pole has order 1." The order-2 sentence does not hold. The still has both rings and the pole trail. The card under Play still says the image went around twice. Change: the first press ends on the two rings, the readout "order 2," and that sentence. The button says "Play the pole." The second press draws the other way, and the pole cards open on that sentence.
+
+3. **Give the wide square the room Chapter 5 has.** Evidence: at 1280, light and dark, the square is 324×324 at x = 304 in a 952px column. The claim is at y = 650 and Play ends at y = 789. Chapter 5's square on that window is 480, with Play ending at y = 745. The phone square already ends Play at y = 835. Change: on the wide window the claim, the readout, and Play sit beside the square, and the square is 480 again. The phone stack stays as it is.
+
+4. **Make each "Already drawn" line a 44px row.** Evidence: Chapter 1 from the menu lands with the title at y = 97. On that screen "A Function Is a Motion" is 178×23 and "The Derivative Is a Move" is 195×23. Chapter 7's pins are 44px rows. Change: those links use that row.
+
+5. **Use Chapter 7's Book row on Chapters 4 and 5.** Evidence: Chapter 7's way up is The Book, 87×44. Chapter 4's is THE BOOK at 69×17, its pins are 23px, and its picture chip is 36px. Chapter 5 wears the same underlined kicker. The chapter menu opens all three. Change: chapters 4 and 5 use the 44px row, and their pins and picture chips meet that height.
+
+6. **Typeset the answer the student just gave.** Evidence: the Log card accepts the series and then shows the source `-sum_{n=1}^{infty} z^n/n` in the answer line. The why under it is typeset, sum and minus included. Change: the answer line uses that same math.
+
+### What to keep
+
+The phone first screen, in both themes. The Book, the title, the lede that names the drag and Play, the status "Uniform convergence · Stage 1 of 5", the square, the claim, the readout, and Play, with Play the last control on the screen. Dark paper `rgb(13, 18, 28)`, title `rgb(233, 237, 245)`, Play still ending at y = 835.
+
+The green point at `r = 6`. The square is the drag target. A drag that misses the dot still moves the probe and flips the claim. Play, Pause, and the freeze on the second press. Play again at n = 44, with the curve back. Next step on all five camps when motion is reduced.
+
+7.2 opening on the settled sentence, Play ending on "The purple has filled in near 0," and the circle sentence staying after the point comes back. 7.5 painted at x = 1.50, with Play walking toward 0 and reaching the removable sentence. The picture cards hidden until the claim that earns them. A miss that says where to look. One card at a time. The stage button counting the cards, then waiting on Show the back, then saying Stage complete. The summit, the green edge, and Go to 7.2 on one phone screen with the next camp's why already in view.
+
+The menu. Eight rows, each 44px, Chapter 7 marked, and the list stopping at Chapter 7. Chapter 1 and Chapter 6 landing on their own cards, under the header, with Walk Chapter 4 off that screen. Heads for 4, 5, and 7 as links. Later heads as cards. A fresh book still walking Chapter 4.
+
+The type and the paper. Iowan at 25.85px on the phone and 36px at 1280. Body 17px. Paper `rgb(246, 243, 236)`. White cards, 10px radius. The four teaching colours still separate on the dark paper. No sideways scroll.
+
+## Chapter 7, batch 5
+
+Branch `cursor/chapter-7`, on top of `428e3c1` (the Log indexed sum, the L'Hôpital forms, and the 7.5 why that stays near 1 only near 0). Draft only. `gh-pages` was not touched.
+
+The menu's way back stores the camp whose title sits under the header. After the chapter paints, that title is about 40px under the 56px header. Laurent left at y = 96 and came back at y = 96, with the why already in view.
+
+7.4's first Play ends on the two rings, the readout "order 2", and that sentence. The button says "Play the pole". The second press draws \(1/z\) the other way and ends on order 1. The zero card is the one under Play. The pole cards stay behind it until that sentence.
+
+At 1280×800 the square is 480 and the claim, the readout, and Play sit beside it. Play ends at y = 457. The phone stack is unchanged: Play is 70×44 and ends at y = 835, light and dark. Dark paper is `rgb(13, 18, 28)`. No sideways scroll.
+
+"Already drawn" is a 44px row. Chapters 4 and 5 use the same Book row as Chapter 7, 87×44, and their pins and the picture chip are 44px.
+
+The Log answer line is the typeset series, the same math as the why. Exercise 6(a) is two blanks: both functions zero and \(g'(1+i)=-8+8i\), then the limit. The limit accepts `-(1+i)/16`, `(-1−i)/16`, and `1/(−8+8i)`. A miss says to divide the derivatives and simplify. Exercise 6(b), page 243, is the next card: one differentiation is still 0/0, and cancelling \((z-i)^2\) leaves \(-1/4\). Exercise 3(a), page 238, is its own card. Page 448 says removable. The series is a pole of order 1 and the principal part is \(6/z\). Exercises 3(c) and 3(g) are the next cards. Example 7.15, page 240, drills Theorem 7.14 on \(\sec z\): \(a_0=1\), the coefficient of \(z^2\) is \(1/2\), and the fourth derivative at 0 is 5. The line on the card says a zero of \(g\) is where you stop dividing and switch to a Laurent series. The memory sheet opens with the summit. The negation of uniform convergence is (7.3), page 211, and it keeps "some \(n\ge N\)". A miss on a card that is not the picture uses that step's reason. Exercise 2(a) asks the order at 1 and at \(\pm i\): 4 and 3.
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` and `node kit/smoke.mjs` passed. No live `kit/` import. `map-route.js` matches the kit copy.
+
+Left open: the shared practice engine, the roadmap pages for chapters 1–3 and 6, Exercise 6(c) and 6(d), and a flash deck that still finishes on one Show the back.
+
+## reviewer (chapter-7 batch 5)
+
+Branch `cursor/chapter-7`, reviewed at `90093ea` against the 202 Updated Edition PDF (471 pages, printed page \(P\) at PDF page \(P+9\)). Verdict: **accept with fixes**. One page number was wrong. The fix is on this branch.
+
+Theorem 7.16, page 241, is \(|f(z)|\to\infty\) if and only if the singularity is a pole. Theorem 7.17 starts on page 242: an essential singularity if and only if \(\lim |f(z)|\) does not exist. The 7.5 memory sheet cited both as page 241. Theorem 7.17 now says page 242.
+
+Checked and left as is. Definition 7.1 and the negation (7.3) are page 211, and (7.3) says some \(n\ge N\). The M-test is Theorem 7.1, page 212. The proof's "Theorem 4.2" is still the slip the card names: Theorem 4.2, page 105, says a convergent sequence is bounded, and a Cauchy sequence converges by Theorem 4.3, page 105. A domain is a connected open set, page 38. Example 7.2's prompt on page 214 omits the minus; the calculation gives \(-\mathrm{Log}(1-z_0)=\sum z_0^n/n\). Corollary 7.3, Example 7.4, and Remark 7.1 are pages 218–219. Theorem 7.5 is page 219. Example 7.7, page 228, is \(3/(2+z-z^2)\). Theorem 7.9, page 228, is uniqueness in one annulus. Exercise 1 and Exercise 10 of §7.3 are page 230. Definition 7.5 is page 232. The value that fills \(\sin z/z\) is 1, page 233. Definition 7.6 is page 234. Theorem 7.12 is page 235. Corollary 7.8 is page 236. Exercise 2(a) and Exercise 3 are page 238. The key on page 448 still calls \(z^2/(z-\sin z)\) removable; the series is a pole of order 1 and the principal part is \(6/z\). Exercise 2(a) is poles of order 4 at 1 and order 3 at \(\pm i\). Theorem 7.13 is page 239. Corollary 7.11, Theorem 7.14, Example 7.15, and Theorem 7.15 are page 240. \(\sec z=1+\frac12 z^2+\frac{5}{24}z^4+\cdots\), so \(a_0=1\), the coefficient of \(z^2\) is \(1/2\), and \(f^{(4)}(0)=5\). Exercise 6(a) and 6(b) are page 243. At \(1+i\), both functions are zero and \(g'(1+i)=-8+8i\), and the limit is \((-1-i)/16\). Cancelling \((z-i)^2\) in 6(b) leaves \(-1/4\). Every Chapter 7 HTML anchor used by a pin is present. No live file imports `kit/`. `map-route.js` matches the kit copy.
+
+On the preview at `90093ea`, headless Chrome, no console errors, no failed requests. At 390×844, light and dark, Play is 70×44 and ends at y = 835, and `scrollWidth` is 390. Laurent left at y = 96 (40px under the 56px header) and the menu's Chapter 7 brought it back at y = 96, with the why in view. 7.4's first Play ends on two purple rings, the readout "order 2", and "Play the pole". The zero card sits under that button. The next card stays hidden until that blank is answered and the second Play ends on order 1. At 1280×800, light and dark, the square is 480 and the claim and Play sit beside it. Play ends at y = 457. The Book row on Chapters 4 and 5 is 87×44, and their pins and the picture chip are 44px. The "Already drawn" link is 44px tall. The Log answer line is the typeset series. The blanks accept \(0\) and \(-8+8i\), then \(1/(-8+8i)\); \(0/0\) then \(-1/4\); and \(1\), \(1/2\), \(5\). Exercise 3(a) rejects removable and accepts a pole of order 1, then \(6/z\). Exercise 2(a) accepts order 4, then 3.
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` and `node kit/smoke.mjs` passed before the page fix. The page fix does not change a graded answer.
+
+## unslop (chapter-7 batch 5)
+
+Preview https://ch7-preview.complexanalysis.pages.dev/#chapter-7, branch `cursor/chapter-7` at `90093ea`. Phone 390×844 first, then 1280×800, light and dark. Walked the first screen, a full Play on 7.4 through "Play the pole", a finished 7.1 and 7.5 so the memory sheet opened with the summit, and the cards for the Log series, Exercise 6(a) and 6(b), Example 7.15, and Exercise 3(a). No product code was changed. `scrollWidth` matched the window at 390 and at 1280. The Log walk and the exercise walks recorded no console errors.
+
+The page is the book path, lightly slopped. Warm paper, the four teaching colours on the marks, one square, one claim. The batch put new words in the chrome, and those words now compete with the square.
+
+Direction, taken from the page. The product is one camp of a complex-analysis course: a picture, then the card that picture earns. The character is calm, exact, and a little warm. The world is the paper and the drawn plane. The moment is the square. The signature is the claim that changes with the green point.
+
+### Verdict
+
+ANOTHER BATCH
+
+The phone's first screen is already the climb, the Log series is set in the same math as its why, and "Play the pole" is the right label on the button. Six spots still say the same thing twice. One polish batch can quiet them. The palette, the type, and the card shape stay.
+
+### What the screen holds
+
+**390×844, light, fresh storage.** Paper `rgb(246, 243, 236)`. The title is Iowan at 25.85px, two lines, `rgb(26, 34, 48)`. The lede is the drag and Play, in `rgb(81, 91, 108)`. The status is "Uniform convergence · Stage 1 of 5". The square is 326×326 at y = 362. The claim is on the screen. Play is 70×44 and ends at y = 835. Dark paper is `rgb(13, 18, 28)`, the title `rgb(233, 237, 245)`, and Play still ends at y = 835.
+
+**1280×800, both themes.** The square is 480×480 at x = 304, y = 318, so its bottom is y = 798 in an 800px window. The axis sits on the window edge. The side column is `480px 448px`, aligned to the start. The claim starts at y = 318, beside the tip of the spike. The readout "n = 4" is at y = 378. Play is 70×44 at y = 413 and ends at y = 457. Under that button, beside the green point, is 341px of empty paper.
+
+**7.4 after one Play.** The claim is "The purple image went around twice. The zero has order 2." The readout is "order 2". The button is "Play the pole", 144×44, still one line. At rest, in the light, its fill is white `rgb(255, 255, 255)`. The standing line above the square, "Drag the green point once around the orange circle.", is weight 600. The claim is weight 400. A third line, "Play on. The image winds the other way.", sits under the button. On the phone it is the next row, at y = 790. On the wide page the button is at y = 328, beside the top of the rings, and that third line is at y = 721, under the square. The same three lines in the dark. The wide column again leaves 341px empty under the button.
+
+**Memory, after Stage complete.** The sheet is hidden until the press, then it opens. On the phone the summit "One N works for the whole set." is 17px, weight 600, at y = 72. MEMORY is the book's label: 12.48px, weight 700, uppercase, `letter-spacing: 0.06em`, muted. The first bullet is "One \(N_\varepsilon\) for the whole set." in the same 17px primary ink as the summit. Six bullets follow. Go to 7.2 is on that screen, 44px. The 7.5 summit is "The singularity at 0 is removable." The open sheet under it is 574px. Its second bullet says a bounded isolated singularity is removable, and the L'Hôpital bullet wraps the primes across 106px. Same ink in the dark. On that preview the essential line still cites Theorem 7.17 at page 241. The branch after this walk cites page 242.
+
+**The Log card.** Example 7.2 accepts `-sum_{n=1}^infty z^n/n`. The answer line is inline KaTeX, 115×25, 17px, the same size as the sentence. It does not widen the page at 390 or at 1280, light or dark. The stem above it still ends in a blank. The why under it sets the book's equation the same way.
+
+**Exercise 6(a), 390.** The heading is "Corollary 7.11, page 240". The prompt says "Exercise 6(a) of §7.5, page 243" and then "Corollary 7.11, page 240" again. The step is "both ___, and \(g'(1+i)=\) ___" with one field and one Check. The accepted line is the raw string "0 and -8+8i". The limit under it is typeset \((-1-i)/16\). The underscores stay in the stem. The finished card is 579px, with two why boxes of 122px. Exercise 6(b) uses the same heading, "Corollary 7.11, page 240".
+
+**Example 7.15, 390.** The heading is "Example 7.15, page 240" and the prompt starts with those words, then the sentence about stopping the division and switching to a Laurent series, then \(a_0\). The open card is 389px before the first Check. After 1, \(1/2\), and 5 it is 770px. Each step still shows the blank above the value, and each value has its own why box. \(1/2\) is typeset. 1 and 5 are plain digits. At 1280 the finished card is 479px.
+
+**Exercise 3(a), 390.** The heading is "§7.4, Exercise 3(a), page 238" and the prompt repeats "Exercise 3(a) of §7.4, page 238." Four choices, each 44×290, the full inner width of the 324px card: removable, a pole of order 1, a pole of order 2, essential. The open card is 386px. Exercises 3(c) and 3(g) use that same list of four.
+
+### Ranked cuts
+
+1. **Put the claim and Play beside the middle of the square.** Evidence: at 1280, light and dark, the square is 480 and ends at y = 798. The claim starts at the top of the square and Play ends at y = 457. The green point, and on 7.4 the rings, sit in the 341px of paper under that button. The phone stack already ends Play at y = 835. Change: on the wide page, center the claim, the readout, and Play on the square. Move the stage line to just under the square, so the axis clears the window. The phone order stays picture, claim, readout, Play.
+
+2. **Let "Play the pole" be the only next instruction.** Evidence: after the zero lap, both widths and both themes. The weight-600 line still says "Drag the green point once around the orange circle." The claim, weight 400, says the image went around twice and the zero has order 2. The button is "Play the pole", 144×44. The line under it says "Play on. The image winds the other way." On the wide page that line is at y = 721 and the button is at y = 328. Change: the claim takes the 600 weight, and the standing drag line goes back to 400. Hide the wait line once the button says "Play the pole".
+
+3. **Open the sheet on the formulas, under a summit that stays the one dark line.** Evidence: the 7.1 sheet opens on Stage complete. The summit and the first bullet both say one \(N\) works for the whole set, both at 17px, the bullet in primary ink. MEMORY is the existing uppercase label. The 7.5 sheet is 574px, and its second bullet repeats "removable". The L'Hôpital bullet wraps the primes. Change: keep the sheet open and keep the MEMORY label. Drop the bullet that restates the summit. Set the list in the muted ink. Write the L'Hôpital line as the quotient \(f'(\alpha)/g'(\alpha)\).
+
+4. **Give Exercise 6 one blank per field, and its own heading.** Evidence: 6(a) shows two underscores and one input. The answer "0 and -8+8i" is raw text. The limit is typeset. 6(a) and 6(b) are both headed "Corollary 7.11, page 240". The prompt says that corollary a second time, and it already says both functions are zero. The finished 6(a) card is 579px, and the blanks stay in the stem. Change: the headings are "Exercise 6(a), page 243" and "Exercise 6(b), page 243". The first step is one blank, \(g'(1+i)\), typeset the way the limit is. A right step replaces the blank in the sentence.
+
+5. **Start Example 7.15 at the series.** Evidence: the heading and the prompt both open with "Example 7.15, page 240". The prompt then gives the Laurent-switch sentence, which the 7.5 memory line already carries. The open card is 389px. The finished card is 770px on the phone, three blanks left sitting above 1, \(1/2\), and 5, each with a why box. Change: the prompt starts at \(\sec z=1/\cos z\). The switch sentence stays on the memory line. A right blank is replaced in the sentence. One why, the series \(1+\frac{1}{2}z^2+\frac{5}{24}z^4\), sits under the last value.
+
+6. **Say Exercise 3(a) once, then the four rows.** Evidence: the heading is "§7.4, Exercise 3(a), page 238" and the first line of the prompt is "Exercise 3(a) of §7.4, page 238." The four choices are 44×290, equal, full width. The card is 386px before the answer. Exercises 3(c) and 3(g) repeat that list. Change: the prompt starts at \(z^2/(z-\sin z)\). The same for 3(c) and 3(g): the function, then the four rows. The page 448 sentence stays the why on 3(a).
+
+### What to keep
+
+The phone first screen, in both themes. The Book, the title, the lede that names the drag and Play, the status, the square, the claim, the readout, and Play at 70×44 ending at y = 835. Paper `rgb(246, 243, 236)` and `rgb(13, 18, 28)`. Iowan at 25.85px on the phone and 36px at 1280. The four teaching colours still separate on the dark paper.
+
+The 480 square on the wide page, and Play sitting beside it. The split is the right idea. It wants to be centered, and the square wants to stay 480.
+
+"Play the pole" on the button. One press ends on the two rings, the readout "order 2", and that sentence. The second press is the pole. The resting control is the same white 44px button, grown to 144px, still one line.
+
+The memory sheet opening with the summit. The summit is one sentence, the green edge is the done state, and Go to 7.2 is on the phone screen. MEMORY can stay the uppercase label the book already uses.
+
+The Log answer. Inline KaTeX, 17px, 115×25, no overflow at either width, either theme, the same math as the why.
+
+The card itself. White, 16px padding, 8px between rows, 10px radius. Check and the choices at 44px. One card open at a time. Exercise 6(b) following 6(a). The four Exercise 3 labels, which are the real traps. Example 7.15's three numbers, 1, \(1/2\), and 5.
+
+No sideways scroll at 390 or at 1280.
+
+## ux-veteran (chapter-7 batch 5)
+
+Preview https://ch7-preview.complexanalysis.pages.dev/#chapter-7, branch `cursor/chapter-7` at `90093ea`. Phone 390×844 first, then 1280×800, light and dark. Touched the page the way a student would: the first graph, a drag, Play and Pause, each later camp, 7.4 through "Play the pole", the menu, The Book, Chapter 1, and Back. No product code was changed. No console errors. No failed requests. `scrollWidth` matched the window at 390 and at 1280, in both themes.
+
+### Verdict
+
+ANOTHER BATCH
+
+The checks this batch named are on the page. The phone ends on Play. The wide window puts a 480 square beside the claim and Play. The menu's way back lands the camp title 40px under the header. "Play the pole" is a 44px control, and the first press stops on order 2. What is still in the way: that button is the thing a thumb hits while the order-2 question is a clipped card, the bold line above the picture keeps saying "drag once around" after the lap is over, a phone camp landing slices the colour line, and Chapters 4 and 5 still end on a 23px "Back to the book".
+
+### How the walk went
+
+**390×844, light, fresh storage.** The site name is whole. Theme and menu are 44×44. The Book is 87×44. The title is Iowan at 25.85px, two lines, `rgb(26, 34, 48)`. The lede is the move, in the muted ink `rgb(81, 91, 108)`. The status is "Uniform convergence · Stage 1 of 5". The square is 326×326 at y = 362. The green point is 8×8, on the curve, at y = 617. The claim and "n = 4" are on the screen. Play is 70×44 and ends at y = 835. The line "Press Play until the curve comes back" starts at y = 843. Paper is `rgb(246, 243, 236)`.
+
+A drag that starts in the left of the square and ends toward the right sets the probe to about 0.79 and the claim to "At this x, the same partial sum has left the band." Play from the opening point switches to Pause at n = 6, and a second press freezes n at 6 with the label Play.
+
+**The camps, title parked 40px under the 56px header.** 7.2, 7.3, and 7.4 land with the title at y = 96. 7.5's title wraps, 54px tall, and still starts at y = 96. On each one the square is 324×324, the claim and Play are on the phone, and Play is 70×44. 7.2's Play ends at y = 756. 7.4's ends at y = 782. 7.5 opens painted: "x = 1.50", the point on the axis, "Away from 0, sin(z)/z is analytic." The formula is typeset once. The status, while 7.1 is the open stage, stays "Uniform convergence · Stage 1 of 5" and sits above this screen. The camp flag is the where.
+
+**7.4.** On arrival the claim is "The green point walks a circle about the zero," the readout is "walking," and the zero card is hidden. One Play runs about eight seconds and ends on "The purple image went around twice. The zero has order 2," the readout "order 2," and a button "Play the pole" at 144×44, y = 738. Two purple rings stay up (24 points and 25). The bold line above the picture still says "Drag the green point once around the orange circle." Under the button, "Play on. The image winds the other way." is on screen, and the zero card starts at y = 825, so an 844px window keeps a blank strip of the card. The question about the two turns is below that strip. The second press ends on "The purple image went around once the other way. The pole has order 1," the readout "order 1," and "Play again" at 122×44. The bold line is unchanged. The card heading "Definition 7.6, page 234" is the strip at the bottom, and the pole cards stay hidden behind that blank. A third press rewinds: at 400ms the claim is back to "walks a circle about the zero," and the walk ends again on order 2 with "Play the pole." The same first press and the same "Play the pole" at 144×44 happen in the dark. With reduced motion the button says Next step, the forty-eighth press says "Play the pole," and it never says Pause.
+
+**Back.** From the menu, with the Laurent title at y = 96 and the scroll at 3357, the stored camp is 7.3. The Book in the page is at y = −3277. The menu's The Book opens `#book` and the camp stays 7.3. Chapter 7 brings the title back to y = 96 at 80ms, at 400ms, and at 1000ms, with the why on that screen. Chapter 1 from the menu lands its card at y = 97, and "One Point, Two Addresses" under Already drawn is 208×44. Browser Back from that card returns to Laurent at y = 96. The site title is 237×30 and opens The Map. Browser Back from The Map returns to the same Laurent title.
+
+**The book, and Chapters 4 and 5.** A fresh book says "Next is §4.1, Exercise 3. 0 of 8 exercises." Walk Chapter 4 is 163×44. Already drawn links are 44px tall: "One Point, Two Addresses" at 208×44, "A Function Is a Motion" at 178×44, "The Derivative Is a Move" at 195×44. On the phone the first of those wraps onto its own line. Heads for 4, 5, and 7 are links. Chapters 4 and 5 each open with The Book at 87×44. Their pins and the picture chips are 44px. The link at the end of each of those chapters, "Back to the book," is 134×23.
+
+**The menu.** Eight rows, each 44px, and all eight are on the first screen of the drawer. Chapter 7 is the current row. The list stops at Chapter 7. At 1280 the same list is the sidebar. Chapter 3 and Chapter 4 wrap to 47px. Chapter 7 is in view and current.
+
+**Dark, both widths.** Paper `rgb(13, 18, 28)`, title `rgb(233, 237, 245)`, lede `rgb(166, 176, 195)`. The same phone first screen, Play ending at y = 835. The green point, the orange band, the purple curve, and the blue axis still separate. Play's fill is `rgb(21, 28, 43)` with a `rgb(116, 128, 160)` edge.
+
+**1280×800, light and dark.** The title is Iowan at 36px, one line. The Book is 87×44. The square is 480×480 at y = 318 and ends at y = 798. The claim starts at y = 318, beside the square. The green point is 12×12 at y = 693. Play is 70×44 at y = 413 and ends at y = 457. A drag to about 0.79 leaves the band. Pause freezes n at 6. Camp landings put the 480 square fully in the window: 7.3's square ends at y = 712, Play ends at y = 371, and the colour line under the picture fits. On 7.4 the button "Play the pole" is 144×44 at y = 328, beside the two rings. The zero card starts at y = 755, so the window keeps the heading "Definition 7.6, page 234" and cuts the question off.
+
+### Ranked fixes
+
+1. **Keep the order-2 sentence up until its blank is answered.** Evidence: after the first press, on the phone, "Play the pole" is 144×44 at y = 738 and the zero card starts at y = 825, a blank strip in the 844px window. The question "went around twice, so the zero has order ___" is below that strip. On the wide window the button is at y = 328 and the card heading is cut at the bottom of the 800px window. The second press changes the claim to order 1 while that card is still the one on the page. The pole cards stay hidden behind it. A third press, "Play again," spends eight seconds rewinding to the zero and ends back on order 2. Change: the blank sits under the readout, above the button, and the whole question is on the screen that says order 2. The button keeps the words "Play the pole" and runs when that blank is right. Until then the picture stays on the two rings.
+
+2. **Make the line above the picture say what the picture is doing.** Evidence: before Play, during order 2, during order 1, and after Play again, the bold line on 7.4 is "Drag the green point once around the orange circle." The line under the button is the one that changes, to "Play on. The image winds the other way." On the 7.2 phone landing the bold line and the line under Play are the same words, "Drag past the orange circle." On 7.5 both say to drag toward 0, and both are on the screen with Play. 7.3 is the one that already earns two lines: "Drag across an orange circle" above the square, and "Leave the annulus and come back" under Play. Change: one line, and it changes with the phase. On 7.4 it says the drag, then the two turns, then the other way. A second line stays only when it adds a step, the way 7.3's wait already does. The copy under 7.2's Play, and the copy under 7.5's Play, go.
+
+3. **End a phone camp landing on a whole line.** Evidence: with the Laurent title at y = 96, Play ends at y = 756 and the colour line begins on that screen. The window cuts it at "Green is the". The same cut is on the 7.5 landing, after "Drag the point toward 0." The hero already clears this: Play ends at y = 835 and the colour line starts at y = 878, whole, on the next flick. At 1280 the camp colour line fits. Change: on the phone, when the camp title sits 40px under the header, the colour line starts below the fold. The landing ends on Play or on the one instruction under it.
+
+4. **Give Chapters 4 and 5 the 44px way back at the end of the page.** Evidence: the header Book on those chapters is 87×44, and their pins and picture chips are 44px. The last link, "Back to the book," is 134×23 on the phone and at 1280. Chapter 7's way back is the 44px row. Change: that end link uses the same row.
+
+### What to keep
+
+The phone first screen, in both themes. The Book at 87×44, the title, the lede that names the drag and Play, the status "Uniform convergence · Stage 1 of 5", the 326px square, the claim, the readout, and Play at 70×44 ending at y = 835. Dark paper `rgb(13, 18, 28)`, title `rgb(233, 237, 245)`. The four colours still separate.
+
+The wide first screen. A 480 square ending at y = 798, the claim beside it, the 12px green point at y = 693, and Play ending at y = 457. The same square on a camp landing, with Play beside the picture and the colour line whole.
+
+The green point at `r = 6`. The square is the drag target. A drag that misses the dot still moves the probe and flips the claim. Play, Pause, and the freeze on the second press. Next step when motion is reduced, and "Play the pole" when that lap has been stepped to the end.
+
+7.2 opening on "The partial sum has settled near 0." 7.3 opening between the two orange circles, with a gesture line and a different line under Play. 7.5 painted at x = 1.50, the point on the axis, the analytic sentence, and the formula typeset once. 7.4's first press ending on two rings, "order 2," and a 44px "Play the pole." The second press ending on one wind the other way and "order 1."
+
+The menu. Eight rows, each at least 44px, all on the first phone screen, Chapter 7 marked, the list stopping at Chapter 7. The camp stored from that menu. Laurent left at y = 96 and came back at y = 96, and it was still there a second later, with the why in view. The same return from Chapter 1 and from The Map, by Back. Already drawn links at 44px. Chapters 4 and 5 opening on the 87×44 Book row, with pins and picture chips at 44px. A fresh book still walking Chapter 4.
+
+The type and the paper. Iowan at 25.85px on the phone and 36px at 1280. Body 17px. Paper `rgb(246, 243, 236)`. White cards, 10px radius, and in the dark `rgb(21, 28, 43)`. No sideways scroll.
+
+## Chapter 7, batch 6
+
+Branch `cursor/chapter-7`, on top of `bc6d882` (Theorem 7.17, page 242). Draft only. `gh-pages` was not touched.
+
+The order-2 blank sits under the readout and above Play the pole. Until it is right, the two rings stay and the button does not start the pole. The claim and the readout are weight 600. The line above the picture is weight 400 and changes with the phase: the drag, then "Two turns.", then "The other way." The duplicate line under Play is gone on 7.2, 7.4, and 7.5. 7.3 keeps "Leave the annulus and come back." Reduced motion says Next step, and the last zero step says Play the pole. It does not say Pause.
+
+At 1280 the claim, the readout, and Play are centered on the 480 square. The stage line sits under the square: the square ends at y = 747 and the status starts at y = 763. The phone first screen is the same stack: the square starts at y = 362, Play is 70×44 and ends at y = 835, and "Press Play until the curve comes back." starts at y = 843. Dark paper is `rgb(13, 18, 28)`. With a camp title at y = 96, the colour line starts below the fold (Laurent at y = 894, Taylor at y = 860, 7.5 at y = 861). On the order-2 phone the claim is the two-turn sentence, the blank is "The zero has order ___." with the field at y = 738–782, and Play the pole ends at y = 834.
+
+The memory list is the muted ink. The 7.1 sheet no longer repeats the summit as its first bullet. L'Hôpital is the quotient \(f'(\alpha)/g'(\alpha)\). Exercise 6(a) and 6(b) are headed on page 243. Each step is one blank, and a right blank replaces the underscore. \(g'(1+i)=-8+8i\), and the limit is \((-1-i)/16\). Exercise 6(c), page 243, is 3. Exercise 6(d), page 243, is \(1/60\). Example 7.15 starts at \(\sec z=1/\cos z\), and the series is the one why under the last value. Exercises 3(a), 3(c), and 3(g) start at the function. Exercise 1 of §7.3, page 230, says the inner series is for \(0<|z|<1\). Chapters 4 and 5 end on Back to the book at 44px. A flash section marks only after every back has been shown. The long Already drawn row wraps to 63px; the shorter ones stay 44px.
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` and `node kit/smoke.mjs` passed. No live `kit/` import. `map-route.js` matches the kit copy.
+
+Left open: the shared practice renderer stays the local card until the practice engine lands. Chapters 1–3 and 6 stay roadmap rows. This batch does not build their walks. Chapter 8 and later were not touched.

@@ -1,0 +1,1097 @@
+[
+  {
+    "id": "ch7-7.1-picture",
+    "chapter": 7,
+    "section": "7.1",
+    "cite": {
+      "ref": "Definition 7.1",
+      "page": 211
+    },
+    "kind": "next-step-blank",
+    "prompt": "What did the picture just show?",
+    "steps": [
+      {
+        "text": "Near 1, the partial sum leaves the orange band until ___ is large enough.",
+        "answer": "n",
+        "accept": [
+          "N",
+          "the number of terms"
+        ],
+        "why": "One N has to work for the whole set. A small n still loses the band near 1."
+      }
+    ],
+    "generator": null,
+    "memory": "One $N$ works for the whole set. If $N$ needs $z$, the convergence is only pointwise."
+  },
+  {
+    "id": "ch7-7.1-mtest-blank",
+    "chapter": 7,
+    "section": "7.1",
+    "cite": {
+      "ref": "Theorem 7.1",
+      "page": 212
+    },
+    "kind": "proof-blank",
+    "prompt": "Theorem 7.1, the Weierstrass M-test, page 212. Fill the proof the way the book builds it.",
+    "steps": [
+      {
+        "text": "If $n>m$, then $|S_n(z)-S_m(z)|$ is at most the sum of the ___ from $k=m$ to $n-1$.",
+        "answer": "M_k",
+        "accept": [
+          "Mk",
+          "M",
+          "the M_k"
+        ],
+        "why": "Each $|u_k(z)|\\le M_k$ on $T$, so the telescope of partial sums is at most the comparison tail."
+      },
+      {
+        "text": "The comparison series converges, so for each $z\\in T$ the partial sums are a ___ sequence.",
+        "answer": "Cauchy",
+        "accept": [
+          "a Cauchy sequence",
+          "cauchy sequence"
+        ],
+        "why": "One $N_\\varepsilon$ makes $|S_n-S_m|<\\varepsilon$ for every $z$ in $T$."
+      },
+      {
+        "text": "Theorem 4.3, page 105, says a Cauchy sequence of complex numbers ___.",
+        "answer": "converges",
+        "accept": [
+          "converges to a limit",
+          "has a limit"
+        ],
+        "why": "A Cauchy sequence of complex numbers converges, so the partial sums have a limit. The line on page 212 says Theorem 4.2. That is a slip: Theorem 4.2 is that a convergent sequence is bounded. A Cauchy sequence converges by Theorem 4.3, page 105."
+      },
+      {
+        "text": "The same tail bounds $|f(z)-S_n(z)|$ at every $z$, so the convergence is ___.",
+        "answer": "uniform",
+        "accept": [
+          "uniform on T",
+          "uniform convergence"
+        ],
+        "why": "$N_\\varepsilon$ comes from $\\sum M_k$ and does not depend on $z$."
+      }
+    ],
+    "generator": null,
+    "memory": "M-test: $|u_k(z)|\\le M_k$ on the whole set and $\\sum M_k$ converges, so the series converges uniformly."
+  },
+  {
+    "id": "ch7-7.1-mtest-mc",
+    "chapter": 7,
+    "section": "7.1",
+    "cite": {
+      "ref": "Theorem 7.1",
+      "page": 212
+    },
+    "kind": "proof-mc",
+    "prompt": "Which hypothesis is the one the M-test actually uses?",
+    "steps": [
+      {
+        "text": "The series $\\sum u_k(z)$ converges uniformly on $T$ when",
+        "answer": "a series of constants $\\sum M_k$ converges and $|u_k(z)|\\le M_k$ for every $z\\in T$",
+        "choices": [
+          "a series of constants $\\sum M_k$ converges and $|u_k(z)|\\le M_k$ for every $z\\in T$",
+          "the series converges at each $z$, and $N$ may depend on $z$",
+          "each term $u_k$ is analytic",
+          "$T$ is a closed disk"
+        ],
+        "why": "Theorem 7.1, page 212. The bound is independent of $z$, so one $N$ works on all of $T$."
+      },
+      {
+        "text": "The line that upgrades pointwise convergence to uniform convergence is",
+        "answer": "the same tail of $\\sum M_k$ bounds $|f-S_n|$ at every $z\\in T$",
+        "choices": [
+          "the same tail of $\\sum M_k$ bounds $|f-S_n|$ at every $z\\in T$",
+          "Theorem 4.3 gives a different limit at each $z$",
+          "the partial sums are continuous",
+          "the comparison series is allowed to diverge"
+        ],
+        "why": "Pointwise convergence is the limit existing at each $z$. Uniform convergence is one tail that works everywhere."
+      }
+    ],
+    "generator": null,
+    "memory": "If the $N$ in the definition has to depend on $z$, the convergence is pointwise, not uniform."
+  },
+  {
+    "id": "ch7-7.1-log",
+    "chapter": 7,
+    "section": "7.1",
+    "cite": { "ref": "Example 7.2", "page": 214 },
+    "kind": "next-step-blank",
+    "prompt": "Example 7.2, page 214. On any closed disk $|z|\\le r<1$ the geometric series converges uniformly to $1/(1-z)$. Integrate along the segment from $0$ to $z_0$.",
+    "steps": [
+      {
+        "text": "The calculation gives $\\mathrm{Log}(1-z)=$ ___",
+        "answer": "-\\sum_{n=1}^{\\infty} z^n/n",
+        "accept": ["-\\sum z^n/n", "-sum z^n/n", "-sum_{n=1}^infty z^n/n", "-sum_{n=1}^{infty} z^n/n", "-\\sum_{n=1}^\\infty z^n/n", "-z-z^2/2-z^3/3"],
+        "miss": "Integrate the geometric series term by term. The series for $\\mathrm{Log}(1-z)$ carries the minus sign.",
+        "why": "The calculation on page 214 is $-\\mathrm{Log}(1-z_0)=\\sum z_0^n/n$. The prompt printed in Example 7.2 omits that minus sign."
+      }
+    ],
+    "generator": null,
+    "memory": "Integrate the geometric series term by term. The series for $\\mathrm{Log}(1-z)$ carries the minus sign."
+  },
+  {
+    "id": "ch7-7.1-flash-uniform",
+    "chapter": 7,
+    "section": "7.1",
+    "cite": {
+      "ref": "Definition 7.1",
+      "page": 211
+    },
+    "kind": "flash",
+    "prompt": "When does a sequence of functions converge uniformly?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "One $N_\\varepsilon$ works for every $z$ in the set. If $N$ depends on $z$, it is only pointwise.",
+        "why": "Definition 7.1, page 211."
+      }
+    ],
+    "generator": null,
+    "memory": "Uniform: one $N$ for the whole set."
+  },
+  {
+    "id": "ch7-7.1-flash-mtest",
+    "chapter": 7,
+    "section": "7.1",
+    "cite": {
+      "ref": "Theorem 7.1",
+      "page": 212
+    },
+    "kind": "flash",
+    "prompt": "State the Weierstrass M-test.",
+    "steps": [
+      {
+        "text": "",
+        "answer": "If $|u_k(z)|\\le M_k$ for every $z\\in T$ and $\\sum M_k$ converges, then $\\sum u_k$ converges uniformly on $T$.",
+        "why": "Theorem 7.1, page 212."
+      }
+    ],
+    "generator": null,
+    "memory": "Bound by constants, sum the constants."
+  },
+  {
+    "id": "ch7-7.2-picture",
+    "chapter": 7,
+    "section": "7.2",
+    "cite": {
+      "ref": "Corollary 7.3",
+      "page": 218
+    },
+    "kind": "next-step-blank",
+    "prompt": "What did the picture just show?",
+    "steps": [
+      {
+        "text": "The partial sums agree inside the disk and stop at the circle through ___.",
+        "answer": "\\pm i",
+        "accept": [
+          "±i",
+          "i and -i",
+          "+i and -i",
+          "plus or minus i"
+        ],
+        "why": "The singularities of $1/(1+z^2)$ are at $\\pm i$, both at distance 1 from 0."
+      }
+    ],
+    "generator": null,
+    "memory": "Radius = distance from the centre to the nearest nonremovable singularity."
+  },
+  {
+    "id": "ch7-7.2-radius-blank",
+    "chapter": 7,
+    "section": "7.2",
+    "cite": {
+      "ref": "Example 7.4",
+      "page": 218
+    },
+    "kind": "next-step-blank",
+    "prompt": "Example 7.4, page 218. The series $\\sum_{n=0}^{\\infty}(-1)^n z^{2n}$ equals $1/(1+z^2)$ on a disk. Name the disk.",
+    "steps": [
+      {
+        "text": "The series equals $1/(1+z^2)$ for ___",
+        "answer": "|z|<1",
+        "accept": [
+          "|z| < 1",
+          "the open unit disk",
+          "D_1(0)",
+          "z in D_1(0)"
+        ],
+        "why": "Corollary 7.3, page 218. The singularities of $1/(1+z^2)$ are at $\\pm i$, both at distance 1 from 0."
+      }
+    ],
+    "generator": null,
+    "memory": "The Taylor disk reaches the nearest nonremovable singularity and stops."
+  },
+  {
+    "id": "ch7-7.2-radius-mc",
+    "chapter": 7,
+    "section": "7.2",
+    "cite": {
+      "ref": "Remark 7.1",
+      "page": 218
+    },
+    "kind": "next-step-mc",
+    "prompt": "Remark 7.1, pages 218–219. The real function $1/(1+x^2)$ is smooth. Its series still stops at $x=\\pm 1$.",
+    "steps": [
+      {
+        "text": "The series stops because",
+        "answer": "the complex function has nonremovable singularities at $\\pm i$, both at distance 1 from 0",
+        "choices": [
+          "the complex function has nonremovable singularities at $\\pm i$, both at distance 1 from 0",
+          "the real function has a vertical asymptote at $x=1$",
+          "every derivative of $1/(1+x^2)$ at 0 is zero",
+          "a geometric series only converges for positive $x$"
+        ],
+        "why": "Remark 7.1. On the real line the singularities are invisible. In the plane they sit at $\\pm i$."
+      }
+    ],
+    "generator": null,
+    "memory": "A smooth real function can still have a Taylor radius of 1. Look for complex singularities."
+  },
+  {
+    "id": "ch7-7.2-flash-radius",
+    "chapter": 7,
+    "section": "7.2",
+    "cite": {
+      "ref": "Corollary 7.3",
+      "page": 218
+    },
+    "kind": "flash",
+    "prompt": "Where does a Taylor series converge to the function?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "On the disk out to the nearest nonremovable singularity, and not past it.",
+        "why": "Corollary 7.3, page 218."
+      }
+    ],
+    "generator": null,
+    "memory": "Radius = distance from the centre to the nearest nonremovable singularity."
+  },
+  {
+    "id": "ch7-7.2-flash-unique",
+    "chapter": 7,
+    "section": "7.2",
+    "cite": {
+      "ref": "Theorem 7.5",
+      "page": 219
+    },
+    "kind": "flash",
+    "prompt": "How do you know a power series you built is the Taylor series?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "Uniqueness. If two power series agree on a disk, their coefficients agree, so any power series for $f$ is the Taylor series.",
+        "why": "Theorem 7.5, page 219."
+      }
+    ],
+    "generator": null,
+    "memory": "You may substitute, multiply, or integrate. Uniqueness says the result is still the Taylor series."
+  },
+  {
+    "id": "ch7-7.3-picture",
+    "chapter": 7,
+    "section": "7.3",
+    "cite": {
+      "ref": "Example 7.7",
+      "page": 228
+    },
+    "kind": "next-step-blank",
+    "prompt": "What did the picture just show?",
+    "steps": [
+      {
+        "text": "Between the two circles the series uses negative powers and ___ powers.",
+        "answer": "non-negative",
+        "accept": [
+          "nonnegative"
+        ],
+        "why": "Example 7.7, page 228. The outer pole contributes the powers $z^n$ for $n\\ge 0$, including the constant."
+      }
+    ],
+    "generator": null,
+    "memory": "Between the poles the series faces both ways: negative powers inside, non-negative powers outside."
+  },
+  {
+    "id": "ch7-7.3-ex10-blank",
+    "chapter": 7,
+    "section": "7.3",
+    "cite": { "ref": "§7.3, Exercise 10", "page": 230 },
+    "kind": "next-step-blank",
+    "prompt": "Exercise 10 of §7.3, page 230. The Laurent series of $1/((z-2)(z-3))$ centered at $0$, in $|z|<2$, $2<|z|<3$, and $|z|>3$.",
+    "steps": [
+      {
+        "text": "Partial fractions. The coefficient of $1/(z-2)$ is ___",
+        "answer": "-1",
+        "accept": ["-1"],
+        "why": "Cover $(z-2)$. The value is $1/(2-3)$."
+      },
+      {
+        "text": "In $|z|<2$ the constant term is ___",
+        "answer": "\\frac{1}{6}",
+        "accept": ["\\frac{1}{6}", "1/6"],
+        "why": "Both poles are outside this disk, so $f(0)=1/(2\\cdot 3)$."
+      },
+      {
+        "text": "In $|z|>3$ the coefficient of $z^{-3}$ is ___",
+        "answer": "5",
+        "accept": ["5"],
+        "why": "Both poles are inside. The coefficient of $z^{-k-1}$ is $a^k/(a-b)+b^k/(b-a)$. For $k=2$ that is $2+3$."
+      }
+    ],
+    "generator": {
+      "template": "laurent-three",
+      "params": { "mode": "blank", "a": [1, 4], "b": [3, 8] }
+    },
+    "memory": "Partial fractions, then a geometric series aimed at the region: $z$ inside a pole, $1/z$ outside it."
+  },
+  {
+    "id": "ch7-7.3-ex10-mc",
+    "chapter": 7,
+    "section": "7.3",
+    "cite": { "ref": "§7.3, Exercise 10", "page": 230 },
+    "kind": "next-step-mc",
+    "prompt": "Exercise 10 of §7.3, page 230. The Laurent series of $1/((z-2)(z-3))$ centered at $0$, in $|z|<2$, $2<|z|<3$, and $|z|>3$.",
+    "steps": [
+      {
+        "text": "For $2<|z|<3$, the series uses",
+        "answer": "negative powers from the pole at $2$, and non-negative powers from the pole at $3$",
+        "choices": [
+          "negative powers from the pole at $2$, and non-negative powers from the pole at $3$",
+          "non-negative powers from both poles",
+          "negative powers from both poles",
+          "negative powers from the pole at $3$, and non-negative powers from the pole at $2$"
+        ],
+        "choiceWhy": [
+          "The pole at $2$ is inside this annulus, so it is expanded in $1/z$. The pole at $3$ is outside, so it is expanded in $z$.",
+          "Non-negative powers from both poles is the series for $|z|<2$.",
+          "Negative powers from both poles is the series for $|z|>3$.",
+          "That swap puts the inner pole's series on the outside of the annulus."
+        ],
+        "why": "Partial fractions, then one geometric series per pole. Inside the outer pole, powers of $z$. Outside the inner pole, powers of $1/z$."
+      }
+    ],
+    "generator": {
+      "template": "laurent-three",
+      "params": { "mode": "mc", "a": [1, 4], "b": [3, 8] }
+    },
+    "memory": "Name the annulus first. Each pole is expanded in $z$ when you are inside it, and in $1/z$ when you are outside it."
+  },
+  {
+    "id": "ch7-7.3-ex1-mc",
+    "chapter": 7,
+    "section": "7.3",
+    "cite": {
+      "ref": "§7.3, Exercise 1",
+      "page": 230
+    },
+    "kind": "next-step-mc",
+    "prompt": "Two Laurent series of $1/(z^3-z^4)$ in powers of $z$: one on $0<|z|<1$, and one for $|z|>1$.",
+    "steps": [
+      {
+        "text": "For $0<|z|<1$, the first move is",
+        "answer": "write $1/(1-z)$ as $\\sum z^n$ and multiply by $z^{-3}$",
+        "choices": [
+          "write $1/(1-z)$ as $\\sum z^n$ and multiply by $z^{-3}$",
+          "write $1/(1-z)$ as a series in $1/z$",
+          "differentiate the geometric series for $1/(1-z)^2$",
+          "drop the negative powers, because the only singularity is at infinity"
+        ],
+        "why": "$1/(z^3-z^4)=z^{-3}/(1-z)=\\sum_{n=0}^{\\infty} z^{n-3}$ on the annulus $0<|z|<1$. The disk $|z|<1$ includes the pole at $0$."
+      }
+    ],
+    "generator": null,
+    "memory": "Factor $1/(z^3(1-z))$, then aim the geometric series at the region you were given."
+  },
+  {
+    "id": "ch7-7.3-ex1-blank",
+    "chapter": 7,
+    "section": "7.3",
+    "cite": {
+      "ref": "§7.3, Exercise 1",
+      "page": 230
+    },
+    "kind": "next-step-blank",
+    "prompt": "Same exercise, the exterior. For $|z|>1$, $1/(1-z)=-\\sum_{k=0}^{\\infty} z^{-k-1}$.",
+    "steps": [
+      {
+        "text": "After multiplying by $z^{-3}$, the coefficient of $z^{-4}$ is ___, and every non-negative power has coefficient 0.",
+        "answer": "-1",
+        "accept": [
+          "−1"
+        ],
+        "why": "$z^{-3}\\cdot(-z^{-1})=-z^{-4}$. The exterior series is $-\\sum_{k=0}^{\\infty} z^{-k-4}$."
+      }
+    ],
+    "generator": null,
+    "memory": "Outside the pole, expand in $1/z$. The principal part starts at the first negative power that survives."
+  },
+  {
+    "id": "ch7-7.3-annulus",
+    "chapter": 7,
+    "section": "7.3",
+    "cite": {
+      "ref": "Example 7.7",
+      "page": 228
+    },
+    "kind": "next-step-blank",
+    "prompt": "Find the Laurent series of $f(z)=1/((z+2)(z-5))$ in the annulus $2<|z|<5$.",
+    "steps": [
+      {
+        "text": "Partial fractions, then the geometric series. The coefficient of $1/(z+2)$ is ___",
+        "answer": "-\\frac{1}{7}",
+        "accept": [
+          "-\\frac{1}{7}",
+          "-1/7"
+        ],
+        "why": "Cover the factor $(z+2)$. The value is $1/(-2-5)$."
+      },
+      {
+        "text": "In this annulus the constant term is ___",
+        "answer": "-\\frac{1}{35}",
+        "accept": [
+          "-\\frac{1}{35}",
+          "-1/35"
+        ],
+        "why": "The outer pole contributes $-1/((5-(-2))\\cdot 5)$. The inner pole contributes only negative powers."
+      }
+    ],
+    "generator": {
+      "template": "laurent-annulus",
+      "params": {
+        "a": [
+          -4,
+          -1
+        ],
+        "b": [
+          2,
+          6
+        ]
+      }
+    },
+    "memory": "Partial fractions, then a geometric series in $z$ inside the outer pole and in $1/z$ outside the inner pole."
+  },
+  {
+    "id": "ch7-7.3-flash-recipe",
+    "chapter": 7,
+    "section": "7.3",
+    "cite": {
+      "ref": "Example 7.7",
+      "page": 228
+    },
+    "kind": "flash",
+    "prompt": "What is the recipe for the Laurent series of a rational function?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "Partial fractions. Geometric series in $(z-\\alpha)/R$ on the inside of a pole, and in $R/(z-\\alpha)$ on the outside.",
+        "why": "Example 7.7, page 228, is this recipe on $3/(2+z-z^2)$."
+      }
+    ],
+    "generator": null,
+    "memory": "Partial fractions, then one geometric series per pole, aimed at the annulus."
+  },
+  {
+    "id": "ch7-7.3-flash-annulus",
+    "chapter": 7,
+    "section": "7.3",
+    "cite": {
+      "ref": "Example 7.7",
+      "page": 228
+    },
+    "kind": "flash",
+    "prompt": "In the annulus between two poles, which powers appear?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "Negative powers from the inner pole, and non-negative powers from the outer pole.",
+        "why": "Example 7.7, the annulus $1<|z|<2$."
+      }
+    ],
+    "generator": null,
+    "memory": "Between the poles the series faces both ways."
+  },
+  {
+    "id": "ch7-7.4-picture",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": {
+      "ref": "Definition 7.6",
+      "page": 234
+    },
+    "kind": "next-step-blank",
+    "prompt": "What did the picture just show?",
+    "steps": [
+      {
+        "text": "The zero has order ___.",
+        "answer": "2",
+        "accept": [
+          "two",
+          "order 2"
+        ],
+        "why": "Definition 7.6, page 234: $z^2$ and its first derivative vanish at 0, and the second derivative is 2. The picture counts that order as two turns."
+      }
+    ],
+    "generator": null,
+    "memory": "No negative powers: removable. Lowest power $-k$: a pole of order $k$. Infinitely many: essential."
+  },
+  {
+    "id": "ch7-7.4-ex2a-mc",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": {
+      "ref": "§7.4, Exercise 2(a)",
+      "page": 238
+    },
+    "kind": "next-step-mc",
+    "prompt": "Exercise 2(a) of §7.4, page 238. Locate the poles of $(z^2+1)^{-3}(z-1)^{-4}$ and give the orders.",
+    "steps": [
+      {
+        "text": "At $z=1$ the singularity is",
+        "answer": "a pole of order 4",
+        "choices": [
+          "a pole of order 4",
+          "a pole of order 3",
+          "a zero of order 4",
+          "removable"
+        ],
+        "why": "Theorem 7.12, page 235. $(z-1)^4$ is the whole vanishing of the denominator at $z=1$, and $z^2+1$ is not zero there."
+      },
+      {
+        "text": "At $z=\\pm i$ the order of each pole is",
+        "answer": "3",
+        "choices": [
+          "3",
+          "4",
+          "6",
+          "1"
+        ],
+        "why": "$(z^2+1)^3=(z-i)^3(z+i)^3$. Each of $\\pm i$ is a pole of order 3, and $z=1$ is a pole of order 4."
+      }
+    ],
+    "generator": null,
+    "memory": "Multiply the orders from each factor. A factor $(z-\\alpha)^k$ in the denominator, not cancelled, is a pole of order $k$."
+  },
+  {
+    "id": "ch7-7.4-order",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": {
+      "ref": "Theorem 7.12",
+      "page": 235
+    },
+    "kind": "next-step-blank",
+    "prompt": "Classify the singularity of $f(z)=(z+2)^{2}/(z+1)^{3}$ at $z=-1$.",
+    "steps": [
+      {
+        "text": "The denominator vanishes there and the numerator does not, so the singularity is a ___",
+        "answer": "pole of order 3",
+        "accept": [
+          "a pole of order 3",
+          "order 3 pole",
+          "3"
+        ],
+        "why": "Theorem 7.12, page 235. $f=h(z)/(z+1)^{3}$ with $h(-1)\\neq 0$."
+      }
+    ],
+    "generator": {
+      "template": "singularity-order",
+      "params": {
+        "a": [
+          -3,
+          3
+        ],
+        "b": [
+          1,
+          3
+        ]
+      }
+    },
+    "memory": "A pole of order $k$ is $h(z)/(z-\\alpha)^k$ with $h$ analytic and $h(\\alpha)\\neq 0$."
+  },
+  {
+    "id": "ch7-7.4-ex3a",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": { "ref": "§7.4, Exercise 3(a)", "page": 238 },
+    "kind": "next-step-blank",
+    "prompt": "Classify the singularity of $z^2/(z-\\sin z)$ at $0$.",
+    "steps": [
+      {
+        "text": "The singularity at $0$ is",
+        "answer": "a pole of order 1",
+        "choices": ["removable", "a pole of order 1", "a pole of order 2", "essential"],
+        "choiceWhy": [
+          "Page 448 calls this removable. $z-\\sin z$ has a zero of order 3 and $z^2$ has a zero of order 2, so Corollary 7.8, page 236, says the quotient is a pole of order 1.",
+          "$z-\\sin z$ has a zero of order 3 and $z^2$ has a zero of order 2. Corollary 7.8, page 236, leaves a pole of order 1. The printed answer on page 448 says removable.",
+          "Order 2 would need the denominator's zero to be two higher than the numerator's. The gap is 1.",
+          "The principal part is the single term $6/z$. It stops."
+        ],
+        "why": "Page 448 calls $z^2/(z-\\sin z)$ removable. The series does not: $z-\\sin z$ has a zero of order 3 and $z^2$ has a zero of order 2, so Corollary 7.8, page 236, gives a pole of order 1."
+      },
+      {
+        "text": "The principal part is ___",
+        "answer": "6/z",
+        "accept": ["\\frac{6}{z}", "6z^{-1}", "6 z^{-1}", "\\dfrac{6}{z}"],
+        "miss": "Divide the orders, then read the coefficient of $z^{-1}$. It is $1/(1/6)$.",
+        "why": "$z-\\sin z=z^3(1/6-z^2/120+\\cdots)$, so $z^2/(z-\\sin z)=6/z+\\cdots$. The principal part is $6/z$."
+      }
+    ],
+    "generator": null,
+    "memory": "Page 448 says removable. The orders 2 and 3 say a pole of order 1, and the principal part is $6/z$."
+  },
+  {
+    "id": "ch7-7.4-ex3",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": { "ref": "§7.4, Exercise 3", "page": 238 },
+    "kind": "next-step-mc",
+    "prompt": "Exercise 3 of §7.4, page 238. Classify the singularity of $\\sin(1/z)$ at $0$. This series does not stop, and the winding does not draw it.",
+    "steps": [
+      {
+        "text": "The singularity is",
+        "answer": "essential",
+        "choices": ["removable", "a pole of order 1", "a pole of order 2", "essential"],
+        "choiceWhy": [
+          "Removable means no negative powers. The computed series still has some.",
+          "A pole has a finite principal part. This series does not stop.",
+          "A pole has a finite principal part. This series does not stop.",
+          "The computed series still has a negative power at the far end of the expansion, so the principal part does not stop."
+        ],
+        "why": "The computed series still has a negative power at the far end of the expansion, so the principal part does not stop."
+      }
+    ],
+    "generator": {
+      "template": "singularity-class",
+      "params": { "a": [0, 0] }
+    },
+    "memory": "No negative powers: removable. Lowest power $-k$: a pole of order $k$. Infinitely many negative powers: essential."
+  },
+  {
+    "id": "ch7-7.4-ex3c",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": { "ref": "§7.4, Exercise 3(c)", "page": 238 },
+    "kind": "next-step-mc",
+    "prompt": "Classify the singularity of $z\\exp(1/z)$ at $0$.",
+    "steps": [
+      {
+        "text": "The singularity is",
+        "answer": "essential",
+        "choices": ["removable", "a pole of order 1", "a pole of order 2", "essential"],
+        "choiceWhy": [
+          "Removable means no negative powers. $z\\exp(1/z)=\\sum z^{1-k}/k!$ keeps going.",
+          "A pole stops. The powers $1-k$ do not.",
+          "A pole stops. The powers $1-k$ do not.",
+          "$z\\exp(1/z)=\\sum_{k=0}^{\\infty} z^{1-k}/k!$. The negative powers do not stop."
+        ],
+        "why": "$z\\exp(1/z)=\\sum_{k=0}^{\\infty} z^{1-k}/k!$. Infinitely many negative powers: essential."
+      }
+    ],
+    "generator": null,
+    "memory": "An infinite principal part is essential. $z\\exp(1/z)$ does not stop."
+  },
+  {
+    "id": "ch7-7.4-tan",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": { "ref": "§7.4, Exercise 3(d)", "page": 238 },
+    "kind": "next-step-mc",
+    "prompt": "Exercise 3(d) of §7.4, page 238. Locate the singularities of $\\tan z$ and name the type.",
+    "steps": [
+      {
+        "text": "The singularities are",
+        "answer": "poles of order 1 at $z=(n+\\tfrac{1}{2})\\pi$",
+        "choices": [
+          "poles of order 1 at $z=(n+\\tfrac{1}{2})\\pi$",
+          "a removable singularity at $0$",
+          "an essential singularity at $0$",
+          "poles of order 2 at $z=n\\pi$"
+        ],
+        "choiceWhy": [
+          "$\\cos z$ has simple zeros at $(n+\\tfrac{1}{2})\\pi$ and $\\sin z$ is not zero there.",
+          "$\\tan z$ is analytic at $0$. The singularities are the zeros of $\\cos z$.",
+          "The principal part at each singularity is one term, not an infinite tail.",
+          "At $n\\pi$ the sine is zero and the cosine is not, so $\\tan z$ is analytic there."
+        ],
+        "why": "$\\cos z$ has simple zeros at $(n+\\tfrac{1}{2})\\pi$ and $\\sin z$ is not zero there, so each is a pole of order 1."
+      }
+    ],
+    "generator": null,
+    "memory": "A simple zero of the denominator, not cancelled by the numerator, is a pole of order 1."
+  },
+  {
+    "id": "ch7-7.4-sin-over-quadratic",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": { "ref": "§7.4, Exercise 3(e)", "page": 238 },
+    "kind": "next-step-mc",
+    "prompt": "Exercise 3(e) of §7.4, page 238. Locate the singularities of $(z^2+z)^{-1}\\sin z$ and name the types.",
+    "steps": [
+      {
+        "text": "The singularities are",
+        "answer": "removable at $0$, and a pole of order 1 at $-1$",
+        "choices": [
+          "removable at $0$, and a pole of order 1 at $-1$",
+          "a pole of order 2 at $0$",
+          "essential at $0$",
+          "removable at $-1$, and a pole of order 1 at $0$"
+        ],
+        "choiceWhy": [
+          "$\\sin z$ and $z$ both have a simple zero at $0$, and $\\sin(-1)\\neq 0$ while $z+1$ has a simple zero at $-1$.",
+          "The factor $z$ in the denominator is cancelled by the zero of $\\sin z$. Nothing of order 2 is left at $0$.",
+          "Both singularities have a finite principal part.",
+          "That swap puts the cancelled zero at $-1$, where $\\sin z$ is not zero."
+        ],
+        "why": "At $0$ the simple zero of $\\sin z$ cancels the factor $z$. At $-1$ the numerator is not zero and $z+1$ has a simple zero."
+      }
+    ],
+    "generator": null,
+    "memory": "Cancel common zeros first. What is left in the denominator is the pole."
+  },
+  {
+    "id": "ch7-7.4-z-over-sin",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": { "ref": "§7.4, Exercise 3(f)", "page": 238 },
+    "kind": "next-step-mc",
+    "prompt": "Exercise 3(f) of §7.4, page 238. Locate the singularities of $z/\\sin z$ and name the types.",
+    "steps": [
+      {
+        "text": "The singularities are",
+        "answer": "removable at $0$, and poles of order 1 at $n\\pi$ for $n\\neq 0$",
+        "choices": [
+          "removable at $0$, and poles of order 1 at $n\\pi$ for $n\\neq 0$",
+          "a pole of order 1 at $0$",
+          "essential at $0$",
+          "removable at every $n\\pi$"
+        ],
+        "choiceWhy": [
+          "$z$ and $\\sin z$ both have a simple zero at $0$. At $n\\pi$, $n\\neq 0$, the numerator is not zero and the zero of $\\sin z$ is simple.",
+          "The zero of the denominator at $0$ is cancelled by the numerator.",
+          "Each singularity has a finite principal part.",
+          "Only the zero at $0$ is cancelled. The others are poles."
+        ],
+        "why": "The limit at $0$ is $1$. Elsewhere $\\sin z$ has a simple zero and $z$ does not vanish, so the pole has order 1."
+      }
+    ],
+    "generator": null,
+    "memory": "A zero of the denominator that the numerator does not share is a pole. Match the orders."
+  },
+  {
+    "id": "ch7-7.4-ex3g",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": { "ref": "§7.4, Exercise 3(g)", "page": 238 },
+    "kind": "next-step-mc",
+    "prompt": "Classify the singularity of $(\\exp z-1)/z$ at $0$.",
+    "steps": [
+      {
+        "text": "The singularity is",
+        "answer": "removable",
+        "choices": ["removable", "a pole of order 1", "a pole of order 2", "essential"],
+        "choiceWhy": [
+          "$(\\exp z-1)/z=\\sum_{m=0}^{\\infty} z^m/(m+1)!$. Every negative coefficient is 0.",
+          "A pole needs a negative power. The $z$ in the denominator cancels the zero of $\\exp z-1$.",
+          "Nothing of order 2 is left. The series starts at the constant term 1.",
+          "The powers do not run off to $-\\infty$. They start at $z^0$."
+        ],
+        "why": "$(\\exp z-1)/z=\\sum_{m=0}^{\\infty} z^m/(m+1)!$ for $z\\neq 0$. No negative powers, so the singularity is removable. The key on page 448 agrees."
+      }
+    ],
+    "generator": null,
+    "memory": "No negative powers: removable. $(\\exp z-1)/z$ is filled in by 1."
+  },
+  {
+    "id": "ch7-7.4-cos-diff",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": { "ref": "§7.4, Exercise 3(h)", "page": 238 },
+    "kind": "next-step-mc",
+    "prompt": "Exercise 3(h) of §7.4, page 238. Classify the singularity of $(\\cos z-\\cos 2z)/z^4$ at $0$.",
+    "steps": [
+      {
+        "text": "The singularity is",
+        "answer": "a pole of order 2",
+        "choices": [
+          "a pole of order 2",
+          "removable",
+          "a pole of order 4",
+          "essential"
+        ],
+        "choiceWhy": [
+          "The numerator has a zero of order 2 and the denominator has a zero of order 4, so the quotient starts at $z^{-2}$.",
+          "Removable would need no negative powers. The $z^2$ term of the numerator is not zero.",
+          "Order 4 would need the numerator to be nonzero at $0$. It vanishes there.",
+          "The principal part stops at $z^{-2}$."
+        ],
+        "why": "$\\cos z-\\cos 2z = \\tfrac{3}{2}z^2+\\cdots$. Dividing by $z^4$ leaves a lowest power of $-2$."
+      }
+    ],
+    "generator": null,
+    "memory": "Subtract the orders. A zero of order $m$ over a zero of order $n$, with $n>m$, is a pole of order $n-m$."
+  },
+  {
+    "id": "ch7-7.4-flash-pole",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": {
+      "ref": "Theorem 7.12",
+      "page": 235
+    },
+    "kind": "flash",
+    "prompt": "When does $f$ have a pole of order $k$ at $\\alpha$?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "When $f(z)=h(z)/(z-\\alpha)^k$ with $h$ analytic at $\\alpha$ and $h(\\alpha)\\neq 0$. The Laurent series then starts at $(z-\\alpha)^{-k}$.",
+        "why": "Theorem 7.12, page 235, and Definition 7.5, page 232."
+      }
+    ],
+    "generator": null,
+    "memory": "Order $k$ means the lowest power is exactly $-k$."
+  },
+  {
+    "id": "ch7-7.4-flash-types",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": {
+      "ref": "Definition 7.5",
+      "page": 232
+    },
+    "kind": "flash",
+    "prompt": "Name the three kinds of isolated singularity from the Laurent series.",
+    "steps": [
+      {
+        "text": "",
+        "answer": "No negative powers: removable. Lowest power $-k$: a pole of order $k$. Infinitely many negative powers: essential.",
+        "why": "Definition 7.5, page 232."
+      }
+    ],
+    "generator": null,
+    "memory": "Read the principal part. Finite and nonempty is a pole. Empty is removable. Infinite is essential."
+  },
+  {
+    "id": "ch7-7.5-picture",
+    "chapter": 7,
+    "section": "7.5",
+    "cite": {
+      "ref": "Theorem 7.15",
+      "page": 240
+    },
+    "kind": "next-step-blank",
+    "prompt": "What did the picture just show?",
+    "steps": [
+      {
+        "text": "Near 0, $\\sin(z)/z$ stays near ___, so the singularity is removable.",
+        "answer": "1",
+        "accept": [
+          "one"
+        ],
+        "why": "Theorem 7.15, page 240. The values stay bounded, and the missing value is the limit 1."
+      }
+    ],
+    "generator": null,
+    "memory": "A bounded isolated singularity is removable. $\\sin z/z$ at 0 is filled in by the value 1."
+  },
+  {
+    "id": "ch7-7.5-isolated-mc",
+    "chapter": 7,
+    "section": "7.5",
+    "cite": {
+      "ref": "Theorem 7.13",
+      "page": 239
+    },
+    "kind": "next-step-mc",
+    "prompt": "Theorem 7.13, page 239. $f$ is analytic in a connected domain and not identically zero.",
+    "steps": [
+      {
+        "text": "A zero of $f$ is",
+        "answer": "isolated: some disk about it contains no other zero",
+        "choices": [
+          "isolated: some disk about it contains no other zero",
+          "a pole of order 1",
+          "an essential singularity",
+          "a point every neighbourhood of which contains another zero"
+        ],
+        "why": "Theorem 7.13. If the zeros accumulated, $f$ would be identically zero."
+      }
+    ],
+    "generator": null,
+    "memory": "On a connected domain, an analytic function that is not identically zero has isolated zeros."
+  },
+  {
+    "id": "ch7-7.5-lhopital",
+    "chapter": 7,
+    "section": "7.5",
+    "cite": { "ref": "Exercise 6(a)", "page": 243 },
+    "kind": "next-step-blank",
+    "prompt": "$\\lim_{z\\to 1+i}(z-1-i)/(z^4+4)$. At $1+i$ both functions are zero.",
+    "steps": [
+      {
+        "text": "$g'(1+i)=$ ___",
+        "answer": "-8+8i",
+        "accept": ["-8+8i", "8i-8", "-8 + 8i", "8i - 8", "-8+8i ≠ 0", "-8+8i\\neq 0"],
+        "miss": "Differentiate $z^4+4$ and evaluate at $1+i$.",
+        "why": "$g'(z)=4z^3$ and $4(1+i)^3=-8+8i\\neq 0$, so Corollary 7.11, page 240, applies."
+      },
+      {
+        "text": "The limit equals ___",
+        "answer": "(-1-i)/16",
+        "accept": ["\\frac{-1-i}{16}", "-\\frac{1+i}{16}", "-1/16-i/16", "(-1-i)/16", "-(1+i)/16", "1/(-8+8i)", "(-1−i)/16", "1/(−8+8i)"],
+        "miss": "Divide the derivatives and simplify.",
+        "why": "Corollary 7.11, page 240. The quotient of the derivatives is $1/(4(1+i)^3)=1/(-8+8i)=(-1-i)/16$."
+      }
+    ],
+    "generator": null,
+    "memory": "If $f(\\alpha)=g(\\alpha)=0$ and $g'(\\alpha)\\neq 0$, the limit of $f/g$ is $f'(\\alpha)/g'(\\alpha)$."
+  },
+  {
+    "id": "ch7-7.5-lhopital-b",
+    "chapter": 7,
+    "section": "7.5",
+    "cite": { "ref": "Exercise 6(b)", "page": 243 },
+    "kind": "next-step-blank",
+    "prompt": "$\\lim_{z\\to i}(z^2-2iz-1)/(z^4+2z^2+1)$.",
+    "steps": [
+      {
+        "text": "One differentiation is still ___",
+        "answer": "0/0",
+        "accept": ["0/0", "zero over zero", "still 0/0", "0 / 0"],
+        "miss": "Both the numerator and the denominator have a zero of order 2 at $i$.",
+        "why": "$(z-i)^2$ over $(z^2+1)^2=(z-i)^2(z+i)^2$. The derivatives also vanish, so Corollary 7.11 does not apply yet."
+      },
+      {
+        "text": "Cancel $(z-i)^2$. The limit equals ___",
+        "answer": "-1/4",
+        "accept": ["-0.25", "-\\frac{1}{4}", "−1/4", "-1/4"],
+        "miss": "Cancel the common factor, then evaluate what is left at $i$.",
+        "why": "What remains is $1/(z+i)^2$. At $z=i$ that is $1/(2i)^2=-1/4$."
+      }
+    ],
+    "generator": null,
+    "memory": "If one differentiation is still $0/0$, the zero was not simple. Cancel and try again."
+  },
+  {
+    "id": "ch7-7.5-lhopital-c",
+    "chapter": 7,
+    "section": "7.5",
+    "cite": { "ref": "Exercise 6(c)", "page": 243 },
+    "kind": "next-step-blank",
+    "prompt": "$\\lim_{z\\to i}(1+z^{6})/(1+z^2)$. At $i$ both functions are zero.",
+    "steps": [
+      {
+        "text": "$g'(i)=$ ___",
+        "answer": "2i",
+        "accept": ["2i", "+2i", "2*i"],
+        "miss": "The denominator is $1+z^2$. Its derivative is $2z$.",
+        "why": "$g'(z)=2z$, so $g'(i)=2i\\neq 0$. Corollary 7.11, page 240, applies."
+      },
+      {
+        "text": "The limit equals ___",
+        "answer": "3",
+        "accept": ["3.0", "6i/2i", "6i/(2i)"],
+        "miss": "Divide $f'(i)=6i^5$ by $g'(i)=2i$.",
+        "why": "$f'(z)=6z^5$ and $f'(i)=6i$. The quotient is $6i/(2i)=3$. The same value is $z^4-z^2+1$ at $z=i$."
+      }
+    ],
+    "generator": null,
+    "memory": "A simple zero of the denominator, not cancelled, is one application of L'Hôpital."
+  },
+  {
+    "id": "ch7-7.5-lhopital-d",
+    "chapter": 7,
+    "section": "7.5",
+    "cite": { "ref": "Exercise 6(d)", "page": 243 },
+    "kind": "next-step-blank",
+    "prompt": "$\\lim_{z\\to 0}(\\sin z+\\sinh z-2z)/z^{5}$.",
+    "steps": [
+      {
+        "text": "The numerator's series starts at order ___",
+        "answer": "5",
+        "accept": ["five", "z^5"],
+        "miss": "$\\sin z$ and $\\sinh z$ cancel the $z$ and $z^3$ terms.",
+        "why": "$\\sin z+\\sinh z=2z+z^5/60+\\cdots$. Subtracting $2z$ leaves a zero of order 5."
+      },
+      {
+        "text": "The limit equals ___",
+        "answer": "1/60",
+        "accept": ["\\frac{1}{60}", "2/120", "2/5!"],
+        "miss": "Divide the $z^5$ term by $z^5$. The coefficient is $1/60$.",
+        "why": "The $z^5$ terms are $1/5!$ from each of $\\sin z$ and $\\sinh z$, so $2/120=1/60$."
+      }
+    ],
+    "generator": null,
+    "memory": "When every derivative through order 4 still vanishes, read the series. The limit is the first coefficient that survives."
+  },
+  {
+    "id": "ch7-7.5-divide",
+    "chapter": 7,
+    "section": "7.5",
+    "cite": { "ref": "Example 7.15", "page": 240 },
+    "kind": "next-step-blank",
+    "prompt": "$\\sec z=1/\\cos z$ for $|z|<\\pi/2$.",
+    "steps": [
+      {
+        "text": "The constant term $a_0=$ ___",
+        "answer": "1",
+        "accept": ["1.0"],
+        "why": ""
+      },
+      {
+        "text": "The coefficient of $z^2$ is ___",
+        "answer": "1/2",
+        "accept": ["0.5", "\\frac{1}{2}", "1/2"],
+        "why": ""
+      },
+      {
+        "text": "The fourth derivative at $0$ is ___",
+        "answer": "5",
+        "accept": ["5.0"],
+        "why": "The series is $1+\\frac{1}{2}z^2+\\frac{5}{24}z^4+\\cdots$ (Example 7.15, page 240). Then $f^{(4)}(0)/4!=5/24$, so $f^{(4)}(0)=5$."
+      }
+    ],
+    "generator": null,
+    "memory": "When $g(\\alpha)\\neq 0$, divide. The coefficients satisfy $a_n=b_0 c_n+\\cdots+b_n c_0$. A zero of $g$ means stop and use a Laurent series."
+  },
+  {
+    "id": "ch7-7.5-flash-zeros",
+    "chapter": 7,
+    "section": "7.5",
+    "cite": {
+      "ref": "Theorem 7.13",
+      "page": 239
+    },
+    "kind": "flash",
+    "prompt": "What does Theorem 7.13 say about zeros?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "If $f$ is analytic in a connected domain and not identically zero, then a zero is isolated.",
+        "why": "Theorem 7.13, page 239."
+      }
+    ],
+    "generator": null,
+    "memory": "On a connected domain, an analytic function that is not identically zero has isolated zeros."
+  },
+  {
+    "id": "ch7-7.5-flash-removable",
+    "chapter": 7,
+    "section": "7.5",
+    "cite": {
+      "ref": "Theorem 7.15",
+      "page": 240
+    },
+    "kind": "flash",
+    "prompt": "When is an isolated singularity removable?",
+    "steps": [
+      {
+        "text": "",
+        "answer": "When $f$ is bounded in the punctured disk. The value that fills it in is the limit. For $\\sin z/z$ that value is 1.",
+        "why": "Theorem 7.15, page 240."
+      }
+    ],
+    "generator": null,
+    "memory": "Bounded isolated singularity: removable."
+  }
+]

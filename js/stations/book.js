@@ -4,11 +4,13 @@
 
 import { stationById } from '../registry.js';
 import { BOOK, sectionHref } from '../data/book.js';
-import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, bookChapter, chapter4ExerciseIds, chapter5ExerciseIds, CHAPTER_PICTURE, pictureHref } from '../data/book-path.js';
+import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, bookChapter, chapter4ExerciseIds, chapter5ExerciseIds, CHAPTER_PICTURE, pictureHref, OPEN_CHAPTERS } from '../data/book-path.js';
+import { chapter7WalkSections } from '../data/chapter-7.js';
 import { test2ProblemById } from '../data/test2-problems.js';
 import { loadSharedTicks, saveSharedTicks, toggleTick, sectionFinished, chapterTally } from '../book/progress.js';
 import { h, appendRich, sourceTag } from './test2-ui.js';
 import { mountExpPicture } from './exp-picture.js';
+import { mountChapter7 } from './chapter7.js';
 
 function slug(id) {
   return String(id).replace(/\./g, '-');
@@ -17,6 +19,17 @@ function slug(id) {
 function ticksOf(store) {
   return loadSharedTicks(store, (id) => !!test2ProblemById(id), chapter4ExerciseIds());
 }
+
+function chapter7Ticks(store) {
+  return loadSharedTicks(store, (id) => typeof id === 'string' && id.startsWith('ch7-'), []);
+}
+
+function chapter5Ticks(store) {
+  const ids = new Set(chapter5ExerciseIds());
+  return loadSharedTicks(store, (id) => ids.has(id), []);
+}
+
+const SHELL_LAST = 7;
 
 function exerciseHint(section, problem) {
   if (problem && problem.hint) return problem.hint;
@@ -36,6 +49,7 @@ export function mount(section, ctx) {
   if (!spec || spec.kind === 'roadmap') return mountRoadmap(section, ctx, spec);
   if (spec.chapter === 4) return mountChapter4(section, ctx, spec.focus);
   if (spec.chapter === 5) return mountChapter5(section, ctx, spec.focus);
+  if (spec.chapter === 7) return mountChapter7(section, ctx, spec.focus);
   return mountRoadmap(section, ctx, { kind: 'roadmap', chapter: null, focus: null });
 }
 
@@ -44,31 +58,70 @@ function mountRoadmap(el, ctx, spec) {
   let ticks = ticksOf(store);
   const tally = () => chapterTally(CHAPTER_4.sections, ticks);
 
+  const stages7 = chapter7WalkSections();
+  const ticks7 = chapter7Ticks(store);
+  const ticks5 = chapter5Ticks(store);
+  const done7 = stages7.filter((s) => ticks7[s.exercises[0]] === true).length;
+  const started7 = Object.keys(ticks7).some((id) => ticks7[id] === true);
+  const ch5Done = chapter5ExerciseIds().every((id) => ticks5[id] === true);
   const status = h('p', { class: 'book-status', id: 'book-status' });
   const walk = h('a', { class: 'btn btn-primary', id: 'book-walk', href: '#chapter-4' }, 'Walk Chapter 4');
   const list = h('ol', { class: 'book-path', id: 'book-path' });
 
+  function inProgress() {
+    const t = tally();
+    if (started7) {
+      const next = stages7.find((s) => ticks7[s.exercises[0]] !== true);
+      const at = next ? stages7.indexOf(next) + 1 : stages7.length;
+      return {
+        n: 7,
+        href: '#chapter-7',
+        label: 'Open Chapter 7',
+        status: next
+          ? `${next.title} · Stage ${at} of ${stages7.length}`
+          : `Done · ${stages7.length} of ${stages7.length} stages.`,
+      };
+    }
+    if (!t.complete) {
+      return { n: 4, href: '#chapter-4', label: 'Walk Chapter 4', status: nextSentence(t) };
+    }
+    if (!ch5Done) {
+      const left = chapter5ExerciseIds().filter((id) => ticks5[id] !== true).length;
+      return {
+        n: 5,
+        href: '#chapter-5',
+        label: 'Open Chapter 5',
+        status: `Chapter 5 is next. ${chapter5ExerciseIds().length - left} of ${chapter5ExerciseIds().length} exercises.`,
+      };
+    }
+    return {
+      n: 7,
+      href: '#chapter-7',
+      label: 'Open Chapter 7',
+      status: `Uniform convergence · Stage 1 of ${stages7.length}`,
+    };
+  }
+
   function paint() {
     const t = tally();
-    if (t.complete) {
-      status.textContent = `${nextSentence(t)} Chapter 5 is next.`;
-      walk.textContent = 'Open Chapter 5';
-      walk.setAttribute('href', '#chapter-5');
-    } else {
-      status.textContent = nextSentence(t);
-      walk.textContent = 'Walk Chapter 4';
-      walk.setAttribute('href', '#chapter-4');
-    }
+    const here = inProgress();
+    status.textContent = here.status;
+    walk.textContent = here.label;
+    walk.setAttribute('href', here.href);
     for (const node of list.querySelectorAll('.book-node')) {
       const n = Number(node.getAttribute('data-chapter'));
+      const ch = BOOK_CHAPTERS.find((item) => item.n === n);
       let state = 'later';
-      if (n === 4) state = t.complete ? 'done' : 'next';
-      else if (n === 5) state = 'open';
+      if (n === here.n) state = (n === 7 && done7 === stages7.length) || (n === 4 && t.complete) ? 'done' : 'next';
+      else if (n === 4 && t.complete) state = 'done';
+      else if (n === 7 && done7 === stages7.length) state = 'done';
+      else if (ch && ch.open) state = 'open';
       node.setAttribute('data-state', state);
       const flag = node.querySelector('.book-flag');
       if (!flag) continue;
-      if (n === 4) flag.textContent = t.complete ? 'Done' : 'Next';
-      else if (n === 5) flag.textContent = 'Open';
+      if (state === 'next') flag.textContent = 'Next';
+      else if (state === 'done') flag.textContent = 'Done';
+      else if (ch && ch.open) flag.textContent = 'Open';
       else flag.textContent = 'Later';
     }
     for (const row of list.querySelectorAll('[data-section]')) {
@@ -83,7 +136,13 @@ function mountRoadmap(el, ctx, spec) {
   }
 
   for (const ch of BOOK_CHAPTERS) {
-    const head = h('div', { class: 'book-node-head' },
+    if (ch.n > SHELL_LAST) continue;
+    const linked = OPEN_CHAPTERS.includes(ch.n);
+    const headTag = linked ? 'a' : 'div';
+    const headAttrs = linked
+      ? { class: 'book-node-head book-row', id: `book-open-${ch.n}`, href: `#chapter-${ch.n}` }
+      : { class: 'book-node-head' };
+    const head = h(headTag, headAttrs,
       h('p', { class: 'book-flag', id: `book-flag-${ch.n}` }, 'Later'),
       h('h2', { id: `book-title-${ch.n}` },
         h('span', { class: 'book-num' }, String(ch.n)),
@@ -117,15 +176,22 @@ function mountRoadmap(el, ctx, spec) {
   el.append(
     h('header', { class: 'station-header' },
       h('h1', { id: 'book-title' }, 'The Book'),
-      h('p', { class: 'station-lede', id: 'book-lede' }, 'Eleven chapters, in the order Howell and Mathews print them.'),
+      h('p', { class: 'station-lede', id: 'book-lede' }, 'Chapters 1 to 7, in the order Howell and Mathews print them.'),
       sourceTag({ pin: '202 Updated Edition, table of contents, pages i–ii', href: BOOK.html })),
-    h('div', { class: 'book-next', id: 'book-next' }, status, walk),
+    h('div', { class: 'book-next', id: 'book-next' }, walk, status),
     list);
 
   const focus = spec && spec.chapter;
   if (focus) {
     const node = el.querySelector(`#book-node-${focus}`);
-    if (node) node.scrollIntoView({ block: 'start' });
+    if (node) {
+      const go = () => {
+        if (!node.isConnected) return;
+        node.scrollIntoView({ block: 'start' });
+      };
+      requestAnimationFrame(() => requestAnimationFrame(go));
+      setTimeout(go, 60);
+    }
   }
 
   return function unmount() {};
@@ -259,13 +325,13 @@ function mountChapter4(el, ctx, focus) {
 
   el.append(
     h('header', { class: 'station-header' },
-      h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back' }, 'The Book')),
+      h('a', { class: 'nav-link ch7-up', href: '#book', id: 'chapter-back' }, 'The Book'),
       h('h1', { id: 'chapter-title' }, 'Chapter 4. Sequences, Series, and Fractals'),
       h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Four sections. Tick an exercise when you have worked it. The hint stays closed until you ask.'),
       sourceTag({ pin: CHAPTER_4.pin, href: CHAPTER_4.href })),
     h('div', { class: 'book-next', id: 'chapter-next-row' }, status, nextBtn),
     path,
-    h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
+    h('p', { class: 'book-footer-link' }, h('a', { class: 'nav-link ch7-up', href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
 
   if (focus) {
     const card = cards.find((c) => c.getAttribute('data-problem') === focus);
@@ -376,7 +442,7 @@ function mountChapter5(el, ctx, focus) {
 
   el.append(
     h('header', { class: 'station-header' },
-      h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back' }, 'The Book')),
+      h('a', { class: 'nav-link ch7-up', href: '#book', id: 'chapter-back' }, 'The Book'),
       h('h1', { id: 'chapter-title' }, 'Chapter 5. The exponential')),
     picture,
     h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Section 5.1. A blank fills when the picture makes it true. The hint stays closed until you ask.'),
@@ -384,7 +450,7 @@ function mountChapter5(el, ctx, focus) {
     walk,
     later,
     sourceTag({ pin: 'Chapter 5, Elementary Functions, page 130', href: sectionHref('sec_exponential-function.html') }),
-    h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
+    h('p', { class: 'book-footer-link' }, h('a', { class: 'nav-link ch7-up', href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
 
   paint();
 

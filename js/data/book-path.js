@@ -22,7 +22,7 @@ function deepFreeze(o) {
 }
 
 // Chapters the router will open as their own page. 1–3 and 6–11 stay on the book.
-export const OPEN_CHAPTERS = Object.freeze([4, 5]);
+export const OPEN_CHAPTERS = Object.freeze([4, 5, 7]);
 
 export const BOOK_CHAPTERS = deepFreeze([
   {
@@ -85,7 +85,7 @@ export const BOOK_CHAPTERS = deepFreeze([
     ],
   },
   {
-    n: 7, title: 'Taylor and Laurent Series', page: 210, open: false, door: null,
+    n: 7, title: 'Taylor and Laurent Series', page: 210, open: true, door: null,
     sections: [
       { id: '7.1', title: 'Uniform Convergence', page: 210 },
       { id: '7.2', title: 'Taylor Series Representations', page: 215 },
