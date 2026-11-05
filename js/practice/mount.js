@@ -71,6 +71,7 @@ export function mountPrep(el, ctx, spec) {
   let right = false;
   let toldWhy = '';
   let slip = false;
+  let itemMiss = false;
   let done = false;
   let deck = loadDeck(ctx.store);
   let flashShow = false;
@@ -109,6 +110,7 @@ export function mountPrep(el, ctx, spec) {
     phase = 'ask';
     right = false;
     slip = false;
+    itemMiss = false;
   }
 
   function nextSeed(source) {
@@ -172,9 +174,12 @@ export function mountPrep(el, ctx, spec) {
     toldWhy = right ? s.why : told.why;
     slip = !right && told.matched;
     phase = 'told';
-    // A practice check is stored the same way a flash grade is stored.
-    if (item.kind !== 'flash' && item.id) {
-      deck = reviewCard(deck, item.id, right ? 'good' : 'again', today);
+    if (!right) itemMiss = true;
+    // One Leitner record per item, written when the last step is checked.
+    // A long proof does not move the box once per step.
+    const lastStep = step >= item.steps.length - 1;
+    if (lastStep && item.kind !== 'flash' && item.id) {
+      deck = reviewCard(deck, item.id, itemMiss ? 'again' : 'good', today);
       saveDeck(ctx.store, deck);
     }
     paint();

@@ -1391,9 +1391,10 @@ a.chapter-later-line .chapter-later-title {
   white-space: nowrap;
 }
 
-/* Room under the last camp, so that row can sit under the Book link instead of at the page end. */
+/* The chapter page sizes this to the shortfall only, so the last row can sit
+   about 8px under the sticky Book link. A full-viewport height left an empty screen. */
 .chapter-end-pad {
-  height: calc(100dvh - var(--header-h) - var(--tap) - 0.5rem);
+  height: 0;
   pointer-events: none;
 }
 
@@ -1482,6 +1483,15 @@ a.chapter-later-line .chapter-later-title {
 .practice-step-text,
 .practice-back,
 .practice-reveal { overflow-wrap: anywhere; }
+/* The question stays the heading. Its size is the step under it, not a title. */
+.practice-card[data-kind] #practice-prompt {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font);
+  font-size: 1.0625rem;
+  font-weight: 400;
+  line-height: 1.55;
+  text-wrap: wrap;
+}
 .practice-field { width: 100%; }
 .practice-field input { width: 100%; font-family: var(--font-mono); }
 .practice-choices { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }

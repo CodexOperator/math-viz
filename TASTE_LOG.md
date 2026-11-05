@@ -2139,3 +2139,28 @@ Practice headings are the question. The theorem, the exercise, and the page stay
 The Book link is the 44px station link. A fresh Continue opens `#chapter-4` at the top. Browser Back returns the book and the chapter to the scroll you left. The drawer is chapters 1–7, then Test prep, and at 1280 that list is the sidebar. Chapter 4 starts on the first screen of the book, flagged Next, with Continue on the screen. The first screen of Chapter 4 shows the 4.1 flag, the two chips, the pins, and Practice.
 
 The type is Iowan Old Style, 25.85px on the phone and 36px at 1280. The axes are blue, the dashed circle and the ray are orange, the ring is green, and the point is purple. The where-line, the white card, and the 44px up control stay. The square stays the size that leaves Play on the first screen. §§5.2, 5.3, and 5.5 stay Later, with no picture. Leave the resume.
+
+## Chapters 4–5, batch 7
+
+Started from `dd97fb2` on `cursor/chapter-4-5-2649`. The two passes after that tip only appended this log. Product code for this batch is the end pad, the laptop Julia cap, the shorter ledes, the practice prompt size, the §4 recipe lines, and one Leitner record per practice item.
+
+The chapter-end pad is the shortfall only. On a phone, scrolled to the end of Chapter 5, §5.5 sits at y = 110. The Book link ends at 101, so the gap is 9px. The pad is 463px, not the old 735px. `#chapter-5-5-5` lands on that same row. Chapter 4’s last section is taller than the window, so its pad is 0. The end screen is the §4.4 recipe and Exercise 6, then the end Book link and the footer.
+
+At 1280×800 the Julia plane is capped at 509px. The disk runs y = 240 to 749. The flat-paper line runs y = 757 to 784. The rule panel stays in the column beside it. On a phone the cap is off: the disk ends at 578 and the flat-paper line starts at 586. The heading “The set” is gone. The caption keeps the green start, the orange point as c, and the drag sentence. It no longer says “Orange on a landing.”
+
+Chapter 4’s lede is “An orbit is a sequence.” Chapter 5’s lede is “Drag the green ring. Play turns the angle.” On the phone the square is still 358px and Play ends at 795. At 1280 the shorter lede lets the square grow to 384px, and Play still ends at 788. The claim is still \(e^{z}\) on the bottom of the unit circle.
+
+Practice 4.1’s question is 17px, the same size as the step under it. On the phone the heading is 80px, not 104px. The source line is still Theorem 4.1, page 104. The §4 recipe cards are numbered lines only, the same shape as §5.1 and §5.4. A multi-step practice item writes one Leitner record, when the last step is checked. A miss on any step of that item grades it again. Leaving in the middle writes nothing.
+
+`node tools/check_vectors.mjs` 234/234. `node tools/fractal-smoke.mjs` passed. `node kit/smoke.mjs` passed. No live `kit/` import. `js/core/map-route.js` matches the kit template. Walked 390×844 and 1280×800, light and dark. No console errors. `scrollWidth` was 390 and 1265.
+
+Theorem 4.9 stays page 113. Theorem 4.11 stays page 116. Howell & Mathews, Complex Analysis, 202 Updated Edition.
+
+Still open, and left on purpose:
+
+- §§5.2, 5.3, and 5.5 stay Later. A picture for the logarithm, the exponents, or the inverse trig functions is a new station, not a cut on the pages that already draw.
+- Chapters 1–3, 6, and 7 stay roadmap lines. Those pages belong to their own loops. This track opens 4 and 5.
+- Chapter 8 and later stay out of the shell. The drawer stops at 7.
+- The circuit stations stay off the §5.4 stage. The 5.4 door opens the stage.
+- Under the Chapter 5 end Book link there is still paper, the shortfall that holds §5.5 at the Book clearance. The footer sits at the bottom of that screen.
+- The Julia rule panel is taller than 800. The disk and the flat-paper line end inside the window. The panel stays beside the plane.

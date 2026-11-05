@@ -181,13 +181,7 @@ function stageMemory(sectionId) {
     return host;
   }
   const lines = recipeLines(flash.memory);
-  // Step 1 of §5.1 already writes the identity. Step 4 of §5.4 already writes sin(x+iy).
-  const formulaText = sectionId === '5.1' || sectionId === '5.4' ? '' : (flash.formula || '');
-  if (formulaText) {
-    const formula = h('p', { id: `chapter-formula-${slug(sectionId)}` });
-    appendRich(formula, formulaText);
-    host.append(formula);
-  }
+  // Numbered steps only, on §4 and §5. The formula line sat above the steps.
   const ol = h('ol');
   for (const step of lines) {
     const li = h('li');
@@ -196,6 +190,54 @@ function stageMemory(sectionId) {
   }
   host.append(ol);
   return host;
+}
+
+// Pad only the shortfall that leaves the last row about 8px under the sticky
+// Book link when the page is scrolled to its end. A full-viewport pad pushed
+// that row off the screen.
+function bindEndPad(root) {
+  const pad = root.querySelector('.chapter-end-pad');
+  const rows = root.querySelectorAll('.section-node, a.chapter-later-line');
+  const last = rows[rows.length - 1];
+  if (!pad || !last) return () => {};
+  let frame = 0;
+  const fit = () => {
+    const header = document.getElementById('site-header');
+    const book = root.querySelector('a.chapter-up');
+    const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
+    const bookH = book ? book.getBoundingClientRect().height : 0;
+    const target = headerBottom + bookH + 8;
+    const padH = pad.getBoundingClientRect().height;
+    const lastTop = last.getBoundingClientRect().top + window.scrollY;
+    const docBottom = Math.max(
+      document.documentElement.scrollHeight,
+      document.body ? document.body.scrollHeight : 0,
+    );
+    const fromLast = docBottom - lastTop - padH;
+    const view = document.documentElement.clientHeight;
+    const shortfall = Math.max(0, Math.round(view - target - fromLast));
+    if (Math.abs(padH - shortfall) > 1) pad.style.height = `${shortfall}px`;
+  };
+  const schedule = () => {
+    if (frame) cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(() => {
+      frame = 0;
+      fit();
+    });
+  };
+  fit();
+  const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(schedule) : null;
+  if (ro) {
+    ro.observe(last);
+    const footer = document.getElementById('site-footer');
+    if (footer) ro.observe(footer);
+  }
+  window.addEventListener('resize', schedule);
+  return () => {
+    if (frame) cancelAnimationFrame(frame);
+    if (ro) ro.disconnect();
+    window.removeEventListener('resize', schedule);
+  };
 }
 
 function stageFoot(section) {
@@ -619,7 +661,7 @@ function mountChapter4(el, ctx, focus) {
     h('header', { class: 'station-header' },
       h('h1', { id: 'chapter-title' }, 'Chapter 4. Sequences, Series, and Fractals'),
       h('p', { class: 'where-line', id: 'where-line' }, 'Chapter 4 · Sequences, Series, and Fractals'),
-      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'An orbit is a sequence. Each section says why, then the work, then the sentence.'),
+      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'An orbit is a sequence.'),
       sourceTag({ pin: CHAPTER_4.pin, href: CHAPTER_4.href })),
     h('div', { class: 'book-next', id: 'chapter-next-row' }, status, nextBtn),
     path,
@@ -627,6 +669,7 @@ function mountChapter4(el, ctx, focus) {
     h('div', { class: 'chapter-end-pad', 'aria-hidden': 'true' }));
 
   paint();
+  const releasePad = bindEndPad(el);
 
   if (focus) {
     const owner = CHAPTER_4.sections.find((s) => s.id === focus || s.exercises.includes(focus));
@@ -639,6 +682,7 @@ function mountChapter4(el, ctx, focus) {
   }
 
   return function unmount() {
+    releasePad();
     const sets = el.querySelector('#chapter-sets');
     if (sets && sets._stop) sets._stop();
   };
@@ -773,7 +817,7 @@ function mountChapter5(el, ctx, focus) {
     h('header', { class: 'station-header' },
       h('h1', { id: 'chapter-title' }, 'Chapter 5. The exponential'),
       h('p', { class: 'where-line', id: 'where-line' }, 'Chapter 5 · The exponential'),
-      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Drag the green ring. Play turns the angle. A blank fills when the picture makes it true.'),
+      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Drag the green ring. Play turns the angle.'),
       sourceTag({ pin: 'Chapter 5, Elementary Functions, page 130', href: sectionHref('sec_exponential-function.html') })),
     picture,
     off,
@@ -787,6 +831,7 @@ function mountChapter5(el, ctx, focus) {
     h('div', { class: 'chapter-end-pad', 'aria-hidden': 'true' }));
 
   paint();
+  const releasePad = bindEndPad(el);
 
   const laterId = focus && focus !== '5.1' && focus !== '5.4' && !CHAPTER_5.cards[focus] ? `chapter-later-${slug(focus)}` : '';
   // The book row and #chapter-5-5-1 land on the square, the same place a press
@@ -805,6 +850,7 @@ function mountChapter5(el, ctx, focus) {
   }
 
   return function unmount() {
+    releasePad();
     observer.disconnect();
     stop();
   };

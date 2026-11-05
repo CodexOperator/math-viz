@@ -87,8 +87,8 @@ export function mount(el, ctx) {
     fields: true,
     step: true,
     film: true,
-    pictureTitle: 'The set',
-    pictureCaption: 'Green is one start. The orange point is c on this picture only. Orange on a landing means the walk left. Drag c and let go: the blue region stops being a disk.',
+    pictureTitle: '',
+    pictureCaption: 'Green is one start. The orange point is c on this picture only. Drag c and let go: the blue region stops being a disk.',
     earlier: JULIA_EARLIER,
   });
   // The colour sentence sits under the title. The plane follows it, so the disk
@@ -97,6 +97,10 @@ export function mount(el, ctx) {
   const paper = h('p', { class: 'muted fractal-note', id: 'julia-paper-note' }, 'On the flat paper, c is a hollow square. ');
   paper.append(h('a', { href: '#paper', id: 'julia-link-paper' }, 'Open the flat paper'));
   const picture = page.stage.parentElement;
+  const pictureTitle = picture.querySelector('#julia-picture-title');
+  if (pictureTitle) pictureTitle.remove();
+  picture.removeAttribute('aria-labelledby');
+  picture.setAttribute('aria-label', 'Julia set');
   picture.insertBefore(page.stage, picture.firstChild);
   page.stage.after(paper);
   const badges = page.lede.parentElement.querySelector('#julia-threads');
@@ -966,6 +970,30 @@ export function mount(el, ctx) {
   writeReadout();
   if (parts.fractal) parts.fractal.request(false);
 
+  // On a wide window the rule sits beside the plane. Cap the square so the
+  // disk and the flat-paper line end inside the window. A phone stays uncapped.
+  function capLaptopPlane() {
+    const plane = document.getElementById('julia-plane-viewport');
+    const note = document.getElementById('julia-paper-note');
+    if (!plane || !note) return;
+    const wide = window.matchMedia('(min-width: 52rem)').matches;
+    if (!wide) {
+      if (plane.style.maxWidth) plane.style.maxWidth = '';
+      return;
+    }
+    plane.style.maxWidth = '';
+    const limit = document.documentElement.clientHeight - 16;
+    const noteBottom = note.getBoundingClientRect().bottom + window.scrollY;
+    const overflow = noteBottom - limit;
+    if (overflow > 1) {
+      const next = Math.max(220, Math.floor(plane.getBoundingClientRect().width - overflow));
+      plane.style.maxWidth = `${next}px`;
+    }
+  }
+  capLaptopPlane();
+  const capFrame = requestAnimationFrame(capLaptopPlane);
+  window.addEventListener('resize', capLaptopPlane);
+
   const api = {
     setC(re, im) { pushC(re, im); },
     getC: () => ({ re: state.c.re, im: state.c.im }),
@@ -985,6 +1013,8 @@ export function mount(el, ctx) {
   mv.julia = api;
 
   return function unmount() {
+    cancelAnimationFrame(capFrame);
+    window.removeEventListener('resize', capLaptopPlane);
     animToken += 1;
     stopFilmClock();
     clearTimeout(loadTimer);
