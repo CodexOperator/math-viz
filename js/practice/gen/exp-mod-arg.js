@@ -93,7 +93,7 @@ export function generate(seed) {
         text: '$\\operatorname{Arg}(e^{z})=$ ___',
         answer: arg.answer,
         accept: arg.accept,
-        why: `Reduce $y$ into $(-\\pi,\\pi]$. Equation (5.7), page 133. The principal value at $\\pm\\pi$ is $\\pi$.`,
+        why: `The arguments are $y+2n\\pi$, Equation (5.5), page 133. $\\operatorname{Arg}$ is the value in $(-\\pi,\\pi]$, Definition 1.11, page 23. At $\\pm\\pi$ that value is $\\pi$.`,
         hints: [
           'The argument of $e^{x+iy}$ starts as $y$.',
           'Subtract $2\\pi$ until the angle sits in $(-\\pi,\\pi]$.',

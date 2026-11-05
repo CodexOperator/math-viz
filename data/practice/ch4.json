@@ -462,7 +462,7 @@
       }
     ],
     "generator": null,
-    "memory": "The attracting fixed points of $z^2+c$ are the points inside that cardioid condition."
+    "memory": "$z^2+c$ has an attracting fixed point precisely when the parameter $c$ lies inside the main cardioid. Theorem 4.11, page 116."
   },
   {
     "id": "ch4-4.2-definition-4-11",
@@ -559,17 +559,17 @@
       "href": "https://complexanalysis.org/web/sec_convergence-theorems.html"
     },
     "kind": "flash",
-    "prompt": "Corollary 4.3, finite geometric sum",
+    "prompt": "Corollary 4.3, the expansion of $1/(1-z)$",
     "steps": [
       {
-        "text": "Corollary 4.3, finite geometric sum",
+        "text": "Corollary 4.3, the expansion of $1/(1-z)$",
         "answer": "If $z\\ne 1$, then $1/(1-z)=1+z+\\cdots+z^{n-1}+z^n/(1-z)$.",
-        "why": "Corollary 4.3, page 119."
+        "why": "Corollary 4.3, page 119. The partial sum $(1-z^n)/(1-z)$ is the line before this identity, Equation (4.14)."
       }
     ],
     "generator": null,
-    "memory": "The finite sum is $(1-z^n)/(1-z)$.",
-    "formula": "$S_n=\\dfrac{1-z^n}{1-z}$ for $z\\ne 1$."
+    "memory": "If $z\\ne 1$, then $1/(1-z)=1+z+\\cdots+z^{n-1}+z^n/(1-z)$. Corollary 4.3, page 119.",
+    "formula": "$\\dfrac{1}{1-z}=1+z+\\cdots+z^{n-1}+\\dfrac{z^n}{1-z}$ for $z\\ne 1$."
   },
   {
     "id": "ch4-4.3-theorem-4-13",
@@ -977,20 +977,22 @@
       },
       {
         "text": "The number of iterations needed is ___.",
-        "answer": "$1$",
-        "why": "The first iterate is the root. The selected answer, page 438, also notes that a guess which is already the root stops before that step. Exercise 3, page 117.",
+        "answer": "$1$, or $0$ if the guess is already the root",
+        "why": "The selected answer, page 438, computes $z_1=-b/a$, and notes that a guess which is already the root stops at $z_0$. Exercise 3, page 117.",
         "hints": [
           "The simplified map ignores the guess.",
-          "Count the steps from $z_0$ to the root."
+          "Count the steps from $z_0$ to the root. The book’s answer also allows the guess that is already the root."
         ],
         "accept": [
           "1",
-          "one"
+          "one",
+          "0 or 1",
+          "1 or 0"
         ]
       }
     ],
     "generator": null,
-    "memory": "For a degree-1 polynomial, Newton’s method lands on the root in one step. Exercise 3, page 117."
+    "memory": "For $f(z)=az+b$, Newton’s method reaches $-b/a$ in one step, or in zero steps if the guess is already the root. Exercise 3, page 117."
   },
   {
     "id": "ch4-4.3-ex-1b",

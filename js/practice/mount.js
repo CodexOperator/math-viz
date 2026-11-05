@@ -20,6 +20,16 @@ const KIND_LABEL = {
   flash: 'Card',
 };
 
+function chaptersPhrase(items) {
+  const nums = [...new Set(items.map((it) => it.chapter))].sort((a, b) => a - b);
+  if (nums.length === 0) return '';
+  if (nums.length === 1) return `Chapter ${nums[0]}`;
+  const body = nums.length === 2
+    ? `${nums[0]} and ${nums[1]}`
+    : `${nums.slice(0, -1).join(', ')}, and ${nums[nums.length - 1]}`;
+  return `Chapters ${body}`;
+}
+
 function sectionTitle(chapter, section) {
   const ch = BOOK_CHAPTERS.find((c) => c.n === chapter);
   const row = ch && ch.sections.find((s) => s.id === section);
@@ -226,15 +236,19 @@ export async function mountPrep(el, ctx, spec) {
         ? 'The set is done. The memory sheet holds the same lines.'
         : 'No items for this chapter yet.';
       if (!pool.length) {
+        const filed = chaptersPhrase(PRACTICE);
+        const whereElse = filed
+          ? `${filed} ${filed.startsWith('Chapters') ? 'are' : 'is'} on the mixed Test prep page.`
+          : 'Nothing is filed for this set yet.';
         stage.replaceChildren(h('article', { class: 'card practice-card', id: 'practice-card' },
           h('h2', { id: 'practice-prompt' }, 'Nothing filed here yet'),
-          h('p', null, 'Chapters 4 and 5, section 5.1, are the sets on this page.')));
+          h('p', null, whereElse)));
         return;
       }
       renderCard(stage, { done: true }, { memory: () => { mode = 'memory'; paint(); } });
       return;
     }
-    const where = walk ? `Section ${section}` : (chapter ? `Chapter ${chapter}` : 'Chapters 4 and 5');
+    const where = walk ? `Section ${section}` : (chapter ? `Chapter ${chapter}` : chaptersPhrase(pool));
     status.textContent = `${where}. ${index + 1} of ${queue.length}.`;
     renderCard(stage, {
       item,

@@ -5941,3 +5941,42 @@ While this review was open, `5ea585b`, `4445063`, `58e9ccc`, and `deff16c` lande
 `node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the shared tick and the quarter sentences, after the move. `node kit/smoke.mjs` exits 0.
 
 **ACCEPT WITH FIXES**
+
+
+## Practice engine, batch 4 — review
+
+Verdict: **ACCEPT WITH FIXES**. Pull request 43, branch `cursor/practice-engine`, reviewed from `189988c8d156369185191907b14b3e24187f30b7`. Not merged. Nothing was deployed, and `gh-pages` was not touched. Four corrections landed on the branch after that tip. They are the sentences a student would memorize.
+
+The published preview https://practice-preview.complexanalysis.pages.dev is that tip. The checks below were run on the branch after the corrections, in headless Chrome against a local copy of the same pages.
+
+### What was checked
+
+Howell & Mathews, Complex Analysis, 202 Updated Edition (the PDF at complexanalysis.org, 471 pages, edition line on the title page). Printed page P is PDF page P+9. Every practice cite in `data/practice/ch2.json`, `ch4.json`, and `ch5.json` was read against the printed page: the definition or theorem statement, and the exercise wording where an item names one.
+
+Pages that hold the statements: linear transformation \(w=Az+B\) on page 50 (Section 2.1 starts on 43). Definitions 4.1 and Theorem 4.1 on 103, the triangle-inequality step of the proof on 104. Definitions 4.2 through 4.5 and Theorems 4.2 and 4.3 on 104–105. Definitions 4.6 and 4.7 and Theorems 4.4 and 4.5 on 106. Theorem 4.6, Definition 4.8, Theorems 4.7 and 4.8, and Corollary 4.1 on 107. §4.1 Exercise 1(a) on 108, selected answer 0 on 437. Theorem 4.9 on 113. Definitions 4.9 and 4.10 and Theorem 4.10 on 115. Theorem 4.11 and Definitions 4.11 and 4.12 on 116. §4.2 Exercise 3 on 117, selected answer on 438. Theorem 4.12 and Equation (4.14) on 118. Corollaries 4.2 and 4.3 on 119. Theorem 4.13 on 120. Definition 4.13 on 121. Theorem 4.14 and §4.3 Exercises 1(b) and 2 on 122. Exercise 6, \(z^n\to 0\) when \(|z|<1\), on 123. Theorem 4.15 on 124. Theorems 4.16 and 4.17 on 125. Definition 5.1 and the start of Theorem 5.1 on 130. Theorem 5.1(iii) on 131. Identity (5.1) on 132. Equations (5.5)–(5.7) and Figure 5.2 on 133. §5.1 Exercise 2(c) on 135. Definition 1.11, \(\operatorname{Arg} z\in(-\pi,\pi]\), on 23.
+
+The HTML anchor `#th15` is the radius theorem. The HTML numbers it 4.4.3. The PDF numbers it Theorem 4.16, page 125. The practice cite uses the PDF number and that anchor.
+
+Generators were checked by computing the value, not by trusting the printed TeX. Every inside ratio with \(a,b\in[-4,4]\) and denominator \(2\) through \(6\) has `geometricSum` equal to \(1/(1-z)\). Seeds 1 through 400 keep the inside/outside flag, the sum, and an integer radius. Seeds 1 through 200 keep \(|e^z|=e^x\) symbolic (a decimal is not accepted) and \(\operatorname{Arg}\) in \((-\pi,\pi]\), with both ends \(\pm\pi\) returning \(\pi\). Seeds 1 through 200 keep \(w=az+b\). A swapped `generate(params, seed)` still throws. No live file imports `kit/`. `js/core/map-route.js` matches `kit/template/js/core/map-route.js`.
+
+### Fixed
+
+The memory line for Theorem 4.11 said the attracting fixed points of \(z^2+c\) are the points inside the cardioid. The fixed points are \(z\)-values. The cardioid is a set of parameters \(c\). Exercise 10 on page 118 says the \(c\) that solve the inequalities form the cardioid. The sheet now says \(z^2+c\) has an attracting fixed point precisely when \(c\) lies inside that cardioid. The flash answer was already the inequality on page 116.
+
+The Corollary 4.3 sheet said the finite sum is \((1-z^n)/(1-z)\). That partial sum is Equation (4.14), page 118. Corollary 4.3, page 119, is \(1/(1-z)=1+z+\cdots+z^{n-1}+z^n/(1-z)\). The card, the formula, and the sheet now say that.
+
+The exponential generator told the student to reduce \(y\) into \((-\pi,\pi]\) and called that Equation (5.7). Equation (5.7), page 133, is \(\arg(e^z)=\{\operatorname{Arg}(e^z)+2n\pi\}\). Equation (5.5) on the same page is \(y+2n\pi\). The interval is Definition 1.11, page 23, and the strip on page 133 uses it. The why and the sheet now cite those. \(|e^z|=e^x\) stays Equation (5.6).
+
+Newton’s Exercise 3 accepted only “1”. The selected answer on page 438 is \(z_1=-b/a\), and a guess that is already the root stops at \(z_0\). The blank now reads “1, or 0 if the guess is already the root.” Typing 1, or “0 or 1”, is accepted. Typing 0 alone is not. The sheet says the same thing.
+
+The mixed set’s status said “Chapters 4 and 5” while the queue is 16 cards from chapters 2, 4, and 5. It now says “Chapters 2, 4, and 5.” A chapter with no file says those three are on the mixed page. A section walk still says “Section 4.1.”
+
+### Walked
+
+Headless Chrome, 390×844 and 1280×800. `#test-prep` opens at scroll 0 on the worked proof of Theorem 4.1. The status is “Chapters 2, 4, and 5. 1 of 16.” Try these steps, then `|x_n-u|+|y_n-v|`, returns “Yes.” and fills the blank. `idk` returns “Not that one.” and hint 1, “Split the one modulus into the two coordinates.” The blank stays empty, and the verdict is inside the 844px window. The memory sheet shows the corrected cardioid line, the corollary, the Newton caveat, page 50 for \(w=Az+B\), and Definition 1.11 for the argument. `#test-prep-3` says nothing is filed and names chapters 2, 4, and 5. `#test-prep-4-4-1` says “Section 4.1. 1 of 6.” `scrollWidth` matched the window at 390 and at 1280. The console lines are the ones the catalog already logs: a blocked `node:fs` import, then a 404 for each chapter file that is not on the server. The set still draws.
+
+### Smoke
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` exits 0, including the practice catalog, the three generators, the Leitner merge, and the miss merge. `node kit/smoke.mjs` exits 0.
+
+**ACCEPT WITH FIXES**

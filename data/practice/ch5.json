@@ -112,7 +112,7 @@
       "template": "exp-mod-arg",
       "params": {}
     },
-    "memory": "For $z=x+iy$, $|e^z|=e^x$ and $\\operatorname{Arg}(e^z)$ is $y$ reduced into $(-\\pi,\\pi]$. Identity (5.1), page 132, and Equations (5.6)–(5.7), page 133.",
+    "memory": "For $z=x+iy$, $|e^z|=e^x$ by Equation (5.6), page 133. $\\operatorname{Arg}(e^z)$ is $y$ reduced into $(-\\pi,\\pi]$, Definition 1.11, page 23. Identity (5.1) is page 132.",
     "formula": "$|e^{x+iy}|=e^x$, $\\operatorname{Arg}(e^{x+iy})\\equiv y \\pmod{2\\pi}$."
   }
 ]
