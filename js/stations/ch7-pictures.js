@@ -772,7 +772,7 @@ export function mountRemovable(parent, hooks) {
     viewBox: `0 0 ${RBOX.w} ${RBOX.h}`,
     tabindex: '0',
     role: 'img',
-    'aria-label': 'The graph of sin z over z. Drag the green point toward 0. Purple is the value. It stays near 1, so the singularity is removable.',
+    'aria-label': 'The graph of sin z over z. Drag the green point toward 0. Purple is the value. Near 0 it stays near 1, so the singularity is removable.',
   });
   const axis = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2', x1: rX(RBOX.x0), y1: rY(0), x2: rX(RBOX.x1), y2: rY(0) });
   const one = svgEl('line', { stroke: 'var(--polar)', 'stroke-width': '1.5', 'stroke-dasharray': '5 4', x1: rX(RBOX.x0), y1: rY(1), x2: rX(RBOX.x1), y2: rY(1) });

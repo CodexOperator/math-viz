@@ -139,7 +139,7 @@ export const CHAPTER_7 = deepFreeze({
       page: 239,
       stub: false,
       picture: 'removable',
-      why: 'A bounded isolated singularity can be filled in. On this picture $\\sin(z)/z$ stays near 1, so the singularity at 0 is removable.',
+      why: 'A bounded isolated singularity can be filled in. Near 0, $\\sin(z)/z$ stays near 1, so the singularity at 0 is removable.',
       observe: 'Drag the green point toward 0.',
       key: 'Blue is the axis. Orange is the line at height 1, and the hole at 0. Green is the point you drag. Purple is $\\sin(z)/z$.',
       summit: 'The singularity at 0 is removable.',
