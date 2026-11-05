@@ -1972,3 +1972,55 @@ Left as is:
 3. The 6.5 blank accepts "the green point" from any position. The outside claim correctly says the integral is 0, and Stage complete still waits until the point is inside.
 
 Keep: the six pictures, the page cites above, the answer-key values, Example 6.1's \(-5/4\), the eight-step total beside \(\exp(2+i\pi/4)-1\), the semicircle \(-2/3\), Example 6.11's \(1/(2\sqrt{5})\), Cauchy's three proof blanks, Examples 6.14–6.19 and 6.21 and 6.25, Exercise 6.3.1 (a)–(d), Theorem 6.12 on the dealt circle cards, the sharp \(1/R\) bounds, and the computed generators.
+
+## ux-veteran (chapter-6 batch 5)
+
+Branch `cursor/chapter-6`, tip `f02aafe`. Preview https://ch6-preview.complexanalysis.pages.dev. The served `js/stations/chapter-6.js`, `js/stations/ch6-pictures.js`, `js/stations/ch6-cards.js`, `js/stations/book.js`, `js/app.js`, `css/components.css`, and `css/theme.css` match that commit. The preview's `version.json` still names `fa0f69f`. Headless Chrome, touch, fresh storage. 390×844 light, then the theme control into the dark. Then 1280×800, light and dark. No console errors. No failed assets. `scrollWidth` was 390 and 1280. No product code was changed. The phone page is 25308px and grows to 25369px once the half-turn line is open. The laptop page is 19976px and grows to 20010px.
+
+### Verdict
+
+ANOTHER BATCH. The drawer, the book doors, the camp arrival, and the type are the page from batch 4. On a phone the half-turn sentence appears above Play during the run, Pause lands on the fold, and Back from the book then tucks the camp flag under the header. One change, below. After Play keeps a line of air and that Back meets the flag, this lens rests.
+
+### What the walk showed
+
+First screen, 390, light and dark, before the latch. The header is 56px. The Book kicker draws at 69×19, and the hit runs from y = 68 to y = 108. The title is Iowan Old Style, 25.85px, weight 600. The lede is the six stages. The flag reads `6.1 · 0 OF 6`. One gesture sits above the square: "Drag the green point around the orange circle. Purple is the integral." The square is 284×284 at y = 385. The claim "The total has left 0." is one line of text inside a 53px box. Play is 70×44 at y = 737 and ends at 781, 63px inside the 844 window. The blank prompt "From 0 to π the integral is" is on that screen. Dark paper is `rgb(13, 18, 28)`. The title and the claim are `rgb(233, 237, 245)`.
+
+The latch. A drag of the green point to the left side sets the phase to half. "A half turn, the left side, integrates to \(2i\)." sits between the claim and Play, wraps, and puts \(2i\). on its own line. That box is 53px. Play moves from a bottom of 781 to a bottom of 842. Two pixels of the card remain under the border, in both themes. Pressing Play says Pause. While Pause is up, the line opens and the button is the one at y = 798. A full turn changes the claim to "A full turn brings the point home." The half-turn line stays. Play stays at 842. A second press says Play.
+
+At 1280, both themes, the square is 272×272. The half-turn sentence is one line. Resting Play ends at 703. After the latch, and after a full turn, Play ends at 737, 63px inside the 800 window. The blank prompt stays on that screen.
+
+Back inside the chapter. From `#chapter-6` at scroll 1200, Go to 6.2 sets `#chapter-6-6-2`, puts the 6.2 flag at y = 73, and leaves the 6.1 blank mounted. Back returns to `#chapter-6` at scroll 1200.
+
+Back from the book, with the line closed. From 6.4, flag at y = 73 and scroll 15649, The Book in the drawer opens `#book` at scroll 0. Back returns to `#chapter-6-6-4` at that scroll, with the flag at y = 73 and the title at y = 96.
+
+Back from the book, after the latch. The line is open. Go to 6.4 leaves the flag at y = 73 and the scroll at 15710. The Book, then Back, returns to that hash and that scroll. The picture has remounted: the phase is move, and the line is hidden. The flag is at y = 12 and the title is at y = 35, both under the 56px header.
+
+Camps. `#chapter-6-6-1` through `#chapter-6-6-6` each put the flag at y = 73 and the title at y = 96. Play is on that screen. On the phone the bottoms are 664, 682, 682, 682, 656, and 709. At 1280, 6.2, 6.3, and 6.6 end at 591 or 592. The flag carries the count. The summit, Go, and Stage complete sit under the blanks. The sheet and the cards follow. On 6.3, Go to 6.4 starts at y = 866, below the 844 window, and "A pole is the next beat" is the next block. "Next camp is Chapter 7, Taylor and Laurent series." is the only next-camp paragraph, on 6.6. After this walk, `453e317` rewrote the 6.4 why and the 6.4 summit so both name a simply connected domain. On the walked page the 6.4 Play ended at 682, with 162px under it, so that longer line stays below the first screen of the camp.
+
+Drawer, light and dark. Places is 44×44. The list is The Book and chapters 1–7, each row 44px, and the list fits. Chapters 1, 2, 3, and 7 say Later. Chapter 6 is the current row. The page behind the drawer stays put (`overflow: hidden`, and `#view` is inert). Chapter 7 opens the book on the Later card. The flag is at y = 73 and the title is at y = 96.
+
+The book. Walk Chapter 6 is 163×44. The six section rows go to `#chapter-6-6-1` through `#chapter-6-6-6`. The title wraps inside 6.2, 6.3, 6.4, and 6.6, and the page stays on the right of that row. 6.1 is 44px and reads Next beside p. 163, and the two do not overlap. Back to the book draws at 134×26. The hit on those words runs from y = 652 to y = 692.
+
+Choices. Forty-four of them, every one at least 44px, none clipped. Six wrap. "Theorem 6.1, so parametrize both curves" is 54px. "the integral equals the length of \(C\)" is 88px. Check is 85×44. The picture inputs are 266×44. The deck heading is "Flashcard · 1 of 2". Show the back opens the definition. Missed is 141×44, closes the back, stays on that card, and adds "Still this card."
+
+Stage complete is 44px and disabled. The line under it says "Bring the point all the way around". The other camps say "Take all eight steps", "Subdivide the triangle", "Bend the path", "Bring the point inside", and "Cross every circle".
+
+Style. Light paper `rgb(246, 243, 236)`, ink `rgb(26, 34, 48)`, muted `rgb(81, 91, 108)`. Dark paper `rgb(13, 18, 28)`, ink `rgb(233, 237, 245)`, muted `rgb(166, 176, 195)`. The button radius is 6px and the card radius is 10px. Chapter 4 at 1280 and chapter 5 at 390, sampled in the dark, use that Iowan title, that lede at 16.8px, that kicker, and that 10px card. The laptop sidebar is the same chapter list, the menu button is hidden, and Chapter 6 is the current row, on screen.
+
+### Ranked cuts
+
+1. **Keep the half-turn line's place, and let the 6.1 claim be one line.** On the phone, light and dark, resting Play ends at 781. During Play the line latches, Pause jumps to a bottom of 842, and it stays there through "A full turn brings the point home." The claim is one line of text in the 53px box `.exp-claim` reserves on a phone. That empty line, plus the wrapped \(2i\)., is the difference between 63px of air and 2px. The blank prompt that was on the resting screen starts at y = 842. After that latch, Go to 6.4 and then The Book and Back restore scroll 15710 on a page that has remounted with the line hidden. The 6.4 flag lands at y = 12, under the header. The same Back with the line closed lands the flag at y = 73. At 1280 the sentence is one line and Play ends at 737 either way. Change: `#ch6-real-half` stays in the stack from the first paint, empty until the latch fills it, and it keeps that height after the point moves on. The 6.1 claim does not take the two-line phone min-height, because this sentence is one line. The half-turn sentence keeps its two lines on the phone. Play's bottom then stays about a line inside 844 and inside 800, Pause does not move when the sentence fills in, and Back from the book meets the flag under the header.
+
+### What to keep
+
+The first screen before the latch, both themes, both widths. The lede, `6.1 · 0 of 6`, the one gesture, the square, "The total has left 0.", and Play. On the laptop, Play after the latch as well, with the sentence on one line and the blank prompt still in view. The four colours on the marks. Play, Pause, Play. The half-turn sentence stays after the point moves on, and a full turn says the point is home.
+
+The mountain. Each camp opens with its flag under the header, the title clear of the bar, the gesture, the picture, and Play. The count is on the flag. The summit, Go, and Stage complete sit under that camp's blanks, and the reason is on the disabled tick. The sheet and the cards follow. The next-camp sentence is only on 6.6, and it names Chapter 7.
+
+The drawer. Chapters 1–7, Later on the chapters that are still cards, Chapter 6 marked, every row 44px, the page behind it held still. Chapter 7 landing with Later at y = 73.
+
+Back inside the chapter. Go writes the camp hash and returns to the scroll you left. The Book, then Back, returns to that camp with the flag under the header when the half-turn line was closed.
+
+The Book kicker and Back to the book, the words at the size they were, the hit at 44px. Walk Chapter 6 at 163×44. Section rows that wrap the title and keep the page on the right. 6.1's Next beside p. 163.
+
+Wrapped choices, the whole sentence on the button, Check at 85×44, inputs at 44px. The flashcard's "1 of 2" and "Still this card." The type, the paper, the 6px button, the 10px card, the same on chapter 4 and chapter 5.
