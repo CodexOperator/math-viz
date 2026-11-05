@@ -2030,3 +2030,59 @@ On the phone book the status is 53px, the height of the two lines. Chapter 3's O
 Theorem 3.5's flash back now includes \(f'(z_0)=e^{-i\theta_0}(U_r+iV_r)\), Equations (3.23) and (3.24), page 91. §3.3 Exercise 2 is a Laplace blank (`next-step-blank`) and a separate choice (`next-step-mc`).
 
 Deferred: Open Chapter 2 waits until that chapter's page meets this branch. The §3.3 summit still restates the why. The shared practice renderer is not on this branch. Chapters 8–11 stay in the data and off the list.
+
+## unslop (chapter-3 batch 6)
+
+Preview https://ch3-preview.complexanalysis.pages.dev/#chapter-3, tip `6d229c3` (PR #46). The served `js/book/chapter3.js`, `js/book/ch3-pictures.js`, `js/book/ch3-math.js`, `js/stations/book.js`, `js/data/book-path.js`, `js/app.js`, and `css/components.css` match that commit. Kit wins where it meets this lens: the four teaching colours, the one gesture, the one clock, the book's small-caps labels, and the current type and paper stay. No product code changed. Phone 390×844 first, light then dark, then 1280×800, light then dark. A rightward drag on the light phone. The book at 0 of 3, then chapters 4 and 5. No console errors. No sideways scroll (`scrollWidth` is 390 and 1280).
+
+The picture is the moment. The chrome stays the paper it already is. Light page rgb(246, 243, 236), text rgb(26, 34, 48). Dark page rgb(13, 18, 28), text rgb(233, 237, 245). Same boxes in both themes.
+
+## Verdict
+
+ANOTHER BATCH
+
+The one-line gesture, the row beside the square, the missing pin list, the missing status at 0 of 3, and the Later word on chapters 1 and 2 all landed. The row then stretched the sentence down the square, the one-line gesture left a blank under Play, and the §3.3 summit still says the why. One batch for the six cuts below. Then this lens rests.
+
+## What the hand does
+
+At rest the point is 1+i. On the phone the square is 324×324, x=33, y=259 to 583, in both themes. The gesture is one line, y=591, the claim's ink: "Drag the green dot." The claim is two lines, y=626 to 679: "The turn stays 45° and the stretch stays 2√2, for every direction." z², conj, and Play are 44px at y=686. Play ends at 730. A rightward drag at imaginary part 1 stops at real part 2.29. The green step, the purple image, and the orange turn stay visible. The claim reads "At 2.29 + i, the turn is 24° and the stretch is 5."
+
+At 1280 the same square is 304×304 at x=321, y=240. "Drag the green dot." starts at x=649, y=240, beside it. The claim is one line in a 53px box at y=330. Play is at y=445. The why, both sentences, runs y=584 to 637, inside 800. §3.2 and §3.3 are 416×416 squares at x=321, with the gesture at the square's top and the chips lower in the same column.
+
+## What reads as the page
+
+The kicker is one line, "3.1 · Differentiable and Analytic Functions · 0 of 3". At 0 of 3 the status row is absent. After 3.1 is marked, the kicker stays 3.1 and the status says "Next is 3.2." on that stage. "IN THE BOOK" is gone. The definitions still end on their pages, and the worked card still carries its source line. §3.2's line is "Drag the green corner." §3.3's line is "Drag the green point." Each is one line, the claim's colour, in both themes. A cold `#chapter-3-3-1` stays at scroll 0, with the kicker at y=202.
+
+On the book, chapters 1 and 2 have no flag. The line is "Already drawn." The doors are 44px: "One Point, Two Addresses" is 242×44, "A Function Is a Motion" is 212×44. Chapters 4 and 5 use "The Book" at 109×44, in both themes. Walk Chapter 4 is hidden. The status box is 53px.
+
+## What is still loose
+
+**The wide sentence is stretched down the square.** The gesture, the claim, and the chips sit in separate rows, and the square's height opens those rows. On the phone the same three sit 8px apart. At 1280, both themes, §3.1 leaves 64px between the gesture and the claim and 62px between the claim and Play. §3.2 leaves 101px and 100px. §3.3 leaves 100px and 100px. The claim on that width is one line inside a 53px box. The why then sits 16px under the square, tighter than the picture's own lines.
+
+**The phone ends on a blank.** Play ends at y=730. The why block's padding-top is 124.8px, so "WHY YOU'D CARE" is at y=871 and the why at y=894. The 844 window closes on 114px of empty card. The screenshot is the same in the dark. The pad is the height the three-line gesture used to occupy.
+
+**The §3.3 summit says the why again.** The why is "You rebuild the missing part by integrating the Cauchy-Riemann equations. Where both gradients are nonzero, the level curves of a conjugate pair cross at a right angle." The memory list ends on that right angle. The summit, 132px and five lines, is both sentences in the other order. The picture's claim is already "The two curves cross at a right angle." §3.2's summit is six lines, 158px, and its second clause repeats that stage's why: the equations are the test that the horizontal and vertical derivatives are the same number.
+
+**Later still names the wrong chapters.** Chapters 1 and 2 dropped the word. The footer on the chapter and on the book still says "Chapters 3, 4, and 5 are open. The other chapters are later." Chapter 4's flag is Later, and at 0 of 3 its first row is "4.1 Sequences and Series p. 102 Next". The book status, 53px under Open Chapter 3, reads "Chapter 3: 0 of 3 stages. Next is 3.1 Differentiable and Analytic Functions."
+
+## Cut
+
+1. **The sentence beside the square is one stack, at the phone's gap.** Evidence, 1280, light and dark, same boxes. §3.1: gesture y=240, claim y=330 (64px), Play y=445 (62px), square 304px ending at 544. §3.2: 101px then 100px beside a 416px square. §3.3: 100px then 100px. On the phone those gaps are 8px. Change: column 2 is one stack, gap 8px, top-aligned with the square. The square's height does not open the stack. On this width the claim is as tall as its line. The phone keeps the two-line claim box, so Play stays at one y.
+
+2. **The blank under Play goes.** Evidence, 390×844, both themes. Play ends at y=730. The why block's padding-top is 124.8px. The label is at y=871, past the fold, and the first screen is 114px of empty card. Change: that padding goes. The why follows Play at the label's 16px margin. The label and the first three lines sit on this screen. The fourth line starts under the fold. A 4px nudge is enough if a line would be cut through the middle.
+
+3. **The summit is one sentence the why has not already said.** Evidence: the §3.3 why, the last memory line, the claim, and the summit are the same right angle, and the summit adds the integral the why already used. The summit is five lines. §3.2's summit spends its second clause on the why. Change: §3.3's summit is one sentence, the circles, the pair the picture draws when Circles is pressed. §3.2's summit keeps the square and the marked corner, and drops the Cauchy-Riemann clause. §3.1's summit stays, one sentence.
+
+4. **The footer stops sorting chapters the flags already sort.** Evidence, on `#chapter-3` and on `#book`, both widths: "Chapters 3, 4, and 5 are open. The other chapters are later." Chapters 1 and 2 say Already drawn. Chapter 4's flag says Later. Change: "The book path for MAT 412. It runs in your browser and works offline." The lede keeps chapters 1–7. The flags keep Open and Later.
+
+5. **Chapter 4 does not say Later while 4.1 says Next.** Evidence, the book at 0 of 3, phone, light and dark. The flag is Later. The row under it is "4.1 Sequences and Series p. 102 Next". Chapters 6 and 7 say Later and have no section rows. Change: chapter 4's flag is empty until 3 of 3, then Next. 4.1 says Next only when that flag says Next. Chapters 6 and 7 keep Later. Chapters 1 and 2 stay Already drawn, with no flag.
+
+6. **The book status is the count.** Evidence, 390, both themes, the card under Open Chapter 3: "Chapter 3: 0 of 3 stages. Next is 3.1 Differentiable and Analytic Functions.", 324×53. The button, the chapter kicker, and the heading already carry that name. The chapter page, after a mark, already says "Next is 3.2." Change: "Chapter 3: 0 of 3." After a stage is marked, "Chapter 3: 1 of 3. Next is 3.2."
+
+## Keep
+
+The phone square at 324px, the one-line gesture in the claim's ink, and Play ending at y=730, in both themes. "Drag the green corner." and "Drag the green point.", one line each. The claim box on the phone, two lines, so Play stays at one y. The drag that stops at real part 2.29 with the three marks still drawn, and the claim that names 24° and a stretch of 5. At 1280 the square beside the sentence: 304px at x=321 for the opening, 416px for §3.2 and §3.3, and the why ending at y=637 inside 800. The status row absent at 0 of 3. After a mark, "Next is 3.2." on that stage, and the kicker still naming 3.1 with the count. The pin list gone, the pages left on the sentences and the source tags. Chapters 1 and 2 with no Later flag, "Already drawn", and 44px doors. "The Book" at 109×44 on chapters 3, 4, and 5. The book status at 53px tall. Walk Chapter 4 hidden. A cold `#chapter-3-3-1` at scroll 0. The four teaching colours. The small caps. The serif title, the paper, and the cards. No sideways scroll.
+
+## Add
+
+Nothing. No slider, no scrubber, no second clock, no third chip, no new hue.
