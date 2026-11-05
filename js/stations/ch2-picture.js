@@ -364,7 +364,8 @@ export function principalSqrt(z) {
 
 // Example 2.21, pages 68–69: the two limits are the approaches to a negative
 // real number, where Arg is near π from above and near −π from below.
-// Anywhere in the left half-plane is not “near π”.
+// Anywhere in the left half-plane is not “near π”. Near π is the argument
+// test alone: a point just left of the origin can already sit in that band.
 export function branchClaim(z) {
   const r = Math.hypot(z.re, z.im);
   if (r < 1e-6) {
@@ -380,13 +381,13 @@ export function branchClaim(z) {
   }
   const nearPi = Math.PI - Math.abs(arg) <= 0.55;
   if (z.im > 0) {
-    if (nearPi && z.re < -0.05) {
+    if (nearPi) {
       return { holds: true, side: 'upper', text: 'Above the cut, Arg $z$ is near $\\pi$, and the principal square root is in the upper half-plane.' };
     }
     return { holds: true, side: 'upper', text: 'The principal square root is in the upper half-plane, and Arg is not yet near $\\pi$. Move toward the ray.' };
   }
   if (z.im < 0) {
-    if (nearPi && z.re < -0.05) {
+    if (nearPi) {
       return { holds: false, side: 'lower', text: 'Below the cut, Arg $z$ is near $-\\pi$, and the principal square root is in the lower half-plane.' };
     }
     return { holds: false, side: 'lower', text: 'The principal square root is in the lower half-plane, and Arg is not yet near $-\\pi$. Move toward the ray.' };

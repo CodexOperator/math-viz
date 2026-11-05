@@ -1849,3 +1849,40 @@ At 1280 the §2.2 choices are 158×44, stacked, in a card 903px wide. The finger
 ### Keep
 
 The first screen of the chapter. Both planes, the shaded half, the claim that names \(w = iz+i\), and the four colours in the lede, at 390 and at 1280, in the light and in the dark. The claim ends at y = 718 on the phone and y = 743 on the laptop. The drag: a press in the corner moves the point, the sentence flips, and the purple point follows. The green mark is 21.5px on the phone. Open Chapter 2 is a 44px primary button, the status under it is one line, and the Chapter 2 card is on the 390 screen. Walk Chapter 4 stays on the Chapter 4 card. After a mark, that status line says how many of the five stages are marked. Go to 2.2 is 44px, it writes the mark, and it lands with the next title clear of the header. Stage complete stays hidden until the claim has been both ways and one card is finished. The memory sheet opens under its own button, one line, with the page. Browser Back returns to the scroll the student left: 406 back to 406, and 2600 back to 2600 through the drawer. §2.4 says “Cross the blue ray” on the right of the origin, and a point already in the lower left is told it is in the lower half-plane. The four roots are one row at 51×44. The drawer on the chapter is chapters 1–7, each row 44px, and chapter 2 is the current row. The footer colour key stays hidden on the book, so the Test 1 key is not on this page. The paper, the Iowan title, and the lede match Addresses and Chapter 4. No sideways scroll, and the console stayed quiet.
+
+## reviewer (Ch2 batch 4)
+
+Reviewed `8215b05` on `cursor/chapter-2` against Howell & Mathews, *Complex Analysis*, 202 Updated Edition (complexanalysis.org PDF, title page “202 Updated Edition”; printed page n is PDF page n+9). Preview https://ch2-preview.complexanalysis.pages.dev served that tip: `ch2-picture.js`, `chapter2.js`, `ch2-maps.js`, and `data/practice/ch2.json` matched the tree. Not merged. gh-pages untouched.
+
+### Verdict
+
+ACCEPT WITH FIXES
+
+Do not accept `0-6i` or `−6i` for −6. `0-6i` parses as `0 + (−6i) = −6i`. Exercise 13 asks for the image of `−2+2i` under `w = (2+i)z − 2i`, and the book’s answer (page 431) is the triangle with vertices `−5−2i`, `−6`, and `3+2i`. `−6` is real. `−6`, `−6+0i`, and `−6.0` still count. `0-6i` counts only when the value really is `−6i`.
+
+### What matches the book
+
+Checked the claims in `js/stations/chapter2.js`, `js/stations/ch2-picture.js`, and `data/practice/ch2.json`, and recomputed the generators.
+
+- §2.1, page 43: one z in D goes to one w. Image, into, inverse image, and one-to-one are page 46. Translation is page 48. Rotation and magnification are page 49 (`w = ze^{iα}`, `w = Kz` for K > 0). The linear map `w = Az + B` is page 50: turn by Arg A, stretch by |A|, slide by B.
+- Example 2.9, pages 50–51. `w = iz + i` sends Re z ≥ 1 onto Im w ≥ 2, because v = x + 1. The boundary is included. Left of the line, v is strictly below 2. Page 51: a linear map preserves angles, so the image of Exercise 13 is a right triangle. The right angle was recomputed: the images `−5−2i`, `−6`, and `3+2i` meet at a right angle.
+- Exercise 13, page 54, and the selected answer on page 431. The three images match.
+- Definition 2.1, page 55. Equation (2.10), page 56: `u = a² − v²/(4a²)`. Example 2.12 is that page. Page 58: `w = z^n` multiplies arguments by n and raises moduli to the n. Definition 2.2 and Exercise 1(b), the line x = 2, are page 59. The selected answer for the strip names `u = 4 − v²/16` when x = 2.
+- Equation (1.45), page 32, is the full set of nth roots. The roots card powers each listed root back to the number. Another reaches moduli 1, 4, 9, and 16. One of the four choices matches.
+- Definition 2.3, page 61. Definition 2.4, Example 2.16, and Theorem 2.1 are page 62. The proof, including the minimum of δ₁ and δ₂ and the two halves adding to ε, is page 63. Exercise 1(a), page 66, is `−3+5i`, which is the selected answer. The picture of the conjugate reflects across the real axis. The book’s Example 2.16 says “y axis”; that sentence in the book is the slip. `|conjugate(z) − conjugate(z₀)| = |z − z₀|`, so δ = ε, and the orange disk is centred at `1 − i`.
+- Example 2.21, pages 68–69. The upper limit at a negative real is `i√r₀` and the lower limit is `−i√r₀`. Near −1 the lower choice is −i. A branch, page 68, is one continuous single-valued choice. Page 69: the origin is the branch point.
+- §2.5 opens on page 72. Figure 2.22 and the north pole are page 73. Equation (2.32), page 74, sends 0 to ∞. Example 2.24, page 76: centre `1/(2a)`, radius `|1/(2a)|`. The picture’s x = 1 circle is `|w − 1/2| = 1/2`. The card’s x = 2 circle is `|w − 1/4| = 1/4`.
+
+`js/core/map-route.js` matches `kit/template/js/core/map-route.js`. Live code does not import `kit/`. `node tools/check_vectors.mjs` (234/234), `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed on `8215b05` and again after the three fixes below. In headless Chrome the Exercise 13 blank rejected `0-6i` and `−6i`, locked on `−6`, and the §2.3 sheet read page 63. A drag just left of the origin said Arg is near π. Deep in the lower half, Arg was not near −π. At 0, §2.5 named ∞ and the north pole. No console errors. `scrollWidth` did not exceed the window at 390 or 1280.
+
+### Fixes pushed to cursor/chapter-2
+
+- Just left of the origin, Arg can already be within 0.55 of π while the real part is still greater than −0.05. At `−0.03+0.01i`, Arg is about 2.82 and the sentence said Arg was not yet near π. The near-π sentence now follows the argument test. The 0.55 band is unchanged. Deep in the lower half, at `−1.1−1.38i`, the square root stays in the lower half-plane and Arg is still not near −π.
+- The §2.3 sheet said “Take the smaller δ. Page 62.” The minimum of δ₁ and δ₂ is the first full paragraph of the proof, printed page 63. Theorem 2.1 is still cited on page 62, where the statement is.
+- The sector choices were wrapped as math with a plain `arg w`. Math mode drops the space, so the button read `argw`. They now use `\arg` and `\pi`, the same commands as the prompt. The four angles are unchanged.
+
+### Leftovers not fixed
+
+1. At 1280 the two planes still sit in the left of a wide card, and the claim does not sit beside them. The quarter-turn arc is still the short arc from the positive real axis to the positive imaginary axis, and it is still small. Practice choices do not stretch to the card. The sector card’s title still shows a caret in `z^n`. The §2.5 worked line can still break before the period that closes `|w − 1/2| = 1/2`.
+2. The roadmap still lists chapters 8–11. The drawer stops at 7. On the book chapter the footer colour key is not the Test 1 key: `body[data-book="true"] .colour-key` is `display: none`.
+3. The practice engine on `cursor/practice-engine` still needs `ch2-maps` in its generator catalog.

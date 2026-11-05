@@ -61,7 +61,7 @@ const COPY = {
     picture: mountLimit,
     next: '2.4',
     sheet: [
-      { text: 'Take the smaller $\\delta$. Page 62.' },
+      { text: 'Take the smaller $\\delta$. Page 63.' },
     ],
     read: [
       { pin: 'Definition 2.3, limit of u(x, y), page 61', href: sectionHref(S23, 'sec_limits-continuity-4') },

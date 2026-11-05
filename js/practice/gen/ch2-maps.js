@@ -165,10 +165,11 @@ const SECTORS = Object.freeze([
 
 function powerSector(rng, seed) {
   const row = SECTORS[(Number(seed) >>> 0) % SECTORS.length];
-  const answer = `0 < arg w < ${row.label}`;
-  const forgot = `0 < arg w < π/${row.den}`;
-  const tooFar = `0 < arg w < ${row.n}π`;
-  const swapped = `π/${row.den} < arg w < π`;
+  // Math mode drops spaces, so plain "arg w" typesets as argw. \arg keeps the gap the prompt uses.
+  const answer = `0 < \\arg w < ${row.tex}`;
+  const forgot = `0 < \\arg w < \\pi/${row.den}`;
+  const tooFar = `0 < \\arg w < ${row.n}\\pi`;
+  const swapped = `\\pi/${row.den} < \\arg w < \\pi`;
   const choices = [answer, forgot, tooFar, swapped];
   for (let i = choices.length - 1; i > 0; i -= 1) {
     const j = irand(rng, 0, i);
@@ -376,7 +377,7 @@ export function selfCheck() {
     const row = SECTORS.find((s) => s.n === n && s.den === sector.values.den);
     if (!row) throw new Error(`sector seed ${seed}`);
     if (Math.abs(sector.values.end - row.rad) > 1e-12) throw new Error(`sector angle ${seed}`);
-    if (sector.answer !== `0 < arg w < ${row.label}`) throw new Error(`sector text ${seed}`);
+    if (sector.answer !== `0 < \\arg w < ${row.tex}`) throw new Error(`sector text ${seed}`);
     if (!sector.choices.includes(sector.answer) || new Set(sector.choices).size !== 4) throw new Error(`sector choices ${seed}`);
     const expected = (Math.PI / row.den) * row.n;
     if (Math.abs(expected - row.rad) > 1e-12) throw new Error(`sector product ${seed}`);
