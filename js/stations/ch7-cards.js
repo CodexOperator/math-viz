@@ -41,6 +41,20 @@ function missLine(item) {
   return item.look || LOOK[item.section] || 'Look at the picture.';
 }
 
+function typesetLine(text) {
+  const raw = showMath(String(text || ''));
+  if (raw.includes('$')) return raw;
+  if (/\\|[_^{}]/.test(raw) || (raw.includes('/') && /\d/.test(raw))) return `$${raw}$`;
+  return raw;
+}
+
+function missCopy(item, step) {
+  if (String(item.id || '').endsWith('-picture')) return missLine(item);
+  if (step && step.miss) return step.miss;
+  if (step && step.why) return step.why;
+  return missLine(item);
+}
+
 export function mountPracticeItem(item, opts) {
   const onDone = opts && opts.onDone;
   const id = slug(item.id);
@@ -74,7 +88,7 @@ export function mountPracticeItem(item, opts) {
     const why = h('p', { class: 'hint-note', id: `ch7-why-${id}-${i + 1}`, hidden: '' });
     if (state[i]) {
       const done = h('p', { class: 'ch7-answered' });
-      rich(done, showMath(step.answer));
+      rich(done, typesetLine(step.answer));
       rich(why, showMath(step.why));
       why.hidden = false;
       wrap.append(done, why);
@@ -98,7 +112,7 @@ export function mountPracticeItem(item, opts) {
             why.replaceChildren();
             why.append(document.createTextNode('Not yet. '));
             const mem = document.createElement('span');
-            rich(mem, showMath(specific || missLine(item)));
+            rich(mem, showMath(specific || missCopy(item, step)));
             why.append(mem);
           }
           btn.setAttribute('aria-pressed', 'true');
@@ -135,7 +149,7 @@ export function mountPracticeItem(item, opts) {
       note.replaceChildren();
       note.append(document.createTextNode('Not yet. '));
       const mem = document.createElement('span');
-      rich(mem, showMath(missLine(item)));
+      rich(mem, showMath(missCopy(item, step)));
       note.append(mem);
       input.dataset.right = 'false';
     }

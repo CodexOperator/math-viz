@@ -15,7 +15,7 @@ const PICTURES = {
   winding: mountWinding,
   removable: mountRemovable,
 };
-const SCROLL_KEY = 'mv:ch7-scroll';
+const CAMP_KEY = 'mv:ch7-camp';
 const NAMES = {
   '7.1': 'Uniform convergence',
   '7.2': 'Taylor series',
@@ -126,7 +126,11 @@ export function mountChapter7(el, ctx, focus) {
       else btn.textContent = 'Stage complete';
       if (summit) summit.hidden = !done;
       const sheet = el.querySelector(`#${scope}-sheet`);
-      if (sheet) sheet.hidden = !done;
+      if (sheet) {
+        const reveal = done && sheet.hidden;
+        sheet.hidden = !done;
+        if (reveal) sheet.open = true;
+      }
       const flash = el.querySelector(`#${scope}-flash`);
       if (flash) flash.hidden = !practiceReady(stage.id);
     }
@@ -134,18 +138,28 @@ export function mountChapter7(el, ctx, focus) {
 
   let hero = null;
   let parked = false;
-  let lastY = 0;
+  let camp = '';
+  function readCamp() {
+    const header = document.getElementById('site-header');
+    const line = (header ? header.getBoundingClientRect().bottom : 56) + 80;
+    let id = '';
+    for (const stage of CHAPTER_7.stages) {
+      const title = el.querySelector(`#chapter-section-${slug(stage.id)}-title`);
+      if (!title) continue;
+      if (title.getBoundingClientRect().top <= line) id = stage.id;
+    }
+    return id;
+  }
   function remember() {
     if (parked) return;
-    lastY = window.scrollY;
-    if (lastY > 0) {
-      try { sessionStorage.setItem(SCROLL_KEY, String(Math.round(lastY))); } catch { /* ignore */ }
-    }
+    camp = readCamp();
+    try { sessionStorage.setItem(CAMP_KEY, camp); } catch { /* ignore */ }
   }
   function park() {
     if (parked) return;
     parked = true;
-    try { sessionStorage.setItem(SCROLL_KEY, String(Math.round(lastY))); } catch { /* ignore */ }
+    camp = readCamp();
+    try { sessionStorage.setItem(CAMP_KEY, camp); } catch { /* ignore */ }
   }
   const up = h('a', { class: 'nav-link ch7-up', id: 'chapter-back', href: '#book' }, 'The Book');
   const onLeave = (ev) => {
@@ -311,8 +325,8 @@ export function mountChapter7(el, ctx, focus) {
         ctx.navigate('book');
         return;
       }
-      const node = el.querySelector(`#chapter-section-${slug(nxt)}`);
-      if (node) node.scrollIntoView({ block: 'start' });
+      const title = el.querySelector(`#chapter-section-${slug(nxt)}-title`);
+      if (title) placeTitle(title);
     });
     if (flashes.length) {
       const deck = mountFlashDeck(flashes, scope, {
@@ -332,6 +346,7 @@ export function mountChapter7(el, ctx, focus) {
       const sheet = h('details', { class: 'ch7-sheet', id: `${scope}-sheet` });
       sheet.append(h('summary', null, 'Memory'), memoryList);
       sheet.hidden = !stageDone(stage.id);
+      if (stageDone(stage.id)) sheet.open = true;
       kids.push(sheet);
     }
     kids.push(complete);
@@ -361,38 +376,41 @@ export function mountChapter7(el, ctx, focus) {
   const onScroll = () => remember();
   window.addEventListener('scroll', onScroll, { passive: true });
 
-  function place(node, y) {
+  function placeTitle(title) {
     const go = () => {
-      if (node) {
-        if (!node.isConnected) return;
-        node.scrollIntoView({ block: 'start' });
-        return;
-      }
-      window.scrollTo(0, y);
+      if (!title || !title.isConnected) return;
+      const header = document.getElementById('site-header');
+      const under = (header ? header.getBoundingClientRect().bottom : 56) + 40;
+      const delta = title.getBoundingClientRect().top - under;
+      if (Math.abs(delta) < 1) return;
+      window.scrollTo(0, Math.max(0, window.scrollY + delta));
     };
     requestAnimationFrame(() => requestAnimationFrame(go));
     setTimeout(go, 60);
+    setTimeout(go, 280);
   }
 
   const focusId = focus ? String(focus) : '';
   const sectionId = CHAPTER_7.stages.some((s) => s.id === focusId)
     ? focusId
     : focusId.split('.').slice(0, 2).join('.');
-  const target = focusId ? el.querySelector(`#chapter-section-${slug(sectionId)}`) : null;
+  const target = focusId ? el.querySelector(`#chapter-section-${slug(sectionId)}-title`) : null;
   if (target) {
-    target.classList.add('is-target');
-    place(target, 0);
+    const node = target.closest('.section-node');
+    if (node) node.classList.add('is-target');
+    placeTitle(target);
   } else {
-    let y = 0;
-    try { y = Number(sessionStorage.getItem(SCROLL_KEY)) || 0; } catch { y = 0; }
-    if (y > 0) place(null, y);
+    let stored = '';
+    try { stored = sessionStorage.getItem(CAMP_KEY) || ''; } catch { stored = ''; }
+    const back = stored ? el.querySelector(`#chapter-section-${slug(stored)}-title`) : null;
+    if (back) placeTitle(back);
   }
 
   return function unmount() {
     window.removeEventListener('scroll', onScroll);
     document.removeEventListener('click', onLeave, true);
-    if (!parked && window.scrollY > 0) {
-      try { sessionStorage.setItem(SCROLL_KEY, String(Math.round(window.scrollY))); } catch { /* ignore */ }
+    if (!parked) {
+      try { sessionStorage.setItem(CAMP_KEY, camp); } catch { /* ignore */ }
     }
     for (const stop of stops) stop();
   };

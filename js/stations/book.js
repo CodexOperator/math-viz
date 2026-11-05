@@ -325,7 +325,7 @@ function mountChapter4(el, ctx, focus) {
 
   el.append(
     h('header', { class: 'station-header' },
-      h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back' }, 'The Book')),
+      h('a', { class: 'nav-link ch7-up', href: '#book', id: 'chapter-back' }, 'The Book'),
       h('h1', { id: 'chapter-title' }, 'Chapter 4. Sequences, Series, and Fractals'),
       h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Four sections. Tick an exercise when you have worked it. The hint stays closed until you ask.'),
       sourceTag({ pin: CHAPTER_4.pin, href: CHAPTER_4.href })),
@@ -442,7 +442,7 @@ function mountChapter5(el, ctx, focus) {
 
   el.append(
     h('header', { class: 'station-header' },
-      h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back' }, 'The Book')),
+      h('a', { class: 'nav-link ch7-up', href: '#book', id: 'chapter-back' }, 'The Book'),
       h('h1', { id: 'chapter-title' }, 'Chapter 5. The exponential')),
     picture,
     h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Section 5.1. A blank fills when the picture makes it true. The hint stays closed until you ask.'),

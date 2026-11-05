@@ -123,7 +123,8 @@
       {
         "text": "The calculation gives $\\mathrm{Log}(1-z)=$ ___",
         "answer": "-\\sum_{n=1}^{\\infty} z^n/n",
-        "accept": ["-\\sum z^n/n", "-sum z^n/n", "-sum_{n=1}^infty z^n/n", "-sum_{n=1}^{infty} z^n/n", "-\\sum_{n=1}^\\infty z^n/n"],
+        "accept": ["-\\sum z^n/n", "-sum z^n/n", "-sum_{n=1}^infty z^n/n", "-sum_{n=1}^{infty} z^n/n", "-\\sum_{n=1}^\\infty z^n/n", "-z-z^2/2-z^3/3"],
+        "miss": "Integrate the geometric series term by term. The series for $\\mathrm{Log}(1-z)$ carries the minus sign.",
         "why": "The calculation on page 214 is $-\\mathrm{Log}(1-z_0)=\\sum z_0^n/n$. The prompt printed in Example 7.2 omits that minus sign."
       }
     ],
@@ -557,7 +558,7 @@
         "why": "Theorem 7.12, page 235. $(z-1)^4$ is the whole vanishing of the denominator at $z=1$, and $z^2+1$ is not zero there."
       },
       {
-        "text": "At $z=i$ the order of the pole is",
+        "text": "At $z=\\pm i$ the order of each pole is",
         "answer": "3",
         "choices": [
           "3",
@@ -565,7 +566,7 @@
           "6",
           "1"
         ],
-        "why": "$(z^2+1)^3=(z-i)^3(z+i)^3$, and $z+i$ is not zero at $z=i$."
+        "why": "$(z^2+1)^3=(z-i)^3(z+i)^3$. Each of $\\pm i$ is a pole of order 3, and $z=1$ is a pole of order 4."
       }
     ],
     "generator": null,
@@ -609,6 +610,37 @@
     "memory": "A pole of order $k$ is $h(z)/(z-\\alpha)^k$ with $h$ analytic and $h(\\alpha)\\neq 0$."
   },
   {
+    "id": "ch7-7.4-ex3a",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": { "ref": "§7.4, Exercise 3(a)", "page": 238 },
+    "kind": "next-step-blank",
+    "prompt": "Exercise 3(a) of §7.4, page 238. Classify the singularity of $z^2/(z-\\sin z)$ at $0$.",
+    "steps": [
+      {
+        "text": "The singularity at $0$ is",
+        "answer": "a pole of order 1",
+        "choices": ["removable", "a pole of order 1", "a pole of order 2", "essential"],
+        "choiceWhy": [
+          "Page 448 calls this removable. $z-\\sin z$ has a zero of order 3 and $z^2$ has a zero of order 2, so Corollary 7.8, page 236, says the quotient is a pole of order 1.",
+          "$z-\\sin z$ has a zero of order 3 and $z^2$ has a zero of order 2. Corollary 7.8, page 236, leaves a pole of order 1. The printed answer on page 448 says removable.",
+          "Order 2 would need the denominator's zero to be two higher than the numerator's. The gap is 1.",
+          "The principal part is the single term $6/z$. It stops."
+        ],
+        "why": "Page 448 calls $z^2/(z-\\sin z)$ removable. The series does not: $z-\\sin z$ has a zero of order 3 and $z^2$ has a zero of order 2, so Corollary 7.8, page 236, gives a pole of order 1."
+      },
+      {
+        "text": "The principal part is ___",
+        "answer": "6/z",
+        "accept": ["\\frac{6}{z}", "6z^{-1}", "6 z^{-1}", "\\dfrac{6}{z}"],
+        "miss": "Divide the orders, then read the coefficient of $z^{-1}$. It is $1/(1/6)$.",
+        "why": "$z-\\sin z=z^3(1/6-z^2/120+\\cdots)$, so $z^2/(z-\\sin z)=6/z+\\cdots$. The principal part is $6/z$."
+      }
+    ],
+    "generator": null,
+    "memory": "Page 448 says removable. The orders 2 and 3 say a pole of order 1, and the principal part is $6/z$."
+  },
+  {
     "id": "ch7-7.4-ex3",
     "chapter": 7,
     "section": "7.4",
@@ -634,6 +666,30 @@
       "params": { "a": [0, 0] }
     },
     "memory": "No negative powers: removable. Lowest power $-k$: a pole of order $k$. Infinitely many negative powers: essential."
+  },
+  {
+    "id": "ch7-7.4-ex3c",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": { "ref": "§7.4, Exercise 3(c)", "page": 238 },
+    "kind": "next-step-mc",
+    "prompt": "Exercise 3(c) of §7.4, page 238. Classify the singularity of $z\\exp(1/z)$ at $0$.",
+    "steps": [
+      {
+        "text": "The singularity is",
+        "answer": "essential",
+        "choices": ["removable", "a pole of order 1", "a pole of order 2", "essential"],
+        "choiceWhy": [
+          "Removable means no negative powers. $z\\exp(1/z)=\\sum z^{1-k}/k!$ keeps going.",
+          "A pole stops. The powers $1-k$ do not.",
+          "A pole stops. The powers $1-k$ do not.",
+          "$z\\exp(1/z)=\\sum_{k=0}^{\\infty} z^{1-k}/k!$. The negative powers do not stop."
+        ],
+        "why": "$z\\exp(1/z)=\\sum_{k=0}^{\\infty} z^{1-k}/k!$. Infinitely many negative powers: essential."
+      }
+    ],
+    "generator": null,
+    "memory": "An infinite principal part is essential. $z\\exp(1/z)$ does not stop."
   },
   {
     "id": "ch7-7.4-tan",
@@ -721,6 +777,30 @@
     ],
     "generator": null,
     "memory": "A zero of the denominator that the numerator does not share is a pole. Match the orders."
+  },
+  {
+    "id": "ch7-7.4-ex3g",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": { "ref": "§7.4, Exercise 3(g)", "page": 238 },
+    "kind": "next-step-mc",
+    "prompt": "Exercise 3(g) of §7.4, page 238. Classify the singularity of $(\\exp z-1)/z$ at $0$.",
+    "steps": [
+      {
+        "text": "The singularity is",
+        "answer": "removable",
+        "choices": ["removable", "a pole of order 1", "a pole of order 2", "essential"],
+        "choiceWhy": [
+          "$(\\exp z-1)/z=\\sum_{m=0}^{\\infty} z^m/(m+1)!$. Every negative coefficient is 0.",
+          "A pole needs a negative power. The $z$ in the denominator cancels the zero of $\\exp z-1$.",
+          "Nothing of order 2 is left. The series starts at the constant term 1.",
+          "The powers do not run off to $-\\infty$. They start at $z^0$."
+        ],
+        "why": "$(\\exp z-1)/z=\\sum_{m=0}^{\\infty} z^m/(m+1)!$ for $z\\neq 0$. No negative powers, so the singularity is removable. The key on page 448 agrees."
+      }
+    ],
+    "generator": null,
+    "memory": "No negative powers: removable. $(\\exp z-1)/z$ is filled in by 1."
   },
   {
     "id": "ch7-7.4-cos-diff",
@@ -846,12 +926,20 @@
     "section": "7.5",
     "cite": { "ref": "Corollary 7.11", "page": 240 },
     "kind": "next-step-blank",
-    "prompt": "Exercise 6(a) of §7.5, page 243. Use Corollary 7.11 on $\\lim_{z\\to 1+i}(z-1-i)/(z^4+4)$.",
+    "prompt": "Exercise 6(a) of §7.5, page 243. $\\lim_{z\\to 1+i}(z-1-i)/(z^4+4)$. Corollary 7.11, page 240, needs both functions zero and $g'\\neq 0$.",
     "steps": [
       {
-        "text": "Numerator and denominator are both 0 at $1+i$, and the derivative of the denominator is $-8+8i\\neq 0$. The limit equals ___",
+        "text": "At $1+i$, $f$ and $g$ are both ___, and $g'(1+i)=$ ___",
+        "answer": "0 and -8+8i",
+        "accept": ["0, -8+8i", "0 and -8+8i", "zero and -8+8i", "both 0, -8+8i", "0 and 8i-8", "0, 8i-8", "both zero and -8+8i", "-8+8i and 0", "0 and -8+8i ≠ 0"],
+        "miss": "Evaluate both functions at $1+i$, then $g'(z)=4z^3$.",
+        "why": "$(1+i)^4=-4$, so $g(1+i)=0$. And $4(1+i)^3=-8+8i\\neq 0$, so Corollary 7.11 applies."
+      },
+      {
+        "text": "The limit equals ___",
         "answer": "(-1-i)/16",
-        "accept": ["\\frac{-1-i}{16}", "-\\frac{1+i}{16}", "-1/16-i/16", "(-1-i)/16", "-(1+i)/16", "1/(-8+8i)"],
+        "accept": ["\\frac{-1-i}{16}", "-\\frac{1+i}{16}", "-1/16-i/16", "(-1-i)/16", "-(1+i)/16", "1/(-8+8i)", "(-1−i)/16", "1/(−8+8i)"],
+        "miss": "Divide the derivatives and simplify.",
         "why": "Corollary 7.11, page 240. The quotient of the derivatives is $1/(4(1+i)^3)=1/(-8+8i)=(-1-i)/16$."
       }
     ],
@@ -859,28 +947,60 @@
     "memory": "If $f(\\alpha)=g(\\alpha)=0$ and $g'(\\alpha)\\neq 0$, the limit of $f/g$ is $f'(\\alpha)/g'(\\alpha)$."
   },
   {
-    "id": "ch7-7.5-divide",
+    "id": "ch7-7.5-lhopital-b",
     "chapter": 7,
     "section": "7.5",
-    "cite": { "ref": "Theorem 7.14", "page": 240 },
+    "cite": { "ref": "Corollary 7.11", "page": 240 },
     "kind": "next-step-blank",
-    "prompt": "Theorem 7.14, page 240. $f(z)=1$ and $g(z)=1-z$ are analytic at $0$, and $g(0)\\neq 0$. Their quotient is $\\sum c_n z^n$.",
+    "prompt": "Exercise 6(b) of §7.5, page 243. $\\lim_{z\\to i}(z^2-2iz-1)/(z^4+2z^2+1)$.",
     "steps": [
       {
-        "text": "$a_0=b_0 c_0$. Here $a_0=1$ and $b_0=1$, so $c_0=$ ___",
-        "answer": "1",
-        "accept": ["1.0"],
-        "why": "Theorem 7.14: $a_n=b_0 c_n+\\cdots+b_n c_0$. The constant term is $a_0/b_0$."
+        "text": "One differentiation is still ___",
+        "answer": "0/0",
+        "accept": ["0/0", "zero over zero", "still 0/0", "0 / 0"],
+        "miss": "Both the numerator and the denominator have a zero of order 2 at $i$.",
+        "why": "$(z-i)^2$ over $(z^2+1)^2=(z-i)^2(z+i)^2$. The derivatives also vanish, so Corollary 7.11 does not apply yet."
       },
       {
-        "text": "$a_1=b_0 c_1+b_1 c_0$. Here $a_1=0$, $b_1=-1$, and $c_0=1$, so $c_1=$ ___",
-        "answer": "1",
-        "accept": ["1.0"],
-        "why": "$0=c_1+(-1)(1)$, so $c_1=1$. The same recurrence gives every later coefficient of $1/(1-z)$."
+        "text": "Cancel $(z-i)^2$. The limit equals ___",
+        "answer": "-1/4",
+        "accept": ["-0.25", "-\\frac{1}{4}", "−1/4", "-1/4"],
+        "miss": "Cancel the common factor, then evaluate what is left at $i$.",
+        "why": "What remains is $1/(z+i)^2$. At $z=i$ that is $1/(2i)^2=-1/4$."
       }
     ],
     "generator": null,
-    "memory": "When $g(\\alpha)\\neq 0$, divide the series. The coefficients satisfy $a_n=b_0 c_n+\\cdots+b_n c_0$."
+    "memory": "If one differentiation is still $0/0$, the zero was not simple. Cancel and try again."
+  },
+  {
+    "id": "ch7-7.5-divide",
+    "chapter": 7,
+    "section": "7.5",
+    "cite": { "ref": "Example 7.15", "page": 240 },
+    "kind": "next-step-blank",
+    "prompt": "Example 7.15, page 240. $\\sec z=1/\\cos z$ for $|z|<\\pi/2$. Theorem 7.14, page 240, divides the series because $\\cos 0\\neq 0$. A zero of the denominator is where you stop dividing and switch to a Laurent series.",
+    "steps": [
+      {
+        "text": "The numerator is $1$, so $a_0=$ ___. Since $b_0=\\cos 0\\neq 0$, the constant term is $a_0/b_0$.",
+        "answer": "1",
+        "accept": ["1.0"],
+        "why": "Theorem 7.14: $a_n=b_0 c_n+\\cdots+b_n c_0$. Here $a_0=1$ and $b_0=1$, so $c_0=1$."
+      },
+      {
+        "text": "Long division gives the coefficient of $z^2$ as ___",
+        "answer": "1/2",
+        "accept": ["0.5", "\\frac{1}{2}", "1/2"],
+        "why": "The book writes $\\sec z=1+\\frac{1}{2}z^2+\\frac{5}{24}z^4+\\cdots$."
+      },
+      {
+        "text": "$f^{(4)}(0)/4!=5/24$, so the fourth derivative at $0$ is ___",
+        "answer": "5",
+        "accept": ["5.0"],
+        "why": "$\\frac{5}{24}\\cdot 4!=5$."
+      }
+    ],
+    "generator": null,
+    "memory": "When $g(\\alpha)\\neq 0$, divide. The coefficients satisfy $a_n=b_0 c_n+\\cdots+b_n c_0$. A zero of $g$ means stop and use a Laurent series."
   },
   {
     "id": "ch7-7.5-flash-zeros",

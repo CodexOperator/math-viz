@@ -1210,8 +1210,28 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .book-sections [data-state="next"] .book-section-mark { color: var(--text); }
 .book-sections [data-state="done"] .book-section-mark { color: var(--ok); }
 
-.book-read { margin: 0; padding-left: 1.2rem; }
-.book-read li { margin: 0.15rem 0; }
+.book-read {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.book-read li { margin: 0; }
+.book-read a,
+.book-door a {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap);
+  min-width: 0;
+  max-width: 100%;
+}
+.chapter-card a.chip { min-height: var(--tap); }
+.book-door {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: var(--tap);
+}
 .book-label {
   margin: var(--space-3) 0 var(--space-1);
   font-family: var(--font);
@@ -1243,12 +1263,42 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   width: min(calc(100% - 2 * var(--space-3)), calc(100dvh - 20rem));
 }
 
-/* At 1280×800 the 480 square ends on the fold and the claim sits under it.
-   Cap only the wide window. The phone square stays the column width. */
+/* The phone stack is the picture, then the claim, the readout, and Play.
+   The wrapper disappears there so those three stay in that order. */
+.ch7-side { display: contents; }
+
+/* At 1280 the square is 480 again, and the claim, the readout, and Play
+   sit in a column beside it. */
 @media (min-width: 56.25rem) {
-  .ch7-stage.exp-stage,
-  .ch7-hero .exp-stage.ch7-stage {
-    width: min(100%, 20.25rem);
+  .ch7-picture {
+    display: grid;
+    grid-template-columns: minmax(0, 30rem) minmax(0, 1fr);
+    column-gap: var(--space-4);
+    row-gap: var(--space-2);
+    align-items: start;
+  }
+  .ch7-side {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+  }
+  .ch7-hero .exp-stage.ch7-stage,
+  .ch7-picture > .exp-stage.ch7-stage {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+    max-width: 30rem;
+    min-width: 0;
+    justify-self: start;
+  }
+  .ch7-picture > .ch7-wait,
+  .ch7-picture > .ch7-key,
+  .ch7-picture > .ch7-card {
+    grid-column: 1 / -1;
   }
 }
 

@@ -39,7 +39,9 @@ export const CHAPTER_7 = deepFreeze({
       },
       memory: [
         'One $N_\\varepsilon$ for the whole set. If $N$ needs $z$, the convergence is only pointwise.',
-        'The negation: one $\\varepsilon>0$ such that every $N$ still leaves some $z$ outside the band.',
+        'The negation (7.3), page 211: one $\\varepsilon>0$ such that for every $N$ there is some $n\\ge N$ and some $z$ still outside the band.',
+        'On $|z|\\le 1/2$, compare with $M_k=(1/2)^k$.',
+        '$-\\mathrm{Log}(1-z)=\\sum_{n=1}^{\\infty} z^n/n$ for $|z|<1$ (Example 7.2, page 214).',
         'M-test: $|u_k(z)|\\le M_k$ on $T$ and $\\sum M_k$ converges.',
         'A power series that converges uniformly on a set may be integrated term by term along a contour in that set (Corollary 7.2, page 213).',
       ],
@@ -71,6 +73,7 @@ export const CHAPTER_7 = deepFreeze({
         'Radius = distance to the nearest nonremovable singularity (Corollary 7.3, page 218).',
         'Any power series that equals $f$ on a disk is the Taylor series (Theorem 7.5, page 219).',
         'Geometric series: $1/(1-z)=\\sum z^n$ for $|z|<1$. Then substitute $z^2$ or $-z^2$.',
+        '$1/(1+z^2)=\\sum_{n=0}^{\\infty}(-1)^n z^{2n}$ for $|z|<1$ (Example 7.4, page 218).',
       ],
       read: [
         { pin: 'Definition 7.2, page 215', href: sectionHref(S72, 'sec_taylor-series-3') },
@@ -125,6 +128,8 @@ export const CHAPTER_7 = deepFreeze({
       },
       memory: [
         'No negative powers: removable. Lowest power $-k$: a pole of order $k$. Infinitely many: essential (Definition 7.5, page 232).',
+        'Zero of order $k$: the first $k-1$ derivatives vanish, and the $k$th does not (Definition 7.6, page 234).',
+        'A zero of order $m$ over a zero of order $n$, with $n>m$, is a pole of order $n-m$ (Corollary 7.8, page 236).',
         'Pole of order $k$: $f(z)=h(z)/(z-\\alpha)^k$ with $h(\\alpha)\\neq 0$ (Theorem 7.12, page 235).',
       ],
       read: [
@@ -152,7 +157,8 @@ export const CHAPTER_7 = deepFreeze({
         'On a connected domain, an analytic function that is not identically zero has isolated zeros (Theorem 7.13, page 239).',
         'A bounded isolated singularity is removable (Theorem 7.15, page 240). $\\sin z/z$ at 0 is filled in by the value 1.',
         'L\'Hôpital: if $f(\\alpha)=g(\\alpha)=0$ and $g\'(\\alpha)\\neq 0$, then $\\lim f/g = f\'(\\alpha)/g\'(\\alpha)$ (Corollary 7.11, page 240).',
-        'Divide the series when $g(\\alpha)\\neq 0$. The coefficients satisfy $a_n=b_0 c_n+\\cdots+b_n c_0$ (Theorem 7.14, page 240).',
+        'Divide the series when $g(\\alpha)\\neq 0$. The coefficients satisfy $a_n=b_0 c_n+\\cdots+b_n c_0$ (Theorem 7.14, page 240). A zero of $g$ is where you stop dividing and switch to a Laurent series.',
+        '$|f(z)|\\to\\infty$ means a pole (Theorem 7.16, page 241). A limit of $|f|$ that does not exist means essential (Theorem 7.17, page 241).',
       ],
       read: [
         { pin: 'Theorem 7.13, page 239', href: sectionHref(S75, 'Isolated_Zeros_Thm') },

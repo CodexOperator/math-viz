@@ -41,6 +41,10 @@ function rich(el, text) {
   appendRich(el, text);
 }
 
+function pictureParts(parent, frame, claim, read, play) {
+  parent.append(frame, h('div', { class: 'ch7-side' }, claim, read, play));
+}
+
 function bindMotion(button, steps, onN, initial) {
   const motion = createMotion();
   let reduced = prefersReducedMotion();
@@ -333,7 +337,7 @@ export function mountUniform(parent, hooks) {
   const read = h('p', { id: 'chapter-uniform-read', class: 'ch7-read' });
   const play = h('button', { type: 'button', class: 'btn', id: 'chapter-uniform-play' }, 'Play');
   const frame = h('div', { class: 'exp-stage ch7-stage', id: 'chapter-uniform-frame' }, stage);
-  parent.append(frame, claim, read, play);
+  pictureParts(parent, frame, claim, read, play);
 
   let x = 0.35;
   let claimText = '';
@@ -427,7 +431,7 @@ export function mountTaylor(parent, hooks) {
   const read = h('p', { id: 'chapter-taylor-read', class: 'ch7-read' });
   const play = h('button', { type: 'button', class: 'btn', id: 'chapter-taylor-play' }, 'Play');
   const frame = h('div', { class: 'exp-stage ch7-stage', id: 'chapter-taylor-frame' }, stage);
-  parent.append(frame, claim, read, play);
+  pictureParts(parent, frame, claim, read, play);
 
   let z = { re: 0.2, im: 0 };
   let revealed = false;
@@ -520,7 +524,7 @@ export function mountLaurent(parent, hooks) {
   const read = h('p', { id: 'chapter-laurent-read', class: 'ch7-read' });
   const play = h('button', { type: 'button', class: 'btn', id: 'chapter-laurent-play' }, 'Play');
   const frame = h('div', { class: 'exp-stage ch7-stage', id: 'chapter-laurent-frame' }, stage);
-  parent.append(frame, claim, read, play);
+  pictureParts(parent, frame, claim, read, play);
 
   let z = { re: 1.45, im: 0.25 };
   let revealed = false;
@@ -625,7 +629,7 @@ export function mountWinding(parent, hooks) {
   const read = h('p', { id: 'chapter-winding-read', class: 'ch7-read' });
   const play = h('button', { type: 'button', class: 'btn', id: 'chapter-winding-play' }, 'Play');
   const frame = h('div', { class: 'exp-stage ch7-stage', id: 'chapter-winding-frame' }, stage);
-  parent.append(frame, claim, read, play);
+  pictureParts(parent, frame, claim, read, play);
 
   let theta = 0.5;
   let claimText = '';
@@ -720,14 +724,137 @@ export function mountWinding(parent, hooks) {
     theta = next;
     track(next, poleState, showPole, poleFrame);
   }
-  const steps = [];
-  for (let i = 0; i <= 48; i += 1) steps.push({ phase: 'zero', theta: 0.5 + (i / 48) * Math.PI * 2 });
-  for (let i = 0; i <= 48; i += 1) steps.push({ phase: 'pole', theta: 0.5 + (i / 48) * Math.PI * 2 });
-  function onStep(step) {
-    if (step.phase === 'pole') applyPole(step.theta);
-    else applyZero(step.theta);
+  const lap = [];
+  for (let i = 0; i <= 48; i += 1) lap.push(0.5 + (i / 48) * Math.PI * 2);
+  const motion = createMotion();
+  let reduced = prefersReducedMotion();
+  let playing = false;
+  let phase = 'zero';
+  let index = 0;
+  let zeroWatched = false;
+  let poleWatched = false;
+  function atEnd() { return index >= lap.length - 1; }
+  function label() {
+    if (playing) return 'Pause';
+    if (phase === 'zero' && zeroWatched && atEnd()) return 'Play the pole';
+    if (phase === 'pole' && poleWatched && atEnd()) return 'Play again';
+    if (reduced) return 'Next step';
+    return 'Play';
   }
-  const stopMotion = bindMotion(play, steps, onStep, steps[0]);
+  function resetZero() {
+    zeroState.origin = lap[0];
+    zeroState.last = lap[0];
+    zeroState.travel = 0;
+    zeroKept = false;
+    innerPts.length = 0;
+    outerPts.length = 0;
+    trailInner.setAttribute('points', '');
+    trailOuter.setAttribute('points', '');
+  }
+  function resetPole() {
+    poleState.origin = lap[0];
+    poleState.last = lap[0];
+    poleState.travel = 0;
+    poleKept = false;
+    polePts.length = 0;
+    poleTrail.setAttribute('points', '');
+  }
+  function paintPhase(i) {
+    index = Math.max(0, Math.min(lap.length - 1, i));
+    if (phase === 'pole') applyPole(lap[index]);
+    else applyZero(lap[index]);
+    play.textContent = label();
+  }
+  function revealed() {
+    return Number(stage.dataset.travel) >= 2 * Math.PI - 0.05;
+  }
+  function finish(which) {
+    if (!revealed() || stage.dataset.phase !== which) {
+      if (which === 'pole') resetPole();
+      else resetZero();
+      for (const theta of lap) {
+        if (which === 'pole') applyPole(theta);
+        else applyZero(theta);
+      }
+    }
+    index = lap.length - 1;
+    if (which === 'pole') poleWatched = true;
+    else zeroWatched = true;
+    playing = false;
+    play.textContent = label();
+  }
+  function run(which, from) {
+    phase = which;
+    const start = Math.max(0, Math.min(lap.length - 1, from));
+    index = start;
+    if (reduced) {
+      if (which === 'pole') poleWatched = true;
+      else zeroWatched = true;
+      paintPhase(start);
+      return;
+    }
+    playing = true;
+    play.textContent = 'Pause';
+    if (which === 'pole') applyPole(lap[start]);
+    else applyZero(lap[start]);
+    const span = Math.max(1, lap.length - 1 - start);
+    motion.run(8000 * span / Math.max(1, lap.length - 1), (u) => {
+      const i = start + Math.round(u * span);
+      if (i !== index) paintPhase(i);
+    }, () => finish(which));
+  }
+  function onClick() {
+    if (playing) {
+      motion.cancel();
+      playing = false;
+      play.textContent = label();
+      return;
+    }
+    if (phase === 'zero' && zeroWatched && atEnd()) {
+      resetPole();
+      run('pole', 0);
+      return;
+    }
+    if (phase === 'pole' && poleWatched && atEnd()) {
+      zeroWatched = false;
+      poleWatched = false;
+      resetZero();
+      run('zero', 0);
+      return;
+    }
+    if (reduced) {
+      if (phase === 'zero') zeroWatched = true;
+      else poleWatched = true;
+      paintPhase(atEnd() ? index : index + 1);
+      return;
+    }
+    run(phase, index);
+  }
+  play.addEventListener('click', onClick);
+  paintPhase(0);
+  let media = null;
+  let onMedia = null;
+  try { media = matchMedia('(prefers-reduced-motion: reduce)'); } catch { media = null; }
+  if (media) {
+    onMedia = () => {
+      reduced = media.matches === true;
+      if (reduced && playing) {
+        motion.cancel();
+        playing = false;
+      }
+      play.textContent = label();
+    };
+    if (typeof media.addEventListener === 'function') media.addEventListener('change', onMedia);
+    else if (typeof media.addListener === 'function') media.addListener(onMedia);
+  }
+  const stopMotion = function destroy() {
+    motion.cancel();
+    play.removeEventListener('click', onClick);
+    if (media && onMedia) {
+      if (typeof media.removeEventListener === 'function') media.removeEventListener('change', onMedia);
+      else if (typeof media.removeListener === 'function') media.removeListener(onMedia);
+    }
+  };
   function angleOf(ev) {
     const local = localOf(stage, ev, size, size);
     const re = -1.4 + (local.x / size) * 2.8;
@@ -791,7 +918,7 @@ export function mountRemovable(parent, hooks) {
   const read = h('p', { id: 'chapter-removable-read', class: 'ch7-read' });
   const play = h('button', { type: 'button', class: 'btn', id: 'chapter-removable-play' }, 'Play');
   const frame = h('div', { class: 'exp-stage ch7-stage', id: 'chapter-removable-frame' }, stage);
-  parent.append(frame, claim, read, play);
+  pictureParts(parent, frame, claim, read, play);
 
   let x = 1.5;
   let claimText = '';

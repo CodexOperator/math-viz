@@ -287,14 +287,37 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
     && ex3.steps[0].choiceWhy.length === 4
     && /winding does not draw it/.test(ex3.prompt)
     && /winding does not draw it/.test(classProblem(1, ex3.generator.params).prompt));
+  const hop = practice.find((item) => item.id === 'ch7-7.5-lhopital');
+  const hopB = practice.find((item) => item.id === 'ch7-7.5-lhopital-b');
+  const divide = practice.find((item) => item.id === 'ch7-7.5-divide');
+  const ex3a = practice.find((item) => item.id === 'ch7-7.4-ex3a');
   check('theorem 7.14 is pinned and L\'Hôpital has a next step',
     readFileSync(new URL('../js/data/chapter-7.js', import.meta.url), 'utf8').includes('Theorem 7.14, page 240')
-    && practice.some((item) => item.id === 'ch7-7.5-lhopital' && item.cite.page === 240 && item.kind === 'next-step-blank')
-    && answerMatches('(-1-i)/16', practice.find((item) => item.id === 'ch7-7.5-lhopital').steps[0])
+    && hop && hop.cite.page === 240 && hop.kind === 'next-step-blank'
+    && hop.steps.length === 2
+    && answerMatches('0 and -8+8i', hop.steps[0])
+    && answerMatches('(-1-i)/16', hop.steps[1])
+    && answerMatches('-(1+i)/16', hop.steps[1])
+    && answerMatches('(-1\u2212i)/16', hop.steps[1])
+    && answerMatches('1/(\u22128+8i)', hop.steps[1])
+    && hop.steps[1].miss === 'Divide the derivatives and simplify.'
+    && hopB && hopB.steps.length === 2
+    && answerMatches('0/0', hopB.steps[0])
+    && answerMatches('-1/4', hopB.steps[1])
     && /Pr_Series_Division/.test(readFileSync(new URL('../js/data/chapter-7.js', import.meta.url), 'utf8'))
     && /Bd__Analytic_Thm/.test(readFileSync(new URL('../js/data/chapter-7.js', import.meta.url), 'utf8'))
-    && practice.some((item) => item.id === 'ch7-7.5-divide' && item.cite.ref === 'Theorem 7.14' && item.steps.length === 2)
-    && answerMatches('1', practice.find((item) => item.id === 'ch7-7.5-divide').steps[1]));
+    && divide && divide.cite.ref === 'Example 7.15' && divide.cite.page === 240 && divide.steps.length === 3
+    && /Theorem 7\.14/.test(divide.prompt)
+    && /Laurent/.test(divide.prompt)
+    && answerMatches('1', divide.steps[0])
+    && answerMatches('1/2', divide.steps[1])
+    && answerMatches('5', divide.steps[2])
+    && ex3a && ex3a.steps[0].answer === 'a pole of order 1'
+    && answerMatches('6/z', ex3a.steps[1])
+    && answerMatches('\\frac{6}{z}', ex3a.steps[1])
+    && /448/.test(ex3a.steps[0].why)
+    && practice.some((item) => item.id === 'ch7-7.4-ex3c' && item.steps[0].answer === 'essential')
+    && practice.some((item) => item.id === 'ch7-7.4-ex3g' && item.steps[0].answer === 'removable'));
   const samples = exercise3Samples();
   check('exercise 3(d)(e)(f)(h) cards match the series',
     samples.tanOrder === 1

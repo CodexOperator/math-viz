@@ -1851,3 +1851,21 @@ The green point at `r = 6`. The square is the drag target. A drag that misses th
 The menu. Eight rows, each 44px, Chapter 7 marked, and the list stopping at Chapter 7. Chapter 1 and Chapter 6 landing on their own cards, under the header, with Walk Chapter 4 off that screen. Heads for 4, 5, and 7 as links. Later heads as cards. A fresh book still walking Chapter 4.
 
 The type and the paper. Iowan at 25.85px on the phone and 36px at 1280. Body 17px. Paper `rgb(246, 243, 236)`. White cards, 10px radius. The four teaching colours still separate on the dark paper. No sideways scroll.
+
+## Chapter 7, batch 5
+
+Branch `cursor/chapter-7`, on top of `428e3c1` (the Log indexed sum, the L'Hôpital forms, and the 7.5 why that stays near 1 only near 0). Draft only. `gh-pages` was not touched.
+
+The menu's way back stores the camp whose title sits under the header. After the chapter paints, that title is about 40px under the 56px header. Laurent left at y = 96 and came back at y = 96, with the why already in view.
+
+7.4's first Play ends on the two rings, the readout "order 2", and that sentence. The button says "Play the pole". The second press draws \(1/z\) the other way and ends on order 1. The zero card is the one under Play. The pole cards stay behind it until that sentence.
+
+At 1280×800 the square is 480 and the claim, the readout, and Play sit beside it. Play ends at y = 457. The phone stack is unchanged: Play is 70×44 and ends at y = 835, light and dark. Dark paper is `rgb(13, 18, 28)`. No sideways scroll.
+
+"Already drawn" is a 44px row. Chapters 4 and 5 use the same Book row as Chapter 7, 87×44, and their pins and the picture chip are 44px.
+
+The Log answer line is the typeset series, the same math as the why. Exercise 6(a) is two blanks: both functions zero and \(g'(1+i)=-8+8i\), then the limit. The limit accepts `-(1+i)/16`, `(-1−i)/16`, and `1/(−8+8i)`. A miss says to divide the derivatives and simplify. Exercise 6(b), page 243, is the next card: one differentiation is still 0/0, and cancelling \((z-i)^2\) leaves \(-1/4\). Exercise 3(a), page 238, is its own card. Page 448 says removable. The series is a pole of order 1 and the principal part is \(6/z\). Exercises 3(c) and 3(g) are the next cards. Example 7.15, page 240, drills Theorem 7.14 on \(\sec z\): \(a_0=1\), the coefficient of \(z^2\) is \(1/2\), and the fourth derivative at 0 is 5. The line on the card says a zero of \(g\) is where you stop dividing and switch to a Laurent series. The memory sheet opens with the summit. The negation of uniform convergence is (7.3), page 211, and it keeps "some \(n\ge N\)". A miss on a card that is not the picture uses that step's reason. Exercise 2(a) asks the order at 1 and at \(\pm i\): 4 and 3.
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` and `node kit/smoke.mjs` passed. No live `kit/` import. `map-route.js` matches the kit copy.
+
+Left open: the shared practice engine, the roadmap pages for chapters 1–3 and 6, Exercise 6(c) and 6(d), and a flash deck that still finishes on one Show the back.
