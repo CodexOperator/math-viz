@@ -123,6 +123,9 @@ export function taylorClaim(re, im, n, revealed = true) {
   if (outside || revealed) {
     text = 'The agreement stops at the circle through $\\pm i$.';
     holds = !outside && err < TAYLOR_SETTLE;
+  } else if (err < TAYLOR_SETTLE && z.mod <= 0.35 && (n | 0) >= 8) {
+    text = 'The purple has filled in near 0.';
+    holds = true;
   } else if (err < TAYLOR_SETTLE && z.mod <= 0.35) {
     text = 'The partial sum has settled near 0.';
     holds = true;
@@ -133,7 +136,10 @@ export function taylorClaim(re, im, n, revealed = true) {
     text = 'Inside the disk, this partial sum has not caught the value yet.';
     holds = false;
   }
-  return { holds, text, err, n: n | 0, re: z.re, im: z.im, mod: z.mod, snapped: z.snapped, outside };
+  return {
+    holds, text, err, n: n | 0, re: z.re, im: z.im, mod: z.mod, snapped: z.snapped, outside,
+    circle: outside || revealed === true,
+  };
 }
 
 // Example 7.7, page 228. f(z) = 3/(2+z-z^2), poles at -1 and 2.
@@ -235,6 +241,27 @@ export function laurentClaim(re, im, n, revealed = true) {
     mod: z.mod,
     region: z.region,
     settled: z.region !== 'wall' && err < LAURENT_SETTLE,
+  };
+}
+
+// 1/z on the unit circle. One full turn winds the image once, the other way.
+export function poleFrame(theta, travel) {
+  const t = Number(theta) || 0;
+  const net = Number(travel) || 0;
+  const walked = Math.abs(net);
+  const z = { re: Math.cos(t), im: Math.sin(t) };
+  const w = { re: Math.cos(-t), im: Math.sin(-t) };
+  const revealed = walked >= 2 * Math.PI - 0.05;
+  return {
+    z,
+    w,
+    theta: t,
+    travel: walked,
+    revealed,
+    text: revealed
+      ? 'The purple image went around once the other way. The pole has order 1.'
+      : 'The green point walks a circle about the pole.',
+    holds: revealed,
   };
 }
 

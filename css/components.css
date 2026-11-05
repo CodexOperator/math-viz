@@ -1055,6 +1055,9 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   gap: var(--space-3);
 }
 
+/* A later chapter card can scroll up under the header, the way a section can. */
+.book-path { padding-bottom: calc(100dvh - var(--header-h)); }
+
 /* The last section can still scroll its title up under the header. */
 .chapter-path { padding-bottom: calc(100dvh - var(--header-h)); }
 
@@ -1240,6 +1243,15 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   width: min(calc(100% - 2 * var(--space-3)), calc(100dvh - 20rem));
 }
 
+/* At 1280×800 the 480 square ends on the fold and the claim sits under it.
+   Cap only the wide window. The phone square stays the column width. */
+@media (min-width: 56.25rem) {
+  .ch7-stage.exp-stage,
+  .ch7-hero .exp-stage.ch7-stage {
+    width: min(100%, 20.25rem);
+  }
+}
+
 .ch7-head { margin-bottom: 0; }
 .ch7-head .station-lede { margin-bottom: var(--space-2); }
 .ch7-where { margin: 0; }
@@ -1291,6 +1303,18 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .ch7-summit { font-weight: 600; }
 
 .ch7-memory { padding-left: 1.2rem; }
+
+.ch7-sheet summary {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
 
 .ch7-observe { font-weight: 600; }
 

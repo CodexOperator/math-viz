@@ -23,6 +23,7 @@ import {
   laurentError,
   laurentRegion,
   windingFrame,
+  poleFrame,
   placeReal,
   removableClaim,
 } from '../core/ch7-series.js';
@@ -303,7 +304,7 @@ function polyPoints(xs, fn) {
   return parts;
 }
 
-export function mountUniform(parent) {
+export function mountUniform(parent, hooks) {
   const stage = svgEl('svg', {
     id: 'chapter-uniform-stage',
     viewBox: `0 0 ${U.w} ${U.h}`,
@@ -336,6 +337,7 @@ export function mountUniform(parent) {
 
   let x = 0.35;
   let claimText = '';
+  let earnedSent = false;
   function paint(n) {
     partial.replaceChildren();
     for (const pts of polyPoints(xs, (t) => geometricPartial(t, n))) partial.append(svgEl('polyline', { points: pts }));
@@ -352,6 +354,10 @@ export function mountUniform(parent) {
     stage.dataset.n = String(n);
     stage.dataset.probeRe = String(scene.x);
     stage.dataset.holds = scene.holds ? 'true' : 'false';
+    if (!earnedSent && scene.broughtBack) {
+      earnedSent = true;
+      if (hooks && hooks.onEarned) hooks.onEarned();
+    }
   }
   const steps = [];
   for (let n = 4; n <= 44; n += 2) steps.push(n);
@@ -399,7 +405,7 @@ function axes(p) {
   return [x, y];
 }
 
-export function mountTaylor(parent) {
+export function mountTaylor(parent, hooks) {
   const p = plane(TAYLOR_WINDOW);
   const stage = svgEl('svg', {
     id: 'chapter-taylor-stage',
@@ -427,6 +433,7 @@ export function mountTaylor(parent) {
   let revealed = false;
   let claimText = '';
   let drawnN = -1;
+  let earnedSent = false;
   function fill(n) {
     if (drawnN === n) return;
     drawnN = n;
@@ -457,6 +464,10 @@ export function mountTaylor(parent) {
     stage.dataset.probeRe = String(scene.re);
     stage.dataset.probeIm = String(scene.im);
     stage.dataset.holds = scene.holds ? 'true' : 'false';
+    if (!earnedSent && scene.circle) {
+      earnedSent = true;
+      if (hooks && hooks.onEarned) hooks.onEarned();
+    }
   }
   const steps = [];
   for (let n = 0; n <= 12; n += 1) steps.push(n);
@@ -484,7 +495,7 @@ export function mountTaylor(parent) {
   };
 }
 
-export function mountLaurent(parent) {
+export function mountLaurent(parent, hooks) {
   const p = plane(LAURENT_WINDOW);
   const stage = svgEl('svg', {
     id: 'chapter-laurent-stage',
@@ -515,6 +526,7 @@ export function mountLaurent(parent) {
   let revealed = false;
   let claimText = '';
   let drawnKey = '';
+  let earnedSent = false;
   function fill(n, region) {
     const key = `${n}:${region}`;
     if (drawnKey === key) return;
@@ -551,6 +563,10 @@ export function mountLaurent(parent) {
     stage.dataset.probeIm = String(scene.im);
     stage.dataset.region = scene.region;
     stage.dataset.holds = scene.holds ? 'true' : 'false';
+    if (!earnedSent && revealed && scene.region === 'annulus') {
+      earnedSent = true;
+      if (hooks && hooks.onEarned) hooks.onEarned();
+    }
   }
   const steps = [];
   for (let n = 1; n <= 18; n += 1) steps.push(n);
@@ -579,7 +595,7 @@ export function mountLaurent(parent) {
   };
 }
 
-export function mountWinding(parent) {
+export function mountWinding(parent, hooks) {
   const size = 480;
   const X = (re) => ((re + 1.4) / 2.8) * size;
   const Y = (im) => ((1.4 - im) / 2.8) * size;
@@ -588,7 +604,7 @@ export function mountWinding(parent) {
     viewBox: `0 0 ${size} ${size}`,
     tabindex: '0',
     role: 'img',
-    'aria-label': 'A circle about a zero of order 2. Drag the green point around the circle. Purple follows the direction of z squared and winds twice. The second turn sits on a larger ring.',
+    'aria-label': 'A circle about a zero of order 2, then a pole of order 1. Drag the green point around the circle. Purple follows z squared and winds twice, then follows 1 over z the other way.',
   });
   const axisX = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2', x1: X(-1.4), y1: Y(0), x2: X(1.4), y2: Y(0) });
   const axisY = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2', x1: X(0), y1: Y(-1.4), x2: X(0), y2: Y(1.4) });
@@ -599,9 +615,12 @@ export function mountWinding(parent) {
   const trailOuter = svgEl('polyline', {
     fill: 'none', stroke: 'var(--output)', 'stroke-width': '3.5', 'stroke-linejoin': 'round', 'stroke-linecap': 'round',
   });
+  const poleTrail = svgEl('polyline', {
+    fill: 'none', stroke: 'var(--output)', 'stroke-width': '3', 'stroke-linejoin': 'round', 'stroke-linecap': 'round',
+  });
   const image = svgEl('circle', { r: '10', fill: 'var(--output)', 'pointer-events': 'none' });
   const dot = addMark(stage, 6, 'var(--input)');
-  stage.append(axisX, axisY, circle, trailInner, trailOuter, image, dot);
+  stage.append(axisX, axisY, circle, trailInner, trailOuter, poleTrail, image, dot);
   const claim = h('p', { id: 'chapter-winding-claim', class: 'ch7-claim', 'aria-live': 'polite' });
   const read = h('p', { id: 'chapter-winding-read', class: 'ch7-read' });
   const play = h('button', { type: 'button', class: 'btn', id: 'chapter-winding-play' }, 'Play');
@@ -609,12 +628,14 @@ export function mountWinding(parent) {
   parent.append(frame, claim, read, play);
 
   let theta = 0.5;
-  let last = 0.5;
-  let travel = 0;
   let claimText = '';
-  let kept = false;
+  let zeroKept = false;
+  let poleKept = false;
+  let zeroTold = false;
+  let poleTold = false;
   const innerPts = [];
   const outerPts = [];
+  const polePts = [];
   function trailPoint(scene) {
     // One lap of z is two laps of z^2. The second lap sits on a larger purple ring so both turns stay visible.
     const radius = scene.travel >= Math.PI ? 0.82 : 0.55;
@@ -624,19 +645,7 @@ export function mountWinding(parent) {
       point: `${X(radius * Math.cos(ang)).toFixed(1)},${Y(radius * Math.sin(ang)).toFixed(1)}`,
     };
   }
-  function show(scene) {
-    moveMark(dot, X(scene.z.re), Y(scene.z.im));
-    const mark = trailPoint(scene);
-    const [px, py] = mark.point.split(',');
-    image.setAttribute('cx', px);
-    image.setAttribute('cy', py);
-    if (!kept) {
-      const bucket = mark.radius > 0.7 ? outerPts : innerPts;
-      if (bucket[bucket.length - 1] !== mark.point) bucket.push(mark.point);
-      trailInner.setAttribute('points', innerPts.join(' '));
-      trailOuter.setAttribute('points', outerPts.join(' '));
-      if (scene.revealed) kept = true;
-    }
+  function paintClaim(scene, readout) {
     if (scene.text !== claimText) {
       claimText = scene.text;
       rich(claim, scene.text);
@@ -644,34 +653,91 @@ export function mountWinding(parent) {
     claim.dataset.holds = scene.holds ? 'true' : 'false';
     stage.dataset.holds = scene.holds ? 'true' : 'false';
     stage.dataset.travel = String(scene.travel);
-    stage.dataset.trail = kept ? 'kept' : 'live';
-    read.textContent = scene.revealed ? 'order 2' : 'walking';
+    stage.dataset.phase = readout === 'order 1' || readout === 'the other way' ? 'pole' : 'zero';
+    read.textContent = readout;
   }
-  function apply(next) {
-    const atStart = Math.abs(next - 0.5) < 1e-9;
-    if (atStart && Math.abs(travel) >= 2 * Math.PI - 0.05 && kept) {
-      travel = 0;
-      last = next;
-      theta = next;
-      show(windingFrame(theta, 0));
+  function showZero(scene) {
+    moveMark(dot, X(scene.z.re), Y(scene.z.im));
+    const mark = trailPoint(scene);
+    const [px, py] = mark.point.split(',');
+    image.setAttribute('cx', px);
+    image.setAttribute('cy', py);
+    if (!zeroKept) {
+      const bucket = mark.radius > 0.7 ? outerPts : innerPts;
+      if (bucket[bucket.length - 1] !== mark.point) bucket.push(mark.point);
+      trailInner.setAttribute('points', innerPts.join(' '));
+      trailOuter.setAttribute('points', outerPts.join(' '));
+      if (scene.revealed) zeroKept = true;
+    }
+    stage.dataset.trail = zeroKept ? 'kept' : 'live';
+    paintClaim(scene, scene.revealed ? 'order 2' : 'walking');
+    if (scene.revealed && !zeroTold) {
+      zeroTold = true;
+      if (hooks && hooks.onEarned) hooks.onEarned();
+    }
+  }
+  function showPole(scene) {
+    moveMark(dot, X(scene.z.re), Y(scene.z.im));
+    const radius = 1.05;
+    const ang = -scene.theta;
+    const point = `${X(radius * Math.cos(ang)).toFixed(1)},${Y(radius * Math.sin(ang)).toFixed(1)}`;
+    const [px, py] = point.split(',');
+    image.setAttribute('cx', px);
+    image.setAttribute('cy', py);
+    if (!poleKept) {
+      if (polePts[polePts.length - 1] !== point) polePts.push(point);
+      poleTrail.setAttribute('points', polePts.join(' '));
+      if (scene.revealed) poleKept = true;
+    }
+    paintClaim(scene, scene.revealed ? 'order 1' : 'the other way');
+    if (scene.revealed && !poleTold) {
+      poleTold = true;
+      if (hooks && hooks.onPole) hooks.onPole();
+    }
+  }
+  function track(next, state, show, frame) {
+    const atStart = Math.abs(next - state.origin) < 1e-9;
+    if (atStart && Math.abs(state.travel) >= 2 * Math.PI - 0.05 && state.kept()) {
+      state.travel = 0;
+      state.last = next;
+      show(frame(next, 0));
       return;
     }
-    let d = next - last;
+    let d = next - state.last;
     while (d > Math.PI) d -= 2 * Math.PI;
     while (d < -Math.PI) d += 2 * Math.PI;
-    travel += d;
-    last = next;
+    state.travel += d;
+    state.last = next;
+    show(frame(next, state.travel));
+  }
+  const zeroState = { origin: 0.5, last: 0.5, travel: 0, kept: () => zeroKept };
+  const poleState = { origin: 0.5, last: 0.5, travel: 0, kept: () => poleKept };
+  function applyZero(next) {
     theta = next;
-    show(windingFrame(theta, travel));
+    track(next, zeroState, showZero, windingFrame);
+  }
+  function applyPole(next) {
+    theta = next;
+    track(next, poleState, showPole, poleFrame);
   }
   const steps = [];
-  for (let i = 0; i <= 48; i += 1) steps.push(0.5 + (i / 48) * Math.PI * 2);
-  const stopMotion = bindMotion(play, steps, apply, 0.5);
-  const stopDrag = bindDrag(stage, (ev) => {
+  for (let i = 0; i <= 48; i += 1) steps.push({ phase: 'zero', theta: 0.5 + (i / 48) * Math.PI * 2 });
+  for (let i = 0; i <= 48; i += 1) steps.push({ phase: 'pole', theta: 0.5 + (i / 48) * Math.PI * 2 });
+  function onStep(step) {
+    if (step.phase === 'pole') applyPole(step.theta);
+    else applyZero(step.theta);
+  }
+  const stopMotion = bindMotion(play, steps, onStep, steps[0]);
+  function angleOf(ev) {
     const local = localOf(stage, ev, size, size);
     const re = -1.4 + (local.x / size) * 2.8;
     const im = 1.4 - (local.y / size) * 2.8;
-    apply(Math.atan2(im, re));
+    return Math.atan2(im, re);
+  }
+  const stopDrag = bindDrag(stage, (ev) => {
+    const ang = angleOf(ev);
+    if (zeroTold) applyPole(ang);
+    else applyZero(ang);
   });
   stage.addEventListener('keydown', onKey);
   function onKey(ev) {
@@ -679,7 +745,8 @@ export function mountWinding(parent) {
     const move = { ArrowRight: step, ArrowLeft: -step, ArrowUp: step, ArrowDown: -step }[ev.key];
     if (move === undefined) return;
     ev.preventDefault();
-    apply(theta + move);
+    if (zeroTold) applyPole(theta + move);
+    else applyZero(theta + move);
   }
   return function unmount() {
     stopMotion();
@@ -699,7 +766,7 @@ function rFromX(px) {
   return RBOX.x0 + ((px - 24) / (RBOX.w - 48)) * (RBOX.x1 - RBOX.x0);
 }
 
-export function mountRemovable(parent) {
+export function mountRemovable(parent, hooks) {
   const stage = svgEl('svg', {
     id: 'chapter-removable-stage',
     viewBox: `0 0 ${RBOX.w} ${RBOX.h}`,
@@ -728,6 +795,7 @@ export function mountRemovable(parent) {
 
   let x = 1.5;
   let claimText = '';
+  let earnedSent = false;
   function paint(px) {
     x = placeReal(px);
     const scene = removableClaim(x);
@@ -742,6 +810,10 @@ export function mountRemovable(parent) {
     stage.dataset.probeRe = String(scene.x);
     stage.dataset.holds = scene.holds ? 'true' : 'false';
     read.textContent = `x = ${scene.x.toFixed(2)}`;
+    if (!earnedSent && scene.holds) {
+      earnedSent = true;
+      if (hooks && hooks.onEarned) hooks.onEarned();
+    }
   }
   const stopMotion = bindApproach(play, {
     get: () => x,
@@ -763,6 +835,7 @@ export function mountRemovable(parent) {
     stopMotion.nudge();
     paint(x + move);
   }
+  paint(1.5);
   return function unmount() {
     stopMotion();
     stopDrag();

@@ -306,7 +306,7 @@ export function start() {
     for (const a of nav.querySelectorAll('a.nav-link')) {
       let on = false;
       if (bookRoute) {
-        on = bookRoute.kind === 'chapter'
+        on = bookRoute.chapter
           ? a.dataset.chapter === String(bookRoute.chapter)
           : a.id === 'nav-book';
       } else {
@@ -500,7 +500,8 @@ export function start() {
     view.dataset.route = route.raw || 'home';
     view.dataset.station = st ? st.id : '';
     view.dataset.map = mapId;
-    window.scrollTo(0, 0);
+    const landOnChapter = route.book && route.book.kind === 'roadmap' && route.book.chapter;
+    if (!landOnChapter) window.scrollTo(0, 0);
     markCurrent(st ? st.id : null, route.book);
 
     if (route.book) {

@@ -4,7 +4,7 @@
 
 import { stationById } from '../registry.js';
 import { BOOK, sectionHref } from '../data/book.js';
-import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, bookChapter, chapter4ExerciseIds, chapter5ExerciseIds, CHAPTER_PICTURE, pictureHref } from '../data/book-path.js';
+import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, bookChapter, chapter4ExerciseIds, chapter5ExerciseIds, CHAPTER_PICTURE, pictureHref, OPEN_CHAPTERS } from '../data/book-path.js';
 import { chapter7WalkSections } from '../data/chapter-7.js';
 import { test2ProblemById } from '../data/test2-problems.js';
 import { loadSharedTicks, saveSharedTicks, toggleTick, sectionFinished, chapterTally } from '../book/progress.js';
@@ -137,9 +137,10 @@ function mountRoadmap(el, ctx, spec) {
 
   for (const ch of BOOK_CHAPTERS) {
     if (ch.n > SHELL_LAST) continue;
-    const headTag = ch.n === 7 ? 'a' : 'div';
-    const headAttrs = ch.n === 7
-      ? { class: 'book-node-head book-row', id: 'book-open-7', href: '#chapter-7' }
+    const linked = OPEN_CHAPTERS.includes(ch.n);
+    const headTag = linked ? 'a' : 'div';
+    const headAttrs = linked
+      ? { class: 'book-node-head book-row', id: `book-open-${ch.n}`, href: `#chapter-${ch.n}` }
       : { class: 'book-node-head' };
     const head = h(headTag, headAttrs,
       h('p', { class: 'book-flag', id: `book-flag-${ch.n}` }, 'Later'),
@@ -183,7 +184,14 @@ function mountRoadmap(el, ctx, spec) {
   const focus = spec && spec.chapter;
   if (focus) {
     const node = el.querySelector(`#book-node-${focus}`);
-    if (node) node.scrollIntoView({ block: 'start' });
+    if (node) {
+      const go = () => {
+        if (!node.isConnected) return;
+        node.scrollIntoView({ block: 'start' });
+      };
+      requestAnimationFrame(() => requestAnimationFrame(go));
+      setTimeout(go, 60);
+    }
   }
 
   return function unmount() {};

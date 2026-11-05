@@ -33,9 +33,9 @@ export const CHAPTER_7 = deepFreeze({
       key: 'Blue is the axis. Orange is the band of width ε. Green is the partial sum and the point you drag. Purple is the limit.',
       summit: 'One N works for the whole set.',
       worked: {
-        pin: 'Example 7.2, page 214',
-        href: sectionHref(S71, 'Swap_Application'),
-        body: 'On any closed disk $|z|\\le r<1$ the geometric series converges uniformly to $1/(1-z)$. Integrate along the segment from $0$ to $z_0$. The calculation gives $-\\mathrm{Log}(1-z_0)=\\sum_{n=1}^{\\infty} z_0^n/n$, so $\\mathrm{Log}(1-z)=-\\sum_{n=1}^{\\infty} z^n/n$ inside the open unit disk. The prompt printed in Example 7.2 omits that minus sign. The calculation on page 214 is this one.',
+        pin: 'Theorem 7.1, page 212',
+        href: sectionHref(S71, 'sec_uniform-convergence-11'),
+        body: 'Compare with a series of constants. On the disk $|z|\\le 1/2$, each term of the geometric series satisfies $|z^k|\\le (1/2)^k$, and $\\sum (1/2)^k$ converges. Theorem 7.1, page 212, says the geometric series converges uniformly on that disk. The card under this line fills in why one comparison is enough for the whole set.',
       },
       memory: [
         'One $N_\\varepsilon$ for the whole set. If $N$ needs $z$, the convergence is only pointwise.',
@@ -116,7 +116,7 @@ export const CHAPTER_7 = deepFreeze({
       picture: 'winding',
       why: 'The negative powers name the singularity: none, a finite string, or an infinite tail. The order is how many times the image winds.',
       observe: 'Drag the green point once around the orange circle.',
-      key: 'Blue axes. Orange is the circle about the zero. Green is the point you drag. Purple follows the direction of $z^2$. The second turn sits on a larger ring so both turns stay visible.',
+      key: 'Blue axes. Orange is the circle. Green is the point you drag. Purple follows $z^2$, then $1/z$ the other way on a larger ring. The second turn of $z^2$ keeps its own ring.',
       summit: 'One trip around a zero of order $k$ sends the image around $k$ times.',
       worked: {
         pin: 'Definition 7.5, page 232, and Theorem 7.12, page 235',
@@ -139,7 +139,7 @@ export const CHAPTER_7 = deepFreeze({
       page: 239,
       stub: false,
       picture: 'removable',
-      why: 'The series tell you two things you can say on an exam: on a connected domain, the zeros of an analytic function that is not identically zero are isolated, and a bounded isolated singularity can be filled in.',
+      why: 'A bounded isolated singularity can be filled in. On this picture $\\sin(z)/z$ stays near 1, so the singularity at 0 is removable.',
       observe: 'Drag the green point toward 0.',
       key: 'Blue is the axis. Orange is the line at height 1, and the hole at 0. Green is the point you drag. Purple is $\\sin(z)/z$.',
       summit: 'The singularity at 0 is removable.',
@@ -158,6 +158,7 @@ export const CHAPTER_7 = deepFreeze({
         { pin: 'Theorem 7.13, page 239', href: sectionHref(S75, 'Isolated_Zeros_Thm') },
         { pin: 'Corollary 7.11, page 240', href: sectionHref(S75, 'cor_L_hospital') },
         { pin: 'Theorem 7.14, page 240', href: sectionHref(S75, 'Pr_Series_Division') },
+        { pin: 'Theorem 7.15, page 240', href: sectionHref(S75, 'Bd__Analytic_Thm') },
       ],
     },
   ],

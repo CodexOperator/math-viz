@@ -1697,3 +1697,21 @@ The green point at `r = 6`, 8px on the phone square and 12px on the 480 square, 
 One square across the camps: 326 and 324 on the phone, 480 at 1280. The 7.1 curves use that square. The right-hand rise stays inside the frame at n = 4 and at n = 44. 7.2 opens on the settled sentence and names the circle when the point crosses it. 7.3's tap at the centre names the non-negative powers. 7.4 leaves two purple rings and the order-2 sentence when the button says Play again. On 7.5, once the point has a place, Play walks toward 0 from that x and returns to the far end only from Play again. The gap between the hill and the axis is the value sitting near 1. The question sits 8px under each Play button.
 
 The type and the paper. Iowan at 25.85px on the phone and 36px at 1280. Body 17px. Paper `rgb(246, 243, 236)` and, in the dark, `rgb(13, 18, 28)`. White cards, 10px radius. The Book, the pins, Play, Check, the blank, and the menu rows, all at least 44px tall. The drawer stops at Chapter 7, and the current row is marked. A fresh book walks Chapter 4. A Chapter 7 tick opens Chapter 7. A wrong blank says "Not yet." and the memory line, and the next card waits. The four teaching colours still separate on the dark paper. No sideways scroll.
+
+## Chapter 7, batch 4
+
+Branch `cursor/chapter-7`, picked up at `404a70a` (reviewer fixes `24f1722` are on that tip). The merged list from batch 3. Draft only. `gh-pages` was not touched.
+
+7.5 arrives already painted at \(x=1.50\): the green point is on the axis, the readout says \(x = 1.50\), and the claim is "Away from 0, \(\sin(z)/z\) is analytic." Play walks from that \(x\) toward 0. The status for this camp is "Removable singularity", the same fact as the summit. The why leads with the filled-in hole.
+
+At 1280×800 the wide squares are capped at 20.25rem. The 7.1 claim starts at y=650 and Play ends at y=789. The phone square is unchanged: Play still ends at y=835. Play on 7.2, before any crossing, ends on "The purple has filled in near 0." The circle sentence is still the one that appears on the crossing and stays after it.
+
+Each picture blank stays closed until the claim that earns it. 7.1 waits until the curve has come back. 7.2 waits for the circle sentence. 7.3 accepts "non-negative" only after the point has left the annulus and come back to the sentence that names both directions. 7.4 does not say "went around twice" on arrival. 7.5 waits for the removable sentence. Until then a line under Play names what is still coming. A miss says where to look. It does not print the summit.
+
+Memory is a closed sheet that appears with the summit, above the button, so Go to the next camp still has that camp's why in view. The stage button stays disabled while a flash says Show the back. The 7.1 worked line is one filled M-test comparison, directly above the proof blanks. The Log integral is the next card and ends on the series. Exercise 10 sits directly under Example 7.7. Another function adds a card and leaves the solved one.
+
+7.4 Play draws the zero's two purple rings, then one lap of \(1/z\) the other way, and the claim says a pole of order 1. The zero card opens on "order 2". The pole cards wait for the pole sentence. The essential card says the series does not stop and the winding does not draw it. The summit is still the zero.
+
+The Book keeps the chapter scroll. A later chapter row scrolls that card under the header: Chapter 1 and Chapter 6 no longer open on Walk Chapter 4. Heads for Chapters 4, 5, and 7 are links. Later heads stay cards. Theorem 7.15 is pinned on 7.5. Theorem 7.14 has a faded division step. Exercise 3(d), 3(e), 3(f), and 3(h) are cards, checked against the series. Practice is still the local card.
+
+`node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. No live `kit/` import. `map-route.js` matches the kit copy. Headless Chrome at 390×844 and 1280×800, light and dark: no sideways scroll, no console errors.

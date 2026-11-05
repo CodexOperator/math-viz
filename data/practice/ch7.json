@@ -60,7 +60,7 @@
           "converges to a limit",
           "has a limit"
         ],
-        "why": "The line on page 212 says Theorem 4.2. That is a slip: Theorem 4.2 is that a convergent sequence is bounded. A Cauchy sequence converges by Theorem 4.3, page 105."
+        "why": "A Cauchy sequence of complex numbers converges, so the partial sums have a limit. The line on page 212 says Theorem 4.2. That is a slip: Theorem 4.2 is that a convergent sequence is bounded. A Cauchy sequence converges by Theorem 4.3, page 105."
       },
       {
         "text": "The same tail bounds $|f(z)-S_n(z)|$ at every $z$, so the convergence is ___.",
@@ -111,6 +111,24 @@
     ],
     "generator": null,
     "memory": "If the $N$ in the definition has to depend on $z$, the convergence is pointwise, not uniform."
+  },
+  {
+    "id": "ch7-7.1-log",
+    "chapter": 7,
+    "section": "7.1",
+    "cite": { "ref": "Example 7.2", "page": 214 },
+    "kind": "next-step-blank",
+    "prompt": "Example 7.2, page 214. On any closed disk $|z|\\le r<1$ the geometric series converges uniformly to $1/(1-z)$. Integrate along the segment from $0$ to $z_0$.",
+    "steps": [
+      {
+        "text": "The calculation gives $\\mathrm{Log}(1-z)=$ ___",
+        "answer": "-\\sum_{n=1}^{\\infty} z^n/n",
+        "accept": ["-\\sum z^n/n", "-sum z^n/n"],
+        "why": "The calculation on page 214 is $-\\mathrm{Log}(1-z_0)=\\sum z_0^n/n$. The prompt printed in Example 7.2 omits that minus sign."
+      }
+    ],
+    "generator": null,
+    "memory": "Integrate the geometric series term by term. The series for $\\mathrm{Log}(1-z)$ carries the minus sign."
   },
   {
     "id": "ch7-7.1-flash-uniform",
@@ -294,6 +312,71 @@
     "memory": "Between the poles the series faces both ways: negative powers inside, non-negative powers outside."
   },
   {
+    "id": "ch7-7.3-ex10-blank",
+    "chapter": 7,
+    "section": "7.3",
+    "cite": { "ref": "§7.3, Exercise 10", "page": 230 },
+    "kind": "next-step-blank",
+    "prompt": "Exercise 10 of §7.3, page 230. The Laurent series of $1/((z-2)(z-3))$ centered at $0$, in $|z|<2$, $2<|z|<3$, and $|z|>3$.",
+    "steps": [
+      {
+        "text": "Partial fractions. The coefficient of $1/(z-2)$ is ___",
+        "answer": "-1",
+        "accept": ["-1"],
+        "why": "Cover $(z-2)$. The value is $1/(2-3)$."
+      },
+      {
+        "text": "In $|z|<2$ the constant term is ___",
+        "answer": "\\frac{1}{6}",
+        "accept": ["\\frac{1}{6}", "1/6"],
+        "why": "Both poles are outside this disk, so $f(0)=1/(2\\cdot 3)$."
+      },
+      {
+        "text": "In $|z|>3$ the coefficient of $z^{-3}$ is ___",
+        "answer": "5",
+        "accept": ["5"],
+        "why": "Both poles are inside. The coefficient of $z^{-k-1}$ is $a^k/(a-b)+b^k/(b-a)$. For $k=2$ that is $2+3$."
+      }
+    ],
+    "generator": {
+      "template": "laurent-three",
+      "params": { "mode": "blank", "a": [1, 4], "b": [3, 8] }
+    },
+    "memory": "Partial fractions, then a geometric series aimed at the region: $z$ inside a pole, $1/z$ outside it."
+  },
+  {
+    "id": "ch7-7.3-ex10-mc",
+    "chapter": 7,
+    "section": "7.3",
+    "cite": { "ref": "§7.3, Exercise 10", "page": 230 },
+    "kind": "next-step-mc",
+    "prompt": "Exercise 10 of §7.3, page 230. The Laurent series of $1/((z-2)(z-3))$ centered at $0$, in $|z|<2$, $2<|z|<3$, and $|z|>3$.",
+    "steps": [
+      {
+        "text": "For $2<|z|<3$, the series uses",
+        "answer": "negative powers from the pole at $2$, and non-negative powers from the pole at $3$",
+        "choices": [
+          "negative powers from the pole at $2$, and non-negative powers from the pole at $3$",
+          "non-negative powers from both poles",
+          "negative powers from both poles",
+          "negative powers from the pole at $3$, and non-negative powers from the pole at $2$"
+        ],
+        "choiceWhy": [
+          "The pole at $2$ is inside this annulus, so it is expanded in $1/z$. The pole at $3$ is outside, so it is expanded in $z$.",
+          "Non-negative powers from both poles is the series for $|z|<2$.",
+          "Negative powers from both poles is the series for $|z|>3$.",
+          "That swap puts the inner pole's series on the outside of the annulus."
+        ],
+        "why": "Partial fractions, then one geometric series per pole. Inside the outer pole, powers of $z$. Outside the inner pole, powers of $1/z$."
+      }
+    ],
+    "generator": {
+      "template": "laurent-three",
+      "params": { "mode": "mc", "a": [1, 4], "b": [3, 8] }
+    },
+    "memory": "Name the annulus first. Each pole is expanded in $z$ when you are inside it, and in $1/z$ when you are outside it."
+  },
+  {
     "id": "ch7-7.3-ex1-mc",
     "chapter": 7,
     "section": "7.3",
@@ -386,71 +469,6 @@
       }
     },
     "memory": "Partial fractions, then a geometric series in $z$ inside the outer pole and in $1/z$ outside the inner pole."
-  },
-  {
-    "id": "ch7-7.3-ex10-blank",
-    "chapter": 7,
-    "section": "7.3",
-    "cite": { "ref": "§7.3, Exercise 10", "page": 230 },
-    "kind": "next-step-blank",
-    "prompt": "Exercise 10 of §7.3, page 230. The Laurent series of $1/((z-2)(z-3))$ centered at $0$, in $|z|<2$, $2<|z|<3$, and $|z|>3$.",
-    "steps": [
-      {
-        "text": "Partial fractions. The coefficient of $1/(z-2)$ is ___",
-        "answer": "-1",
-        "accept": ["-1"],
-        "why": "Cover $(z-2)$. The value is $1/(2-3)$."
-      },
-      {
-        "text": "In $|z|<2$ the constant term is ___",
-        "answer": "\\frac{1}{6}",
-        "accept": ["\\frac{1}{6}", "1/6"],
-        "why": "Both poles are outside this disk, so $f(0)=1/(2\\cdot 3)$."
-      },
-      {
-        "text": "In $|z|>3$ the coefficient of $z^{-3}$ is ___",
-        "answer": "5",
-        "accept": ["5"],
-        "why": "Both poles are inside. The coefficient of $z^{-k-1}$ is $a^k/(a-b)+b^k/(b-a)$. For $k=2$ that is $2+3$."
-      }
-    ],
-    "generator": {
-      "template": "laurent-three",
-      "params": { "mode": "blank", "a": [1, 4], "b": [3, 8] }
-    },
-    "memory": "Partial fractions, then a geometric series aimed at the region: $z$ inside a pole, $1/z$ outside it."
-  },
-  {
-    "id": "ch7-7.3-ex10-mc",
-    "chapter": 7,
-    "section": "7.3",
-    "cite": { "ref": "§7.3, Exercise 10", "page": 230 },
-    "kind": "next-step-mc",
-    "prompt": "Exercise 10 of §7.3, page 230. The Laurent series of $1/((z-2)(z-3))$ centered at $0$, in $|z|<2$, $2<|z|<3$, and $|z|>3$.",
-    "steps": [
-      {
-        "text": "For $2<|z|<3$, the series uses",
-        "answer": "negative powers from the pole at $2$, and non-negative powers from the pole at $3$",
-        "choices": [
-          "negative powers from the pole at $2$, and non-negative powers from the pole at $3$",
-          "non-negative powers from both poles",
-          "negative powers from both poles",
-          "negative powers from the pole at $3$, and non-negative powers from the pole at $2$"
-        ],
-        "choiceWhy": [
-          "The pole at $2$ is inside this annulus, so it is expanded in $1/z$. The pole at $3$ is outside, so it is expanded in $z$.",
-          "Non-negative powers from both poles is the series for $|z|<2$.",
-          "Negative powers from both poles is the series for $|z|>3$.",
-          "That swap puts the inner pole's series on the outside of the annulus."
-        ],
-        "why": "Partial fractions, then one geometric series per pole. Inside the outer pole, powers of $z$. Outside the inner pole, powers of $1/z$."
-      }
-    ],
-    "generator": {
-      "template": "laurent-three",
-      "params": { "mode": "mc", "a": [1, 4], "b": [3, 8] }
-    },
-    "memory": "Name the annulus first. Each pole is expanded in $z$ when you are inside it, and in $1/z$ when you are outside it."
   },
   {
     "id": "ch7-7.3-flash-recipe",
@@ -596,7 +614,7 @@
     "section": "7.4",
     "cite": { "ref": "§7.4, Exercise 3", "page": 238 },
     "kind": "next-step-mc",
-    "prompt": "Exercise 3 of §7.4, page 238. Classify the singularity of $\\sin(1/z)$ at $0$.",
+    "prompt": "Exercise 3 of §7.4, page 238. Classify the singularity of $\\sin(1/z)$ at $0$. This series does not stop, and the winding does not draw it.",
     "steps": [
       {
         "text": "The singularity is",
@@ -616,6 +634,122 @@
       "params": { "a": [0, 0] }
     },
     "memory": "No negative powers: removable. Lowest power $-k$: a pole of order $k$. Infinitely many negative powers: essential."
+  },
+  {
+    "id": "ch7-7.4-tan",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": { "ref": "§7.4, Exercise 3(d)", "page": 238 },
+    "kind": "next-step-mc",
+    "prompt": "Exercise 3(d) of §7.4, page 238. Locate the singularities of $\\tan z$ and name the type.",
+    "steps": [
+      {
+        "text": "The singularities are",
+        "answer": "poles of order 1 at $z=(n+\\tfrac{1}{2})\\pi$",
+        "choices": [
+          "poles of order 1 at $z=(n+\\tfrac{1}{2})\\pi$",
+          "a removable singularity at $0$",
+          "an essential singularity at $0$",
+          "poles of order 2 at $z=n\\pi$"
+        ],
+        "choiceWhy": [
+          "$\\cos z$ has simple zeros at $(n+\\tfrac{1}{2})\\pi$ and $\\sin z$ is not zero there.",
+          "$\\tan z$ is analytic at $0$. The singularities are the zeros of $\\cos z$.",
+          "The principal part at each singularity is one term, not an infinite tail.",
+          "At $n\\pi$ the sine is zero and the cosine is not, so $\\tan z$ is analytic there."
+        ],
+        "why": "$\\cos z$ has simple zeros at $(n+\\tfrac{1}{2})\\pi$ and $\\sin z$ is not zero there, so each is a pole of order 1."
+      }
+    ],
+    "generator": null,
+    "memory": "A simple zero of the denominator, not cancelled by the numerator, is a pole of order 1."
+  },
+  {
+    "id": "ch7-7.4-sin-over-quadratic",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": { "ref": "§7.4, Exercise 3(e)", "page": 238 },
+    "kind": "next-step-mc",
+    "prompt": "Exercise 3(e) of §7.4, page 238. Locate the singularities of $(z^2+z)^{-1}\\sin z$ and name the types.",
+    "steps": [
+      {
+        "text": "The singularities are",
+        "answer": "removable at $0$, and a pole of order 1 at $-1$",
+        "choices": [
+          "removable at $0$, and a pole of order 1 at $-1$",
+          "a pole of order 2 at $0$",
+          "essential at $0$",
+          "removable at $-1$, and a pole of order 1 at $0$"
+        ],
+        "choiceWhy": [
+          "$\\sin z$ and $z$ both have a simple zero at $0$, and $\\sin(-1)\\neq 0$ while $z+1$ has a simple zero at $-1$.",
+          "The factor $z$ in the denominator is cancelled by the zero of $\\sin z$. Nothing of order 2 is left at $0$.",
+          "Both singularities have a finite principal part.",
+          "That swap puts the cancelled zero at $-1$, where $\\sin z$ is not zero."
+        ],
+        "why": "At $0$ the simple zero of $\\sin z$ cancels the factor $z$. At $-1$ the numerator is not zero and $z+1$ has a simple zero."
+      }
+    ],
+    "generator": null,
+    "memory": "Cancel common zeros first. What is left in the denominator is the pole."
+  },
+  {
+    "id": "ch7-7.4-z-over-sin",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": { "ref": "§7.4, Exercise 3(f)", "page": 238 },
+    "kind": "next-step-mc",
+    "prompt": "Exercise 3(f) of §7.4, page 238. Locate the singularities of $z/\\sin z$ and name the types.",
+    "steps": [
+      {
+        "text": "The singularities are",
+        "answer": "removable at $0$, and poles of order 1 at $n\\pi$ for $n\\neq 0$",
+        "choices": [
+          "removable at $0$, and poles of order 1 at $n\\pi$ for $n\\neq 0$",
+          "a pole of order 1 at $0$",
+          "essential at $0$",
+          "removable at every $n\\pi$"
+        ],
+        "choiceWhy": [
+          "$z$ and $\\sin z$ both have a simple zero at $0$. At $n\\pi$, $n\\neq 0$, the numerator is not zero and the zero of $\\sin z$ is simple.",
+          "The zero of the denominator at $0$ is cancelled by the numerator.",
+          "Each singularity has a finite principal part.",
+          "Only the zero at $0$ is cancelled. The others are poles."
+        ],
+        "why": "The limit at $0$ is $1$. Elsewhere $\\sin z$ has a simple zero and $z$ does not vanish, so the pole has order 1."
+      }
+    ],
+    "generator": null,
+    "memory": "A zero of the denominator that the numerator does not share is a pole. Match the orders."
+  },
+  {
+    "id": "ch7-7.4-cos-diff",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": { "ref": "§7.4, Exercise 3(h)", "page": 238 },
+    "kind": "next-step-mc",
+    "prompt": "Exercise 3(h) of §7.4, page 238. Classify the singularity of $(\\cos z-\\cos 2z)/z^4$ at $0$.",
+    "steps": [
+      {
+        "text": "The singularity is",
+        "answer": "a pole of order 2",
+        "choices": [
+          "a pole of order 2",
+          "removable",
+          "a pole of order 4",
+          "essential"
+        ],
+        "choiceWhy": [
+          "The numerator has a zero of order 2 and the denominator has a zero of order 4, so the quotient starts at $z^{-2}$.",
+          "Removable would need no negative powers. The $z^2$ term of the numerator is not zero.",
+          "Order 4 would need the numerator to be nonzero at $0$. It vanishes there.",
+          "The principal part stops at $z^{-2}$."
+        ],
+        "why": "$\\cos z-\\cos 2z = \\tfrac{3}{2}z^2+\\cdots$. Dividing by $z^4$ leaves a lowest power of $-2$."
+      }
+    ],
+    "generator": null,
+    "memory": "Subtract the orders. A zero of order $m$ over a zero of order $n$, with $n>m$, is a pole of order $n-m$."
   },
   {
     "id": "ch7-7.4-flash-pole",
@@ -723,6 +857,30 @@
     ],
     "generator": null,
     "memory": "If $f(\\alpha)=g(\\alpha)=0$ and $g'(\\alpha)\\neq 0$, the limit of $f/g$ is $f'(\\alpha)/g'(\\alpha)$."
+  },
+  {
+    "id": "ch7-7.5-divide",
+    "chapter": 7,
+    "section": "7.5",
+    "cite": { "ref": "Theorem 7.14", "page": 240 },
+    "kind": "next-step-blank",
+    "prompt": "Theorem 7.14, page 240. $f(z)=1$ and $g(z)=1-z$ are analytic at $0$, and $g(0)\\neq 0$. Their quotient is $\\sum c_n z^n$.",
+    "steps": [
+      {
+        "text": "$a_0=b_0 c_0$. Here $a_0=1$ and $b_0=1$, so $c_0=$ ___",
+        "answer": "1",
+        "accept": ["1.0"],
+        "why": "Theorem 7.14: $a_n=b_0 c_n+\\cdots+b_n c_0$. The constant term is $a_0/b_0$."
+      },
+      {
+        "text": "$a_1=b_0 c_1+b_1 c_0$. Here $a_1=0$, $b_1=-1$, and $c_0=1$, so $c_1=$ ___",
+        "answer": "1",
+        "accept": ["1.0"],
+        "why": "$0=c_1+(-1)(1)$, so $c_1=1$. The same recurrence gives every later coefficient of $1/(1-z)$."
+      }
+    ],
+    "generator": null,
+    "memory": "When $g(\\alpha)\\neq 0$, divide the series. The coefficients satisfy $a_n=b_0 c_n+\\cdots+b_n c_0$."
   },
   {
     "id": "ch7-7.5-flash-zeros",

@@ -10,14 +10,14 @@ import { chapterTally, sectionFinished, foldLegacyExercises, saveSharedTicks, to
 import { EXP_DURATION, expFrame, finishedStops } from '../js/core/live-film.js';
 import { compile } from '../js/core/parse.js';
 import { parseBookRoute } from '../js/book/route.js';
-import { uniformClaim, taylorClaim, laurentClaim, answerMatches, windingFrame, removableClaim } from '../js/core/ch7-series.js';
+import { uniformClaim, taylorClaim, laurentClaim, answerMatches, windingFrame, poleFrame, removableClaim } from '../js/core/ch7-series.js';
 import { chapter7WalkSections } from '../js/data/chapter-7.js';
 import { id as laurentGenId } from '../js/practice/gen/laurent-annulus.js';
 import { id as orderGenId } from '../js/practice/gen/singularity-order.js';
 import { generate as laurentProblem, sampleAgrees } from '../js/practice/gen/laurent-annulus.js';
 import { generate as orderProblem } from '../js/practice/gen/singularity-order.js';
 import { generate as threeProblem, sampleAgrees as threeAgrees } from '../js/practice/gen/laurent-three.js';
-import { generate as classProblem } from '../js/practice/gen/singularity-class.js';
+import { generate as classProblem, exercise3Samples } from '../js/practice/gen/singularity-class.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
 import { parsePath, evalPath } from '../js/core/path-expr.js';
 import { smoothLoop, presetById, compileFormula } from '../js/core/path-geom.js';
@@ -222,7 +222,7 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
   const order = practice.find((item) => item.id === 'ch7-7.4-order');
   const made = laurentProblem(1, annulus.generator.params);
   const madeOrder = orderProblem(1, order.generator.params);
-  check('chapter 7 is mounted from the book page', book.includes('mountChapter7') && book.includes('book-open-7'));
+  check('chapter 7 is mounted from the book page', book.includes('mountChapter7') && book.includes('book-open-${ch.n}') && book.includes('OPEN_CHAPTERS'));
   check('chapter 7 practice matches the schema',
     practice.length >= 16
     && practice.every((item) => item.chapter === 7 && kinds.has(item.kind) && item.cite && item.cite.page && item.memory && Array.isArray(item.steps))
@@ -284,12 +284,31 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
     && classProblem(3, ex3.generator.params).kind === 'removable'
     && !/Exercise 3/.test(classProblem(5, ex3.generator.params).prompt)
     && classProblem(5, ex3.generator.params).order === 1
-    && ex3.steps[0].choiceWhy.length === 4);
+    && ex3.steps[0].choiceWhy.length === 4
+    && /winding does not draw it/.test(ex3.prompt)
+    && /winding does not draw it/.test(classProblem(1, ex3.generator.params).prompt));
   check('theorem 7.14 is pinned and L\'Hôpital has a next step',
     readFileSync(new URL('../js/data/chapter-7.js', import.meta.url), 'utf8').includes('Theorem 7.14, page 240')
     && practice.some((item) => item.id === 'ch7-7.5-lhopital' && item.cite.page === 240 && item.kind === 'next-step-blank')
     && answerMatches('(-1-i)/16', practice.find((item) => item.id === 'ch7-7.5-lhopital').steps[0])
-    && /Pr_Series_Division/.test(readFileSync(new URL('../js/data/chapter-7.js', import.meta.url), 'utf8')));
+    && /Pr_Series_Division/.test(readFileSync(new URL('../js/data/chapter-7.js', import.meta.url), 'utf8'))
+    && /Bd__Analytic_Thm/.test(readFileSync(new URL('../js/data/chapter-7.js', import.meta.url), 'utf8'))
+    && practice.some((item) => item.id === 'ch7-7.5-divide' && item.cite.ref === 'Theorem 7.14' && item.steps.length === 2)
+    && answerMatches('1', practice.find((item) => item.id === 'ch7-7.5-divide').steps[1]));
+  const samples = exercise3Samples();
+  check('exercise 3(d)(e)(f)(h) cards match the series',
+    samples.tanOrder === 1
+    && Math.abs(samples.eLimit - 1) < 1e-3
+    && samples.ePole === true
+    && Math.abs(samples.fLimit - 1) < 1e-3
+    && Math.abs(samples.fPole - Math.PI) < 1e-2
+    && samples.diffOrder === 2
+    && practice.find((item) => item.id === 'ch7-7.4-tan').steps[0].answer.includes('order 1')
+    && practice.find((item) => item.id === 'ch7-7.4-sin-over-quadratic').steps[0].answer.includes('removable at $0$')
+    && practice.find((item) => item.id === 'ch7-7.4-z-over-sin').steps[0].answer.includes('removable at $0$')
+    && practice.find((item) => item.id === 'ch7-7.4-cos-diff').steps[0].answer === 'a pole of order 2'
+    && practice.findIndex((item) => item.id === 'ch7-7.3-ex10-blank') < practice.findIndex((item) => item.id === 'ch7-7.3-ex1-mc')
+    && practice.some((item) => item.id === 'ch7-7.1-log' && item.cite.page === 214));
   check('uniform convergence leaves the band near 1 and holds near 0',
     uniformClaim(0.4, 4).holds === true
     && uniformClaim(0.85, 4).holds === false
@@ -309,6 +328,8 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
     taylorClaim(0.9, 0, 0, false).holds === false
     && /not caught/.test(taylorClaim(0.9, 0, 0, false).text)
     && taylorClaim(0.2, 0, 0, false).text === 'The partial sum has settled near 0.'
+    && taylorClaim(0.2, 0, 1, false).text === 'The partial sum has settled near 0.'
+    && taylorClaim(0.2, 0, 12, false).text === 'The purple has filled in near 0.'
     && /caught the value/.test(taylorClaim(0.9, 0, 12, false).text)
     && !/near 0/.test(taylorClaim(0.9, 0, 12, false).text)
     && taylorClaim(0.6, 0, 12, false).holds === true);
@@ -322,6 +343,9 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
     && windingFrame(0, Math.PI * 2).text.includes('twice')
     && windingFrame(0, -(Math.PI * 2)).text.includes('twice')
     && windingFrame(0, Math.PI).holds === false
+    && poleFrame(0.4, 0).holds === false
+    && poleFrame(0, Math.PI * 2).text.includes('order 1')
+    && poleFrame(0, Math.PI * 2).text.includes('other way')
     && answerMatches('positive', practice.find((item) => item.id === 'ch7-7.3-picture').steps[0]) === false
     && answerMatches('non-negative', practice.find((item) => item.id === 'ch7-7.3-picture').steps[0])
     && !/page 241/.test(JSON.stringify(practice))

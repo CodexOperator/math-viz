@@ -141,6 +141,36 @@ function whyFor(label, found, slip) {
   return 'A pole has a finite principal part. This series does not stop.';
 }
 
+// Numerical checks for the Exercise 3 parts that are not a series at 0 alone.
+// tan z: simple poles where cos z = 0. (z^2+z)^{-1} sin z: removable at 0, simple pole at -1.
+// z/sin z: removable at 0, simple poles at nπ, n≠0. (cos z - cos 2z)/z^4: pole of order 2 at 0.
+export function exercise3Samples() {
+  const h = 1e-4;
+  const half = Math.PI / 2;
+  const tanOrder = Math.abs(Math.abs(h * Math.tan(half - h)) - 1) < 1e-3 ? 1 : 0;
+  const e0 = Math.sin(h) / (h * (h + 1));
+  const f0 = h / Math.sin(h);
+  const pi = Math.PI;
+  const fPole = Math.abs(h * (pi + h) / Math.sin(pi + h));
+  let fact = 1;
+  let lowest = 0;
+  for (let k = 0; k <= 8; k += 1) {
+    if (k > 0) fact *= (2 * k - 1) * (2 * k);
+    const sign = k % 2 === 0 ? 1 : -1;
+    const coeff = (sign / fact) * (1 - 4 ** k);
+    const power = 2 * k - 4;
+    if (Math.abs(coeff) > 1e-10 && power < lowest) lowest = power;
+  }
+  return {
+    tanOrder,
+    eLimit: e0,
+    ePole: Math.abs(Math.sin(-1)) > 0.5,
+    fLimit: f0,
+    fPole,
+    diffOrder: -lowest,
+  };
+}
+
 export function generate(seed, params) {
   const n = Math.max(1, Number(seed) || 1);
   const entry = CATALOG[(n - 1) % CATALOG.length];
@@ -150,9 +180,10 @@ export function generate(seed, params) {
   if (!choices.includes(answer)) choices[1] = answer;
   const choiceWhy = choices.map((label) => whyFor(label, found, entry.slip));
   const named = entry.exercise !== false && !(params && params.cite === false);
-  const cited = named
+  let cited = named
     ? `Exercise 3 of §7.4, page 238. Classify the singularity of $${entry.tex}$ at $0$.`
     : `Classify the singularity of $${entry.tex}$ at $0$.`;
+  if (found.kind === 'essential') cited += ' This series does not stop, and the winding does not draw it.';
   return {
     seed: n,
     kind: found.kind,

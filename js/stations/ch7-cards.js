@@ -29,6 +29,18 @@ function showMath(text) {
   return String(text || '').replace(/\\\[/g, '$').replace(/\\\]/g, '$').replace(/\\\(/g, '$').replace(/\\\)/g, '$');
 }
 
+const LOOK = {
+  '7.1': 'Look at the readout under the picture.',
+  '7.2': 'Look at the orange circle.',
+  '7.3': 'Look at which side of the orange circles the point is on.',
+  '7.4': 'Look at the purple image.',
+  '7.5': 'Look at the readout near 0.',
+};
+
+function missLine(item) {
+  return item.look || LOOK[item.section] || 'Look at the picture.';
+}
+
 export function mountPracticeItem(item, opts) {
   const onDone = opts && opts.onDone;
   const id = slug(item.id);
@@ -43,7 +55,7 @@ export function mountPracticeItem(item, opts) {
   );
 
   let steps = item.steps.slice();
-  let seed = 1;
+  let seed = (opts && opts.seed) || 1;
   const state = steps.map(() => false);
 
   function paint() {
@@ -86,7 +98,7 @@ export function mountPracticeItem(item, opts) {
             why.replaceChildren();
             why.append(document.createTextNode('Not yet. '));
             const mem = document.createElement('span');
-            rich(mem, showMath(specific || item.memory));
+            rich(mem, showMath(specific || missLine(item)));
             why.append(mem);
           }
           btn.setAttribute('aria-pressed', 'true');
@@ -123,7 +135,7 @@ export function mountPracticeItem(item, opts) {
       note.replaceChildren();
       note.append(document.createTextNode('Not yet. '));
       const mem = document.createElement('span');
-      rich(mem, showMath(item.memory));
+      rich(mem, showMath(missLine(item)));
       note.append(mem);
       input.dataset.right = 'false';
     }
@@ -142,13 +154,16 @@ export function mountPracticeItem(item, opts) {
   if (item.generator && GENERATORS[item.generator.template]) {
     const again = h('button', { type: 'button', class: 'btn', id: `ch7-again-${id}` }, 'Another function');
     again.addEventListener('click', () => {
-      seed += 1;
-      const next = GENERATORS[item.generator.template](seed, item.generator.params);
-      rich(prompt, showMath(next.prompt));
-      steps = next.steps;
-      state.length = 0;
-      for (let i = 0; i < steps.length; i += 1) state.push(false);
-      paint();
+      const nextSeed = seed + 1;
+      const next = GENERATORS[item.generator.template](nextSeed, item.generator.params);
+      const extra = mountPracticeItem({
+        ...item,
+        id: `${item.id}-s${nextSeed}`,
+        prompt: next.prompt,
+        steps: next.steps,
+      }, { seed: nextSeed });
+      card.insertAdjacentElement('afterend', extra);
+      again.hidden = true;
     });
     card.append(again);
   }
@@ -157,7 +172,7 @@ export function mountPracticeItem(item, opts) {
   return card;
 }
 
-export function mountFlashDeck(items, prefix) {
+export function mountFlashDeck(items, prefix, opts) {
   if (!items.length) return h('div');
   let index = 0;
   let open = false;
@@ -180,6 +195,7 @@ export function mountFlashDeck(items, prefix) {
   show.addEventListener('click', () => {
     open = true;
     paint();
+    if (opts && opts.onSeen) opts.onSeen();
   });
   next.addEventListener('click', () => {
     index = (index + 1) % items.length;

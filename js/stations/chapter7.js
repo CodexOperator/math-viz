@@ -21,8 +21,16 @@ const NAMES = {
   '7.2': 'Taylor series',
   '7.3': 'Laurent series',
   '7.4': 'Singularities',
-  '7.5': 'Isolated zeros',
+  '7.5': 'Removable singularity',
 };
+const WAIT = {
+  '7.1': 'Press Play until the curve comes back.',
+  '7.2': 'Drag past the orange circle.',
+  '7.3': 'Leave the annulus and come back.',
+  '7.4': 'Walk once around the orange circle.',
+  '7.5': 'Drag the point toward 0.',
+};
+const POLE_WAIT = 'Play on. The image winds the other way.';
 
 function slug(id) {
   return String(id).replace(/\./g, '-');
@@ -57,8 +65,22 @@ export function mountChapter7(el, ctx, focus) {
     return practice.filter((item) => item.section === section && item.kind !== 'flash').map((item) => item.id);
   }
 
-  function stageReady(id) {
+  function flashKey(id) {
+    return `ch7-flash-seen-${id}`;
+  }
+
+  function practiceReady(id) {
     return gateIds(id).every((item) => ticks[item] === true);
+  }
+
+  function flashReady(id) {
+    const flashes = practice.filter((item) => item.section === id && item.kind === 'flash');
+    if (!flashes.length) return true;
+    return ticks[flashKey(id)] === true;
+  }
+
+  function stageReady(id) {
+    return practiceReady(id) && flashReady(id);
   }
 
   function stageDone(id) {
@@ -89,25 +111,51 @@ export function mountChapter7(el, ctx, focus) {
 
   function paintButtons() {
     for (const stage of CHAPTER_7.stages) {
-      const btn = el.querySelector(`#chapter-section-${slug(stage.id)}-complete`);
-      const summit = el.querySelector(`#chapter-section-${slug(stage.id)}-summit`);
+      const scope = `chapter-section-${slug(stage.id)}`;
+      const btn = el.querySelector(`#${scope}-complete`);
+      const summit = el.querySelector(`#${scope}-summit`);
       if (!btn) continue;
       const done = stageDone(stage.id);
       const ready = stageReady(stage.id);
+      const left = gateIds(stage.id).filter((item) => ticks[item] !== true).length;
       btn.disabled = !done && !ready;
       btn.setAttribute('aria-pressed', done ? 'true' : 'false');
       if (done) btn.textContent = nextOf(stage.id) === 'book' ? 'Back to the book' : `Go to ${nextOf(stage.id)}`;
-      else if (!ready) btn.textContent = 'Answer the practice to finish this stage.';
+      else if (left > 0) btn.textContent = left === 1 ? '1 card left.' : `${left} cards left.`;
+      else if (!flashReady(stage.id)) btn.textContent = 'Show the back of a card.';
       else btn.textContent = 'Stage complete';
       if (summit) summit.hidden = !done;
+      const sheet = el.querySelector(`#${scope}-sheet`);
+      if (sheet) sheet.hidden = !done;
+      const flash = el.querySelector(`#${scope}-flash`);
+      if (flash) flash.hidden = !practiceReady(stage.id);
     }
   }
 
   let hero = null;
+  let parked = false;
+  let lastY = 0;
+  function remember() {
+    if (parked) return;
+    lastY = window.scrollY;
+    if (lastY > 0) {
+      try { sessionStorage.setItem(SCROLL_KEY, String(Math.round(lastY))); } catch { /* ignore */ }
+    }
+  }
+  function park() {
+    if (parked) return;
+    parked = true;
+    try { sessionStorage.setItem(SCROLL_KEY, String(Math.round(lastY))); } catch { /* ignore */ }
+  }
   const up = h('a', { class: 'nav-link ch7-up', id: 'chapter-back', href: '#book' }, 'The Book');
-  up.addEventListener('click', () => {
-    try { sessionStorage.setItem(SCROLL_KEY, String(window.scrollY)); } catch { /* this visit still leaves */ }
-  });
+  const onLeave = (ev) => {
+    const a = ev.target instanceof Element ? ev.target.closest('a[href^="#"]') : null;
+    if (!a) return;
+    const href = a.getAttribute('href') || '';
+    if (href === '#chapter-7' || href.startsWith('#chapter-7-')) return;
+    park();
+  };
+  document.addEventListener('click', onLeave, true);
 
   for (const stage of CHAPTER_7.stages) {
     const scope = `chapter-section-${slug(stage.id)}`;
@@ -130,9 +178,21 @@ export function mountChapter7(el, ctx, focus) {
     }
 
     let picture = null;
+    let claimEarned = false;
+    let poleEarned = false;
+    let refreshGates = () => {};
     if (stage.picture && PICTURES[stage.picture]) {
       picture = h('div', { class: 'ch7-picture', id: `${scope}-picture` });
-      stops.push(PICTURES[stage.picture](picture));
+      stops.push(PICTURES[stage.picture](picture, {
+        onEarned() {
+          claimEarned = true;
+          refreshGates();
+        },
+        onPole() {
+          poleEarned = true;
+          refreshGates();
+        },
+      }));
       if (stage.id === '7.1') {
         picture.id = 'chapter-hero';
         picture.classList.add('ch7-hero');
@@ -163,54 +223,68 @@ export function mountChapter7(el, ctx, focus) {
         body));
     }
 
+    let memoryList = null;
     if (stage.memory && stage.memory.length) {
-      const list = h('ul', { class: 'ch7-memory', id: `${scope}-memory` });
+      memoryList = h('ul', { class: 'ch7-memory', id: `${scope}-memory` });
       stage.memory.forEach((line) => {
         const li = h('li');
         appendRich(li, line);
-        list.append(li);
+        memoryList.append(li);
       });
-      kids.push(h('p', { class: 'book-label', id: `${scope}-sheet` }, 'Memory'), list);
     }
 
     const sectionItems = practice.filter((item) => item.section === stage.id && item.kind !== 'flash');
     const flashes = practice.filter((item) => item.section === stage.id && item.kind === 'flash');
     const host = h('div', { class: 'chapter-exercises', id: `${scope}-practice` });
     const ordered = [];
-    function revealNext(itemId) {
-      const at = ordered.findIndex((node) => node.getAttribute('data-practice') === itemId);
-      const nxt = ordered[at + 1];
-      if (nxt) nxt.hidden = false;
-      const flash = host.querySelector('.ch7-flash');
-      if (flash && stageReady(stage.id)) flash.hidden = false;
+    let wait = null;
+    if (picture) {
+      wait = h('p', { class: 'ch7-read ch7-wait', id: `${scope}-wait` }, WAIT[stage.id] || '');
+      picture.append(wait);
     }
-    let waiting = false;
+    refreshGates = () => {
+      let blocked = false;
+      for (const card of ordered) {
+        const id = card.getAttribute('data-practice') || '';
+        const solved = ticks[id] === true;
+        const needsClaim = id.endsWith('-picture') && !claimEarned;
+        const needsPole = stage.id === '7.4' && !id.endsWith('-picture') && !poleEarned;
+        if (solved) {
+          card.hidden = false;
+          continue;
+        }
+        card.hidden = blocked || needsClaim || needsPole;
+        blocked = true;
+      }
+      if (!wait) return;
+      if (!claimEarned) {
+        wait.hidden = false;
+        wait.textContent = WAIT[stage.id] || '';
+      } else if (stage.id === '7.4' && !poleEarned) {
+        wait.hidden = false;
+        wait.textContent = POLE_WAIT;
+      } else wait.hidden = true;
+    };
     for (const item of sectionItems) {
       const card = mountPracticeItem(item, {
         onDone(itemId) {
           ticks = { ...ticks, [itemId]: true };
           persist();
-          revealNext(itemId);
+          refreshGates();
           paintButtons();
           paintStatus();
         },
       });
-      card.hidden = waiting;
-      if (ticks[item.id] !== true) waiting = true;
       const underPlay = picture && item.id.endsWith('-picture');
       if (underPlay) picture.append(card);
       else host.append(card);
       ordered.push(card);
     }
+    refreshGates();
     if (picture) {
       const key = h('p', { class: 'ch7-key', id: `${scope}-key` });
       appendRich(key, stage.key);
       picture.append(key);
-    }
-    if (flashes.length) {
-      const deck = mountFlashDeck(flashes, scope);
-      deck.hidden = !stageReady(stage.id);
-      host.append(deck);
     }
     kids.push(h('p', { class: 'book-label', id: `${scope}-practice-label` }, 'Practice'), host);
 
@@ -240,7 +314,27 @@ export function mountChapter7(el, ctx, focus) {
       const node = el.querySelector(`#chapter-section-${slug(nxt)}`);
       if (node) node.scrollIntoView({ block: 'start' });
     });
-    kids.push(summit, complete);
+    if (flashes.length) {
+      const deck = mountFlashDeck(flashes, scope, {
+        onSeen() {
+          if (ticks[flashKey(stage.id)] === true) return;
+          ticks = { ...ticks, [flashKey(stage.id)]: true };
+          persist();
+          paintButtons();
+          paintStatus();
+        },
+      });
+      deck.hidden = !practiceReady(stage.id);
+      kids.push(deck);
+    }
+    kids.push(summit);
+    if (memoryList) {
+      const sheet = h('details', { class: 'ch7-sheet', id: `${scope}-sheet` });
+      sheet.append(h('summary', null, 'Memory'), memoryList);
+      sheet.hidden = !stageDone(stage.id);
+      kids.push(sheet);
+    }
+    kids.push(complete);
 
     path.append(h('li', {
       class: 'section-node',
@@ -264,10 +358,21 @@ export function mountChapter7(el, ctx, focus) {
   paintButtons();
   paintStatus();
 
-  const onScroll = () => {
-    try { sessionStorage.setItem(SCROLL_KEY, String(window.scrollY)); } catch { /* ignore */ }
-  };
+  const onScroll = () => remember();
   window.addEventListener('scroll', onScroll, { passive: true });
+
+  function place(node, y) {
+    const go = () => {
+      if (node) {
+        if (!node.isConnected) return;
+        node.scrollIntoView({ block: 'start' });
+        return;
+      }
+      window.scrollTo(0, y);
+    };
+    requestAnimationFrame(() => requestAnimationFrame(go));
+    setTimeout(go, 60);
+  }
 
   const focusId = focus ? String(focus) : '';
   const sectionId = CHAPTER_7.stages.some((s) => s.id === focusId)
@@ -276,16 +381,19 @@ export function mountChapter7(el, ctx, focus) {
   const target = focusId ? el.querySelector(`#chapter-section-${slug(sectionId)}`) : null;
   if (target) {
     target.classList.add('is-target');
-    target.scrollIntoView({ block: 'start' });
+    place(target, 0);
   } else {
     let y = 0;
     try { y = Number(sessionStorage.getItem(SCROLL_KEY)) || 0; } catch { y = 0; }
-    if (y > 0) requestAnimationFrame(() => window.scrollTo(0, y));
+    if (y > 0) place(null, y);
   }
 
   return function unmount() {
     window.removeEventListener('scroll', onScroll);
-    try { sessionStorage.setItem(SCROLL_KEY, String(window.scrollY)); } catch { /* ignore */ }
+    document.removeEventListener('click', onLeave, true);
+    if (!parked && window.scrollY > 0) {
+      try { sessionStorage.setItem(SCROLL_KEY, String(Math.round(window.scrollY))); } catch { /* ignore */ }
+    }
     for (const stop of stops) stop();
   };
 }
