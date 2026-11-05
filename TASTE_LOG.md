@@ -1775,3 +1775,47 @@ The §4.2 recipe says disconnected. Example 4.10 prints `0 → i → −1+i → 
 `node tools/check_vectors.mjs` 234/234. `node tools/fractal-smoke.mjs` passed. `node kit/smoke.mjs` passed. No live `kit/` import.
 
 Still open: §§5.2, 5.3, and 5.5 have no picture. Chapters 1–3, 6, and 7 are roadmap lines. The circuit stations stay off the §5.4 stage. A few older practice prompts, outside the drills this batch opened, still put an exercise citation in the headline. The laptop square does not fill the column. The height of the first screen is the limit.
+
+## ux-veteran (chapter-4-5 batch 4)
+
+Preview https://book-preview.complexanalysis.pages.dev at tip `c0102e6`. `js/stations/book.js`, `js/stations/exp-picture.js`, `css/components.css`, `js/app.js`, `js/practice/mount.js`, and `js/practice/recipe.js` on that preview are the same bytes as this tip. Fresh storage. Phone first, 390×844, light, coarse pointer, then the same walk in the dark, then 1280×800, light and dark, with a mouse. No product code was changed. No console errors. No failed requests. No sideways scroll (`scrollWidth` was 390 and 1280).
+
+Read `## ux-veteran (mobile audit)` on `cursor/ux-veteran-audit` and `## ux-veteran (chapter-4-5 batch 3)`. The bar is the same: a 44px target, one up control, and a first screen that names the next action.
+
+### Verdict
+
+ANOTHER BATCH. The five cuts from batch 3 are on the page. The recipe is five lines, Chapter 4 is on the first screen, §5.4 reads Open, the line above the stills is gone, and the drawer says Test prep. The first screen of Chapter 5 still tells you to drag the green ring, then says the point is on the bottom, and the green ring is on the right. One batch, the five cuts below.
+
+### What the checks did
+
+**The book, both themes.** At 390 the status says "Next is §4.1, Exercise 3. 0 of 10 exercises." Continue is 111×44 at y = 325. Chapters 1, 2, and 3 are one line each, 358×44. Chapter 4, flagged Next, starts at y = 590. The 4.1 row is on that screen, 324×44, and it reads Next. At 1280 the same card starts at y = 524 and the sidebar is the list: chapters 1–7, then Test prep, each row at least 44×263, and the chapter you are on is marked. The Chapters button is gone at that width. Dark paper is rgb(13, 18, 28). The status is rgb(233, 237, 245) on rgb(21, 28, 43), contrast 14.5. The lede is rgb(166, 176, 195) on the paper, contrast 8.6.
+
+**Chapter 4.** `#chapter-4` opens at scroll 0. The Book link is 358×44. The status says "0 of 8 exercises." The two chips are 44px. Practice 4.1 is 91×44. `#chapter-4-4-2` puts the 4.2 flag at y = 109, 8px under the Book link (bottom 101). The same pin holds for 4.1, 4.3, 4.4, 5.1, and 5.4. The stills are on that screen: 161×161 on the phone (bottom 395) and 174×174 at 1280 (bottom 408). The idea is one sentence, then the pictures. Next landing is 358×44.
+
+**Chapter 5.** At 390 the square is 358×358, from y = 350 to 708. The claim is two lines, y = 716 to 769: "The point sits on the bottom of the unit circle." Play is 70×44 and ends at 821. The status card starts at y = 845, one pixel under the window. At 1280 the square is 358×358 at x = 304, the claim is one line at y = 710, and Play ends at 788. The status starts at y = 812. The green ring is 44px across, centered on the right of the circle. The green disc inside it is 20px. The purple disc is 12px, centered on the bottom. Same sentence in the dark, claim contrast 16.
+
+**§5.4 and the later rows.** `#chapter-5-5-4` puts the flag 8px under the Book link. The recipe card is five numbered lines. Each line keeps its page: Identity (5.34), page 150; Identity (5.36), page 150; Theorem 5.4, page 149; Identity (5.35), page 150; Figure 5.7, page 152. No empty row. Practice 5.4 is 91×44 and opens `#test-prep-5-5-4` at scroll 0, with Chapter 5 as a 116×44 button. On the book, the 5.4 mark reads Open. The 5.2, 5.3, and 5.5 marks read Later. `#chapter-5-5-2` is stuck at the bottom of the page: the Later flag is at y = 244, and the Book link ends at 101. `#chapter-5-5-5` lands with that same scroll, the 5.5 title at y = 537, and the 5.2 card still on the screen above it.
+
+**Back.** From the bare URL scrolled to 600, a chapter, then Back, returns to scroll 600. From `#book` at 600, Back returns to 600. From `#chapter-4` at 1500, Practice, then Back, returns to 1500. The practice button itself returns to the chapter at the scroll you left. Continue opens `#chapter-4` at scroll 0.
+
+**Drawer and the station pages.** The drawer is eight rows, each 358×44: chapters 1–7, then Test prep. Julia's + and − are 44×44 with a coarse pointer, 6px apart, and 32×32 with the mouse. The camp title "Julia and Mandelbrot Sets" is a 44px link with no underline, and it opens `#julia`. That page's title is "Julia Sets: Square, then Slide." The disk starts at y = 665 and ends at 987, so an 844px window shows the top of it. "Sequences and Series" opens `#sequence-chapter-4-1-3`, whose title is "A Sequence Has a Fate."
+
+### Ranked
+
+1. **The sentence names a point the green ring is not on.** At 390 and at 1280, light and dark, the lede says "Drag the green dot." The green ring is 44px on the right of the circle, with the 20px green disc inside it. The purple disc is 12px on the bottom. The claim says "The point sits on the bottom of the unit circle." The sentence is true of the purple mark, and it never says purple or \(e^{z}\). Change: the resting sentence names that mark. "\(e^{z}\) sits on the bottom of the unit circle." The green ring stays the radius on the real axis.
+
+2. **The front door counts 10 and the chapter counts 8.** On the book, both widths and both themes, the status is "Next is §4.1, Exercise 3. 0 of 10 exercises." Chapter 4 says "0 of 8 exercises." Chapter 5 says "0 of 2 exercises." The 10 is those two chapters, and the sentence does not say so. Change: the book line names the span. "Next is §4.1, Exercise 3, in Chapters 4 and 5. 0 of 10 exercises." The chapter pages keep their own counts.
+
+3. **The camp title is a silent exit.** "Sequences and Series", "Julia and Mandelbrot Sets", "Geometric Series and Convergence Theorems", and "Power Series Functions" are 44px links, color inherited, no underline. The first opens a page titled "A Sequence Has a Fate." The second opens "Julia Sets: Square, then Slide," with the disk starting at y = 665. The stills on §4.2, and the two §4.1 chips, are already the doors. Change: the camp title is a heading. The stills and the chips stay the way into the picture.
+
+4. **The theorem links between the chips and Practice are 23px.** On the Chapter 4 first screen, Definition 4.1 is 23×189 at y = 663 and Theorem 4.1 is 23×183 at y = 692. The chips above them are 44px and Practice 4.1 below them is 91×44. §5.4 has the same four pins, each 23px: Definition 5.5, Theorem 5.4, Identity (5.35), Figure 5.7. Change: each of those pins is a block link, min-height 44, the same target Practice already is.
+
+5. **The last camps cannot sit under the Book link.** Open camps pin the flag at y = 109, 8px under the Book link. `#chapter-5-5-2` leaves the Later flag at y = 244 because the page is already scrolled to its end (2695). `#chapter-5-5-5` leaves the title at y = 537, with the 5.2 card on the screen above it. The opened row has the target class, and the outline for that class is only on a problem card, so the three Later rows look alike. Change: pad the end of the chapter so the opened row can sit 8px under the Book link. Mark that row. The other rows stay Later.
+
+### What to keep
+
+The five batch-3 cuts are in. The recipe is five lines with the pages on the lines, on the stage, in both themes. Chapter 4 starts at y = 590 on the phone and y = 524 at 1280, flagged Next, with Continue on the screen. §5.4 reads Open. §§5.2, 5.3, and 5.5 read Later. The drawer row reads Test prep. The §4.2 idea is one sentence, and the stills follow it, 161px on the phone and 174px at 1280, both on that screen.
+
+Play stays inside the window: it ends at 821 on the phone and at 788 at 1280. The status card starts just under that window. Leave the square at 358px. The empty field to its right on the laptop is the room Play is using. The walk opens with the purple mark on the bottom and the green ring on the right, and the ring is 44px. The Book link is the 44px station link. A section flag on an open camp sits 8px under it. Continue opens `#chapter-4` at the top. Back returns the book, the bare URL, and the chapter to the scroll you left, and the practice button does the same.
+
+Julia's + and − are 44×44 under a coarse pointer and 32×32 with the mouse. Practice 5.4 lands at the top of Test prep. The mode row is three chips, each 44px. Later chapters are one line and 44px. The type is Iowan Old Style at 25.85px, the paper is rgb(246, 243, 236) in the light and rgb(13, 18, 28) in the dark, and the blue Continue button is the station button. The where-line, the white card, and the 44px up control stay.
