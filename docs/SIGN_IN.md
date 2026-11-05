@@ -54,6 +54,8 @@ Google's client form and the X app form both refuse a `*` in a callback URL. Add
 
 `/auth/google/callback` and `/auth/x/callback` only redirect to the `/api/auth/...` paths. They do not exchange the code. The start URLs stay `/auth/google/start` and `/auth/x/start`.
 
+A click is a document navigation. With `not_found_handling` set to `404-page`, that navigation is the static 404 unless the Function runs first. `assets.run_worker_first` includes `/api/*` and `/auth/*` for that reason. A `fetch` of the same URL is not enough.
+
 Authorized JavaScript origins, if Google asks:
 
 - `https://complexanalysis.pages.dev`
