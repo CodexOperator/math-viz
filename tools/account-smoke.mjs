@@ -10,14 +10,16 @@ import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createStore } from '../js/core/store.js';
 import {
-  SIGN_IN_LABEL, PROGRESS_KEYS, isProgressKey, mergeProgress, collectProgress, accountView, displayHandle, syncPlan,
+  SIGN_IN_LABEL, SIGN_IN_NAME, BOOK_SIGNIN_NOTE, PROGRESS_KEYS, isProgressKey, mergeProgress, collectProgress,
+  accountView, displayHandle, shortHandle, syncPlan, mergeNotice, offeredProviders, rememberAuthPlace, takeAuthLanding,
 } from '../js/core/account.js';
+import { recordMiss } from '../js/practice/misses.js';
 import {
   SESSION_TTL_SEC, signSession, readSession, verifyToken, signToken,
 } from '../functions/_lib/session.js';
 import { sessionCookie, safeReturn, cookiePair, readBodyLimited } from '../functions/_lib/http.js';
 import { validateProgress, MAX_PROGRESS_BYTES } from '../functions/_lib/progress.js';
-import { beginAuth } from '../functions/_lib/oauth.js';
+import { beginAuth, historySteps, CANCEL_NOTICE, FAIL_NOTICE } from '../functions/_lib/oauth.js';
 import { onRequest as progressRequest } from '../functions/api/progress.js';
 import { onRequestGet as meRequest } from '../functions/api/me.js';
 import { onRequestGet as legacyGoogleCallback } from '../functions/auth/google/callback.js';
@@ -59,6 +61,9 @@ const xToken = await signSession(secret, { provider: 'x', id: '42', handle: 'ada
 const xSession = await readSession(secret, xToken, now);
 check('an X session keeps the id and the handle', xSession && xSession.provider === 'x' && xSession.id === '42' && xSession.handle === 'ada');
 check('the header shows an X handle with @', displayHandle(xSession) === '@ada');
+check('the header shows the part before @ and keeps the full address',
+  shortHandle({ provider: 'google', handle: 'shael.student@university.edu' }) === 'shael.student'
+  && displayHandle({ provider: 'google', handle: 'shael.student@university.edu' }) === 'shael.student@university.edu');
 
 const mergedTicks = mergeProgress(
   { updatedAt: 1, keys: { 'progress.test2': { '4.1.3': true }, 'homework.ticks': { '4.2.3': true } } },
@@ -119,6 +124,14 @@ check('the union keeps every tick',
   && both.upload === true && both.apply === true);
 const again = syncPlan(both.merged, { keys: both.merged.keys, updatedAt: both.merged.updatedAt });
 check('a second merge of the same union is a no-op', again.upload === false && again.apply === false);
+check('the first upload says how many ticks stayed on the phone',
+  mergeNotice(first, localOnly) === 'Kept 1 tick from this phone.');
+check('ticks from the other phone are named when this phone had none',
+  mergeNotice(syncPlan({ keys: {} }, { keys: { progress: { b: true } } }), { keys: {} }) === 'Ticks from your other phone.');
+check('a union of both phones says both lines',
+  mergeNotice(both, { keys: { progress: { a: true }, 'progress.test2': { '4.1.3': true } } })
+  === 'Kept 2 ticks from this phone. Ticks from your other phone.');
+check('an unchanged union says nothing', mergeNotice(again, both.merged) === '');
 
 const folded = mergeProgress(
   { keys: { 'book.progress': { exercises: { '4.1.3': true }, sections: { '4.1': true } } } },
@@ -162,8 +175,37 @@ check('collect finds the progress keys and skips the map, the lab, and the filte
 check('filter and map keys are not progress', !isProgressKey('progress.test2.filter') && !isProgressKey('map') && PROGRESS_KEYS.includes('practice.leitner'));
 
 check('a signed-out view with no provider is hidden', accountView({ signedIn: false, providers: { google: false, x: false } }).mode === 'hidden');
-check('the sign-in label is the header sentence', accountView({ signedIn: false, providers: { google: true, x: false } }).label === SIGN_IN_LABEL);
-check('a signed-in view names the handle', accountView({ signedIn: true, provider: 'google', handle: 'ada@example.com', providers: {} }).handle === 'ada@example.com');
+check('the sign-in control is Sign in, and X is not offered',
+  accountView({ signedIn: false, providers: { google: true, x: true } }).label === SIGN_IN_LABEL
+  && accountView({ signedIn: false, providers: { google: true, x: true } }).name === SIGN_IN_NAME
+  && offeredProviders({ providers: { google: true, x: true } }).join() === 'google');
+check('a signed-in view shows the short name and keeps the address',
+  accountView({ signedIn: true, provider: 'google', handle: 'ada@example.com', providers: {} }).handle === 'ada'
+  && accountView({ signedIn: true, provider: 'google', handle: 'ada@example.com', providers: {} }).full === 'ada@example.com');
+const memSession = new Map();
+const sessionLike = {
+  getItem: (k) => (memSession.has(k) ? memSession.get(k) : null),
+  setItem: (k, v) => { memSession.set(k, String(v)); },
+  removeItem: (k) => { memSession.delete(k); },
+};
+rememberAuthPlace(sessionLike);
+check('leaving for the provider remembers a scroll and a history depth',
+  sessionLike.getItem('mv:auth-scroll') != null && sessionLike.getItem('mv:auth-depth') != null);
+sessionLike.setItem('mv:auth-notice', CANCEL_NOTICE);
+const landed = takeAuthLanding(sessionLike);
+check('a cancel notice is read once',
+  landed.notice === CANCEL_NOTICE && landed.returned === true && sessionLike.getItem('mv:auth-notice') == null);
+check('history steps over the provider and stops if the stack is unrelated',
+  historySteps(12, 10) === 2 && historySteps(11, 10) === 1 && historySteps(4, 0) === 2 && historySteps(2, 0) === 0 && historySteps(30, 10) === 0);
+const missedBook = recordMiss(store, 'ch4-4.1-sample', 0, 40);
+recordMiss(store, 'ch4-4.1-sample', 0, 50);
+const mergedMiss = mergeProgress(
+  { keys: { 'practice.misses': missedBook } },
+  { keys: { 'practice.misses': store.get('practice.misses') } },
+);
+check('a wrong answer writes a miss book the other phone can merge',
+  store.get('practice.misses').steps['ch4-4.1-sample']['0'].misses === 2
+  && mergedMiss.keys['practice.misses'].steps['ch4-4.1-sample']['0'].misses === 2);
 
 const good = validateProgress({ rev: 0, keys: { 'progress.test2': { '4.1.3': true } } });
 check('a tick document is accepted', good.ok && good.doc.keys['progress.test2']['4.1.3'] === true && good.doc.rev === 0);
@@ -193,6 +235,7 @@ const env = {
   PROGRESS: {
     async get(key) { return kv.has(key) ? kv.get(key) : null; },
     async put(key, value) { kv.set(key, value); },
+    async delete(key) { kv.delete(key); },
   },
 };
 const kv = new Map();
@@ -295,6 +338,19 @@ const declared = await readBodyLimited({
   body: { getReader() { throw new Error('should not read'); } },
 }, 1024);
 check('a declared body over the cap is refused before it is read', declared.error === 'size');
+const crossDelete = await progressRequest({
+  request: new Request('https://complexanalysis.pages.dev/api/progress', {
+    method: 'DELETE',
+    headers: { origin: 'https://evil.example', cookie: `mv_session=${encodeURIComponent(sessionCookieValue)}` },
+  }),
+  env,
+});
+check('a cross-site DELETE is refused', crossDelete.status === 403 && kv.has('u:google:abc'));
+const removed = await progressCall('DELETE', null, sessionCookieValue);
+const afterDelete = await progressCall('GET', null, sessionCookieValue);
+const afterBody = await afterDelete.json();
+check('DELETE removes the cloud row and the next read is empty',
+  removed.status === 200 && !kv.has('u:google:abc') && afterDelete.status === 200 && afterBody.rev === 0 && Object.keys(afterBody.keys).length === 0);
 
 const legacy = await legacyGoogleCallback({
   request: new Request('https://complexanalysis.pages.dev/auth/google/callback?code=abc&state=xyz'),
@@ -311,9 +367,13 @@ const missed = await googleCallback({
   env,
 });
 const missedCookies = missed.headers.getSetCookie ? missed.headers.getSetCookie() : [missed.headers.get('set-cookie') || ''];
+const missedText = await missed.text();
 check('a callback without the state cookie does not sign in',
-  missed.status === 302
-  && missed.headers.get('location') === '/#book'
+  missed.status === 200
+  && missed.headers.get('location') == null
+  && missedText.includes('/#book')
+  && missedText.includes(FAIL_NOTICE)
+  && missedText.includes('history.go')
   && missedCookies.every((cookie) => !String(cookie).startsWith('mv_session=')));
 
 const oauthish = await signToken(secret, {
@@ -474,7 +534,7 @@ try {
       return {
         state: document.getElementById('view').dataset.state,
         kids: slot ? slot.childElementCount : -1,
-        text: document.body.innerText.includes(${JSON.stringify(SIGN_IN_LABEL)}),
+        text: !!document.getElementById('account-signin') || !!document.getElementById('account-signout'),
         overflow: html.scrollWidth - html.clientWidth,
         header: !!document.getElementById('site-header'),
       };
@@ -491,50 +551,86 @@ try {
         state: document.getElementById('view').dataset.state,
         title: title ? title.textContent : '',
         kids: slot ? slot.childElementCount : -1,
+        note: (document.getElementById('book-signin-note') || {}).textContent || '',
         overflow: html.scrollWidth - html.clientWidth,
       };
     })()`);
-    check(`${label} The Book loads with an empty account slot`, book.state === 'ready' && book.title === 'The Book' && book.kids === 0 && book.overflow <= 1, JSON.stringify(book));
+    check(`${label} The Book loads with an empty account slot`, book.state === 'ready' && book.title === 'The Book' && book.kids === 0 && book.note === BOOK_SIGNIN_NOTE && book.overflow <= 1, JSON.stringify(book));
 
     const painted = await evalJson(page.send, `import('./js/core/account.js').then((mod) => {
       const slot = document.getElementById('account-slot');
       mod.paintAccount(slot, { signedIn: false, providers: { google: true, x: true } }, { location: location });
-      const details = document.getElementById('account-details');
-      if (details) details.open = true;
-      const sign = document.getElementById('account-signin').getBoundingClientRect();
-      const google = document.getElementById('account-google').getBoundingClientRect();
-      const x = document.getElementById('account-x').getBoundingClientRect();
+      const signEl = document.getElementById('account-signin');
+      const sign = signEl.getBoundingClientRect();
+      const theme = document.getElementById('theme-toggle').getBoundingClientRect();
+      const header = document.getElementById('site-header').getBoundingClientRect();
+      const style = getComputedStyle(signEl);
       const html = document.documentElement;
+      window.dispatchEvent(new Event('resize'));
       return {
-        text: document.getElementById('account-signin').textContent,
+        text: signEl.textContent,
+        name: signEl.getAttribute('aria-label'),
         signH: Math.round(sign.height),
         signW: Math.round(sign.width),
-        googleH: Math.round(google.height),
-        xH: Math.round(x.height),
-        href: document.getElementById('account-google').getAttribute('href'),
+        sameRow: Math.abs(sign.top - theme.top) < 8,
+        headerH: Math.round(header.height),
+        border: parseFloat(style.borderTopWidth) >= 1,
+        quiet: signEl.classList.contains('btn-quiet'),
+        href: signEl.getAttribute('href'),
+        x: !!document.getElementById('account-x'),
         overflow: html.scrollWidth - html.clientWidth,
       };
     })`);
-    check(`${label} sign-in control is at least 44px and names the sentence`,
-      painted.text === SIGN_IN_LABEL && painted.signH >= 44 && painted.signW >= 44 && painted.googleH >= 44 && painted.xH >= 44 && painted.overflow <= 1,
+    check(`${label} Sign in is one bordered 44px control on the Chapters row`,
+      painted.text.includes(SIGN_IN_LABEL)
+      && painted.name === SIGN_IN_NAME
+      && painted.signH >= 44 && painted.signW >= 44
+      && painted.sameRow && painted.border && painted.quiet === false
+      && painted.x === false
+      && painted.headerH <= (width < 500 ? 120 : 80)
+      && painted.overflow <= 1,
       JSON.stringify(painted));
     check(`${label} google link uses this origin's return path`, typeof painted.href === 'string' && painted.href.startsWith('/auth/google/start?return='));
 
     const signed = await evalJson(page.send, `import('./js/core/account.js').then((mod) => {
-      mod.paintAccount(document.getElementById('account-slot'), { signedIn: true, provider: 'x', handle: 'ada', providers: { x: true } });
+      mod.paintAccount(document.getElementById('account-slot'), { signedIn: true, provider: 'google', handle: 'shael.student@university.edu', providers: { google: true } });
+      window.dispatchEvent(new Event('resize'));
       const handle = document.getElementById('account-handle');
-      const out = document.getElementById('account-signout').getBoundingClientRect();
+      const outEl = document.getElementById('account-signout');
+      const out = outEl.getBoundingClientRect();
+      const theme = document.getElementById('theme-toggle').getBoundingClientRect();
+      const header = document.getElementById('site-header').getBoundingClientRect();
+      const more = document.getElementById('account-more');
+      if (more) more.open = true;
+      window.dispatchEvent(new Event('resize'));
+      const del = document.getElementById('account-delete');
+      const delBox = del.getBoundingClientRect();
       const html = document.documentElement;
       return {
         handle: handle.textContent,
-        out: document.getElementById('account-signout').textContent,
+        full: handle.getAttribute('aria-label'),
+        title: handle.getAttribute('title'),
+        out: outEl.textContent,
         h: Math.round(out.height),
         w: Math.round(out.width),
+        sameRow: Math.abs(out.top - theme.top) < 8,
+        closedH: Math.round(header.height),
+        del: del.textContent,
+        delH: Math.round(delBox.height),
         overflow: html.scrollWidth - html.clientWidth,
       };
     })`);
-    check(`${label} signed-in state shows the handle and Sign out`,
-      signed.handle === '@ada' && signed.out === 'Sign out' && signed.h >= 44 && signed.w >= 44 && signed.overflow <= 1,
+    check(`${label} signed-in state shows the short name, the address, Sign out, and Delete the copy`,
+      signed.handle === 'shael.student'
+      && signed.full === 'shael.student@university.edu'
+      && signed.title === 'shael.student@university.edu'
+      && signed.out === 'Sign out'
+      && signed.h >= 44 && signed.w >= 44
+      && signed.sameRow
+      && signed.closedH <= (width < 500 ? 120 : 80)
+      && signed.del === 'Delete the copy'
+      && signed.delH >= 44
+      && signed.overflow <= 1,
       JSON.stringify(signed));
   }
   page.close();

@@ -105,14 +105,14 @@ KV:
 4. Select the namespace. Add the binding for Production and for Preview.
 5. Save. A new deployment picks up the binding. Redeploy if the current production build started before the binding existed.
 
-The stored key is `u:google:<sub>` or `u:x:<id>`. The value is JSON: `rev`, `updatedAt`, and `keys`. A PUT larger than 64 KiB, or a body that is not that shape, is rejected.
+The stored key is `u:google:<sub>` or `u:x:<id>`. The value is JSON: `rev`, `updatedAt`, and `keys`. A PUT larger than 64 KiB, or a body that is not that shape, is rejected. `DELETE /api/progress` from this origin removes that key. The phone's `localStorage` is left as it is.
 
 ## After it is saved
 
-Open the production site. The header, including on The Book, shows "Sign in to keep your progress" only when that provider is fully configured. Google, X, or both, depending on which secrets are set. Signed in, the header shows the handle and Sign out.
+Open the production site. The header shows a bordered Sign in, with "for another device" on the control, only when Google is fully configured. X is not offered there yet: the start URL still asks for `users.read tweet.read`, which is more than an identity scope. The X routes stay in the Functions for when that scope is confirmed. Signed in, the header shows the part of the address before `@`, or `@name`. The full address is the control's accessible name and its title. Sign out stays on the page. On a wide window, Delete the copy is on that row. On a phone it is under the name.
 
-Sign out is `POST /auth/logout`. The session cookie is `mv_session`, HttpOnly, Secure, SameSite=Lax, and it expires after 8 hours without a request. A signed-in call to `/api/me` or `/api/progress` replaces it, so a study session stays signed in. The value is an HMAC of the account id and the handle, not the ticks.
+Sign out is `POST /auth/logout`. It does not reload, and it does not move the scroll position. The session cookie is `mv_session`, HttpOnly, Secure, SameSite=Lax, and it expires after 8 hours without a request. A signed-in call to `/api/me` or `/api/progress` replaces it, so a study session stays signed in. The value is an HMAC of the account id and the handle, not the ticks.
 
 The state cookie is `mv_oauth`. It is HttpOnly, Secure, SameSite=Lax, Path=`/api/auth`, and it lasts 10 minutes. SameSite=Lax is what lets the browser send it on the top-level redirect back from Google or X. The path is what limits it to the callback.
 
-Ticks on either device stay ticked. An untick on one device does not clear a tick stored on the other. A flashcard keeps the copy with more reviews, and the same review count keeps the later `updated` stamp. A practice-miss book (`v`, then `steps`) keeps the larger miss count, and the same count keeps the later stamp. The first sign-in writes that union to KV and to this browser. Signing out leaves the browser copy where it is.
+Ticks on either device stay ticked. An untick on one device does not clear a tick stored on the other. A flashcard keeps the copy with more reviews, and the same review count keeps the later `updated` stamp. A wrong answer on Test prep writes `practice.misses` as `{ v, steps }`. A practice-miss book keeps the larger miss count per step, and the same count keeps the later stamp. The copy that travels is ticks, the flashcard schedule, and those misses. The first signed-in load writes that union. The live region says how many ticks stayed on this phone, or that ticks came from the other phone. A later edit stays quiet. Cancelling at the provider returns to the chapter and says the ticks are still on this phone. The callback page steps back over the provider, so Back does not open the authorize URL. Signing out leaves the browser copy where it is.

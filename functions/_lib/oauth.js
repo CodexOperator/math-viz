@@ -87,11 +87,68 @@ export async function beginAuth(context, provider) {
   return redirect(dest, [oauthCookie(token)]);
 }
 
-function fail(returnTo) {
-  return redirect(returnTo || '/#book', [
+export const CANCEL_NOTICE = 'Sign-in cancelled. Your ticks are still on this phone.';
+export const FAIL_NOTICE = "Sign-in didn't finish. Your ticks are still on this phone.";
+
+function clearOauthCookies() {
+  return [
     clearCookie(OAUTH_COOKIE, OAUTH_COOKIE_PATH),
     clearCookie(OAUTH_COOKIE, '/auth'),
-  ]);
+  ];
+}
+
+export function cancelError(error) {
+  return error === 'access_denied' || error === 'denied' || error === 'cancelled';
+}
+
+// How many history entries to step back over so Back lands on the chapter.
+// depth is history.length on the chapter, saved before the provider navigation.
+// Two steps is chapter <- provider <- callback. One step is a provider whose
+// redirect already replaced itself. Zero means location.replace instead.
+export function historySteps(historyLength, depth) {
+  const length = Number(historyLength) || 0;
+  const from = Number(depth) || 0;
+  const steps = from > 0 ? length - from : (length > 2 ? 2 : 0);
+  if (steps < 1 || steps > 4) return 0;
+  return steps;
+}
+
+function jsConst(value) {
+  return JSON.stringify(value).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
+}
+
+function attrEscape(value) {
+  return String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+
+// A document, not a 302. The script steps back over the provider entry.
+// A 302 would leave that entry under the chapter, and Back would open it again.
+function land(returnTo, cookies, notice) {
+  const dest = returnTo || '/#book';
+  const headers = new Headers({
+    'content-type': 'text/html; charset=utf-8',
+    'cache-control': 'no-store',
+    'referrer-policy': 'no-referrer',
+    'content-security-policy': "default-src 'none'; script-src 'unsafe-inline'; base-uri 'none'; form-action 'none'",
+  });
+  for (const cookie of cookies) headers.append('Set-Cookie', cookie);
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Returning</title></head><body><p><a href="${attrEscape(dest)}">Back</a></p><script>(function () {
+  var dest = ${jsConst(dest)};
+  var note = ${jsConst(notice || '')};
+  try { if (note) sessionStorage.setItem('mv:auth-notice', note); } catch (e) {}
+  var depth = 0;
+  try { depth = Number(sessionStorage.getItem('mv:auth-depth')) || 0; } catch (e) {}
+  var steps = depth > 0 ? history.length - depth : (history.length > 2 ? 2 : 0);
+  if (steps < 1 || steps > 4) { location.replace(dest); return; }
+  var left = false;
+  addEventListener('pagehide', function () { left = true; });
+  history.go(-steps);
+  setTimeout(function () {
+    if (left || document.visibilityState === 'hidden') return;
+    location.replace(dest);
+  }, 700);
+})();</script></body></html>`;
+  return new Response(html, { status: 200, headers });
 }
 
 let googleCerts = { at: 0, keys: [] };
@@ -217,25 +274,24 @@ export async function finishAuth(context, provider) {
   const back = sent && sent.returnTo ? safeReturn(sent.returnTo, origin) : '/#book';
   const state = url.searchParams.get('state') || '';
   const code = url.searchParams.get('code') || '';
-  if (!sent || sent.kind !== 'oauth' || sent.provider !== provider || !sent.verifier || !safeEqual(sent.state || '', state) || !code || url.searchParams.get('error')) {
-    return fail(back);
+  const error = url.searchParams.get('error') || '';
+  const stateOk = !!(sent && sent.kind === 'oauth' && sent.provider === provider && sent.verifier && safeEqual(sent.state || '', state));
+  if (!stateOk || !code || error) {
+    const notice = stateOk && cancelError(error) ? CANCEL_NOTICE : FAIL_NOTICE;
+    return land(back, clearOauthCookies(), notice);
   }
   try {
     const redirectUri = `${origin}${callbackPath(provider)}`;
     const user = provider === 'google'
       ? await googleUser({ env, code, verifier: sent.verifier, nonce: sent.nonce, redirectUri })
       : await xUser({ env, code, verifier: sent.verifier, redirectUri });
-    if (!user) return fail(back);
+    if (!user) return land(back, clearOauthCookies(), FAIL_NOTICE);
     const session = await signSession(env.SESSION_SECRET, user);
     const check = await readSession(env.SESSION_SECRET, session);
-    if (!check) return fail(back);
-    return redirect(back, [
-      sessionCookie(session),
-      clearCookie(OAUTH_COOKIE, OAUTH_COOKIE_PATH),
-      clearCookie(OAUTH_COOKIE, '/auth'),
-    ]);
+    if (!check) return land(back, clearOauthCookies(), FAIL_NOTICE);
+    return land(back, [sessionCookie(session), ...clearOauthCookies()], '');
   } catch {
     console.error(`[mv] ${provider} sign-in failed`);
-    return fail(back);
+    return land(back, clearOauthCookies(), FAIL_NOTICE);
   }
 }

@@ -1,7 +1,7 @@
 // node tools/oauth-mock.mjs
 // Google and X, with fetch replaced by a local stand-in. No network, no real secrets.
 
-import { beginAuth, finishAuth } from '../functions/_lib/oauth.js';
+import { beginAuth, finishAuth, CANCEL_NOTICE, FAIL_NOTICE, historySteps } from '../functions/_lib/oauth.js';
 import { b64urlToBytes, bytesToB64url } from '../functions/_lib/session.js';
 
 const secret = 'test-session-secret-not-a-real-value';
@@ -167,39 +167,66 @@ check('google sends S256 of the verifier and the /api/auth callback',
   && google.location.searchParams.get('redirect_uri') === expected.redirect
   && /Path=\/api\/auth/.test(google.response.headers.get('set-cookie') || ''));
 
-async function finish(provider, cookie, code, state) {
+async function finish(provider, cookie, query) {
   calls.length = 0;
   return finishAuth({
-    request: new Request(`https://complexanalysis.pages.dev/api/auth/${provider}/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`, {
+    request: new Request(`https://complexanalysis.pages.dev/api/auth/${provider}/callback?${query}`, {
       headers: { cookie },
     }),
     env,
   }, provider);
 }
 
-const wrong = await finish('google', google.cookie, 'good', 'not-the-state');
-check('a mismatched state is refused before the token request',
-  wrong.status === 302 && wrong.headers.get('location') === '/#book' && !calls.includes('https://oauth2.googleapis.com/token') && !sessionCookie(wrong));
-
-for (const code of ['bad-nonce', 'bad-iss', 'bad-aud', 'alg-none', 'bad-sig']) {
-  const refused = await finish('google', google.cookie, code, google.payload.state);
-  check(`google ${code} does not sign in`, refused.status === 302 && refused.headers.get('location') === '/#book' && !sessionCookie(refused));
+function dropsProvider(text, path) {
+  return text.includes(path) && text.includes('history.go(-steps)') && text.includes('history.length - depth') && text.includes('location.replace');
 }
 
-const signed = await finish('google', google.cookie, 'good', google.payload.state);
+check('two steps is the provider between the chapter and the callback', historySteps(7, 5) === 2 && historySteps(6, 5) === 1);
+
+const wrong = await finish('google', google.cookie, `code=good&state=${encodeURIComponent('not-the-state')}`);
+const wrongText = await wrong.text();
+check('a mismatched state is refused before the token request',
+  wrong.status === 200 && dropsProvider(wrongText, '/#book') && wrongText.includes(FAIL_NOTICE) && !calls.includes('https://oauth2.googleapis.com/token') && !sessionCookie(wrong));
+
+for (const code of ['bad-nonce', 'bad-iss', 'bad-aud', 'alg-none', 'bad-sig']) {
+  const refused = await finish('google', google.cookie, `code=${code}&state=${encodeURIComponent(google.payload.state)}`);
+  const refusedText = await refused.text();
+  check(`google ${code} does not sign in`, refused.status === 200 && dropsProvider(refusedText, '/#book') && refusedText.includes(FAIL_NOTICE) && !sessionCookie(refused));
+}
+
+const chapter = await beginAuth({
+  request: new Request('https://complexanalysis.pages.dev/auth/google/start?return=%2F%23chapter-5'),
+  env,
+}, 'google');
+const chapterCookie = cookiePair(chapter).split('; ').find((part) => part.startsWith('mv_oauth='));
+const chapterToken = decodeURIComponent(chapterCookie.slice('mv_oauth='.length));
+const chapterState = payloadOf(chapterToken).state;
+const cancelled = await finish('google', `mv_oauth=${encodeURIComponent(chapterToken)}`, `error=access_denied&state=${encodeURIComponent(chapterState)}`);
+const cancelledText = await cancelled.text();
+check('cancel returns to the chapter and says the ticks stayed',
+  cancelled.status === 200
+  && dropsProvider(cancelledText, '/#chapter-5')
+  && cancelledText.includes(CANCEL_NOTICE)
+  && !sessionCookie(cancelled)
+  && !calls.includes('https://oauth2.googleapis.com/token'));
+
+const signed = await finish('google', google.cookie, `code=good&state=${encodeURIComponent(google.payload.state)}`);
+const signedText = await signed.text();
 const session = sessionCookie(signed);
 check('google sign-in sets a session cookie and returns to the book',
-  signed.status === 302
-  && signed.headers.get('location') === '/#book'
+  signed.status === 200
+  && dropsProvider(signedText, '/#book')
+  && !signedText.includes(CANCEL_NOTICE)
   && /HttpOnly/.test(session) && /Secure/.test(session) && /SameSite=Lax/.test(session)
   && calls.includes('https://oauth2.googleapis.com/token'));
 
 const x = await start('x');
-const xDone = await finish('x', x.cookie, 'good', x.payload.state);
+const xDone = await finish('x', x.cookie, `code=good&state=${encodeURIComponent(x.payload.state)}`);
+const xText = await xDone.text();
 const xSession = sessionCookie(xDone);
 check('x sign-in sends the encoded client secret, the verifier, and the /api/auth callback',
-  xDone.status === 302
-  && xDone.headers.get('location') === '/#book'
+  xDone.status === 200
+  && dropsProvider(xText, '/#book')
   && /HttpOnly/.test(xSession)
   && xSaw.verifier === x.payload.verifier
   && xSaw.redirect === 'https://complexanalysis.pages.dev/api/auth/x/callback'

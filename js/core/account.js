@@ -5,7 +5,14 @@
 
 import { mergeLeitner } from '../practice/leitner.js';
 
-export const SIGN_IN_LABEL = 'Sign in to keep your progress';
+export const SIGN_IN_LABEL = 'Sign in';
+export const SIGN_IN_NOTE = 'for another device';
+export const SIGN_IN_NAME = 'Sign in for another device';
+export const BOOK_SIGNIN_NOTE = 'Ticks stay on this phone. Sign in copies them to another phone.';
+export const SIGNOUT_NOTICE = 'Signed out. Your ticks are still on this phone.';
+export const SIGNOUT_FAIL = "Sign-out didn't finish. Your ticks are still on this phone.";
+export const DELETE_NOTICE = 'The saved copy is deleted. Your ticks are still on this phone.';
+export const DELETE_FAIL = 'The saved copy is still there.';
 
 // Keys the site already writes, plus the names a later page can use for the
 // same four memories: stage ticks, the flashcard schedule, practice
@@ -19,7 +26,7 @@ export const PROGRESS_KEYS = Object.freeze([
   'homework.ticks',   // a homework mark kept apart from the chapter ticks
   'practice.leitner', // flashcard schedule (box, due, updated)
   'practice.ticks',   // a practice item marked done
-  'practice.misses',  // a miss count with updatedAt
+  'practice.misses',  // { v, steps: { item: { step: { misses, updated } } } }
 ]);
 
 const DEBOUNCE_MS = 800;
@@ -223,13 +230,101 @@ export function displayHandle(me) {
   return handle;
 }
 
-export function accountView(me) {
+// The header shows the part before @, or @name. The full address stays on
+// the accessible name and the title.
+export function shortHandle(me) {
+  const full = displayHandle(me);
+  if (me && me.provider === 'x') return full;
+  const at = full.indexOf('@');
+  if (at > 0) return full.slice(0, at);
+  return full;
+}
+
+const TICK_KEYS = ['progress', 'progress.test2', 'stage.ticks', 'homework.ticks', 'practice.ticks'];
+
+function trueCount(map) {
+  if (!map || typeof map !== 'object' || Array.isArray(map)) return 0;
+  let n = 0;
+  for (const id of Object.keys(map)) if (map[id] === true) n += 1;
+  return n;
+}
+
+export function tickCount(doc) {
+  const keys = doc && doc.keys && typeof doc.keys === 'object' && !Array.isArray(doc.keys) ? doc.keys : {};
+  let n = 0;
+  for (const name of TICK_KEYS) n += trueCount(keys[name]);
+  const book = keys['book.progress'];
+  if (book && typeof book === 'object' && book.migrated !== true) n += trueCount(book.exercises);
+  return n;
+}
+
+function pluralTicks(n) {
+  return n === 1 ? 'tick' : 'ticks';
+}
+
+// One line for the first signed-in load. Later edits stay quiet.
+export function mergeNotice(plan, local) {
+  if (!plan || (!plan.upload && !plan.apply)) return '';
+  const localTicks = tickCount(local);
+  const mergedTicks = tickCount(plan.merged);
+  const kept = plan.upload ? localTicks : 0;
+  const brought = !!(plan.apply && mergedTicks > localTicks);
+  if (brought && kept) return `Kept ${kept} ${pluralTicks(kept)} from this phone. Ticks from your other phone.`;
+  if (brought) return 'Ticks from your other phone.';
+  if (kept) return `Kept ${kept} ${pluralTicks(kept)} from this phone.`;
+  return 'Saved.';
+}
+
+// Google is the header control. X stays off until the start URL asks only
+// for an identity scope. It still requests users.read and tweet.read.
+export function offeredProviders(me) {
   const providers = [];
   if (me && me.providers && me.providers.google) providers.push('google');
-  if (me && me.providers && me.providers.x) providers.push('x');
-  if (me && me.signedIn) return { mode: 'in', handle: displayHandle(me), provider: me.provider || '', providers };
-  if (!providers.length) return { mode: 'hidden', providers, label: '' };
-  return { mode: 'out', label: SIGN_IN_LABEL, providers };
+  return providers;
+}
+
+export function accountView(me) {
+  const providers = offeredProviders(me);
+  if (me && me.signedIn) {
+    return {
+      mode: 'in',
+      handle: shortHandle(me),
+      full: displayHandle(me),
+      provider: me.provider || '',
+      providers,
+    };
+  }
+  if (!providers.length) return { mode: 'hidden', providers, label: '', name: '' };
+  return { mode: 'out', label: SIGN_IN_LABEL, name: SIGN_IN_NAME, providers };
+}
+
+export function rememberAuthPlace(storage) {
+  try {
+    const y = globalThis.window ? globalThis.window.scrollY : 0;
+    const depth = globalThis.history ? globalThis.history.length : 0;
+    if (!storage) return;
+    storage.setItem('mv:auth-scroll', String(Math.max(0, Math.round(y || 0))));
+    storage.setItem('mv:auth-depth', String(depth || 0));
+  } catch { /* the return hash still names the chapter */ }
+}
+
+export function takeAuthLanding(storage) {
+  const empty = { notice: '', scroll: null, returned: false };
+  if (!storage) return empty;
+  try {
+    const notice = storage.getItem('mv:auth-notice') || '';
+    const raw = storage.getItem('mv:auth-scroll');
+    const depth = storage.getItem('mv:auth-depth');
+    storage.removeItem('mv:auth-notice');
+    storage.removeItem('mv:auth-scroll');
+    storage.removeItem('mv:auth-depth');
+    const returned = notice !== '' || raw != null || depth != null;
+    let scroll = null;
+    if (raw != null && raw !== '' && Number.isFinite(Number(raw))) scroll = Number(raw);
+    return { notice, scroll, returned };
+  } catch {
+    return empty;
+  }
 }
 
 function el(tag, attrs, children) {
@@ -251,28 +346,78 @@ function authHref(provider, loc) {
 
 const PROVIDER_LABEL = { google: 'Google', x: 'X' };
 
+function signInFace() {
+  return [
+    el('span', { class: 'account-signin-label' }, SIGN_IN_LABEL),
+    el('span', { class: 'account-signin-sub' }, SIGN_IN_NOTE),
+  ];
+}
+
+function armAuthLinks(slot, storage) {
+  for (const anchor of slot.querySelectorAll('a[href^="/auth/"]')) {
+    anchor.addEventListener('click', () => rememberAuthPlace(storage));
+  }
+}
+
 export function paintAccount(slot, me, opts = {}) {
   if (!slot) return;
   const view = accountView(me);
   slot.replaceChildren();
   if (view.mode === 'hidden') return;
   const loc = opts.location || globalThis.location || { pathname: '/', search: '', hash: '' };
+  const storage = opts.sessionStorage || globalThis.sessionStorage;
   if (view.mode === 'in') {
+    const more = el('details', { class: 'account-more', id: 'account-more' }, [
+      el('summary', {
+        class: 'account-handle',
+        id: 'account-handle',
+        title: view.full,
+        'aria-label': view.full,
+      }, view.handle),
+      el('button', {
+        type: 'button',
+        class: 'btn account-delete',
+        id: 'account-delete',
+        'aria-label': 'Delete the copy saved for another device',
+      }, 'Delete the copy'),
+    ]);
     slot.append(
-      el('span', { class: 'account-handle', id: 'account-handle' }, view.handle),
-      el('button', { type: 'button', class: 'btn btn-quiet account-signout', id: 'account-signout' }, 'Sign out'),
+      more,
+      el('button', { type: 'button', class: 'btn account-signout', id: 'account-signout' }, 'Sign out'),
     );
+    const wide = globalThis.matchMedia && matchMedia('(min-width: 56.25rem)').matches;
+    if (wide) {
+      more.open = true;
+      more.addEventListener('click', (event) => {
+        const summary = event.target && event.target.closest ? event.target.closest('summary') : null;
+        if (summary) event.preventDefault();
+      });
+    }
+    more.addEventListener('toggle', () => noteHeader());
     const button = slot.querySelector('#account-signout');
     if (button && opts.onSignOut) button.addEventListener('click', opts.onSignOut);
+    const del = slot.querySelector('#account-delete');
+    if (del && opts.onDelete) {
+      del.addEventListener('click', () => {
+        if (del.dataset.armed !== 'true') {
+          del.dataset.armed = 'true';
+          del.textContent = 'Delete it';
+          return;
+        }
+        opts.onDelete();
+      });
+    }
     return;
   }
   if (view.providers.length === 1) {
     const provider = view.providers[0];
     slot.append(el('a', {
-      class: 'btn btn-quiet account-signin',
+      class: 'btn account-signin',
       id: 'account-signin',
       href: authHref(provider, loc),
-    }, view.label));
+      'aria-label': SIGN_IN_NAME,
+    }, signInFace()));
+    armAuthLinks(slot, storage);
     return;
   }
   const links = view.providers.map((provider) => el('a', {
@@ -281,13 +426,58 @@ export function paintAccount(slot, me, opts = {}) {
     href: authHref(provider, loc),
   }, PROVIDER_LABEL[provider] || provider));
   slot.append(el('details', { class: 'account-details', id: 'account-details' }, [
-    el('summary', { class: 'btn btn-quiet account-signin', id: 'account-signin' }, view.label),
+    el('summary', {
+      class: 'btn account-signin',
+      id: 'account-signin',
+      'aria-label': SIGN_IN_NAME,
+    }, signInFace()),
     el('div', { class: 'account-providers', id: 'account-providers' }, links),
   ]));
+  armAuthLinks(slot, storage);
 }
 
 function noteHeader() {
   try { window.dispatchEvent(new Event('resize')); } catch { /* the header height is also read on resize */ }
+}
+
+function announce(text) {
+  if (!text) return;
+  const view = globalThis.document && document.getElementById('view');
+  const status = globalThis.document && document.getElementById('route-status');
+  const ready = view && view.dataset && view.dataset.state && view.dataset.state !== 'loading';
+  if (ready && status) {
+    status.textContent = text;
+    return;
+  }
+  const mv = (globalThis.window && (window.__mv = window.__mv || {})) || null;
+  if (mv) mv.accountNotice = text;
+}
+
+function parkLanding(landing) {
+  if (!landing || !globalThis.window) return;
+  const mv = (window.__mv = window.__mv || {});
+  if (landing.notice) mv.accountNotice = landing.notice;
+  if (landing.scroll != null) mv.accountScroll = landing.scroll;
+}
+
+async function waitForView() {
+  const view = globalThis.document && document.getElementById('view');
+  if (!view || !view.dataset) return;
+  if (view.dataset.state && view.dataset.state !== 'loading') return;
+  await new Promise((resolve) => {
+    let obs = null;
+    const done = () => {
+      if (obs) obs.disconnect();
+      resolve();
+    };
+    if (typeof MutationObserver === 'function') {
+      obs = new MutationObserver(() => {
+        if (view.dataset.state && view.dataset.state !== 'loading') done();
+      });
+      obs.observe(view, { attributes: true, attributeFilter: ['data-state'] });
+    }
+    setTimeout(done, 4000);
+  });
 }
 
 export function mountAccount({ store, slot, fetch: fetchImpl, location: loc, sessionStorage: ss } = {}) {
@@ -300,13 +490,18 @@ export function mountAccount({ store, slot, fetch: fetchImpl, location: loc, ses
   let timer = 0;
   let busy = false;
   let queued = false;
+  let watching = false;
+  let me = null;
   const unsubs = [];
   const ac = typeof AbortController === 'function' ? new AbortController() : null;
+  const landing = takeAuthLanding(storage);
+  parkLanding(landing);
 
   function stop() {
     stopped = true;
     clearTimeout(timer);
     if (ac) ac.abort();
+    if (globalThis.window) window.removeEventListener('pageshow', onPageShow);
     for (const fn of unsubs.splice(0)) {
       try { fn(); } catch { /* already gone */ }
     }
@@ -386,28 +581,79 @@ export function mountAccount({ store, slot, fetch: fetchImpl, location: loc, ses
   }
 
   function watch() {
-    if (!store.subscribe) return;
+    if (watching || !store.subscribe) return;
+    watching = true;
     for (const name of PROGRESS_KEYS) {
       try { unsubs.push(store.subscribe(name, schedule)); } catch { /* a missing key still syncs on the next visit */ }
     }
   }
 
-  async function signOut() {
+  function unwatch() {
+    watching = false;
+    for (const fn of unsubs.splice(0)) {
+      try { fn(); } catch { /* already gone */ }
+    }
+  }
+
+  function paint(current) {
+    paintAccount(slot, current, {
+      location,
+      sessionStorage: storage,
+      onSignOut: () => { signOut().catch(() => {}); },
+      onDelete: () => { deleteCopy().catch(() => {}); },
+    });
+    noteHeader();
+  }
+
+  async function refreshOpenPage() {
+    const y = globalThis.window ? window.scrollY : 0;
+    const detail = { scrollY: y, done: null };
     try {
-      await fetchFn('/auth/logout', {
+      window.dispatchEvent(new CustomEvent('mv:account-refresh', { detail }));
+    } catch { /* the ticks are in localStorage for the next visit */ }
+    if (detail.done && typeof detail.done.then === 'function') {
+      try { await detail.done; } catch { /* the open page keeps its scroll */ }
+    }
+  }
+
+  async function signOut() {
+    let ok = false;
+    try {
+      const res = await fetchFn('/auth/logout', {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'content-type': 'application/json', accept: 'application/json' },
         body: '{}',
         signal: ac ? ac.signal : undefined,
       });
-    } catch { /* reload still drops the in-memory session if the cookie cleared */ }
-    try { if (storage) storage.removeItem('mv:account-synced'); } catch { /* ignore */ }
-    if (location && location.reload) location.reload();
+      ok = !!(res && res.ok);
+    } catch { ok = false; }
+    if (!ok) {
+      announce(SIGNOUT_FAIL);
+      return;
+    }
+    try { if (storage) storage.removeItem('mv:account-synced'); } catch { /* the next sign-in can say the line again */ }
+    unwatch();
+    me = { ...(me || {}), signedIn: false };
+    paint(me);
+    announce(SIGNOUT_NOTICE);
+  }
+
+  async function deleteCopy() {
+    let ok = false;
+    try {
+      const res = await fetchFn('/api/progress', {
+        method: 'DELETE',
+        credentials: 'same-origin',
+        headers: { accept: 'application/json' },
+        signal: ac ? ac.signal : undefined,
+      });
+      ok = !!(res && res.ok);
+    } catch { ok = false; }
+    announce(ok ? DELETE_NOTICE : DELETE_FAIL);
   }
 
   async function boot() {
-    let me = null;
     try {
       const res = await fetchFn('/api/me', {
         credentials: 'same-origin',
@@ -422,24 +668,27 @@ export function mountAccount({ store, slot, fetch: fetchImpl, location: loc, ses
       return;
     }
     if (stopped || !me) return;
-    paintAccount(slot, me, { location, onSignOut: () => { signOut().catch(() => {}); } });
-    noteHeader();
+    paint(me);
     if (!me.signedIn) return;
     watch();
     busy = true;
     try {
+      await waitForView();
+      if (stopped) return;
       const remote = await readProgress();
       if (stopped || !remote) return;
-      const plan = syncPlan(collectProgress(store), remote);
+      const local = collectProgress(store);
+      const plan = syncPlan(local, remote);
       if (plan.apply) applyQuiet(plan.merged);
       if (plan.upload) await pushMerged(remote);
-      if (!plan.apply || stopped) return;
       let already = false;
       try { already = !!(storage && storage.getItem('mv:account-synced')); } catch { already = false; }
-      if (!already && location && location.reload) {
-        try { if (storage) storage.setItem('mv:account-synced', '1'); } catch { /* one reload is enough */ }
-        location.reload();
+      const line = already ? '' : mergeNotice(plan, local);
+      if (line) {
+        try { if (storage) storage.setItem('mv:account-synced', '1'); } catch { /* one line is enough */ }
       }
+      if (plan.apply) await refreshOpenPage();
+      if (line) announce(line);
     } catch { /* signed in, local ticks still on the page */ }
     finally {
       busy = false;
@@ -450,6 +699,15 @@ export function mountAccount({ store, slot, fetch: fetchImpl, location: loc, ses
     }
   }
 
-  boot();
+  function onPageShow(event) {
+    if (!event || !event.persisted || stopped) return;
+    const again = takeAuthLanding(storage);
+    if (!again.returned) return;
+    if (again.notice) announce(again.notice);
+    boot().catch(() => {});
+  }
+
+  if (globalThis.window) window.addEventListener('pageshow', onPageShow);
+  boot().catch(() => {});
   return stop;
 }

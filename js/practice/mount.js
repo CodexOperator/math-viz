@@ -7,6 +7,7 @@ import { loadCatalog, realize } from './catalog.js';
 import { selectItems, sectionOfFocus, practiceEntries } from './queue.js';
 import { answersMatch } from './check.js';
 import { loadDeck, saveDeck, reviewCard, dueOrder, localDay } from './leitner.js';
+import { recordMiss } from './misses.js';
 import { renderCard, renderSheet, renderFlash } from './render.js';
 
 const KIND_LABEL = {
@@ -188,6 +189,7 @@ export async function mountPrep(el, ctx, spec) {
       return;
     }
     misses += 1;
+    try { recordMiss(ctx.store, item.id, step); } catch { /* the hint still shows */ }
     phase = misses === 1 ? 'hint' : 'told';
     paint();
   }

@@ -416,7 +416,9 @@ export function start() {
   }
 
   function finish(first, label) {
-    if (routeStatus) routeStatus.textContent = label;
+    const queued = window.__mv && window.__mv.accountNotice;
+    if (routeStatus) routeStatus.textContent = queued || label;
+    if (queued && window.__mv) window.__mv.accountNotice = '';
     if (!first) view.focus({ preventScroll: true });
   }
 
@@ -471,6 +473,11 @@ export function start() {
     if (lastHash && lastHash !== nowHash) scrollMem.set(lastHash, window.scrollY);
     pendingScroll = restoreScroll ? (scrollMem.get(nowHash) ?? null) : null;
     restoreScroll = false;
+    const parked = window.__mv && window.__mv.accountScroll;
+    if (pendingScroll == null && parked != null && Number.isFinite(parked)) {
+      pendingScroll = parked;
+      window.__mv.accountScroll = null;
+    }
     lastHash = nowHash;
     const st = route.station ? stationById(route.station) : null;
     const forced = mapForcedByRoute(st, route);
@@ -622,11 +629,21 @@ export function start() {
 
   listen(window, 'popstate', () => { restoreScroll = true; });
   listen(window, 'hashchange', render);
+  listen(window, 'mv:account-refresh', (event) => {
+    const y = event.detail && Number.isFinite(event.detail.scrollY) ? event.detail.scrollY : window.scrollY;
+    scrollMem.set(location.hash || '#home', y);
+    restoreScroll = true;
+    const pending = render();
+    if (event.detail) event.detail.done = pending;
+  });
 
   function syncHeaderHeight() {
     const header = document.getElementById('site-header');
     if (!header) return;
-    document.documentElement.style.setProperty('--header-h', `${header.offsetHeight}px`);
+    // Measure the content. A previous taller header must not stick as min-height.
+    document.documentElement.style.setProperty('--header-h', '0px');
+    const h = header.offsetHeight;
+    document.documentElement.style.setProperty('--header-h', `${h}px`);
   }
   syncHeaderHeight();
   listen(window, 'resize', syncHeaderHeight);

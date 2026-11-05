@@ -25,9 +25,10 @@ export async function onRequest(context) {
   const method = context.request.method;
   if (method === 'GET') return onGet(context);
   if (method === 'PUT') return onPut(context);
+  if (method === 'DELETE') return onDelete(context);
   return new Response('Method not allowed', {
     status: 405,
-    headers: { allow: 'GET, PUT', 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' },
+    headers: { allow: 'GET, PUT, DELETE', 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' },
   });
 }
 
@@ -75,4 +76,14 @@ async function onPut(context) {
   if (serial.length > MAX_PROGRESS_BYTES) return withCookie(json({ error: 'size' }, 413), auth.cookie);
   await env.PROGRESS.put(key, serial);
   return withCookie(json(stored), auth.cookie);
+}
+
+async function onDelete(context) {
+  const { request, env } = context;
+  if (!sameSiteWrite(request)) return json({ error: 'origin' }, 403);
+  const auth = await authed(context);
+  if (auth.error) return auth.error;
+  if (typeof env.PROGRESS.delete !== 'function') return withCookie(json({ error: 'unavailable' }, 404), auth.cookie);
+  await env.PROGRESS.delete(userKey(auth.session));
+  return withCookie(json({ ok: true }), auth.cookie);
 }

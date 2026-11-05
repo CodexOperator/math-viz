@@ -1598,3 +1598,15 @@ ANOTHER BATCH. The control is on The Book, the targets are 44px, and a signed-ou
 ### What to keep
 
 The slot stays empty when `/api/me` does not answer, and The Book is unchanged: status, 44px Continue, the eight drawer rows. Sign-in is that one header control on The Book, not a second block in the page. Google and X are the site's bordered buttons, on the paper and the type the book already uses (`rgb(246, 243, 236)` and `rgb(13, 18, 28)`, Iowan title, the accent Continue). The sentence, Google, X, and Sign out are all at least 44px tall. The focus ring is the site's. The drawer and the chapter anchor follow the real header height, so the extra row does not cover "1 Complex Numbers" or the Chapter 4 title. When the function runs, the return hash is the chapter the student left, Back from the provider restores that chapter's scroll, Sign out leaves the ticks on the phone, and a tick held on the account does come down into `localStorage`. Dark matches light.
+
+## sign-in (batch 2)
+
+Branch `cursor/sign-in`. The header control is a bordered Sign in, 44px, on the Chapters row (96px header at 390, one row at 1280). The line under it is "for another device". The Book says, once, that ticks stay on this phone and sign-in copies them to another phone. A long local-part ellipsizes; the full address is the title and the accessible name. Sign out does not reload and does not move the scroll. The live region says the ticks stayed.
+
+Cancel (`access_denied`, `denied`, or `cancelled`, with the state cookie) and a failed exchange return an HTML page, not a 302. The page steps `history.go` back over the provider using the history length saved at the tap, then `location.replace` if that does not leave. The chapter's scroll is restored, and the live region says the ticks are still on this phone.
+
+The first signed-in load writes the union and says "Kept N ticks from this phone." or "Ticks from your other phone." It does not reload. A wrong answer on Test prep now writes `practice.misses` as `{ v, steps }`, which the existing merge already kept. The sync copy is ticks, the flashcard schedule, and those misses.
+
+`DELETE /api/progress` removes `u:<provider>:<id>` and does not touch `localStorage`. On a wide window the button is on the header row. On a phone it sits under the name, so the Chapters row stays one line.
+
+X stays off the header. The start URL still asks for `users.read tweet.read`, and that is not an identity-only scope. The routes remain. No client secret was added. Nothing was merged and `gh-pages` was not touched.
