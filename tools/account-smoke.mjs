@@ -10,8 +10,9 @@ import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createStore } from '../js/core/store.js';
 import {
-  SIGN_IN_LABEL, SIGN_IN_NAME, BOOK_SIGNIN_NOTE, PROGRESS_KEYS, isProgressKey, mergeProgress, collectProgress,
+  SIGN_IN_LABEL, SIGN_IN_NAME, SIGNED_IN_LABEL, BOOK_SIGNIN_NOTE, BOOK_SIGNIN_NOTE_WIDE, PROGRESS_KEYS, isProgressKey, mergeProgress, collectProgress,
   accountView, displayHandle, shortHandle, syncPlan, mergeNotice, offeredProviders, rememberAuthPlace, takeAuthLanding,
+  DELETE_LABEL, DELETE_CONFIRM, DELETE_ARM_LINE,
 } from '../js/core/account.js';
 import { recordMiss } from '../js/practice/misses.js';
 import {
@@ -61,7 +62,7 @@ const xToken = await signSession(secret, { provider: 'x', id: '42', handle: 'ada
 const xSession = await readSession(secret, xToken, now);
 check('an X session keeps the id and the handle', xSession && xSession.provider === 'x' && xSession.id === '42' && xSession.handle === 'ada');
 check('the header shows an X handle with @', displayHandle(xSession) === '@ada');
-check('the header shows the part before @ and keeps the full address',
+check('a short handle is the part before @ and the full address stays',
   shortHandle({ provider: 'google', handle: 'shael.student@university.edu' }) === 'shael.student'
   && displayHandle({ provider: 'google', handle: 'shael.student@university.edu' }) === 'shael.student@university.edu');
 
@@ -179,8 +180,8 @@ check('the sign-in control is Sign in, and X is not offered',
   accountView({ signedIn: false, providers: { google: true, x: true } }).label === SIGN_IN_LABEL
   && accountView({ signedIn: false, providers: { google: true, x: true } }).name === SIGN_IN_NAME
   && offeredProviders({ providers: { google: true, x: true } }).join() === 'google');
-check('a signed-in view shows the short name and keeps the address',
-  accountView({ signedIn: true, provider: 'google', handle: 'ada@example.com', providers: {} }).handle === 'ada'
+check('a signed-in view says Signed in and keeps the address',
+  accountView({ signedIn: true, provider: 'google', handle: 'ada@example.com', providers: {} }).handle === SIGNED_IN_LABEL
   && accountView({ signedIn: true, provider: 'google', handle: 'ada@example.com', providers: {} }).full === 'ada@example.com');
 const memSession = new Map();
 const sessionLike = {
@@ -577,10 +578,11 @@ try {
         title: title ? title.textContent : '',
         kids: slot ? slot.childElementCount : -1,
         note: (document.getElementById('book-signin-note') || {}).textContent || '',
+        noteHidden: !!(document.getElementById('book-signin-note') || {}).hidden,
         overflow: html.scrollWidth - html.clientWidth,
       };
     })()`);
-    check(`${label} The Book loads with an empty account slot`, book.state === 'ready' && book.title === 'The Book' && book.kids === 0 && book.note === BOOK_SIGNIN_NOTE && book.overflow <= 1, JSON.stringify(book));
+    check(`${label} The Book loads with an empty account slot`, book.state === 'ready' && book.title === 'The Book' && book.kids === 0 && book.note === '' && book.noteHidden === true && book.overflow <= 1, JSON.stringify(book));
 
     const painted = await evalJson(page.send, `import('./js/core/account.js').then((mod) => {
       const slot = document.getElementById('account-slot');
@@ -593,32 +595,44 @@ try {
       const html = document.documentElement;
       window.dispatchEvent(new Event('resize'));
       return {
-        text: signEl.textContent,
+        text: (signEl.textContent || '').trim(),
         name: signEl.getAttribute('aria-label'),
         signH: Math.round(sign.height),
         signW: Math.round(sign.width),
+        font: parseFloat(style.fontSize),
+        sub: !!signEl.querySelector('.account-signin-sub'),
         sameRow: Math.abs(sign.top - theme.top) < 8,
         headerH: Math.round(header.height),
         border: parseFloat(style.borderTopWidth) >= 1,
         quiet: signEl.classList.contains('btn-quiet'),
         href: signEl.getAttribute('href'),
         x: !!document.getElementById('account-x'),
+        note: (document.getElementById('book-signin-note') || {}).textContent || '',
+        noteHidden: !!(document.getElementById('book-signin-note') || {}).hidden,
         overflow: html.scrollWidth - html.clientWidth,
       };
     })`);
+    const expectNote = width >= 900 ? BOOK_SIGNIN_NOTE_WIDE : BOOK_SIGNIN_NOTE;
     check(`${label} Sign in is one bordered 44px control on the Chapters row`,
-      painted.text.includes(SIGN_IN_LABEL)
+      painted.text === SIGN_IN_LABEL
       && painted.name === SIGN_IN_NAME
       && painted.signH >= 44 && painted.signW >= 44
+      && painted.font >= 16.5
+      && painted.sub === false
       && painted.sameRow && painted.border && painted.quiet === false
       && painted.x === false
+      && painted.note === expectNote
+      && painted.noteHidden === false
       && painted.headerH <= (width < 500 ? 120 : 80)
       && painted.overflow <= 1,
       JSON.stringify(painted));
     check(`${label} google link uses this origin's return path`, typeof painted.href === 'string' && painted.href.startsWith('/auth/google/start?return='));
 
     const signed = await evalJson(page.send, `import('./js/core/account.js').then((mod) => {
-      mod.paintAccount(document.getElementById('account-slot'), { signedIn: true, provider: 'google', handle: 'shael.student@university.edu', providers: { google: true } });
+      const full = 'shael.student@university.edu';
+      mod.paintAccount(document.getElementById('account-slot'), { signedIn: true, provider: 'google', handle: full, providers: { google: true } }, {
+        onDelete() {},
+      });
       window.dispatchEvent(new Event('resize'));
       const handle = document.getElementById('account-handle');
       const outEl = document.getElementById('account-signout');
@@ -626,37 +640,94 @@ try {
       const theme = document.getElementById('theme-toggle').getBoundingClientRect();
       const header = document.getElementById('site-header').getBoundingClientRect();
       const more = document.getElementById('account-more');
-      if (more) more.open = true;
-      window.dispatchEvent(new Event('resize'));
+      const label = handle.querySelector('.account-signed-label');
+      const addr = document.getElementById('account-address');
       const del = document.getElementById('account-delete');
-      const delBox = del.getBoundingClientRect();
       const html = document.documentElement;
-      return {
-        handle: handle.textContent,
+      const closed = {
+        label: label ? label.textContent : '',
+        addrDisplay: getComputedStyle(addr).display,
         full: handle.getAttribute('aria-label'),
         title: handle.getAttribute('title'),
         out: outEl.textContent,
         h: Math.round(out.height),
         w: Math.round(out.width),
+        handleH: Math.round(handle.getBoundingClientRect().height),
+        border: parseFloat(getComputedStyle(handle).borderTopWidth) >= 1,
         sameRow: Math.abs(out.top - theme.top) < 8,
         closedH: Math.round(header.height),
-        del: del.textContent,
-        delH: Math.round(delBox.height),
+        open: more.open,
+        delH: Math.round(del.getBoundingClientRect().height),
+        note: (document.getElementById('book-signin-note') || {}).textContent || '',
         overflow: html.scrollWidth - html.clientWidth,
       };
+      more.open = true;
+      window.dispatchEvent(new Event('resize'));
+      const addrBox = addr.getBoundingClientRect();
+      const delBox = del.getBoundingClientRect();
+      const outOpen = outEl.getBoundingClientRect();
+      del.click();
+      const opened = {
+        addr: addr.textContent,
+        addrDisplay: getComputedStyle(addr).display,
+        labelDisplay: getComputedStyle(label).display,
+        left: addrBox.left,
+        right: addrBox.right,
+        client: html.clientWidth,
+        stacked: addrBox.top < delBox.top && delBox.top < outOpen.top,
+        del: del.textContent,
+        delH: Math.round(delBox.height),
+        line: (document.getElementById('account-status') || {}).textContent || '',
+        live: (document.getElementById('route-status') || {}).textContent || '',
+        overflow: html.scrollWidth - html.clientWidth,
+      };
+      const long = 'alexanderthegreat.student@university.edu';
+      mod.paintAccount(document.getElementById('account-slot'), { signedIn: true, provider: 'google', handle: long, providers: { google: true } }, {
+        onDelete() {},
+      });
+      const again = document.getElementById('account-more');
+      again.open = true;
+      window.dispatchEvent(new Event('resize'));
+      const longBox = document.getElementById('account-address').getBoundingClientRect();
+      opened.longLeft = longBox.left;
+      opened.longRight = longBox.right;
+      opened.longText = document.getElementById('account-address').textContent;
+      opened.longOverflow = html.scrollWidth - html.clientWidth;
+      return { closed, opened };
     })`);
-    check(`${label} signed-in state shows the short name, the address, Sign out, and Delete the copy`,
-      signed.handle === 'shael.student'
-      && signed.full === 'shael.student@university.edu'
-      && signed.title === 'shael.student@university.edu'
-      && signed.out === 'Sign out'
-      && signed.h >= 44 && signed.w >= 44
-      && signed.sameRow
-      && signed.closedH <= (width < 500 ? 120 : 80)
-      && signed.del === 'Delete the copy'
-      && signed.delH >= 44
-      && signed.overflow <= 1,
-      JSON.stringify(signed));
+    check(`${label} signed-in control is a bordered Signed in, with Sign out, and Delete stays closed`,
+      signed.closed.label === SIGNED_IN_LABEL
+      && signed.closed.addrDisplay === 'none'
+      && signed.closed.full === 'shael.student@university.edu'
+      && signed.closed.title === 'shael.student@university.edu'
+      && signed.closed.out === 'Sign out'
+      && signed.closed.h >= 44 && signed.closed.w >= 44
+      && signed.closed.handleH >= 44
+      && signed.closed.border
+      && signed.closed.sameRow
+      && signed.closed.open === false
+      && signed.closed.delH === 0
+      && signed.closed.note === ''
+      && signed.closed.closedH <= (width < 500 ? 120 : 80)
+      && signed.closed.overflow <= 1,
+      JSON.stringify(signed.closed));
+    check(`${label} opened account stacks the address, Delete saved copy, and stays on screen`,
+      signed.opened.addr === 'shael.student@university.edu'
+      && signed.opened.addrDisplay !== 'none'
+      && signed.opened.labelDisplay === 'none'
+      && signed.opened.left >= -1
+      && signed.opened.right <= signed.opened.client + 1
+      && signed.opened.stacked
+      && signed.opened.del === DELETE_CONFIRM
+      && signed.opened.delH >= 44
+      && signed.opened.line === DELETE_ARM_LINE
+      && signed.opened.live === DELETE_ARM_LINE
+      && signed.opened.overflow <= 1
+      && signed.opened.longText === 'alexanderthegreat.student@university.edu'
+      && signed.opened.longLeft >= -1
+      && signed.opened.longRight <= signed.opened.client + 1
+      && signed.opened.longOverflow <= 1,
+      JSON.stringify(signed.opened));
   }
   page.close();
 } catch (err) {

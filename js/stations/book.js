@@ -12,7 +12,7 @@ import { h, appendRich, sourceTag } from './test2-ui.js';
 import { mountExpPicture } from './exp-picture.js';
 import { mountPrep } from '../practice/mount.js';
 import { prepHash } from '../book/route.js';
-import { BOOK_SIGNIN_NOTE } from '../core/account.js';
+import { syncBookSignInNote } from '../core/account.js';
 
 function slug(id) {
   return String(id).replace(/\./g, '-');
@@ -135,10 +135,11 @@ export function mountBookHome(el, ctx, spec) {
       h('h1', { id: 'book-title' }, 'The Book'),
       h('p', { class: 'where-line', id: 'where-line' }, 'The book · Chapters 1–7'),
       h('p', { class: 'station-lede', id: 'book-lede' }, 'Chapters 1 to 7, in the order Howell and Mathews print them.'),
-      h('p', { class: 'book-signin-note', id: 'book-signin-note' }, BOOK_SIGNIN_NOTE),
+      h('p', { class: 'book-signin-note', id: 'book-signin-note', hidden: true }),
       sourceTag({ pin: '202 Updated Edition, table of contents, pages i–ii', href: BOOK.html })),
     h('div', { class: 'book-next', id: 'book-next' }, status, walk),
     list);
+  syncBookSignInNote();
 
   const focus = spec && spec.chapter;
   if (focus && walkSections().some((s) => s.chapter === focus)) {

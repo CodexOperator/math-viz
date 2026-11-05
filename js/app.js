@@ -20,7 +20,7 @@ import { shellChapters, bookChapter } from './data/book-path.js';
 import { cssVar, getTheme, setTheme, onThemeChange, prefersReducedMotion, initTheme } from './core/theme.js';
 import { createStore } from './core/store.js';
 import { watchIds } from './core/ids.js';
-import { mountAccount } from './core/account.js';
+import { mountAccount, showAccountStatus } from './core/account.js';
 
 export const SITE_TITLE = 'One Point, Two Addresses';
 
@@ -418,6 +418,7 @@ export function start() {
   function finish(first, label) {
     const queued = window.__mv && window.__mv.accountNotice;
     if (routeStatus) routeStatus.textContent = queued || label;
+    showAccountStatus(queued || '');
     if (queued && window.__mv) window.__mv.accountNotice = '';
     if (!first) view.focus({ preventScroll: true });
   }
@@ -464,6 +465,7 @@ export function start() {
   async function render() {
     const seq = ++state.seq;
     clearTimeout(state.loadingTimer);
+    showAccountStatus('');
     teardown();
     const first = state.first;
     state.first = false;

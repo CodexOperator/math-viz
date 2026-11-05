@@ -224,6 +224,9 @@ check('cancel returns to the chapter and says the ticks stayed',
   cancelled.status === 200
   && dropsProvider(cancelledText, '/#chapter-5')
   && cancelledText.includes(CANCEL_NOTICE)
+  && cancelledText.includes(`<p>${CANCEL_NOTICE}</p>`)
+  && cancelledText.includes('min-width:44px')
+  && cancelledText.includes('min-height:44px')
   && !sessionCookie(cancelled)
   && !calls.includes('https://oauth2.googleapis.com/token'));
 

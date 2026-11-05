@@ -129,10 +129,11 @@ function land(returnTo, cookies, notice) {
     'content-type': 'text/html; charset=utf-8',
     'cache-control': 'no-store',
     'referrer-policy': 'no-referrer',
-    'content-security-policy': "default-src 'none'; script-src 'unsafe-inline'; base-uri 'none'; form-action 'none'",
+    'content-security-policy': "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'",
   });
   for (const cookie of cookies) headers.append('Set-Cookie', cookie);
-  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Returning</title></head><body><p><a href="${attrEscape(dest)}">Back</a></p><script>(function () {
+  const spoken = notice ? `<p>${attrEscape(notice)}</p>` : '';
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Returning</title></head><body style="margin:1rem;font:1.0625rem/1.45 system-ui,sans-serif">${spoken}<p><a href="${attrEscape(dest)}" style="display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-width:44px;min-height:44px;padding:0 12px;border:1.5px solid currentColor;border-radius:6px;color:inherit;text-decoration:none;font:inherit">Back</a></p><script>(function () {
   var dest = ${jsConst(dest)};
   var note = ${jsConst(notice || '')};
   try { if (note) sessionStorage.setItem('mv:auth-notice', note); } catch (e) {}

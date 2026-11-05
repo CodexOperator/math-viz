@@ -6,11 +6,15 @@
 import { mergeLeitner } from '../practice/leitner.js';
 
 export const SIGN_IN_LABEL = 'Sign in';
-export const SIGN_IN_NOTE = 'for another device';
 export const SIGN_IN_NAME = 'Sign in for another device';
-export const BOOK_SIGNIN_NOTE = 'Ticks stay on this phone. Sign in copies them to another phone.';
+export const SIGNED_IN_LABEL = 'Signed in';
+export const BOOK_SIGNIN_NOTE = 'Ticks stay on this phone. Sign in copies them to another device.';
+export const BOOK_SIGNIN_NOTE_WIDE = 'Ticks stay in this browser. Sign in copies them to another device.';
 export const SIGNOUT_NOTICE = 'Signed out. Your ticks are still on this phone.';
 export const SIGNOUT_FAIL = "Sign-out didn't finish. Your ticks are still on this phone.";
+export const DELETE_LABEL = 'Delete the copy';
+export const DELETE_CONFIRM = 'Delete saved copy';
+export const DELETE_ARM_LINE = 'Delete it. This removes the saved copy.';
 export const DELETE_NOTICE = 'The saved copy is deleted. Your ticks are still on this phone.';
 export const DELETE_FAIL = 'The saved copy is still there.';
 
@@ -288,7 +292,7 @@ export function accountView(me) {
   if (me && me.signedIn) {
     return {
       mode: 'in',
-      handle: shortHandle(me),
+      handle: SIGNED_IN_LABEL,
       full: displayHandle(me),
       provider: me.provider || '',
       providers,
@@ -347,10 +351,14 @@ function authHref(provider, loc) {
 const PROVIDER_LABEL = { google: 'Google', x: 'X' };
 
 function signInFace() {
-  return [
-    el('span', { class: 'account-signin-label' }, SIGN_IN_LABEL),
-    el('span', { class: 'account-signin-sub' }, SIGN_IN_NOTE),
-  ];
+  return SIGN_IN_LABEL;
+}
+
+// Break a long address at @ so the opened line wraps as a name, then a domain.
+function addressKids(full) {
+  const at = String(full).lastIndexOf('@');
+  if (at <= 0) return [full];
+  return [full.slice(0, at), el('wbr'), full.slice(at)];
 }
 
 function armAuthLinks(slot, storage) {
@@ -359,9 +367,44 @@ function armAuthLinks(slot, storage) {
   }
 }
 
+function setOffered(on) {
+  if (!globalThis.window) return;
+  const mv = (window.__mv = window.__mv || {});
+  mv.accountOffered = !!on;
+}
+
+// The book line is only true while the header is offering Sign in.
+// A wide window is a browser; a phone may still say phone.
+export function syncBookSignInNote() {
+  const note = globalThis.document && document.getElementById('book-signin-note');
+  if (!note) return;
+  const on = !!(globalThis.window && window.__mv && window.__mv.accountOffered);
+  if (!on) {
+    note.hidden = true;
+    note.textContent = '';
+    return;
+  }
+  const wide = !!(globalThis.matchMedia && matchMedia('(min-width: 56.25rem)').matches);
+  note.hidden = false;
+  note.textContent = wide ? BOOK_SIGNIN_NOTE_WIDE : BOOK_SIGNIN_NOTE;
+}
+
+export function showAccountStatus(text) {
+  const line = globalThis.document && document.getElementById('account-status');
+  if (!line) return;
+  const next = text || '';
+  const hide = !next;
+  if (line.textContent === next && line.hidden === hide) return;
+  line.textContent = next;
+  line.hidden = hide;
+  noteHeader();
+}
+
 export function paintAccount(slot, me, opts = {}) {
   if (!slot) return;
   const view = accountView(me);
+  setOffered(view.mode === 'out');
+  syncBookSignInNote();
   slot.replaceChildren();
   if (view.mode === 'hidden') return;
   const loc = opts.location || globalThis.location || { pathname: '/', search: '', hash: '' };
@@ -369,39 +412,48 @@ export function paintAccount(slot, me, opts = {}) {
   if (view.mode === 'in') {
     const more = el('details', { class: 'account-more', id: 'account-more' }, [
       el('summary', {
-        class: 'account-handle',
+        class: 'btn account-signed',
         id: 'account-handle',
         title: view.full,
         'aria-label': view.full,
-      }, view.handle),
+      }, [
+        el('span', { class: 'account-signed-label' }, SIGNED_IN_LABEL),
+        el('span', { class: 'account-address', id: 'account-address' }, addressKids(view.full)),
+      ]),
       el('button', {
         type: 'button',
         class: 'btn account-delete',
         id: 'account-delete',
         'aria-label': 'Delete the copy saved for another device',
-      }, 'Delete the copy'),
+      }, DELETE_LABEL),
     ]);
     slot.append(
       more,
       el('button', { type: 'button', class: 'btn account-signout', id: 'account-signout' }, 'Sign out'),
     );
-    const wide = globalThis.matchMedia && matchMedia('(min-width: 56.25rem)').matches;
-    if (wide) {
-      more.open = true;
-      more.addEventListener('click', (event) => {
-        const summary = event.target && event.target.closest ? event.target.closest('summary') : null;
-        if (summary) event.preventDefault();
-      });
-    }
-    more.addEventListener('toggle', () => noteHeader());
+    const del = slot.querySelector('#account-delete');
+    more.addEventListener('toggle', () => {
+      if (!more.open && del && del.dataset.armed === 'true') {
+        del.dataset.armed = 'false';
+        del.textContent = DELETE_LABEL;
+        const line = globalThis.document && document.getElementById('account-status');
+        if (line && line.textContent === DELETE_ARM_LINE) {
+          showAccountStatus('');
+          const status = document.getElementById('route-status');
+          if (status && status.textContent === DELETE_ARM_LINE) status.textContent = '';
+        }
+      }
+      noteHeader();
+    });
     const button = slot.querySelector('#account-signout');
     if (button && opts.onSignOut) button.addEventListener('click', opts.onSignOut);
-    const del = slot.querySelector('#account-delete');
     if (del && opts.onDelete) {
       del.addEventListener('click', () => {
+        if (del.disabled) return;
         if (del.dataset.armed !== 'true') {
           del.dataset.armed = 'true';
-          del.textContent = 'Delete it';
+          del.textContent = DELETE_CONFIRM;
+          announce(DELETE_ARM_LINE);
           return;
         }
         opts.onDelete();
@@ -447,6 +499,7 @@ function announce(text) {
   const ready = view && view.dataset && view.dataset.state && view.dataset.state !== 'loading';
   if (ready && status) {
     status.textContent = text;
+    showAccountStatus(text);
     return;
   }
   const mv = (globalThis.window && (window.__mv = window.__mv || {})) || null;
@@ -493,8 +546,15 @@ export function mountAccount({ store, slot, fetch: fetchImpl, location: loc, ses
   let watching = false;
   let me = null;
   let interrupt = false;
+  let deleting = false;
   let syncEpoch = 0;
   const unsubs = [];
+  let wideMedia = null;
+  const onWideNote = () => syncBookSignInNote();
+  try {
+    wideMedia = globalThis.matchMedia ? matchMedia('(min-width: 56.25rem)') : null;
+    if (wideMedia && wideMedia.addEventListener) wideMedia.addEventListener('change', onWideNote);
+  } catch { wideMedia = null; }
   const ac = typeof AbortController === 'function' ? new AbortController() : null;
   const landing = takeAuthLanding(storage);
   parkLanding(landing);
@@ -503,6 +563,7 @@ export function mountAccount({ store, slot, fetch: fetchImpl, location: loc, ses
     stopped = true;
     clearTimeout(timer);
     if (ac) ac.abort();
+    if (wideMedia && wideMedia.removeEventListener) wideMedia.removeEventListener('change', onWideNote);
     if (globalThis.window) window.removeEventListener('pageshow', onPageShow);
     for (const fn of unsubs.splice(0)) {
       try { fn(); } catch { /* already gone */ }
@@ -644,18 +705,34 @@ export function mountAccount({ store, slot, fetch: fetchImpl, location: loc, ses
     announce(SIGNOUT_NOTICE);
   }
 
+  function resetDelete() {
+    const del = slot.querySelector('#account-delete');
+    if (!del) return;
+    del.disabled = false;
+    del.dataset.armed = 'false';
+    del.textContent = DELETE_LABEL;
+  }
+
   async function deleteCopy() {
+    if (deleting) return;
+    deleting = true;
     interrupt = true;
     syncEpoch += 1;
     const epoch = syncEpoch;
     clearTimeout(timer);
     queued = false;
+    const del = slot.querySelector('#account-delete');
+    if (del) del.disabled = true;
     let spins = 0;
     while (busy && !stopped && epoch === syncEpoch && spins < 150) {
       await new Promise((resolve) => setTimeout(resolve, 20));
       spins += 1;
     }
-    if (stopped || epoch !== syncEpoch) return;
+    if (stopped || epoch !== syncEpoch) {
+      deleting = false;
+      if (del) del.disabled = false;
+      return;
+    }
     clearTimeout(timer);
     queued = false;
     let ok = false;
@@ -669,6 +746,12 @@ export function mountAccount({ store, slot, fetch: fetchImpl, location: loc, ses
       ok = !!(res && res.ok);
     } catch { ok = false; }
     announce(ok ? DELETE_NOTICE : DELETE_FAIL);
+    resetDelete();
+    if (ok) {
+      const more = slot.querySelector('#account-more');
+      if (more) more.open = false;
+    }
+    deleting = false;
   }
 
   async function boot() {
