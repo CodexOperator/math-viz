@@ -229,18 +229,18 @@ a.book-row-closed,
   gap: 0.65rem;
   min-height: var(--tap);
   min-width: 0;
-  padding-top: 0;
-  padding-bottom: 0;
+  padding-top: 0.35rem;
+  padding-bottom: 0.35rem;
   color: inherit;
   text-decoration: none;
 }
 .book-closed-title {
   flex: 1 1 auto;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
   font-weight: 600;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  line-height: 1.3;
+  white-space: normal;
 }
 .book-row-closed .book-num,
 .book-row-closed .book-flag { flex: none; }
@@ -251,9 +251,9 @@ span.nav-link.nav-closed {
 }
 span.nav-link.nav-closed:hover { background: transparent; }
 .nav-closed .nav-title {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  overflow: visible;
+  line-height: 1.3;
+  white-space: normal;
 }
 .section-head {
   display: flex;
@@ -1341,10 +1341,48 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .practice-card,
 .practice-sheet,
 .practice-doors { min-width: 0; max-width: 100%; }
+#view:has(.practice-mount) { padding-top: var(--space-2); }
+.station.practice-mount { gap: var(--space-2); }
+.station.practice-mount .where-line { display: none; }
+.station.practice-mount .station-lede { margin-bottom: 0; }
+.station.practice-mount .book-next { padding: var(--space-2) var(--space-3); }
+.practice-kicker {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+.practice-kicker .book-flag,
+.practice-kicker .book-page { margin: 0; }
+.practice-card {
+  gap: 0.35rem;
+  padding: var(--space-2) var(--space-3);
+}
+.practice-card h2 {
+  margin-bottom: 0;
+  font-size: 1.05rem;
+  line-height: 1.25;
+}
+.practice-card .source-tag { margin-top: 0; }
+.practice-card .practice-step-text { margin: 0; line-height: 1.4; }
+.practice-card .practice-why {
+  margin-top: 0.25rem;
+  padding: 0.35rem 0.65rem;
+}
 .practice-card h2,
 .practice-step-text,
 .practice-back,
-.practice-reveal { overflow-wrap: anywhere; }
+.practice-why,
+.practice-choice,
+.practice-hint-line,
+.practice-formulas li,
+.practice-memories li {
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+.practice-card .katex,
+.practice-sheet .katex,
+.practice-choice .katex { white-space: nowrap; }
 .practice-field {
   display: flex;
   flex-direction: column;
@@ -1362,6 +1400,10 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .practice-field input { width: 100%; font-family: var(--font-mono); }
 .practice-check-row { margin-top: var(--space-2); }
 .practice-choices { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.practice-choices[data-cols="2"] {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
 .practice-choice {
   width: 100%;
   height: auto;

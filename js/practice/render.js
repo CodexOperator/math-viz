@@ -23,14 +23,63 @@ function fillStep(parent, text, answer) {
   if (parts[1]) appendRich(parent, parts[1]);
 }
 
+function mathPlain(text) {
+  return String(text || '')
+    .replace(/\$/g, '')
+    .replace(/\\(?:varepsilon|epsilon)/gi, 'epsilon')
+    .replace(/\\[a-zA-Z]+/g, '')
+    .replace(/[{}]/g, '')
+    .replace(/\s+/g, '')
+    .toLowerCase();
+}
+
+function spoilNeedles(conceal) {
+  if (!conceal) return [];
+  const raw = [conceal.answer].concat(conceal.accept || []);
+  const out = [];
+  for (const value of raw) {
+    const plain = mathPlain(value);
+    if (plain && !out.includes(plain)) out.push(plain);
+  }
+  return out;
+}
+
+function leaks(text, needles) {
+  if (!needles.length || !text) return false;
+  const hay = mathPlain(text);
+  return needles.some((needle) => {
+    if (needle.length >= 3) return hay.includes(needle);
+    const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`).test(hay);
+  });
+}
+
+// The front is the gloss after the number: "absolute convergence implies convergence".
+export function cardGloss(item) {
+  const prompt = String((item && item.prompt) || '');
+  const ref = item && item.cite && item.cite.ref ? String(item.cite.ref) : '';
+  if (ref && prompt.startsWith(ref)) {
+    const rest = prompt.slice(ref.length).replace(/^[\s,.:;\-–—]+/, '').trim();
+    if (rest) return rest;
+  }
+  return prompt;
+}
+
+function choicePlainLength(choice) {
+  return String(choice || '').replace(/\$/g, '').replace(/\\[a-zA-Z]+/g, '').replace(/[{}]/g, '').trim().length;
+}
+
 export function renderCard(host, vm, act) {
   host.replaceChildren();
   if (vm.done) {
-    host.append(h('article', { class: 'card practice-card', id: 'practice-card' },
-      h('h2', { id: 'practice-prompt' }, 'Set complete'),
-      rich('You retrieved this set. The memory sheet is the short version of the same facts.'),
-      h('div', { class: 'problem-actions' },
-        h('button', { type: 'button', class: 'btn btn-primary', id: 'practice-to-memory' }, 'Open the memory sheet'))));
+    const kids = [h('h2', { id: 'practice-prompt' }, 'Set complete')];
+    if (vm.shown) kids.push(rich('These lines were shown.'));
+    const facts = vm.facts || [];
+    if (facts.length) facts.forEach((line) => kids.push(rich(line)));
+    else kids.push(rich('You retrieved this set.'));
+    kids.push(h('div', { class: 'problem-actions' },
+      h('button', { type: 'button', class: 'btn btn-primary', id: 'practice-to-memory' }, 'Open the memory sheet')));
+    host.append(h('article', { class: 'card practice-card', id: 'practice-card' }, ...kids));
     host.querySelector('#practice-to-memory').addEventListener('click', act.memory);
     return;
   }
@@ -39,8 +88,9 @@ export function renderCard(host, vm, act) {
   const step = item.steps[vm.step];
   const worked = vm.view === 'worked';
   const kids = [
-    h('p', { class: 'book-flag', id: 'practice-kind' }, worked ? 'Worked example' : vm.kindLabel),
-    h('p', { class: 'book-page', id: 'practice-count' }, vm.count),
+    h('div', { class: 'practice-kicker' },
+      h('p', { class: 'book-flag', id: 'practice-kind' }, worked ? 'Worked example' : vm.kindLabel),
+      h('p', { class: 'book-page', id: 'practice-count' }, vm.count)),
   ];
   const prompt = h('h2', { id: 'practice-prompt' });
   appendRich(prompt, item.prompt || '');
@@ -52,8 +102,13 @@ export function renderCard(host, vm, act) {
     }));
   }
 
-  const list = h('ol', { class: 'practice-steps', id: 'practice-steps' });
+  const list = h('ol', {
+    class: 'practice-steps',
+    id: 'practice-steps',
+    start: String((worked ? vm.step : 0) + 1),
+  });
   item.steps.forEach((s, i) => {
+    if (worked && i !== vm.step) return;
     if (!worked && i > vm.step) return;
     const li = h('li', {
       id: `practice-step-${i}`,
@@ -70,12 +125,17 @@ export function renderCard(host, vm, act) {
   kids.push(list);
 
   if (worked) {
+    const last = vm.step >= item.steps.length - 1;
     kids.push(h('div', { class: 'problem-actions' },
-      h('button', { type: 'button', class: 'btn btn-primary', id: 'practice-next' }, 'Try these steps')));
+      h('button', { type: 'button', class: 'btn btn-primary', id: 'practice-next' }, last ? 'Try these steps' : 'Next')));
   } else if (vm.phase === 'ask' || vm.phase === 'hint') {
     if (String(item.kind).endsWith('mc')) {
+      const choiceList = step.choices || [];
       const choices = h('div', { class: 'practice-choices', id: 'practice-choices', role: 'group', 'aria-label': 'Choices' });
-      orderedChoices(step.choices || [], vm.choiceSeed || 1).forEach((choice, i) => {
+      if (choiceList.length >= 4 && choiceList.every((choice) => choicePlainLength(choice) <= 16)) {
+        choices.setAttribute('data-cols', '2');
+      }
+      orderedChoices(choiceList, vm.choiceSeed || 1).forEach((choice, i) => {
         const btn = h('button', { type: 'button', class: 'btn practice-choice', id: `practice-choice-${i}` });
         appendRich(btn, choice);
         btn.addEventListener('click', () => act.answer(choice));
@@ -116,12 +176,11 @@ export function renderCard(host, vm, act) {
       });
       kids.push(note);
     }
-    if (step.hints && step.hints.length) {
+    if (step.hints && step.hints.length && vm.hint < step.hints.length) {
       const hintBtn = h('button', {
         type: 'button', class: 'btn', id: 'practice-hint',
         'aria-expanded': vm.hint > 0 ? 'true' : 'false',
-      }, vm.hint > 0 && vm.hint < step.hints.length ? 'Next hint' : 'Hint');
-      if (vm.hint >= step.hints.length) hintBtn.disabled = true;
+      }, vm.hint > 0 ? 'Next hint' : 'Hint');
       hintBtn.addEventListener('click', act.hint);
       kids.push(h('div', { class: 'problem-actions' }, hintBtn));
     }
@@ -151,36 +210,41 @@ export function renderCard(host, vm, act) {
   if (next && vm.phase === 'told') next.focus({ preventScroll: true });
 }
 
-export function renderSheet(host, groups) {
+export function renderSheet(host, groups, conceal) {
   host.replaceChildren();
+  const needles = spoilNeedles(conceal);
   const sheet = h('div', { class: 'practice-sheet', id: 'practice-sheet' });
   sheet.append(
     h('h2', { id: 'practice-sheet-title' }, 'Memory sheet'),
-    rich('The formulas and the one-line versions. Print this page when you want the sheet on paper.'),
+    rich('Print this page when you want the sheet on paper.'),
     h('div', { class: 'problem-actions' },
       h('button', { type: 'button', class: 'btn', id: 'practice-print' }, 'Print')));
   if (!groups.length) {
     sheet.append(rich('Nothing is filed for this chapter yet.'));
   }
   for (const group of groups) {
+    const formulas = group.lines.filter((line) => line.formula && !leaks(line.formula, needles));
+    const memories = group.lines.filter((line) => line.memory && !leaks(line.memory, needles));
+    if (!formulas.length && !memories.length) continue;
     const block = h('section', { class: 'card practice-sheet-section', id: `practice-sheet-${group.section.replace(/\./g, '-')}` });
     block.append(h('h3', null, group.title));
-    const formulas = group.lines.filter((line) => line.formula);
     if (formulas.length) {
       block.append(h('p', { class: 'book-flag' }, 'Formulas'));
       const ul = h('ul', { class: 'practice-formulas' });
       formulas.forEach((line) => ul.append(h('li', null, rich(line.formula))));
       block.append(ul);
     }
-    block.append(h('p', { class: 'book-flag' }, 'Takeaways'));
-    const ul = h('ul', { class: 'practice-memories' });
-    group.lines.forEach((line) => {
-      const li = h('li');
-      appendRich(li, line.memory);
-      li.append(document.createTextNode(` (${line.ref}, page ${line.page})`));
-      ul.append(li);
-    });
-    block.append(ul);
+    if (memories.length) {
+      block.append(h('p', { class: 'book-flag' }, 'Takeaways'));
+      const ul = h('ul', { class: 'practice-memories' });
+      memories.forEach((line) => {
+        const li = h('li');
+        appendRich(li, line.memory);
+        li.append(document.createTextNode(` (${line.ref}, page ${line.page})`));
+        ul.append(li);
+      });
+      block.append(ul);
+    }
     sheet.append(block);
   }
   host.append(sheet);
@@ -199,11 +263,12 @@ export function renderFlash(host, vm, act) {
   const item = vm.item;
   const back = item.steps[0];
   const kids = [
-    h('p', { class: 'book-flag' }, vm.early ? 'Early' : (vm.box ? `Box ${vm.box}` : 'New')),
-    h('p', { class: 'book-page', id: 'practice-count' }, vm.count),
+    h('div', { class: 'practice-kicker' },
+      h('p', { class: 'book-flag' }, vm.early ? 'Early' : (vm.box ? `Box ${vm.box}` : 'New')),
+      h('p', { class: 'book-page', id: 'practice-count' }, vm.count)),
   ];
   const prompt = h('h2', { id: 'practice-prompt' });
-  appendRich(prompt, item.prompt || '');
+  appendRich(prompt, cardGloss(item));
   kids.push(prompt);
   if (item.cite && item.cite.href) {
     kids.push(sourceTag({ href: item.cite.href, pin: `${item.cite.ref}, page ${item.cite.page}` }));
@@ -215,7 +280,6 @@ export function renderFlash(host, vm, act) {
     const answer = h('p', { class: 'practice-back', id: 'practice-back' });
     appendRich(answer, back.answer);
     kids.push(answer);
-    if (back.why) kids.push(rich(back.why, { class: 'practice-why', id: 'practice-why' }));
     kids.push(h('div', { class: 'problem-actions' },
       h('button', { type: 'button', class: 'btn', id: 'practice-again' }, 'Again'),
       h('button', { type: 'button', class: 'btn btn-primary', id: 'practice-good' }, 'Got it')));

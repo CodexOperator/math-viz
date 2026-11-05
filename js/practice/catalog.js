@@ -1,7 +1,7 @@
-// The practice catalog. Each data/practice/ch<N>.json that exists for
-// chapters 1–7 is loaded. A missing file is an empty chapter, not an error.
-// catalogIssues checks the shared schema, including a missing why and a
-// repeated id. A generator must be generate(seed, params).
+// The practice catalog. Chapters 1–7 with no file are empty. The browser
+// fetches only PRACTICE_FILES, so it never imports node:fs and never 404s a
+// chapter that is not on this branch. catalogIssues checks the shared schema,
+// including a missing why and a repeated id. A generator must be generate(seed, params).
 
 import { GENERATORS, generateItem, seedFirst } from './gen/index.js';
 
@@ -9,33 +9,51 @@ export const KINDS = Object.freeze([
   'proof-blank', 'proof-mc', 'next-step-blank', 'next-step-mc', 'blank', 'mc', 'flash',
 ]);
 
-const CHAPTERS = [1, 2, 3, 4, 5, 6, 7];
+// Files that exist under data/practice/. Node checks this list against the
+// directory. The browser requests these URLs and no others.
+export const PRACTICE_FILES = Object.freeze([2, 4, 5]);
+
 let cache = null;
+
+function runningInNode() {
+  return import.meta.url.startsWith('file:');
+}
+
+async function assertFileList() {
+  if (!runningInNode()) return;
+  const { readdir } = await import('node:fs/promises');
+  const { fileURLToPath } = await import('node:url');
+  const dir = fileURLToPath(new URL('../../data/practice/', import.meta.url));
+  const found = (await readdir(dir))
+    .map((name) => /^ch(\d+)\.json$/.exec(name))
+    .filter(Boolean)
+    .map((match) => Number(match[1]))
+    .sort((a, b) => a - b);
+  const listed = [...PRACTICE_FILES].sort((a, b) => a - b);
+  if (found.join() !== listed.join()) {
+    throw new Error(`Practice files on disk are ${found.join(', ')}; the browser list is ${listed.join(', ')}`);
+  }
+}
 
 async function readChapter(n) {
   const url = new URL(`../../data/practice/ch${n}.json`, import.meta.url);
-  try {
+  if (runningInNode()) {
     const { readFile } = await import('node:fs/promises');
     const { fileURLToPath } = await import('node:url');
     const text = await readFile(fileURLToPath(url), 'utf8');
     const rows = JSON.parse(text);
     return Array.isArray(rows) ? rows : [];
-  } catch (err) {
-    if (err && (err.code === 'ENOENT' || err.code === 'ERR_MODULE_NOT_FOUND')) return [];
   }
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return [];
-    const rows = await res.json();
-    return Array.isArray(rows) ? rows : [];
-  } catch {
-    return [];
-  }
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Practice chapter ${n} failed to load`);
+  const rows = await res.json();
+  return Array.isArray(rows) ? rows : [];
 }
 
 export async function loadCatalog() {
   if (cache) return cache;
-  const lists = await Promise.all(CHAPTERS.map((n) => readChapter(n)));
+  await assertFileList();
+  const lists = await Promise.all(PRACTICE_FILES.map((n) => readChapter(n)));
   cache = Object.freeze(lists.flat());
   return cache;
 }

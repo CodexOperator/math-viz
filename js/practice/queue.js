@@ -46,7 +46,7 @@ export function sectionWalk(items, seed = 1) {
     if (item.kind === 'proof-blank') out.push({ source: item, seed: stamp, view: 'worked' });
     out.push({ source: item, seed: stamp, view: 'faded' });
   }
-  return out;
+  return withSectionModels(out);
 }
 
 // Round-robin across sections so a run does not drill one section to exhaustion.
@@ -74,6 +74,7 @@ export function interleave(items, seed = 1) {
 }
 
 // The mixed set opens on one worked proof, then that proof with the blanks.
+// The page passes only the open chapters. This function does not drop a chapter.
 export function testPrepEntries(items, seed = 1) {
   const live = items.filter((it) => it.kind !== 'flash');
   const proof = live.find((it) => it.kind === 'proof-blank');
@@ -84,7 +85,35 @@ export function testPrepEntries(items, seed = 1) {
     out.push({ source: proof, seed: stamp, view: 'worked' });
     out.push({ source: proof, seed: stamp, view: 'faded' });
   }
-  return out.concat(rest);
+  return withSectionModels(out.concat(rest));
+}
+
+// Closed chapters stay out of the mixed deck. A chapter page still asks for its own items.
+export function mixedItems(items, closed) {
+  const skip = new Set(closed || []);
+  return items.filter((it) => !skip.has(it.chapter));
+}
+
+// §4.2, §4.4, and §5.1 are not proofs. The first card is that item filled in.
+const MODEL_SECTIONS = new Set(['4.2', '4.4', '5.1']);
+
+function withSectionModels(entries) {
+  const seen = new Set();
+  const out = [];
+  for (const entry of entries) {
+    const sec = entry.source.section;
+    if (entry.view === 'worked' && MODEL_SECTIONS.has(sec)) seen.add(sec);
+    const firstBlank = entry.view === 'faded'
+      && MODEL_SECTIONS.has(sec)
+      && !seen.has(sec)
+      && entry.source.kind !== 'proof-blank';
+    if (firstBlank) {
+      out.push({ source: entry.source, seed: entry.seed, view: 'worked' });
+      seen.add(sec);
+    }
+    out.push(entry);
+  }
+  return out;
 }
 
 export function practiceEntries(items, { mode, seed }) {

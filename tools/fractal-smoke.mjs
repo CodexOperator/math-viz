@@ -16,10 +16,10 @@ import { generate as expGenerate, principalQuarters } from '../js/practice/gen/e
 import { catalogIssues, loadCatalog, assertGeneratorSignatures } from '../js/practice/catalog.js';
 import { seedFirst } from '../js/practice/gen/index.js';
 import { generate as mapGenerate } from '../js/practice/gen/ch2-maps.js';
-import { testPrepEntries, sectionWalk, orderedChoices } from '../js/practice/queue.js';
+import { testPrepEntries, sectionWalk, orderedChoices, mixedItems } from '../js/practice/queue.js';
 import { walkSections, continueTarget, closedChapters } from '../js/book/continue.js';
-import { mergeLeitner, reviewCard, emptyDeck } from '../js/practice/leitner.js';
-import { mergeMisses, noteMiss, emptyMisses } from '../js/practice/misses.js';
+import { mergeLeitner, reviewCard, emptyDeck, dueOrder } from '../js/practice/leitner.js';
+import { mergeMisses, noteMiss, emptyMisses, clearMiss, pendingMisses } from '../js/practice/misses.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
 import { parsePath, evalPath } from '../js/core/path-expr.js';
 import { smoothLoop, presetById, compileFormula } from '../js/core/path-geom.js';
@@ -1197,6 +1197,27 @@ check('a fraction, a power, and a complex number match their equivalents',
   }));
   const walk = sectionWalk(PRACTICE.filter((it) => it.id === 'ch4-4.1-thm-4.1-blank'));
   check('a proof blank opens as a worked example', walk[0] && walk[0].view === 'worked' && walk[1] && walk[1].view === 'faded');
+  const walk42 = sectionWalk(PRACTICE.filter((it) => it.section === '4.2' && it.kind !== 'flash'));
+  const walk51 = sectionWalk(PRACTICE.filter((it) => it.section === '5.1' && it.kind !== 'flash'));
+  check('a non-proof section opens on the filled item',
+    walk42[0] && walk42[0].view === 'worked' && walk42[0].source.section === '4.2'
+    && walk42[1] && walk42[1].view === 'faded' && walk42[1].source.id === walk42[0].source.id
+    && walk51[0] && walk51[0].view === 'worked' && walk51[1] && walk51[1].view === 'faded');
+  const openMix = mixedItems(PRACTICE, [1, 2, 3, 6, 7]);
+  check('the mixed set is the open chapters',
+    openMix.length > 0
+    && openMix.every((it) => it.chapter === 4 || it.chapter === 5)
+    && openMix.some((it) => it.chapter === 4)
+    && openMix.some((it) => it.chapter === 5)
+    && !openMix.some((it) => it.chapter === 2));
+  const def413 = PRACTICE.find((it) => it.cite && it.cite.ref === 'Definition 4.13');
+  check('definition 4.13 names a positive sequence',
+    !!def413 && /positive/.test(def413.steps[0].answer) && /positive/.test(def413.memory));
+  const flash41 = dueOrder(PRACTICE.filter((it) => it.kind === 'flash' && it.section === '4.1'), emptyDeck(), '2026-11-04');
+  const flashRefs = flash41.due.map((row) => row.item.cite.ref);
+  check('flashcards in a section deal in book order',
+    flashRefs.indexOf('Definition 4.1') >= 0
+    && flashRefs.indexOf('Definition 4.1') < flashRefs.indexOf('Corollary 4.1'));
   const mix = testPrepEntries(PRACTICE, 3);
   check('test prep opens on a worked proof, then the blank',
     mix[0] && mix[0].view === 'worked' && mix[0].source.kind === 'proof-blank'
@@ -1285,11 +1306,16 @@ check('a fraction, a power, and a complex number match their equivalents',
   const kept = mergeLeitner(miss, second);
   check('a Leitner merge keeps the card that was practiced more',
     kept.cards.card.reviews === 2 && kept.cards.card.box === 2 && first.cards.card.due === '2026-11-05');
+  check('again leaves the card due today', miss.cards.card.due === '2026-11-04' && miss.cards.card.box === 1);
   const missed = noteMiss(noteMiss(emptyMisses(), 'step-item', 0, 10), 'step-item', 0, 20);
   const other = noteMiss(emptyMisses(), 'step-item', 0, 99);
   const mergedMiss = mergeMisses(other, missed);
+  const cleared = clearMiss(missed, 'step-item', 0);
   check('a miss record keeps the step that was missed more',
     missed.steps['step-item']['0'].misses === 2
+    && missed.steps['step-item']['0'].pending === true
+    && pendingMisses(missed).length === 1
+    && pendingMisses(cleared).length === 0
     && mergedMiss.steps['step-item']['0'].misses === 2
     && mergedMiss.steps['step-item']['0'].updated === 20);
 }

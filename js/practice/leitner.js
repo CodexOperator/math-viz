@@ -2,7 +2,7 @@
 // Stored at localStorage key mv:practice.leitner (the store prefix is mv:).
 // A future signed-in sync merges two decks with mergeLeitner: the card with
 // more reviews wins, and a tie keeps the later updated stamp.
-// Box gaps, in days: 1, 2, 4, 8, 16. A miss returns the card to box 1.
+// Box gaps, in days: 1, 2, 4, 8, 16. Again returns the card to box 1 and leaves it due today.
 
 export const LEITNER_KEY = 'practice.leitner';
 const GAPS = [0, 1, 2, 4, 8, 16];
@@ -60,17 +60,20 @@ export function reviewCard(deck, id, grade, today, nowMs = Date.now()) {
   const prev = deck.cards[id] || { box: 0, due: today, reviews: 0, lapses: 0, updated: 0 };
   let box = prev.box || 1;
   let lapses = prev.lapses || 0;
+  let due;
   if (grade === 'again') {
     box = 1;
     lapses += 1;
+    due = today;
   } else {
     box = Math.min(5, (prev.box || 0) + 1);
+    due = addDays(today, GAPS[box]);
   }
   const cards = {
     ...deck.cards,
     [id]: {
       box,
-      due: addDays(today, GAPS[box]),
+      due,
       reviews: (prev.reviews || 0) + 1,
       lapses,
       updated: nowMs,
@@ -84,9 +87,10 @@ export function isDue(rec, today) {
   return String(rec.due || '') <= today;
 }
 
-// Due cards first (lower box, then id). Unseen cards count as due.
+// Due cards first (lower box, then the order the book lists them). Unseen cards count as due.
 export function dueOrder(items, deck, today) {
   const cards = items.filter((it) => it.kind === 'flash');
+  const index = new Map(cards.map((it, i) => [it.id, i]));
   const due = [];
   const later = [];
   for (const it of cards) {
@@ -97,7 +101,7 @@ export function dueOrder(items, deck, today) {
     const ba = a.rec ? a.rec.box : 0;
     const bb = b.rec ? b.rec.box : 0;
     if (ba !== bb) return ba - bb;
-    return a.item.id < b.item.id ? -1 : a.item.id > b.item.id ? 1 : 0;
+    return (index.get(a.item.id) ?? 0) - (index.get(b.item.id) ?? 0);
   };
   due.sort(byBox);
   later.sort((a, b) => String(a.rec.due).localeCompare(String(b.rec.due)) || byBox(a, b));

@@ -1,13 +1,14 @@
 // Test prep page: interleaved retrieval, a section walk, the memory sheet,
 // and Leitner flashcards. The two existing test maps stay behind their own links.
 
-import { h } from '../stations/test2-ui.js';
+import { h, appendRich } from '../stations/test2-ui.js';
 import { BOOK_CHAPTERS } from '../data/book-path.js';
+import { closedChapters } from '../book/continue.js';
 import { loadCatalog, realize } from './catalog.js';
-import { selectItems, sectionOfFocus, practiceEntries, choiceSeed } from './queue.js';
+import { selectItems, sectionOfFocus, practiceEntries, choiceSeed, mixedItems } from './queue.js';
 import { answersMatch } from './check.js';
 import { loadDeck, saveDeck, reviewCard, dueOrder, localDay } from './leitner.js';
-import { loadMisses, saveMisses, noteMiss } from './misses.js';
+import { loadMisses, saveMisses, noteMiss, clearMiss, pendingMisses } from './misses.js';
 import { renderCard, renderSheet, renderFlash } from './render.js';
 
 const KIND_LABEL = {
@@ -34,6 +35,17 @@ function sectionTitle(chapter, section) {
   const ch = BOOK_CHAPTERS.find((c) => c.n === chapter);
   const row = ch && ch.sections.find((s) => s.id === section);
   return row ? `${row.id} ${row.title}` : `Section ${section}`;
+}
+
+function practiceFacts(items) {
+  const lines = [];
+  const seen = new Set();
+  for (const it of items) {
+    if (!it || it.kind === 'flash' || !it.memory || seen.has(it.memory)) continue;
+    seen.add(it.memory);
+    lines.push(it.memory);
+  }
+  return lines;
 }
 
 function memoryGroups(items) {
@@ -65,10 +77,13 @@ function memoryGroups(items) {
 }
 
 export async function mountPrep(el, ctx, spec) {
+  el.classList.add('practice-mount');
   const section = sectionOfFocus(spec && spec.focus);
   const chapter = spec && spec.chapter;
   const PRACTICE = await loadCatalog();
-  const pool = selectItems(PRACTICE, { chapter, section });
+  const closed = closedChapters();
+  const scoped = selectItems(PRACTICE, { chapter, section });
+  const pool = (chapter || section) ? scoped : mixedItems(scoped, closed);
   const walk = !!(section);
   function drawSeed() {
     const n = Math.floor(Math.random() * 2147483646) + 1;
@@ -85,14 +100,19 @@ export async function mountPrep(el, ctx, spec) {
   let phase = 'ask';
   let right = false;
   let done = false;
+  let shown = false;
+  let stickTop = true;
   let deck = loadDeck(ctx.store);
   let missesBook = loadMisses(ctx.store);
   let flashShow = false;
   let cardIds = null;
   let cardPos = 0;
+  let pileIndex = 0;
+  let pileTotal = 0;
   const today = localDay();
 
   const status = h('p', { class: 'book-status', id: 'practice-status' });
+  const statusRow = h('div', { class: 'book-next', id: 'practice-next-row' }, status);
   const up = h('a', { class: 'station-link', id: 'practice-book', href: '#book', 'data-dir': 'prev' }, 'The Book');
   const endlessBtn = h('button', {
     type: 'button', class: 'chip', id: 'practice-endless', 'aria-pressed': 'false',
@@ -112,10 +132,13 @@ export async function mountPrep(el, ctx, spec) {
     if (next === seed) next = (seed % 2147483646) + 1;
     seed = next;
     queue = practiceEntries(pool, { mode: walk ? 'walk' : 'prep', seed });
+    restorePending();
     index = 0;
-    resetStep();
+    openEntry();
     done = false;
+    shown = false;
     mode = 'practice';
+    cardIds = null;
     paint();
   });
   const hasGenerator = pool.some((it) => it.generator);
@@ -149,6 +172,34 @@ export async function mountPrep(el, ctx, spec) {
     right = false;
   }
 
+  function openEntry() {
+    resetStep();
+    const entry = currentEntry();
+    if (entry && entry.reask && Number.isInteger(entry.step)) step = entry.step;
+    stickTop = true;
+  }
+
+  function scheduleReask(source, stepIndex, itemSeed) {
+    if (!source) return;
+    if (queue.some((entry) => entry.reask && entry.source.id === source.id && entry.step === stepIndex)) return;
+    queue.push({
+      source,
+      seed: itemSeed || 1,
+      view: 'faded',
+      reask: true,
+      step: stepIndex,
+    });
+  }
+
+  function restorePending() {
+    for (const pending of pendingMisses(missesBook)) {
+      const source = pool.find((it) => it.id === pending.id);
+      if (!source) continue;
+      const prior = queue.find((entry) => entry.source.id === pending.id && !entry.reask);
+      scheduleReask(source, pending.step, prior ? prior.seed : 1);
+    }
+  }
+
   function missLine(item) {
     const s = item.steps[step];
     if (s && s.hints && s.hints.length) return s.hints[0];
@@ -168,6 +219,7 @@ export async function mountPrep(el, ctx, spec) {
     if (!entry || !entry.source.generator) return;
     entry.seed = (entry.seed || 1) + 1;
     resetStep();
+    stickTop = true;
     done = false;
     paint();
   }
@@ -175,55 +227,77 @@ export async function mountPrep(el, ctx, spec) {
   function advance() {
     const entry = currentEntry();
     const item = realized();
-    if (item && step < item.steps.length - 1 && phase === 'told') {
+    if (entry && entry.view === 'worked' && item && step < item.steps.length - 1) {
       step += 1;
       hint = 0;
       misses = 0;
       phase = 'ask';
       right = false;
+      stickTop = true;
       paint();
       return;
     }
-    if (endless && entry && entry.source.generator) {
+    if (item && !(entry && entry.reask) && step < item.steps.length - 1 && phase === 'told') {
+      step += 1;
+      hint = 0;
+      misses = 0;
+      phase = 'ask';
+      right = false;
+      stickTop = true;
+      paint();
+      return;
+    }
+    if (endless && entry && entry.view !== 'worked' && !entry.reask && entry.source.generator) {
       generateAnother();
       return;
     }
     index += 1;
-    resetStep();
     if (index >= queue.length) {
       if (endless) {
         const gens = pool.filter((it) => it.generator);
         if (gens.length) {
           const source = gens[(index) % gens.length];
           queue.push({ source, seed: nextSeed(source), view: 'faded' });
+          openEntry();
           done = false;
           paint();
           return;
         }
       }
       done = true;
+      paint();
+      return;
     }
+    openEntry();
+    done = false;
     paint();
   }
 
   function onAnswer(value) {
+    const entry = currentEntry();
     const item = realized();
     if (!item || (phase !== 'ask' && phase !== 'hint')) return;
     const s = item.steps[step];
     right = answersMatch(value, s.answer, s.accept);
     if (right) {
       phase = 'told';
+      if (entry && entry.reask) {
+        missesBook = clearMiss(missesBook, item.id, step);
+        saveMisses(ctx.store, missesBook);
+      }
       paint();
       return;
     }
     misses += 1;
     missesBook = noteMiss(missesBook, item.id, step);
     saveMisses(ctx.store, missesBook);
+    if (entry) scheduleReask(entry.source, step, entry.seed);
     if (misses === 1) {
       phase = 'hint';
       if (hint < 1 && s.hints && s.hints.length) hint = 1;
     } else {
       phase = 'told';
+      shown = true;
     }
     paint();
   }
@@ -233,10 +307,10 @@ export async function mountPrep(el, ctx, spec) {
     const entry = currentEntry();
     if (!item || done) {
       status.textContent = pool.length
-        ? 'The set is done. The memory sheet holds the same lines.'
+        ? 'Set complete.'
         : 'No items for this chapter yet.';
       if (!pool.length) {
-        const filed = chaptersPhrase(PRACTICE);
+        const filed = chaptersPhrase(mixedItems(PRACTICE, closed));
         const whereElse = filed
           ? `${filed} ${filed.startsWith('Chapters') ? 'are' : 'is'} on the mixed Test prep page.`
           : 'Nothing is filed for this set yet.';
@@ -245,7 +319,7 @@ export async function mountPrep(el, ctx, spec) {
           h('p', null, whereElse)));
         return;
       }
-      renderCard(stage, { done: true }, { memory: () => { mode = 'memory'; paint(); } });
+      renderCard(stage, { done: true, facts: practiceFacts(pool), shown }, { memory: () => { mode = 'memory'; paint(); } });
       return;
     }
     const where = walk ? `Section ${section}` : (chapter ? `Chapter ${chapter}` : chaptersPhrase(pool));
@@ -274,17 +348,26 @@ export async function mountPrep(el, ctx, spec) {
     });
   }
 
+  function liveConceal() {
+    if (done) return null;
+    const entry = currentEntry();
+    const item = realized();
+    if (!entry || !item || entry.view === 'worked' || phase === 'told') return null;
+    const s = item.steps[step];
+    if (!s) return null;
+    return { answer: s.answer, accept: s.accept || [] };
+  }
+
   function paintMemory() {
     status.textContent = 'The sheet for this set. It prints without the menu.';
-    renderSheet(stage, memoryGroups(pool));
+    renderSheet(stage, memoryGroups(pool), liveConceal());
   }
 
   function flashList() {
     const order = dueOrder(pool, deck, today);
     const fresh = order.due.filter((row) => !row.rec);
     const reviewed = order.due.filter((row) => row.rec);
-    if (reviewed.length) return { rows: reviewed, early: false };
-    if (fresh.length) return { rows: fresh, early: false };
+    if (reviewed.length || fresh.length) return { rows: reviewed.concat(fresh), early: false };
     return { rows: order.later, early: order.later.length > 0 };
   }
 
@@ -292,21 +375,28 @@ export async function mountPrep(el, ctx, spec) {
     if (!cardIds) {
       const { rows } = flashList();
       cardIds = rows.map((row) => row.item.id);
+      cardPos = 0;
+      pileIndex = 0;
+      pileTotal = cardIds.length;
     }
     if (!cardIds.length) {
-      status.textContent = 'No flashcards in this set.';
+      status.textContent = '';
       renderFlash(stage, { item: null }, {});
       return;
     }
-    if (cardPos >= cardIds.length) cardPos = 0;
+    if (cardPos >= cardIds.length) {
+      cardPos = 0;
+      pileIndex = 0;
+      pileTotal = cardIds.length;
+    }
     const item = pool.find((it) => it.id === cardIds[cardPos]);
     if (!item) return;
     const rec = deck.cards[item.id];
-    const count = `${cardPos + 1} of ${cardIds.length}`;
-    status.textContent = count;
-    const front = item.cite && item.cite.ref ? item.cite.ref : item.prompt;
+    const total = Math.max(pileTotal, pileIndex + 1);
+    const count = `${pileIndex + 1} of ${total}`;
+    status.textContent = '';
     renderFlash(stage, {
-      item: { ...item, prompt: front },
+      item,
       show: flashShow,
       early: false,
       box: rec ? rec.box : 0,
@@ -317,7 +407,14 @@ export async function mountPrep(el, ctx, spec) {
         deck = reviewCard(deck, item.id, grade, today);
         saveDeck(ctx.store, deck);
         flashShow = false;
-        cardPos += 1;
+        if (grade === 'again') {
+          const id = cardIds[cardPos];
+          cardIds.splice(cardPos, 1);
+          cardIds.push(id);
+        } else {
+          cardPos += 1;
+        }
+        pileIndex += 1;
         paint();
       },
     });
@@ -330,20 +427,31 @@ export async function mountPrep(el, ctx, spec) {
     }
     endlessBtn.hidden = !hasGenerator || mode !== 'practice';
     newSet.hidden = mode !== 'practice';
+    statusRow.hidden = mode === 'cards';
     if (mode === 'memory') paintMemory();
     else if (mode === 'cards') paintCards();
     else paintPractice();
     const entry = currentEntry();
-    if (mode === 'cards') lede.textContent = 'Show the back.';
-    else if (mode === 'memory') lede.textContent = 'The formulas and the one-line versions.';
-    else if (entry && entry.view === 'worked' && !done) lede.textContent = 'Try these steps.';
-    else lede.textContent = 'Check, then read the reason.';
-    if (mode === 'practice' && phase === 'ask') {
+    if (mode === 'cards') setLede(flashShow ? 'Again, or got it.' : 'Show the back.');
+    else if (mode === 'memory') setLede('The formulas and the one-line versions.');
+    else if (done || !entry) setLede(doneLede());
+    else if (entry.view === 'worked') {
+      const item = realized();
+      const last = !item || step >= item.steps.length - 1;
+      setLede(last ? 'Try these steps.' : 'Next.');
+    } else setLede('Check, then read the reason.');
+    if (stickTop && mode === 'practice') {
+      stickTop = false;
+      const scroller = document.scrollingElement || document.documentElement;
+      if (scroller) scroller.scrollTop = 0;
+    }
+    if (mode === 'practice' && phase === 'ask' && !(entry && entry.view === 'worked')) {
       requestAnimationFrame(() => fitAnswer());
     }
     if (mode === 'practice' && (phase === 'hint' || phase === 'told')) {
       requestAnimationFrame(() => {
-        const node = stage.querySelector('#practice-hint-note')
+        const node = stage.querySelector('#practice-next')
+          || stage.querySelector('#practice-hint-note')
           || stage.querySelector('#practice-why')
           || stage.querySelector('#practice-verdict');
         revealInView(node);
@@ -351,8 +459,24 @@ export async function mountPrep(el, ctx, spec) {
     }
   }
 
+  function doneLede() {
+    const facts = practiceFacts(pool);
+    if (!pool.length) return 'Check, then read the reason.';
+    if (shown && facts.length === 1) return `These lines were shown. ${facts[0]}`;
+    if (shown) return 'These lines were shown.';
+    if (facts.length === 1) return facts[0];
+    if (facts.length) return 'The facts from this set.';
+    return 'Set complete.';
+  }
+
+  function setLede(text) {
+    lede.replaceChildren();
+    appendRich(lede, text || '');
+  }
+
   function fitAnswer() {
-    const check = stage.querySelector('#practice-check') || stage.querySelector('.practice-choice');
+    const choices = stage.querySelectorAll('.practice-choice');
+    const check = choices.length ? choices[choices.length - 1] : stage.querySelector('#practice-check');
     if (!check) return;
     const header = document.getElementById('site-header');
     const topLimit = (header ? header.getBoundingClientRect().bottom : 0) + 8;
@@ -405,19 +529,18 @@ export async function mountPrep(el, ctx, spec) {
   window.addEventListener('resize', onResize);
   if (window.visualViewport) window.visualViewport.addEventListener('resize', onResize);
 
-  const lede = h('p', { class: 'station-lede', id: 'practice-lede' }, walk
-    ? 'Try these steps.'
-    : 'Check, then read the reason.');
+  const lede = h('p', { class: 'station-lede', id: 'practice-lede' });
   el.append(
     h('header', { class: 'station-header' },
       up,
       h('h1', { id: 'practice-title' }, 'Test prep'),
       h('p', { class: 'where-line', id: 'where-line' }, 'Test prep'),
       lede),
-    h('div', { class: 'book-next', id: 'practice-next-row' }, status),
+    statusRow,
     h('div', { class: 'practice-toolbar', id: 'practice-toolbar' }, modeRow, newSet, hasGenerator ? endlessBtn : null),
     stage,
     indexes);
+  restorePending();
   paint();
   return function unmount() {
     window.removeEventListener('resize', onResize);

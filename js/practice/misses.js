@@ -30,10 +30,40 @@ export function noteMiss(book, id, step, nowMs = Date.now()) {
       ...(book && book.steps),
       [id]: {
         ...item,
-        [key]: { misses: (prev.misses || 0) + 1, updated: nowMs },
+        [key]: { misses: (prev.misses || 0) + 1, updated: nowMs, pending: true },
       },
     },
   };
+}
+
+// A correct re-ask clears the flag. The miss count stays, so a merge still sees it.
+export function clearMiss(book, id, step) {
+  const key = String(step);
+  const item = book && book.steps && book.steps[id];
+  const prev = item && item[key];
+  if (!prev || !prev.pending) return book || emptyMisses();
+  return {
+    v: 1,
+    steps: {
+      ...book.steps,
+      [id]: {
+        ...item,
+        [key]: { misses: prev.misses || 0, updated: prev.updated || 0, pending: false },
+      },
+    },
+  };
+}
+
+export function pendingMisses(book) {
+  const out = [];
+  const steps = (book && book.steps) || {};
+  for (const id of Object.keys(steps)) {
+    const recs = steps[id] || {};
+    for (const key of Object.keys(recs)) {
+      if (recs[key] && recs[key].pending) out.push({ id, step: Number(key) });
+    }
+  }
+  return out;
 }
 
 export function mergeMisses(a, b) {

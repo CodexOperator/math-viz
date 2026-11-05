@@ -602,16 +602,16 @@
       "href": "https://complexanalysis.org/web/sec_convergence-theorems.html"
     },
     "kind": "flash",
-    "prompt": "Definition 4.13, limit supremum",
+    "prompt": "Definition 4.13, limit supremum of a positive sequence",
     "steps": [
       {
-        "text": "Definition 4.13, limit supremum",
-        "answer": "The limit supremum is the smallest $L$ such that only finitely many terms exceed $L+\\varepsilon$, for every $\\varepsilon>0$. If no such $L$ exists, it is infinity.",
-        "why": "Definition 4.13, page 121."
+        "text": "Definition 4.13, limit supremum of a positive sequence",
+        "answer": "Let $\\{t_n\\}$ be a sequence of positive real numbers. The limit supremum is the smallest real number $L$ such that, for every $\\varepsilon>0$, only finitely many terms exceed $L+\\varepsilon$. If no such $L$ exists, the limit supremum is infinity.",
+        "why": "Definition 4.13, page 121. The sequence is positive."
       }
     ],
     "generator": null,
-    "memory": "Limit supremum is the eventual ceiling of the sequence."
+    "memory": "The limit supremum of a sequence of positive real numbers is its eventual ceiling."
   },
   {
     "id": "ch4-4.3-theorem-4-14",
