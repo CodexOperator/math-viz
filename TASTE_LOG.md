@@ -1943,3 +1943,57 @@ The Log answer. Inline KaTeX, 17px, 115×25, no overflow at either width, either
 The card itself. White, 16px padding, 8px between rows, 10px radius. Check and the choices at 44px. One card open at a time. Exercise 6(b) following 6(a). The four Exercise 3 labels, which are the real traps. Example 7.15's three numbers, 1, \(1/2\), and 5.
 
 No sideways scroll at 390 or at 1280.
+
+## ux-veteran (chapter-7 batch 5)
+
+Preview https://ch7-preview.complexanalysis.pages.dev/#chapter-7, branch `cursor/chapter-7` at `90093ea`. Phone 390×844 first, then 1280×800, light and dark. Touched the page the way a student would: the first graph, a drag, Play and Pause, each later camp, 7.4 through "Play the pole", the menu, The Book, Chapter 1, and Back. No product code was changed. No console errors. No failed requests. `scrollWidth` matched the window at 390 and at 1280, in both themes.
+
+### Verdict
+
+ANOTHER BATCH
+
+The checks this batch named are on the page. The phone ends on Play. The wide window puts a 480 square beside the claim and Play. The menu's way back lands the camp title 40px under the header. "Play the pole" is a 44px control, and the first press stops on order 2. What is still in the way: that button is the thing a thumb hits while the order-2 question is a clipped card, the bold line above the picture keeps saying "drag once around" after the lap is over, a phone camp landing slices the colour line, and Chapters 4 and 5 still end on a 23px "Back to the book".
+
+### How the walk went
+
+**390×844, light, fresh storage.** The site name is whole. Theme and menu are 44×44. The Book is 87×44. The title is Iowan at 25.85px, two lines, `rgb(26, 34, 48)`. The lede is the move, in the muted ink `rgb(81, 91, 108)`. The status is "Uniform convergence · Stage 1 of 5". The square is 326×326 at y = 362. The green point is 8×8, on the curve, at y = 617. The claim and "n = 4" are on the screen. Play is 70×44 and ends at y = 835. The line "Press Play until the curve comes back" starts at y = 843. Paper is `rgb(246, 243, 236)`.
+
+A drag that starts in the left of the square and ends toward the right sets the probe to about 0.79 and the claim to "At this x, the same partial sum has left the band." Play from the opening point switches to Pause at n = 6, and a second press freezes n at 6 with the label Play.
+
+**The camps, title parked 40px under the 56px header.** 7.2, 7.3, and 7.4 land with the title at y = 96. 7.5's title wraps, 54px tall, and still starts at y = 96. On each one the square is 324×324, the claim and Play are on the phone, and Play is 70×44. 7.2's Play ends at y = 756. 7.4's ends at y = 782. 7.5 opens painted: "x = 1.50", the point on the axis, "Away from 0, sin(z)/z is analytic." The formula is typeset once. The status, while 7.1 is the open stage, stays "Uniform convergence · Stage 1 of 5" and sits above this screen. The camp flag is the where.
+
+**7.4.** On arrival the claim is "The green point walks a circle about the zero," the readout is "walking," and the zero card is hidden. One Play runs about eight seconds and ends on "The purple image went around twice. The zero has order 2," the readout "order 2," and a button "Play the pole" at 144×44, y = 738. Two purple rings stay up (24 points and 25). The bold line above the picture still says "Drag the green point once around the orange circle." Under the button, "Play on. The image winds the other way." is on screen, and the zero card starts at y = 825, so an 844px window keeps a blank strip of the card. The question about the two turns is below that strip. The second press ends on "The purple image went around once the other way. The pole has order 1," the readout "order 1," and "Play again" at 122×44. The bold line is unchanged. The card heading "Definition 7.6, page 234" is the strip at the bottom, and the pole cards stay hidden behind that blank. A third press rewinds: at 400ms the claim is back to "walks a circle about the zero," and the walk ends again on order 2 with "Play the pole." The same first press and the same "Play the pole" at 144×44 happen in the dark. With reduced motion the button says Next step, the forty-eighth press says "Play the pole," and it never says Pause.
+
+**Back.** From the menu, with the Laurent title at y = 96 and the scroll at 3357, the stored camp is 7.3. The Book in the page is at y = −3277. The menu's The Book opens `#book` and the camp stays 7.3. Chapter 7 brings the title back to y = 96 at 80ms, at 400ms, and at 1000ms, with the why on that screen. Chapter 1 from the menu lands its card at y = 97, and "One Point, Two Addresses" under Already drawn is 208×44. Browser Back from that card returns to Laurent at y = 96. The site title is 237×30 and opens The Map. Browser Back from The Map returns to the same Laurent title.
+
+**The book, and Chapters 4 and 5.** A fresh book says "Next is §4.1, Exercise 3. 0 of 8 exercises." Walk Chapter 4 is 163×44. Already drawn links are 44px tall: "One Point, Two Addresses" at 208×44, "A Function Is a Motion" at 178×44, "The Derivative Is a Move" at 195×44. On the phone the first of those wraps onto its own line. Heads for 4, 5, and 7 are links. Chapters 4 and 5 each open with The Book at 87×44. Their pins and the picture chips are 44px. The link at the end of each of those chapters, "Back to the book," is 134×23.
+
+**The menu.** Eight rows, each 44px, and all eight are on the first screen of the drawer. Chapter 7 is the current row. The list stops at Chapter 7. At 1280 the same list is the sidebar. Chapter 3 and Chapter 4 wrap to 47px. Chapter 7 is in view and current.
+
+**Dark, both widths.** Paper `rgb(13, 18, 28)`, title `rgb(233, 237, 245)`, lede `rgb(166, 176, 195)`. The same phone first screen, Play ending at y = 835. The green point, the orange band, the purple curve, and the blue axis still separate. Play's fill is `rgb(21, 28, 43)` with a `rgb(116, 128, 160)` edge.
+
+**1280×800, light and dark.** The title is Iowan at 36px, one line. The Book is 87×44. The square is 480×480 at y = 318 and ends at y = 798. The claim starts at y = 318, beside the square. The green point is 12×12 at y = 693. Play is 70×44 at y = 413 and ends at y = 457. A drag to about 0.79 leaves the band. Pause freezes n at 6. Camp landings put the 480 square fully in the window: 7.3's square ends at y = 712, Play ends at y = 371, and the colour line under the picture fits. On 7.4 the button "Play the pole" is 144×44 at y = 328, beside the two rings. The zero card starts at y = 755, so the window keeps the heading "Definition 7.6, page 234" and cuts the question off.
+
+### Ranked fixes
+
+1. **Keep the order-2 sentence up until its blank is answered.** Evidence: after the first press, on the phone, "Play the pole" is 144×44 at y = 738 and the zero card starts at y = 825, a blank strip in the 844px window. The question "went around twice, so the zero has order ___" is below that strip. On the wide window the button is at y = 328 and the card heading is cut at the bottom of the 800px window. The second press changes the claim to order 1 while that card is still the one on the page. The pole cards stay hidden behind it. A third press, "Play again," spends eight seconds rewinding to the zero and ends back on order 2. Change: the blank sits under the readout, above the button, and the whole question is on the screen that says order 2. The button keeps the words "Play the pole" and runs when that blank is right. Until then the picture stays on the two rings.
+
+2. **Make the line above the picture say what the picture is doing.** Evidence: before Play, during order 2, during order 1, and after Play again, the bold line on 7.4 is "Drag the green point once around the orange circle." The line under the button is the one that changes, to "Play on. The image winds the other way." On the 7.2 phone landing the bold line and the line under Play are the same words, "Drag past the orange circle." On 7.5 both say to drag toward 0, and both are on the screen with Play. 7.3 is the one that already earns two lines: "Drag across an orange circle" above the square, and "Leave the annulus and come back" under Play. Change: one line, and it changes with the phase. On 7.4 it says the drag, then the two turns, then the other way. A second line stays only when it adds a step, the way 7.3's wait already does. The copy under 7.2's Play, and the copy under 7.5's Play, go.
+
+3. **End a phone camp landing on a whole line.** Evidence: with the Laurent title at y = 96, Play ends at y = 756 and the colour line begins on that screen. The window cuts it at "Green is the". The same cut is on the 7.5 landing, after "Drag the point toward 0." The hero already clears this: Play ends at y = 835 and the colour line starts at y = 878, whole, on the next flick. At 1280 the camp colour line fits. Change: on the phone, when the camp title sits 40px under the header, the colour line starts below the fold. The landing ends on Play or on the one instruction under it.
+
+4. **Give Chapters 4 and 5 the 44px way back at the end of the page.** Evidence: the header Book on those chapters is 87×44, and their pins and picture chips are 44px. The last link, "Back to the book," is 134×23 on the phone and at 1280. Chapter 7's way back is the 44px row. Change: that end link uses the same row.
+
+### What to keep
+
+The phone first screen, in both themes. The Book at 87×44, the title, the lede that names the drag and Play, the status "Uniform convergence · Stage 1 of 5", the 326px square, the claim, the readout, and Play at 70×44 ending at y = 835. Dark paper `rgb(13, 18, 28)`, title `rgb(233, 237, 245)`. The four colours still separate.
+
+The wide first screen. A 480 square ending at y = 798, the claim beside it, the 12px green point at y = 693, and Play ending at y = 457. The same square on a camp landing, with Play beside the picture and the colour line whole.
+
+The green point at `r = 6`. The square is the drag target. A drag that misses the dot still moves the probe and flips the claim. Play, Pause, and the freeze on the second press. Next step when motion is reduced, and "Play the pole" when that lap has been stepped to the end.
+
+7.2 opening on "The partial sum has settled near 0." 7.3 opening between the two orange circles, with a gesture line and a different line under Play. 7.5 painted at x = 1.50, the point on the axis, the analytic sentence, and the formula typeset once. 7.4's first press ending on two rings, "order 2," and a 44px "Play the pole." The second press ending on one wind the other way and "order 1."
+
+The menu. Eight rows, each at least 44px, all on the first phone screen, Chapter 7 marked, the list stopping at Chapter 7. The camp stored from that menu. Laurent left at y = 96 and came back at y = 96, and it was still there a second later, with the why in view. The same return from Chapter 1 and from The Map, by Back. Already drawn links at 44px. Chapters 4 and 5 opening on the 87×44 Book row, with pins and picture chips at 44px. A fresh book still walking Chapter 4.
+
+The type and the paper. Iowan at 25.85px on the phone and 36px at 1280. Body 17px. Paper `rgb(246, 243, 236)`. White cards, 10px radius, and in the dark `rgb(21, 28, 43)`. No sideways scroll.
