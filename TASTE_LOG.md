@@ -1647,3 +1647,53 @@ The sentences the pictures earn. The circle sentence stays after the point comes
 One card at a time. The next card waits. The wrong choices are the mistakes a student makes, and four of them answer in the student's own terms: N depending on z is pointwise, a vertical asymptote is the real-line trap, non-negative powers from both poles belong to \(|z|<2\), and removable means the negative powers are gone. Exercise 10's three steps, and a second rational function from the generator, are the right kind of faded practice once they sit under the model.
 
 The five summit sentences, once the press shows them. One N for the whole set. The Taylor series stops at the nearest singularity. The Laurent series aims inward on one side and outward on the other. One trip around a zero of order k winds the image k times. The singularity at 0 is removable.
+
+## ux-veteran (chapter-7 batch 3)
+
+Preview https://ch7-preview.complexanalysis.pages.dev/#chapter-7, branch `cursor/chapter-7` at `27c5ed5`. Phone 390×844 first, then 1280×800, light and dark. Touched the page the way a student would. No product code was changed. No console errors. No failed requests. `scrollWidth` matched the window at 390 and at 1280, in both themes.
+
+### Verdict
+
+ANOTHER BATCH
+
+The five phone checks this batch named are on the page. The first screen ends on Play. The green point is the Chapter 5 dot, and the square is the target. Play on 7.5 continues from the x already on the screen. The five squares are one size. The picture question sits under Play. What is still in the way: at 1280 the sentence and Play are the next flick, 7.5 arrives with the point in the corner and the sentence blank, and The Book forgets the place you left.
+
+### How the walk went
+
+**390×844, light, fresh storage.** The site name is whole. Theme and menu are 44×44. The Book is 87×44. The title is Iowan at 25.85px, two lines. The lede is the move, in the muted ink `rgb(81, 91, 108)`: drag toward 1, then Play. The status is "Uniform convergence · Stage 1 of 5". The square is 326×326 at y = 362. The claim and "n = 4" are on the screen. Play is 70×44 and ends at y = 835, so an 844px window keeps the whole button, with 9px under it. The picture question, "What did the picture just show?", starts at y = 843. The colour sentence starts at y = 1055, whole, under that card. Pins and Memory follow the card.
+
+The green circle is `r = 6` in a 480 viewBox, drawn 8.1×8.2 on this square. Chapter 5's green circle is the same `r = 6`, drawn 9×9 on its 358px square. A drag that starts in the top-left of the square and ends toward the right sets the probe to 0.92 and the claim to "At this x, the same partial sum has left the band." Play from there switches to Pause, reaches n = 8, and a second press freezes n at 8 with the label Play. Play from the opening point, x = 0.35, keeps the "near 1, this n still leaves it" sentence through n = 40 and, at n = 44, says "A larger n has brought the curve back." The button says Play again. Every drawn point of the curves stays inside the 480 viewBox (the lowest is 44, the highest is 421).
+
+Stages 7.2 through 7.5 are 324×324. At each one the picture question is the next block after Play, an 8px gap, and the colour sentence follows the card. 7.2 opens on "The partial sum has settled near 0." A drag to about 1.39 changes it to the circle through ±i. 7.3 opens between the two orange circles. A tap at the centre says every power is non-negative. 7.4 plays out to "order 2", the button says Play again, and both purple rings stay up (24 points on the inner trail, 25 on the outer). "terms" on the first blank prints "Not yet." and the memory line. The next card stays hidden. The waiting button still says "Answer the practice to finish this stage." and it is disabled. The field is 231×44 and Check is 85×44.
+
+**7.5, before any touch.** The line above the square says "Drag the green point toward 0." The claim is an empty 53px block. The readout is empty. The green circle has no centre, so it sits on the corner of the square, 8px, half a dot past the top-left. The orange hole is at the top of the hill. Play from that rest does the walk the button promises: the first sample is x = 1.43, the button says Pause, the sentence is "Away from 0, sin(z)/z is analytic," and the next samples are 1.35, 1.28, 1.20, stepping toward 0. A drag that lands at x = −0.20, while the button still says Play, sets the removable sentence. The next press moves to x = −0.17 and says Pause. After a walk that has finished, Play again starts near x = 1.46. The same step toward 0, from a dragged x, happens at 1280.
+
+**Back.** Scrolled to 7.3, the page is at y = 4506 and `mv:ch7-scroll` holds 4506. The section title clears the header (title top 97, header bottom 56). The Book then opens `#book`, and the stored value is 0. The Chapter 7 row brings the chapter back at y = 0. The 7.3 title is at y = 4523.
+
+**The book and the menu.** A fresh book says "Next is §4.1, Exercise 3. 0 of 8 exercises." and the button is "Walk Chapter 4", 163×44. One stored Chapter 7 tick changes that button to "Open Chapter 7". The phone drawer is The Book plus Chapters 1 through 7, each row 44px, and Chapter 7 is the current page. Chapters 8 through 11 are absent. At 1280 the same list is a 280px sidebar, and Chapter 7 is in view and current. Chapter 1 and Chapter 6, opened from those rows, mount the book. The first screen there is still Walk Chapter 4. On the book itself the Chapter 7 head is the only link. Chapters 1 through 6 are divs. Chapter 5's flag says Open.
+
+**Dark, both widths.** Paper `rgb(13, 18, 28)`, title `rgb(233, 237, 245)`, lede `rgb(166, 176, 195)`. The same first screen: Play ends at y = 835 and the question starts at y = 843. The green point, the orange band, the purple curve, and the blue axis still separate. At 1280 the dark square is the same 480×480 ending at y = 798.
+
+**1280×800, light.** The title is Iowan at 36px, one line. The square is 480×480 at y = 318 and ends at y = 798. The claim starts at y = 806. Play starts at y = 901 and ends at y = 945. Stages 7.2 through 7.5 are the same 480 square, and the green circle is 12×12, the size Chapter 5 draws on its 480 square. Chapter 5 on this window puts that square at y = 179 and Play ends at y = 745. Reduced motion, on the phone, labels every camp Next step. Two presses go from n = 4 to n = 6 to n = 8, and the button does not say Pause.
+
+### Ranked fixes
+
+1. **Paint 7.5 before the first touch.** Evidence: on arrival the claim is empty, the readout is empty, and the green circle has no centre, so an 8px dot sits at the corner (−4, −4) while the hole is at (159, 37) on a 324px square. The instruction already says to drag that point. Play from the untouched page then walks from x = 1.43 toward 0 and fills the analytic sentence. A drag to −0.20 continues toward 0 on the next press, and Play again is the restart near 1.46. Change: the opening frame is x = 1.50, the point on the axis, the readout, and "Away from 0, sin(z)/z is analytic."
+
+2. **Put the claim and Play on the wide first screen.** Evidence: at 1280, light and dark, the square ends at y = 798 in an 800px window. The claim is at y = 806 and Play ends at y = 945. A drag on that first screen changes a sentence the window does not hold. Chapter 5 on the same window ends Play at y = 745. The phone already ends on Play. Change: cap the wide square so the claim and Play finish inside 800. Leave the phone square as it is.
+
+3. **Keep the chapter scroll when The Book is pressed.** Evidence: at y = 4506 the stored key is 4506. On the book it is 0. The Chapter 7 row returns to y = 0. Change: the value saved is the scroll the chapter had when the student left. The write that happens after the page has jumped to the top has to stop replacing it.
+
+4. **Land a chapter row on that chapter's card.** Evidence: the drawer rows for Chapter 1 and Chapter 6 are 44px, the same row as Chapter 7. Each opens the book, and the first screen is "Walk Chapter 4". Chapter 4, Chapter 5, and Chapter 7 open their own pictures. Change: a row whose chapter is still the roadmap opens the book scrolled to that chapter's card. The three pictured chapters stay on their pictures.
+
+5. **Make an Open or Next head a link.** Evidence: on the book, heads 1 through 6 are divs. Chapter 7's head is the link, 81px tall. Chapter 5's flag says Open and the head has no href. The walk button itself is 44px and, with a Chapter 7 tick, says Open Chapter 7. Change: a head flagged Open or Next is a link, the same row Chapter 7 already is. A Later head stays a card.
+
+### What to keep
+
+The phone first screen, in both themes. The Book, the title, the lede that names the drag and Play, the status line "Uniform convergence · Stage 1 of 5", the square, the claim, the readout, and Play, with Play the last control on the screen. The picture question is the next block, then the colour sentence, whole, then the pins.
+
+The green point at `r = 6`, 8px on the phone square and 12px on the 480 square, the same dot Chapter 5 paints. The square is the drag target. A drag that misses the dot still moves the probe and flips the claim. Play, Pause, and the freeze on the second press. Play again at n = 44, with the curve back inside the frame. Next step on all five camps when motion is reduced.
+
+One square across the camps: 326 and 324 on the phone, 480 at 1280. The 7.1 curves use that square. The right-hand rise stays inside the frame at n = 4 and at n = 44. 7.2 opens on the settled sentence and names the circle when the point crosses it. 7.3's tap at the centre names the non-negative powers. 7.4 leaves two purple rings and the order-2 sentence when the button says Play again. On 7.5, once the point has a place, Play walks toward 0 from that x and returns to the far end only from Play again. The gap between the hill and the axis is the value sitting near 1. The question sits 8px under each Play button.
+
+The type and the paper. Iowan at 25.85px on the phone and 36px at 1280. Body 17px. Paper `rgb(246, 243, 236)` and, in the dark, `rgb(13, 18, 28)`. White cards, 10px radius. The Book, the pins, Play, Check, the blank, and the menu rows, all at least 44px tall. The drawer stops at Chapter 7, and the current row is marked. A fresh book walks Chapter 4. A Chapter 7 tick opens Chapter 7. A wrong blank says "Not yet." and the memory line, and the next card waits. The four teaching colours still separate on the dark paper. No sideways scroll.
