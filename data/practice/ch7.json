@@ -123,7 +123,7 @@
       {
         "text": "The calculation gives $\\mathrm{Log}(1-z)=$ ___",
         "answer": "-\\sum_{n=1}^{\\infty} z^n/n",
-        "accept": ["-\\sum z^n/n", "-sum z^n/n"],
+        "accept": ["-\\sum z^n/n", "-sum z^n/n", "-sum_{n=1}^infty z^n/n", "-sum_{n=1}^{infty} z^n/n", "-\\sum_{n=1}^\\infty z^n/n"],
         "why": "The calculation on page 214 is $-\\mathrm{Log}(1-z_0)=\\sum z_0^n/n$. The prompt printed in Example 7.2 omits that minus sign."
       }
     ],
@@ -851,7 +851,7 @@
       {
         "text": "Numerator and denominator are both 0 at $1+i$, and the derivative of the denominator is $-8+8i\\neq 0$. The limit equals ___",
         "answer": "(-1-i)/16",
-        "accept": ["\\frac{-1-i}{16}", "-\\frac{1+i}{16}", "-1/16-i/16", "(-1-i)/16"],
+        "accept": ["\\frac{-1-i}{16}", "-\\frac{1+i}{16}", "-1/16-i/16", "(-1-i)/16", "-(1+i)/16", "1/(-8+8i)"],
         "why": "Corollary 7.11, page 240. The quotient of the derivatives is $1/(4(1+i)^3)=1/(-8+8i)=(-1-i)/16$."
       }
     ],
