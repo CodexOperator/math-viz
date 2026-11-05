@@ -2082,3 +2082,40 @@ The wide lede is the leftover. At 1280, both themes, `#chapter-lede` is 595×52 
 ### Keep
 
 The phone chapter’s first screen. Both planes at 158px from y = 499, the quarter-turn arc at a third of the square on the unshaded side of the blue line, the claim that breaks before \(w = iz+i\), the waiting line ending at y = 801, WORKED, and the first line of Example 2.9 at y = 824. The same screen in the dark, with the warm wash `rgb(157, 103, 71)` above the orange line. At 1280 the planes are 264px, the claim sits beside the w plane, and “Drag until the sentence changes” is one line under the pair, ending at y = 799. A press on the square moves the point and flips the sentence. “0 of 5 stages marked.” sits under the title and does not get repeated in the lede. Open Chapter 2 is a 44px primary button, the status under it is one line, and §2.4 is the last row on the 390 screen, bottom 843. The doors are 44px, and `CC BY 4.0.` stays with “pages i–ii”. A press in the §2.4 row, and a fresh `#chapter-2-2-4`, put the title at y = 97, clear of the header. After Exercise 13, Summit, the sentence, Stage complete, and Go to 2.2 are on the screen under the header. Go is 44px, it writes the mark, and §2.2 opens with its title at y = 97. Browser Back returns to the scroll the student left: 500 back to 500, 1800 back to 1800, and 2600 back to 2600 through the drawer. The drawer is chapters 1–7, each row 44px, Later on the chapters that are not open, and chapter 3 stays current after the tap. The book lede counts seven chapters. The roots card says the words. The sector choices keep the gap in `\arg w`. The circle sentence keeps its period. Further reading keeps the marker on the first line. The colour key stays off the book. The map’s 36px chips stay the map’s chips. The paper, the Iowan title, and the four teaching colours match the book and Chapter 4. No sideways scroll, and the console stayed quiet.
+
+## reviewer (Ch2 batch 6)
+
+Reviewed `7d8dea4` on `cursor/chapter-2` against Howell & Mathews, *Complex Analysis*, 202 Updated Edition (the professor PDF; printed page n is PDF page n+9). Preview https://ch2-preview.complexanalysis.pages.dev served that tip: `chapter2.js` and `ch2-picture.js` matched the tree. `BRIEF.md` and `LENSES.md` are not on this branch. The loop is the one in `kit/SKILL.md`. Not merged. `gh-pages` untouched. The unslop note at `02cd256` and the ux-veteran note at `327e5c6` are logs only. The page is the same.
+
+### Verdict
+
+ACCEPT WITH FIXES
+
+The five pictures, the pins, and the card answers match the book. One worked sentence put Definition 2.1 on the branch. That cite is fixed on this branch.
+
+### What matches the book
+
+Checked the claims in `js/stations/chapter2.js`, `js/stations/ch2-picture.js`, and `data/practice/ch2.json`, and recomputed the generator (`selfCheck` for seeds 1–80).
+
+- §2.1, page 43: one z in D goes to one w. Image, into, inverse image, and one-to-one are page 46. Translation is page 48. Rotation and magnification are page 49. The linear map w = Az + B is page 50: turn by Arg A, stretch by |A|, slide by B.
+- Example 2.9, pages 50–51. w = iz + i sends Re z ≥ 1 onto Im w ≥ 2, because v = x + 1. The boundary is included. Left of the line, v is strictly below 2. Page 51: a linear transformation preserves angles, because it is a rotation, a magnification, and a translation. The right angle at −2+i (straight up, straight right) is still a right angle at −5−2i. The images −5−2i, −6, and 3+2i have dot product 0.
+- Exercise 13, page 54, and the selected answer on page 432. The triangle has vertices −5−2i, −6, and 3+2i. `0-6i`, `−6i`, and `-6i` stay rejected. `−6` locks. The shape line still accepts triangle and right triangle.
+- Equation (1.45), page 32. The roots card’s first paint reads `1 and −1`, `i and −i`, and `only 1`, with the words outside math. One choice is the answer. Each listed root powers back to the number. A formula-only choice stays one math run: the sector buttons are `0 < arg w < …` with the gap after arg.
+- Equation (2.10), page 56: u = a² − v²/(4a²). The line x = 1 is u = 1 − v²/4. Exercise 1(b), page 59, is x = 2, so u = 4 − v²/16. The selected answer says the same.
+- Definition 2.3, page 61. Definition 2.4 and Theorem 2.1 are page 62. The minimum of δ₁ and δ₂, and the two halves adding to ε, are page 63. Exercise 1(a), page 66, is −3+5i. The selected answer on page 433 is −3+5i. (2+i)² = 3+4i. Example 2.16 says the conjugate reflects about the y axis. That sentence in the book is the slip. The picture reflects across the real axis, and the orange disk is centred at 1−i. δ = ε.
+- Example 2.21, pages 68–69. The upper limit at a negative real is i√r₀ and the lower limit is −i√r₀. Near −1 the lower choice is −i. Page 68: a branch is any single-valued function that is continuous in some domain (except, perhaps, on the boundary) and assigns one of the values. Page 69: the origin is the branch point.
+- §2.5 opens on page 72. Figure 2.22 and the north pole are page 73. Equation (2.32), page 74, sends 0 to ∞. Example 2.24, page 76: centre 1/(2a), radius |1/(2a)|. The picture’s x = 1 circle is |w − 1/2| = 1/2. The card’s x = 2 circle is |w − 1/4| = 1/4.
+
+Walked in headless Chrome at 390×844 and 1280×800, light and dark. No console errors. `scrollWidth` was 390 on the phone and 1265 in the 1280 window. The phone lede does not repeat the stage count. Each formula in the claim is one piece: w = iz+i on its own line, then Im w = 2. Example 2.9 starts at y = 824. At 1280 the claim sits alone beside the 264px planes and the waiting line under the pair ends at y = 799. The dark half-plane composites to rgb(156, 102, 71). The light wash is rgb(241, 225, 214). `CC BY 4.0.` is one line of the citation. §2.4 ends at y = 843. Further-reading links are blocks, min-height 44, marker on the first line, page inside the link. Book doors are 44px. A later chapter with a map is the flag, the title as that link, and the page. Chapters 6 and 7 have no door, so the title is the title. A press on the z square flips the §2.1 sentence both ways.
+
+`js/core/map-route.js` matches `kit/template/js/core/map-route.js` (sha256 `94ff34704f9df4355a5fc512b931691be006b744e4a52b2c0ec10edccf7fa231`). Live code does not import `kit/`. `node tools/check_vectors.mjs` (234/234), `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed.
+
+### Fixes pushed to cursor/chapter-2
+
+- The §2.4 worked line ended the branch sentence and then said “Definition 2.1, page 55.” Definition 2.1, page 55, is the principal square root. The branch sentence is page 68, and it is not a numbered definition. The square root now carries Definition 2.1. The branch sentence carries page 68. The flash card already said page 68.
+
+### Leftovers not fixed
+
+1. The Theorem 2.1 blank still accepts the letter e for ε. ε, epsilon, and the two halves adding to ε are the book’s bound (page 63). The letter e is not.
+2. The Theorem 2.4 pin says page 64. The sum and the difference start there. The composition, which needs f continuous in a neighborhood of g(z₀), is the next page, 65.
+3. On a phone, Chapter 3’s title wraps to 68px. The card is still the flag, the title, and the page, and §2.4 still ends at 843. Chapters 6 and 7 have no drawn map, so those titles are not links.

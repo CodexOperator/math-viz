@@ -79,7 +79,7 @@ const COPY = {
   '2.4': {
     why: 'Arg jumps when the point crosses the negative real axis.',
     summit: 'Arg jumps across the negative real axis, and the principal square root jumps with it.',
-    example: 'Example 2.21, pages 68–69. At a negative real number the limit from above and the limit from below are different square roots, so the principal square root jumps. A branch is one single-valued choice of those values, continuous in a domain except, perhaps, on the boundary. Definition 2.1, page 55.',
+    example: 'Example 2.21, pages 68–69. At a negative real number the limit from above and the limit from below are different square roots, so the principal square root jumps. Definition 2.1, page 55, is that square root. A branch is one single-valued choice of those values, continuous in a domain except, perhaps, on the boundary (page 68).',
     picture: mountBranch,
     next: '2.5',
     sheet: [
