@@ -348,11 +348,11 @@
     "chapter": 2,
     "section": "2.2",
     "cite": {
-      "ref": "§2.2, angles under z^n",
+      "ref": "§2.2, angles under $z^n$",
       "page": 58
     },
     "kind": "mc",
-    "prompt": "Another sector under z^n. The image angle is computed.",
+    "prompt": "Another sector under $z^n$. The image angle is computed.",
     "steps": [
       {
         "text": "___",

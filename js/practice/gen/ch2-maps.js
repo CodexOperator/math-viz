@@ -428,6 +428,11 @@ export function selfCheck() {
     if (!/Arg \+ 2πk/.test(Object.values(root.miss).join(' '))) throw new Error(`root miss text ${seed}`);
   }
   if (answerMatches('0-6i', { answer: '-6', accept: ['-6+0i'] })) throw new Error('0-6i must stay -6i');
+  if (answerMatches('-6i', { answer: '-6', accept: ['-6+0i', '-6.0'] })) throw new Error('-6i must stay imaginary');
+  if (answerMatches('−6i', { answer: '-6', accept: ['-6+0i', '-6.0'] })) throw new Error('−6i must stay imaginary');
+  if (!answerMatches('-6', { answer: '-6', accept: ['-6+0i'] })) throw new Error('-6');
+  if (!answerMatches('−6', { answer: '-6', accept: [] })) throw new Error('unicode minus six');
+  if (!answerMatches('-6+0i', { answer: '-6', accept: ['-6+0i'] })) throw new Error('-6+0i');
   if (!answerMatches('-6.0', { answer: '-6', accept: [] })) throw new Error('.0');
   if (!answerMatches('3+2*i', { answer: '3+2i', accept: [] })) throw new Error('star');
   if (!answerMatches('(3+2i)', { answer: '3+2i', accept: [] })) throw new Error('parens');

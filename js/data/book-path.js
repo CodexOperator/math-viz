@@ -22,7 +22,9 @@ function deepFreeze(o) {
   return o;
 }
 
-// Chapters the router will open as their own page. 1, 3, and 6–11 stay on the book.
+// Chapters the router will open as their own page. 1, 3, 6, and 7 stay on the
+// roadmap. The roadmap draws Chapters 1–7. Chapters 8–11 stay in this list
+// so the contents check still sees the book, and they are not drawn.
 export const OPEN_CHAPTERS = Object.freeze([2, 4, 5]);
 
 export const BOOK_CHAPTERS = deepFreeze([

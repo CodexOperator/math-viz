@@ -1,6 +1,7 @@
 // Chapter 2 as a mountain of five stages.
-// Order on a stage: why, picture, claim, worked, practice, memory, then the summit.
+// Order on a stage: why, picture, claim, the waiting line, worked, practice, memory, then the summit.
 // The summit and Stage complete stay hidden until the claim has been both ways and one problem is right.
+// Earning the stage scrolls that summit up under the header. The count stays under the chapter title.
 // Until then a line names the missing piece. Go to the next stage writes the mark, then moves.
 // mount(el, ctx) also reads ctx.book.focus, so a one-line registry entry can open this page.
 
@@ -93,8 +94,8 @@ const COPY = {
   },
   '2.5': {
     why: '$1/z$ sends the line $x = 1$ to a circle.',
-    summit: '$1/z$ sends the line $x = 1$ to the circle $|w - 1/2| = 1/2$.',
-    example: 'Example 2.24, page 76. On the line $x = 1$, $u = 1/(1+y^2)$ and $v = -y/(1+y^2)$, which is the circle $|w - 1/2| = 1/2$. At $0$, $1/z$ is not a point of the plane. Equation (2.32), page 74, sends it to $\\infty$, the north pole.',
+    summit: '$1/z$ sends the line $x = 1$ to the circle $|w - 1/2| = 1/2.$',
+    example: 'Example 2.24, page 76. On the line $x = 1$, $u = 1/(1+y^2)$ and $v = -y/(1+y^2)$, which is the circle $|w - 1/2| = 1/2.$ At $0$, $1/z$ is not a point of the plane. Equation (2.32), page 74, sends it to $\\infty$, the north pole.',
     picture: mountReciprocal,
     next: null,
     sheet: [
@@ -133,6 +134,7 @@ export function mount(el, ctx, focusArg) {
     return row.sawTrue === true && row.sawFalse === true;
   }
 
+  const earnedBefore = {};
   function paint() {
     const done = CH2_STAGES.filter((id) => marks[id] === true).length;
     status.textContent = `${done} of ${CH2_STAGES.length} stages marked.`;
@@ -143,6 +145,8 @@ export function mount(el, ctx, focusArg) {
       const finished = marks[id] === true;
       const both = dragged(id, row);
       const earned = finished || (both && row.item);
+      const justEarned = earnedBefore[id] === false && earned;
+      earnedBefore[id] = earned;
       node.setAttribute('data-state', finished ? 'done' : 'ahead');
       row.waiting.hidden = earned;
       if (!earned) row.waiting.textContent = both ? 'Finish one practice card' : 'Drag until the sentence changes';
@@ -153,6 +157,13 @@ export function mount(el, ctx, focusArg) {
       row.mark.setAttribute('aria-pressed', finished ? 'true' : 'false');
       row.mark.textContent = finished ? 'Marked' : 'Stage complete';
       if (row.go) row.go.hidden = !earned;
+      if (justEarned) {
+        requestAnimationFrame(() => {
+          if (row.summitLabel.isConnected && !row.summitLabel.hidden) {
+            row.summitLabel.scrollIntoView({ block: 'start' });
+          }
+        });
+      }
     }
   }
 
@@ -199,10 +210,14 @@ export function mount(el, ctx, focusArg) {
     const summit = h('p', { class: 'ch2-summit', id: `${scope}-summit`, hidden: '' });
     richLine(summit, copy.summit);
     row.summit = summit;
-    const summitLabel = h('h3', { class: 'book-label', id: `${scope}-summit-label`, hidden: '' }, 'Summit');
+    const summitLabel = h('h3', { class: 'book-label ch2-summit-label', id: `${scope}-summit-label`, hidden: '' }, 'Summit');
     row.summitLabel = summitLabel;
     const waiting = h('p', { class: 'book-page ch2-waiting', id: `${scope}-waiting` }, 'Drag until the sentence changes');
     row.waiting = waiting;
+    const claim = picture.querySelector('.ch2-claim');
+    const aside = h('div', { class: 'ch2-aside', id: `${scope}-aside` });
+    claim.replaceWith(aside);
+    aside.append(claim, waiting);
     const mark = h('button', {
       type: 'button', class: 'btn ch2-complete', id: `${scope}-complete`, 'data-stage': section.id,
       'aria-pressed': 'false', disabled: '', hidden: '',
@@ -251,7 +266,6 @@ export function mount(el, ctx, focusArg) {
       h('h3', { class: 'book-label', id: `${scope}-faded` }, 'Practice'),
       practice,
       h('div', { class: 'ch2-memory-block', id: `${scope}-memory` }, memBtn, sheet),
-      waiting,
       summitLabel,
       summit,
       done,
@@ -265,10 +279,10 @@ export function mount(el, ctx, focusArg) {
     h('header', { class: 'station-header' },
       h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back', class: 'book-tap' }, 'The Book')),
       h('h1', { id: 'chapter-title' }, 'Chapter 2. Complex Functions'),
+      status,
       h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Five stages. Drag the green point. Purple is where it lands. Blue is the line or circle you test, and orange is the curve it maps to.'),
       sourceTag({ pin: 'Chapter 2, Complex Functions, page 43', href: sectionHref(S21) })),
     path,
-    status,
     h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end', class: 'book-tap' }, 'Back to the book')));
 
   const restoring = Number.isFinite(ctx && ctx.restoreY);

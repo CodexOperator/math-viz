@@ -1886,3 +1886,19 @@ Checked the claims in `js/stations/chapter2.js`, `js/stations/ch2-picture.js`, a
 1. At 1280 the two planes still sit in the left of a wide card, and the claim does not sit beside them. The quarter-turn arc is still the short arc from the positive real axis to the positive imaginary axis, and it is still small. Practice choices do not stretch to the card. The sector card’s title still shows a caret in `z^n`. The §2.5 worked line can still break before the period that closes `|w − 1/2| = 1/2`.
 2. The roadmap still lists chapters 8–11. The drawer stops at 7. On the book chapter the footer colour key is not the Test 1 key: `body[data-book="true"] .colour-key` is `display: none`.
 3. The practice engine on `cursor/practice-engine` still needs `ch2-maps` in its generator catalog.
+
+## Chapter 2, batch 5
+
+Started from `b64738c`. The merged list, on the current paper and type.
+
+After Exercise 13 the summit scrolls up under the header: Summit, the sentence, Stage complete, and Go to 2.2. The waiting line sits under the claim (on a wide window it sits in that same column). “0 of 5 stages marked.” sits under the chapter title.
+
+§2.1–§2.5 are full-row links, 44px, page number included. A press under the words opens the stage. Further reading, the source line, the site title, and Chapter 4’s Book and Back controls are 44px. Chapter 5 uses the same Book control.
+
+Unopened drawer rows say Later. Opening Chapter 3 keeps that row current. The book lede says Chapters 1–7. Chapters 8–11 are not drawn. The data list still has eleven chapters so the contents check holds.
+
+The orange quarter-turn arc is about a third of the square and stays on the unshaded side of the blue line, on the phone and on the wide plane. At 1280 the claim sits beside the planes and the pair ends inside the 800px window. Phone planes stay about 158px. Stacked practice choices use the card; at 1280 they are one row, each 44px. The four root choices stay a compact row. The sector title is \(z^n\). The circle sentence keeps its period on \(|w - 1/2| = 1/2\). `0-6i` and `−6i` are still rejected for `−6`.
+
+`ch2-maps` stays out of the shared practice-engine catalog. That catalog is not on this branch.
+
+Checked in headless Chrome at 390×844 and 1280×800, light and dark. No sideways scroll. No console errors. `node tools/check_vectors.mjs` (234/234), `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed.

@@ -232,15 +232,17 @@ export function start() {
         el('span', { class: 'nav-title' }, 'The Book'),
       ])));
     const list = el('ul', { class: 'nav-list', id: 'nav-chapters', 'aria-label': 'Chapters' });
-    // The course stops at Chapter 7. Later chapters stay on the roadmap, not in the drawer.
+    // The course on this page is Chapters 1–7. A chapter that is not open says Later.
     for (const ch of BOOK_CHAPTERS) {
       if (ch.n > 7) continue;
-      list.append(el('li', {}, el('a', {
-        class: 'nav-link', id: `nav-chapter-${ch.n}`, href: `#chapter-${ch.n}`, 'data-chapter': String(ch.n),
-      }, [
+      const kids = [
         el('span', { class: 'nav-num', 'aria-hidden': 'true' }, String(ch.n)),
         el('span', { class: 'nav-title' }, ch.title),
-      ])));
+      ];
+      if (!ch.open) kids.push(el('span', { class: 'nav-later' }, 'Later'));
+      list.append(el('li', {}, el('a', {
+        class: 'nav-link', id: `nav-chapter-${ch.n}`, href: `#chapter-${ch.n}`, 'data-chapter': String(ch.n),
+      }, kids)));
     }
     nav.append(list);
   }
@@ -310,7 +312,8 @@ export function start() {
     for (const a of nav.querySelectorAll('a.nav-link')) {
       let on = false;
       if (bookRoute) {
-        on = bookRoute.kind === 'chapter'
+        // A later chapter stays on the roadmap, and its drawer row stays current.
+        on = bookRoute.chapter != null
           ? a.dataset.chapter === String(bookRoute.chapter)
           : a.id === 'nav-book';
       } else {

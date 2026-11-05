@@ -94,6 +94,7 @@ function mountRoadmap(el, ctx, spec) {
   }
 
   for (const ch of BOOK_CHAPTERS) {
+    if (ch.n > 7) continue;
     const head = h('div', { class: 'book-node-head' },
       h('p', { class: 'book-flag', id: `book-flag-${ch.n}` }, 'Later'),
       h('h2', { id: `book-title-${ch.n}` },
@@ -105,13 +106,16 @@ function mountRoadmap(el, ctx, spec) {
       const sections = h('ol', { class: 'book-sections', id: `book-sections-${ch.n}` });
       for (const s of ch.sections) {
         const label = `${s.id} ${s.title}`;
+        const page = h('span', { class: 'book-section-page' }, `p. ${s.page}`);
+        const mark = h('span', { class: 'book-section-mark' }, '');
         const name = ch.n === 2
-          ? h('a', { href: `#chapter-2-${slug(s.id)}` }, label)
+          ? h('a', { class: 'book-section-link', href: `#chapter-2-${slug(s.id)}` },
+            h('span', { class: 'book-section-name' }, label), page, mark)
           : h('span', null, label);
-        sections.append(h('li', { 'data-section': s.id, id: `book-section-${slug(s.id)}` },
-          name,
-          h('span', { class: 'book-section-page' }, `p. ${s.page}`),
-          h('span', { class: 'book-section-mark' }, '')));
+        const row = ch.n === 2
+          ? h('li', { 'data-section': s.id, id: `book-section-${slug(s.id)}` }, name)
+          : h('li', { 'data-section': s.id, id: `book-section-${slug(s.id)}` }, name, page, mark);
+        sections.append(row);
       }
       kids.push(sections);
     }
@@ -134,7 +138,7 @@ function mountRoadmap(el, ctx, spec) {
   el.append(
     h('header', { class: 'station-header' },
       h('h1', { id: 'book-title' }, 'The Book'),
-      h('p', { class: 'station-lede', id: 'book-lede' }, 'Eleven chapters, in the order Howell and Mathews print them.'),
+      h('p', { class: 'station-lede', id: 'book-lede' }, 'Chapters 1–7, in the order Howell and Mathews print them.'),
       sourceTag({ pin: '202 Updated Edition, table of contents, pages i–ii', href: BOOK.html })),
     h('div', { class: 'book-next', id: 'book-next' }, open2, status),
     list);
@@ -276,13 +280,13 @@ function mountChapter4(el, ctx, focus) {
 
   el.append(
     h('header', { class: 'station-header' },
-      h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back' }, 'The Book')),
+      h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back', class: 'book-tap' }, 'The Book')),
       h('h1', { id: 'chapter-title' }, 'Chapter 4. Sequences, Series, and Fractals'),
       h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Four sections. Tick an exercise when you have worked it. The hint stays closed until you ask.'),
       sourceTag({ pin: CHAPTER_4.pin, href: CHAPTER_4.href })),
     h('div', { class: 'book-next', id: 'chapter-next-row' }, status, nextBtn),
     path,
-    h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
+    h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end', class: 'book-tap' }, 'Back to the book')));
 
   if (focus && !(ctx && Number.isFinite(ctx.restoreY))) {
     const card = cards.find((c) => c.getAttribute('data-problem') === focus);
@@ -393,7 +397,7 @@ function mountChapter5(el, ctx, focus) {
 
   el.append(
     h('header', { class: 'station-header' },
-      h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back' }, 'The Book')),
+      h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back', class: 'book-tap' }, 'The Book')),
       h('h1', { id: 'chapter-title' }, 'Chapter 5. The exponential')),
     picture,
     h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Section 5.1. A blank fills when the picture makes it true. The hint stays closed until you ask.'),
@@ -401,7 +405,7 @@ function mountChapter5(el, ctx, focus) {
     walk,
     later,
     sourceTag({ pin: 'Chapter 5, Elementary Functions, page 130', href: sectionHref('sec_exponential-function.html') }),
-    h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
+    h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end', class: 'book-tap' }, 'Back to the book')));
 
   paint();
 

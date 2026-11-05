@@ -60,7 +60,9 @@ function card(item, store, onDone) {
   const id = item.id;
   const node = h('article', { class: 'card problem-card chapter-card ch2-card', id: `ch2-card-${id}` });
   const cite = item.cite ? `${item.cite.ref}, page ${item.cite.page}` : item.section;
-  node.append(h('h3', { id: `ch2-card-title-${id}` }, cite));
+  const title = h('h3', { id: `ch2-card-title-${id}` });
+  rich(title, cite);
+  node.append(title);
   const prompt = h('div', { id: `ch2-card-prompt-${id}` });
   node.append(prompt);
   const why = h('p', { class: 'hint-note', id: `ch2-card-why-${id}`, hidden: '' });

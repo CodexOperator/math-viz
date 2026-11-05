@@ -257,7 +257,10 @@ function mountPair(parent, opts) {
 }
 
 export function mountLinear(parent, hooks) {
-  const zView = makeView(1, 0, 2.5);
+  // Three units wide, centred on Re z = 1. A radius of one third of that
+  // square ends on the line, and the arc itself stays on the unshaded side.
+  // Example 2.9, page 50: multiplication by i is that quarter turn.
+  const zView = makeView(1, 0, 1.5);
   const wView = makeView(0, 2, 2.6);
   const turn = svgEl('path', { fill: 'none', stroke: 'var(--polar)', 'stroke-width': '2.5' });
   const cut = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2.5' });
@@ -273,8 +276,9 @@ export function mountLinear(parent, hooks) {
     onClaim: hooks && hooks.onClaim,
     drawZ(svg, view) {
       svg.append(shade(view, 1, view.cx + view.half, view.cy - view.half, view.cy + view.half, 'var(--cart)'));
-      const r = view.R(0.55);
-      turn.setAttribute('d', `M ${view.X(0.55)} ${view.Y(0)} A ${r} ${r} 0 0 0 ${view.X(0)} ${view.Y(0.55)}`);
+      const radius = (view.half * 2) / 3;
+      const r = view.R(radius);
+      turn.setAttribute('d', `M ${view.X(radius)} ${view.Y(0)} A ${r} ${r} 0 0 0 ${view.X(0)} ${view.Y(radius)}`);
       putLine(cut, view, 1, view.cy - view.half, 1, view.cy + view.half);
       svg.append(turn, cut);
     },
