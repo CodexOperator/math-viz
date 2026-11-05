@@ -7,6 +7,7 @@ import { loadSharedTicks, saveSharedTicks, toggleTick, sectionFinished, chapterT
 import { h, appendRich, sourceTag } from '../stations/test2-ui.js';
 import { mountDerivativePicture, mountSquarePicture, mountLevelPicture } from './ch3-pictures.js';
 import { mountPractice, mountDeck } from './ch3-cards.js';
+import { writeBookFooter } from './path-note.js';
 
 const PICTURES = {
   '3.1': mountDerivativePicture,
@@ -37,7 +38,7 @@ export function mount(el, ctx, focus) {
   const path = h('ol', { class: 'chapter-path ch3-path', id: 'chapter-path' });
   const status = h('p', { class: 'book-status', id: 'chapter-status' });
   const stageLine = h('p', { id: 'chapter-stage-line' });
-  const statusWrap = h('div', { class: 'book-next', id: 'chapter-next-row' }, status);
+  const statusWrap = h('div', { class: 'book-next ch3-status', id: 'chapter-next-row' }, status);
   const buttons = [];
   const anchors = new Map();
   const opening = CHAPTER_3.sections[0];
@@ -82,6 +83,7 @@ export function mount(el, ctx, focus) {
       button.setAttribute('aria-pressed', String(on));
       button.textContent = on ? 'Stage complete' : 'Mark stage complete';
     }
+    writeBookFooter(store);
   }
 
   for (const section of CHAPTER_3.sections) {

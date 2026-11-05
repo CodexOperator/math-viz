@@ -272,7 +272,7 @@ export const CHAPTER_3 = deepFreeze({
       title: 'The Cauchy-Riemann Equations',
       page: 85,
       why: 'The Cauchy-Riemann equations are $u_x = v_y$ and $u_y = -v_x$. They test whether the horizontal derivative and the vertical derivative are the same number. Theorem 3.3, page 86.',
-      summit: 'A nonzero derivative turns and stretches a tiny square into a square with the marked corner still leading, and the Cauchy-Riemann equations are the test that the horizontal and vertical derivatives are that same number.',
+      summit: 'A nonzero derivative turns and stretches a tiny square into a square with the marked corner still leading.',
       read: [
         { pin: 'Theorem 3.3, page 86', href: sectionHref(S32, 'CR_EQ_Thm') },
         { pin: 'Equation (3.16), page 86', href: sectionHref(S32, 'C-R_EQs') },
@@ -303,7 +303,7 @@ export const CHAPTER_3 = deepFreeze({
       title: 'Harmonic Functions',
       page: 95,
       why: 'You rebuild the missing part by integrating the Cauchy-Riemann equations. Where both gradients are nonzero, the level curves of a conjugate pair cross at a right angle.',
-      summit: 'Where both gradients are nonzero, a harmonic conjugate\'s level curves cross at a right angle, and the conjugate itself is recovered by integrating the Cauchy-Riemann equations.',
+      summit: 'Circles draws the other pair through the point: one level of $x^2 - y^2$ and the circle $x^2 + y^2$.',
       read: [
         { pin: "Laplace's equation, page 95", href: sectionHref(S33, 'Laplace_s_Equation') },
         { pin: 'Theorem 3.8, page 95', href: sectionHref(S33, 'Harmonic_Theorem') },
@@ -403,4 +403,13 @@ export function exerciseFromToken(token) {
   if (!m) return null;
   const id = m[1].replace(/-/g, '.');
   return CHAPTER_PICTURE[id] ? id : null;
+}
+
+// One camp in the footer. Chapters 1 and 2 are already drawn. The rest are later.
+// This is not a census that calls chapters 3, 4, and 5 open at once.
+export function bookPathNote(chapter3Done, chapter4Done) {
+  const camp = chapter4Done
+    ? 'Chapter 5 is open.'
+    : (chapter3Done ? 'Chapter 4 is next.' : 'Chapter 3 is open.');
+  return `The book path for MAT 412. ${camp} Chapters 1 and 2 are already drawn. The rest are later. It runs in your browser and works offline.`;
 }

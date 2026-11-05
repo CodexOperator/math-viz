@@ -16,6 +16,7 @@ import { filmsFor } from './data/films.js';
 import { BOOK } from './data/book.js';
 import { parseBookRoute } from './book/route.js';
 import { BOOK_CHAPTERS } from './data/book-path.js';
+import { bookFooterText } from './book/path-note.js';
 import { cssVar, getTheme, setTheme, onThemeChange, prefersReducedMotion, initTheme } from './core/theme.js';
 import { createStore } from './core/store.js';
 import { watchIds } from './core/ids.js';
@@ -213,7 +214,7 @@ export function start() {
     const note = document.getElementById('site-footer-note');
     if (!note) return;
     if (bookRoute) {
-      note.textContent = 'The book path for MAT 412. Chapters 3, 4, and 5 are open. The other chapters are later. It runs in your browser and works offline.';
+      note.textContent = bookFooterText(store);
       return;
     }
     note.textContent = mapId === 'test2'

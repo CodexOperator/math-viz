@@ -2187,3 +2187,19 @@ On the preview and on the local page, 390×844 then 1280×800, light and dark: P
 2. The shared practice renderer is not on this branch. A `next-step-blank` that grew a `choices` list would still be graded as a choice. Exercise 2 no longer does that.
 3. Open Chapter 2 is not on the book page. Chapter 2 is not a page on this branch.
 4. The selected-answers key on page 435 still prints \(15z^2-8z+7\) for §3.1 Exercise 1(a). The card keeps the chain-rule derivative.
+
+## Chapter 3 batch 7
+
+Branch `cursor/chapter-3`. Headless Chrome, 390×844 and 1280×800, light and dark. No console errors. No sideways scroll (`scrollWidth` equals `clientWidth`, 390 and 1265).
+
+From 56.25rem the gesture, the claim, and the chips are one stack, 8px apart, top-aligned with the square. The square stays 304px (opening) and 416px (§3.2 and §3.3). The claim on that width is one line. Open paper sits under the chips. The phone claim box stays two lines, and Play still ends at y=730.
+
+On the phone the why label is 16px under Play. The why's third line ends at y=840. The fourth line starts at y=844. The book status is "Chapter 3: 0 of 3." After a mark it is "Chapter 3: 1 of 3. Next is 3.2." Chapters 1 and 2 drop the page line, and "Already drawn" shares the 44px door. "3 Analytic and Harmonic Functions" ends at y=728. The 3.1 row ends at y=842.
+
+The §3.3 summit names the Circles pair, one level of \(x^2-y^2\) and the circle \(x^2+y^2\). The §3.2 summit keeps the square and the marked corner. The §3.1 summit is unchanged.
+
+While Chapter 3 is unfinished, Chapter 4's flag is empty and 4.1 does not say Next. At 3 of 3 the flag is Next and 4.1 says Next. Chapter 5 says Later until Chapter 4 is done, then Open. Chapters 6 and 7 stay Later. The footer names one camp, says chapters 1 and 2 are already drawn, and calls the rest later.
+
+The wide analytic sentence ends at y=795. "Entire means…" starts at y=815. Chapter 4's path padding is 0. The "Back to the book" footer is gone on chapters 4 and 5. The Book control stays 109×44. Chapter 5's status ends at y=833. After Mark, the status is the sentence "Next is 3.2." and the §3.2 why, through "Theorem 3.3, page 86.", sits inside 844.
+
+Deferred: the shared practice renderer is not on this branch. Open Chapter 2 waits until that page meets this branch. The selected-answers key on page 435 still prints \(15z^2-8z+7\) for §3.1 Exercise 1(a); the card stays the chain rule. Chapters 8–11 stay off the list. When Chapter 4 is finished, the top control still says "Back to the book." That is the next button, not the footer link.

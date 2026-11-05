@@ -294,7 +294,7 @@ export function mountDerivativePicture(parent) {
   });
   const observe = h('p', { class: 'ch3-observe', id: 'chapter-deriv-observe' }, 'Drag the green dot.');
   const row = h('div', { class: 'ch3-deriv-row', id: 'chapter-deriv-row' }, shell.controls, play);
-  parent.append(shell.frame, observe, shell.claim, row);
+  parent.append(shell.frame, h('div', { class: 'ch3-stack' }, observe, shell.claim, row));
   paint();
   return function unmount() {
     stopPlay();
@@ -393,7 +393,7 @@ export function mountSquarePicture(parent) {
     paint();
   });
   const observe = h('p', { class: 'ch3-observe', id: 'chapter-square-observe' }, 'Drag the green corner.');
-  parent.append(shell.frame, observe, shell.claim, shell.controls);
+  parent.append(shell.frame, h('div', { class: 'ch3-stack' }, observe, shell.claim, shell.controls));
   paint();
   return function unmount() {
     frame.stop();
@@ -609,7 +609,7 @@ export function mountLevelPicture(parent) {
     paint();
   });
   const observe = h('p', { class: 'ch3-observe', id: 'chapter-level-observe' }, 'Drag the green point.');
-  parent.append(shell.frame, observe, shell.claim, shell.controls);
+  parent.append(shell.frame, h('div', { class: 'ch3-stack' }, observe, shell.claim, shell.controls));
   paint();
   return function unmount() {
     frame.stop();
