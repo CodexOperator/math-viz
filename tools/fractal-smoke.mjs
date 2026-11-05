@@ -5,7 +5,11 @@ import { readFileSync } from 'node:fs';
 import { stationsForMap, stationForTopic, stationForProblem, stationById, threadsOn, stationPart, STATIONS } from '../js/registry.js';
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
-import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, chapter4ExerciseIds, chapter5ExerciseIds } from '../js/data/book-path.js';
+import { BOOK_CHAPTERS, CHAPTER_3, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, chapter3StageIds, chapter4ExerciseIds, chapter5ExerciseIds } from '../js/data/book-path.js';
+import { derivativeScene, squareScene, levelScene, circleComparePoint, clampRect, clampDrawn, marksDrawn, sharedGain, markScale, arcRadius, PLANE_SIZE, MARK_PX, ARC_PX } from '../js/book/ch3-math.js';
+import { answersMatch } from '../js/book/ch3-grade.js';
+import { selfCheck as crPolyChecks } from '../js/practice/gen/cr-poly.js';
+import { selfCheck as harmonicChecks } from '../js/practice/gen/harmonic-conjugate.js';
 import { chapterTally, sectionFinished, foldLegacyExercises, saveSharedTicks, toggleTick } from '../js/book/progress.js';
 import { EXP_DURATION, expFrame, finishedStops } from '../js/core/live-film.js';
 import { compile } from '../js/core/parse.js';
@@ -118,7 +122,9 @@ check('#chapter-4 opens chapter 4', parseRoute('#chapter-4').book.kind === 'chap
 check('#chapter-4-4-1-3 focuses exercise 4.1.3', parseRoute('#chapter-4-4-1-3').book.focus === '4.1.3');
 check('#chapter-1 stays on the roadmap', parseRoute('#chapter-1').book.kind === 'roadmap' && parseRoute('#chapter-1').book.chapter === 1);
 check('a junk token on a later chapter is not a page', parseRoute('#chapter-1-extra').station == null && parseRoute('#chapter-1-extra').book == null);
-check('eleven chapters, 4 and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_CHAPTERS.join() === '4,5' && BOOK_CHAPTERS.filter((ch) => ch.open).map((ch) => ch.n).join() === '4,5');
+check('eleven chapters, 3, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_CHAPTERS.join() === '3,4,5' && BOOK_CHAPTERS.filter((ch) => ch.open).map((ch) => ch.n).join() === '3,4,5');
+check('#chapter-3 opens chapter 3', parseRoute('#chapter-3').book.kind === 'chapter' && parseRoute('#chapter-3').book.chapter === 3 && parseRoute('#chapter-3-3-2').book.focus === '3.2');
+check('chapter 3 stages are the three sections', CHAPTER_3.sections.map((s) => `${s.id} ${s.page}`).join() === '3.1 79,3.2 85,3.3 95' && chapter3StageIds().join() === '3.1,3.2,3.3');
 check('chapter 4 sections follow the contents', CHAPTER_4.sections.map((s) => `${s.id} ${s.page}`).join() === '4.1 102,4.2 109,4.3 118,4.4 123');
 check('chapter 4 exercises are the homework set plus 4.4.6', chapter4ExerciseIds().join() === '4.1.3,4.1.13,4.2.3,4.2.4,4.2.5,4.3.1,4.3.2,4.4.6');
 {
@@ -204,6 +210,182 @@ check('One Newton Step keeps Example 4.7', /Example 4\.7, page 110/.test(readFil
 }
 check('the live router does not import kit', !/from\s+['"][^'"]*kit\//.test(readFileSync(new URL('../js/app.js', import.meta.url), 'utf8')));
 check('book route parser matches the router', parseBookRoute('chapter-5').kind === 'chapter' && parseRoute('#chapter-5').book.chapter === 5);
+{
+  const straight = derivativeScene('sq', { re: 1, im: 1 }, 0.4);
+  const turned = derivativeScene('sq', { re: 1, im: 1 }, 2.1);
+  const mirrorA = derivativeScene('conj', { re: 0.2, im: -0.4 }, 0.2);
+  const mirrorB = derivativeScene('conj', { re: 0.2, im: -0.4 }, 1.1);
+  check('z squared keeps one turn', straight.claim.holds && turned.claim.holds && straight.claim.text === turned.claim.text && /45°/.test(straight.claim.text) && /2√2/.test(straight.claim.text) && /for every direction/.test(straight.claim.text));
+  const moved = derivativeScene('sq', { re: 0.4, im: -0.2 }, 0.3);
+  const movedAgain = derivativeScene('sq', { re: 0.4, im: -0.2 }, 1.7);
+  check('a moved base point names the point and drops for every direction',
+    moved.claim.holds && moved.claim.text === movedAgain.claim.text
+    && /0\.4 - 0\.2i/.test(moved.claim.text)
+    && !/for every direction/.test(moved.claim.text));
+  const back = circleComparePoint({ re: 0, im: 0 });
+  const stay = circleComparePoint({ re: 0.2, im: -0.3 });
+  check('circles at the origin move to the comparison point', back.re === 1 && back.im === 0.45 && stay.re === 0.2 && stay.im === -0.3);
+  check('conj changes the turn with the direction', !mirrorA.claim.holds && mirrorA.claim.text !== mirrorB.claim.text);
+  check('a turned square stays a square', squareScene('turn', 0.7).claim.holds === true);
+  check('a stretched square is not a square', squareScene('stretch', 0).claim.holds === false && squareScene('stretch', Math.PI / 4).claim.holds === false && squareScene('stretch', 0).claim.text !== squareScene('stretch', Math.PI / 4).claim.text);
+  check('conjugate levels meet at a right angle, except at the origin', levelScene('conj', 1, 0.4).claim.holds === true && levelScene('conj', 0, 0).claim.holds === false);
+  check('circles meet the hyperbolas at a right angle only on the diagonal', levelScene('circles', 1, 0.4).claim.holds === false && levelScene('circles', 1, 1).claim.holds === true);
+  check('polynomial generators recompute their answers', crPolyChecks() === true && harmonicChecks() === true);
+  check('a reordered sum and a starred factor count',
+    answersMatch('2z - i', [], '-i+2z')
+    && answersMatch('5(z^2 - iz + 9)^4', [], '5*(z^2-iz+9)^4')
+    && answersMatch('x^3 - 3xy^2 + C', [], 'C + x^3 - 3xy^2')
+    && answersMatch('5(z^2 - iz + 9)^4(2z - i)', [], '(2z-i)5(z^2-iz+9)^4')
+    && answersMatch('5(z^2 - iz + 9)^4', [], '(z^2-iz+9)^4*5')
+    && !answersMatch('5(z^2 - iz + 9)^4', [], '5(z^2-iz+9)^45')
+    && answersMatch('u_x = v_y', [], 'v_y = u_x')
+    && answersMatch('u_y = -v_x', [], '-v_x = u_y')
+    && !answersMatch('u_y = -v_x', [], 'u_y = v_x')
+    && answersMatch('-y and x + 4', ['u=-y, v=x+4'], 'u=-y and v=x+4')
+    && !answersMatch('-y and x + 4', [], 'x + 4 and -y')
+    && !answersMatch('-y and x + 4', [], 'u=y and v=x+4')
+    && answersMatch('-4i', ['-4*i'], '4(-i)')
+    && !answersMatch('-4i', [], '4(i)')
+    && answersMatch('2z - i', [], '-(i-2z)')
+    && answersMatch('2z - i', [], '-(i - 2z)')
+    && answersMatch('2z - i', [], '(-i+2z)')
+    && !answersMatch('2z - i', [], '-(i+2z)')
+    && !answersMatch('2z - i', [], 'i-2z')
+    && !answersMatch('2z - i', [], '-(2z-i)')
+    && answersMatch('both hold', ['u_x = 0 = v_y and u_y = -1 = -v_x'], 'u_y=-1=-v_x and u_x=0=v_y')
+    && answersMatch('u_x + i v_x', [], 'u_x(x_0,y_0) + i v_x(x_0,y_0)')
+    && answersMatch('-y and x + 4', ['u=-y, v=x+4'], 'u(x,y)=-y and v(x,y)=x+4')
+    && answersMatch('-3xy^2 + C(x)', [], '-3xy^2+C(x)')
+    && !answersMatch('x^3 - 3xy^2 + C', [], 'x^3 - 3xy^2 + C(x)')
+    && !answersMatch('-3xy^2 + C(x)', [], '-3xy^2+C')
+    && !answersMatch('0', [], '0(x)')
+    && answersMatch('2z', [], '2(z)')
+    && answersMatch('x^3 - 3xy^2 + C', ['v = x^3 - 3xy^2 + C'], 'v = x^3 - 3xy^2 + C')
+    && answersMatch('x^3 - 3xy^2 + C', ['v = x^3 - 3xy^2 + C'], 'v(x,y) = x^3 - 3xy^2 + c')
+    && !answersMatch('x^3 - 3xy^2 + C', [], 'v = x^3 - 3xy^2 + C(x)')
+    && answersMatch('both 0', ['0, 0'], '0, 0')
+    && !answersMatch('both 0', [], '0, 0')
+    && answersMatch('3/(z+2)^2', ['3(z+2)^{-2}'], '3/(z+2)^{2}')
+    && answersMatch('3/(z+2)^2', ['3(z+2)^{-2}'], '3(z+2)^{-2}')
+    && answersMatch('2', ['b=2'], 'b = 2')
+    && !answersMatch('2', ['b=2'], '1')
+    && !answersMatch('2', ['b=2'], 'b=1')
+    && answersMatch('1', ['a=1'], 'a=1')
+    && !answersMatch('1', ['a=1'], '-1')
+    && !answersMatch('1', ['a=1'], '2')
+    && answersMatch('6x + 6y', ['6(x+y)'], '6y + 6x')
+    && answersMatch('6x + 6y', ['6(x+y)'], '6(x+y)')
+    && answersMatch('-2', ['z=-2'], 'z = -2'));
+  const edge = clampRect(2.25, 1, 2.5);
+  const corner = clampRect(4, -3, 2.5);
+  const near = (a, b) => Math.abs(a - b) < 1e-9;
+  check('a drag stays on the drawn square, including the corner',
+    near(edge.re, 2.25) && near(edge.im, 1) && near(corner.re, 2.5) && near(corner.im, -2.5));
+  const ch3Items = JSON.parse(readFileSync(new URL('../data/practice/ch3.json', import.meta.url), 'utf8'));
+  const chain = ch3Items.find((item) => item.id === 'ch3-3.1-chain-001');
+  const hop = ch3Items.find((item) => item.id === 'ch3-3.1-lhopital-001');
+  const cardIds = ['ch3-3.1-quot-001', 'ch3-3.1-entire-001', 'ch3-3.2-rat-001', 'ch3-3.2-const-001', 'ch3-3.3-im-001'];
+  const choicesFit = ch3Items.every((item) => (item.steps || []).every((step) => !step.choices || step.choices.includes(step.answer)));
+  check('exercise 1(a) keeps the derivative and leaves the answer key off the card',
+    chain.steps[2].answer === '5(z^2 - iz + 9)^4(2z - i)'
+    && chain.note == null
+    && !JSON.stringify(chain).includes('15z'));
+  const t34 = ch3Items.find((item) => item.id === 'ch3-3.2-flash-t34');
+  const polar = ch3Items.find((item) => item.id === 'ch3-3.2-polar-001');
+  const modulus = ch3Items.find((item) => item.id === 'ch3-3.2-mod-001');
+  const t35 = ch3Items.find((item) => item.id === 'ch3-3.2-flash-t35');
+  check('theorem 3.4 memory states the full hypothesis',
+    /neighborhood/.test(t34.memory)
+    && /partials continuous/.test(t34.memory)
+    && /equations/.test(t34.memory));
+  check('exercise 10 and theorem 3.6 are proof blanks, and theorem 3.5 stays a flash',
+    polar && polar.kind === 'proof-blank' && polar.cite.page === 94
+    && modulus && modulus.kind === 'proof-blank' && modulus.cite.page === 92
+    && t35 && t35.kind === 'flash'
+    && answersMatch(polar.steps[0].answer, polar.steps[0].accept, 'cos theta and sin theta')
+    && !answersMatch(polar.steps[0].answer, polar.steps[0].accept, 'sin theta and cos theta')
+    && answersMatch(polar.steps[1].answer, polar.steps[1].accept, '-r sin theta and r cos theta')
+    && !answersMatch(polar.steps[1].answer, polar.steps[1].accept, 'r cos theta and -r sin theta')
+    && answersMatch(polar.steps[2].answer, polar.steps[2].accept, 'V_θ')
+    && answersMatch(polar.steps[3].answer, polar.steps[3].accept, '-Uθ')
+    && answersMatch(modulus.steps[0].answer, modulus.steps[0].accept, 'u^2+v^2=K^2')
+    && answersMatch(modulus.steps[1].answer, modulus.steps[1].accept, 'v u_x + u u_y = 0 and u u_x - v u_y = 0')
+    && answersMatch(modulus.steps[1].answer, modulus.steps[1].accept, 'u u_x = v u_y and v u_x = -u u_y')
+    && answersMatch(modulus.steps[2].answer, modulus.steps[2].accept, 'both 0')
+    && answersMatch(modulus.steps[3].answer, modulus.steps[3].accept, 'a constant'));
+  const span = 2.4;
+  const pxPer = PLANE_SIZE / (2 * span);
+  const homeZ = { re: 1, im: 1 };
+  const homeScene = derivativeScene('sq', homeZ, 0);
+  const homeShared = sharedGain(homeZ, [homeScene.h, homeScene.image], span);
+  check('the opening arrows keep the shared scale',
+    Math.abs(markScale(homeZ, homeScene.h, span, homeShared, MARK_PX) - homeShared) < 1e-12);
+  const readable = { re: 1.6, im: 1 };
+  const readableScene = derivativeScene('sq', readable, 0);
+  const readableShared = sharedGain(readable, [readableScene.h, readableScene.image], span);
+  const readableG = markScale(readable, readableScene.h, span, readableShared, MARK_PX);
+  const readableP = markScale(readable, readableScene.image, span, readableShared, MARK_PX);
+  const readableLen = (scale, v) => scale * Math.hypot(v.re, v.im) * pxPer;
+  const readableOx = ((readable.re + span) / (2 * span)) * PLANE_SIZE;
+  const readableOy = ((span - readable.im) / (2 * span)) * PLANE_SIZE;
+  check('inside the square the three marks clear the handle',
+    readableLen(readableG, readableScene.h) >= MARK_PX
+    && readableLen(readableP, readableScene.image) >= MARK_PX
+    && arcRadius(readableOx, readableOy, 0, readableScene.turn) >= ARC_PX);
+  const frame = clampRect(3, 1, span);
+  check('the drag still stops at the frame', near(frame.re, span) && near(frame.im, 1));
+  const stopped = clampDrawn('sq', 3, 1, 0, span);
+  const held = clampDrawn('sq', 1.6, 1, 0, span);
+  const swallowed = clampDrawn('sq', 2.29, 1, 0, span);
+  const stoppedClaim = derivativeScene('sq', stopped, 0).claim.text;
+  check('the point stops while the three marks clear the handle',
+    stopped.re <= 2.11 && stopped.re > 2.05 && near(stopped.im, 1)
+    && marksDrawn('sq', stopped, 0, span)
+    && !marksDrawn('sq', { re: 2.29, im: 1 }, 0, span)
+    && near(held.re, 1.6) && near(held.im, 1)
+    && Math.abs(swallowed.re - stopped.re) < 1e-3 && near(swallowed.im, 1)
+    && stoppedClaim.includes('25°') && stoppedClaim.includes('4.65'));
+  const t35back = t35.steps[0].answer;
+  check('theorem 3.5 names both polar forms of the derivative',
+    t35.kind === 'flash'
+    && t35back.includes('U_r + i V_r')
+    && t35back.includes('V_\\theta - i U_\\theta')
+    && t35back.includes('(3.23)')
+    && t35back.includes('(3.24)')
+    && t35back.includes('Page 91')
+    && t35.steps[0].why.includes('(3.22)')
+    && t35.steps[0].why.includes('(3.24)')
+    && !t35.steps[0].why.includes('one form'));
+  const laplace = ch3Items.find((item) => item.id === 'ch3-3.3-im-001');
+  const exists = ch3Items.find((item) => item.id === 'ch3-3.3-im-002');
+  check('exercise 2 keeps the Laplace blank apart from the choice',
+    laplace && laplace.kind === 'next-step-blank'
+    && laplace.steps.every((step) => !step.choices)
+    && exists && exists.kind === 'next-step-mc'
+    && exists.steps[0].choices.includes(exists.steps[0].answer));
+  check('a L Hopital miss does not print the value',
+    hop.steps[0].accept.includes('0, 0')
+    && hop.steps[2].why.includes('-4i')
+    && !hop.steps[2].miss.includes('-4i')
+    && !hop.steps[2].miss.includes('−4i'));
+  check('the five exercise cards are on the page',
+    choicesFit && cardIds.every((id) => ch3Items.some((item) => item.id === id)));
+  const lines = CHAPTER_3.sections.map((section) => [...section.recipes, ...(section.extras || [])].join('\n'));
+  check('memory carries the quotient, the neighborhood, and a given v',
+    lines[0].includes("(g f' - f g')/g^2")
+    && /neighborhood/.test(lines[1])
+    && /four partials are continuous/.test(lines[1])
+    && /Theorem 3\.4/.test(lines[1])
+    && /exam gives \$v\$/.test(lines[2])
+    && lines[2].includes('-v_x'));
+  const mem = { 'progress.test2': { '4.1.3': true } };
+  const store = {
+    get(key, fallback) { return Object.prototype.hasOwnProperty.call(mem, key) ? mem[key] : fallback; },
+    set(key, value) { mem[key] = value; },
+  };
+  saveSharedTicks(store, { '3.1': true, '3.2': false });
+  check('a chapter 3 stage tick keeps a chapter 4 tick', mem['progress.test2']['3.1'] === true && mem['progress.test2']['4.1.3'] === true && mem['progress.test2']['3.2'] == null);
+}
 check('the shipped route rule matches the kit helper',
   readFileSync(new URL('../js/core/map-route.js', import.meta.url), 'utf8')
   === readFileSync(new URL('../kit/template/js/core/map-route.js', import.meta.url), 'utf8'));

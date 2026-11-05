@@ -1330,3 +1330,906 @@ Nothing. No slider, no scrubber, no spring, no second clock.
 Yes. One batch, then stop. It is the one cut above.
 
 The hold, the button, and the frame clock are the lesson, and they hold. Something real is left, and it is the frame a mouse drag draws around the square. A touch does not draw it. After that frame is gone, nothing real is left of this walk's touch.
+
+## Chapter 3
+
+Branch `cursor/chapter-3`. Batch 1. Headless Chrome on a local server: `#chapter-3`, `#chapter-3-3-3`, `#book`, `#chapter-4`, `#chapter-5`. Light and dark. 1280 and 390. No console errors. No sideways scroll. Idle after Pause schedules 0 frames.
+
+The three pictures agree with the sentences. z² at 1+i stays 45° and 2√2 while the direction changes. conj mirrors, and the turn moves. A turned square stays a square with the marked corner leading. Stretch is a rectangle at angle 0 and a rhombus at 45°, and the sentence changes. Conjugate levels cross at a right angle except at the origin. Circles do that only on the diagonal. Play says Pause, a second press holds the angle, and reduced motion says Step and advances a quarter turn. A typed chain-rule step, a Cauchy-Riemann choice, a generated polynomial, and a flashcard all answer in place. Marking 3.1 writes `progress.test2` and leaves a Chapter 4 tick alone. The roadmap shows Chapter 3 open, with 3.1 done, and Walk Chapter 4 is still the next walk.
+
+On a 390×844 phone the arrows are on the first screen, under the why. The claim and Play sit just below that screen. The picture is the next thumb, not a buried one. Dragging the green corner turns the square and keeps it a square. Stretch, dragged, is neither a right angle nor equal sides. A point near the origin snaps there, where both slopes vanish.
+
+## Another batch
+
+The shared practice engine, when it lands, should replace the local card. The page already reads `data/practice/ch3.json`. Still open: a phone layout that keeps Play beside the claim on the first screen, and the exam recipes that are not cards yet. Theorem 3.4's long proof is a statement and a flash. The step-by-step blank is Theorem 3.3.
+
+## Chapter 3 batch 2
+
+Branch `cursor/chapter-3`, after `838edd7`. The reviewer's `6db51c7` and the two taste notes stay. Headless Chrome, light and dark, 390×844 and 1280×800.
+
+The opening point is still 1+i. A 12px drag moves the dot with the finger, miss 0px, and the imaginary part stays 1. A drag while the button says Pause stops the angle. Four hundred milliseconds later the angle is the same number and the button says Play. Idle after that schedules 0 frames.
+
+The first screen is the square, the claim, and Play. At 390, Play ends at y=703 inside 844. At 1280, Play ends at y=776 inside 800. The same numbers in the dark. The why sits under Play. The duplicate "Play sweeps the direction" line is gone. The orange turn is a visible arc. Switching to conj leaves the claim box at 53px and Play at the same y.
+
+A wrong chain-rule step prints the expected factor and leaves Next step visible. `u_x=0=v_y and u_y=-1=-v_x`, `-i+2z`, `5*(z^2-iz+9)^4`, and `C + x^3 - 3xy^2` match. Theorem 3.4 stays a flash: defined and continuous in a neighborhood, partials continuous at the point, Cauchy-Riemann at the point, then f' = u_x + i v_x. Exercise 11 is |z|² only at 0. Example 3.6 is the two paths, 1 and −1. Exercise 7(a) is −4i. Some generated polynomials fail Cauchy-Riemann or hold only on the real axis. Some harmonic seeds fail Laplace. A passing one asks for the integral and for C'(x). The stage flag opens the one memory list. Missed puts that card next.
+
+The drawer, the way up, and Back are untouched. Reduced motion still says Step and moves a quarter turn.
+
+## Next
+
+Hand the cards to js/practice/ when that renderer lands. Nothing else on this page until then.
+
+## test-prep-coach (ch3 batch 1)
+
+Preview https://ch3-preview.complexanalysis.pages.dev/#chapter-3, tip `160ab62`. Phone 390×844 first, then 1280×800, light and dark. No product code changed. No console errors. No sideways scroll. The chapter page is 12469px tall. The first screen, at both sizes and in both themes, is the title, "Next is 3.1 Differentiable and Analytic Functions. 0 of 3 stages.", the why, and the top of the derivative picture. The §3.1 memory list starts at y=2996. The §3.2 deck has two buttons, Show and Next card.
+
+### Theorem 3.4
+
+Leave the long proof as the flash. On the phone, card 2 of 5 in §3.2 asks "What extra hypothesis makes the Cauchy-Riemann equations guarantee a derivative?" The back is the statement, cited Theorem 3.4, page 89. There is no proof-blank and no proof-mc for it. The only proof drill is Theorem 3.3, page 86, once as a four-step blank and once as four choices. That split is the one to keep for an exam in a few days.
+
+The web edition's matching statement is Theorem 3.2.6. The proof splits Δu, calls the mean value theorem, and carries four epsilons through to the limit of Δw/Δz. That is a page and a half. The exercises after it ask where f is differentiable and what f' is. §3.1 Exercise 11 is |z|², differentiable only at 0. The counterexample the card already names, Example 3.6, page 88 (web Example 3.2.5), satisfies the equations at 0 and then gives two limits, 1 along the real axis and −1 along y=x. Those two questions are what a student misses after memorizing "Cauchy-Riemann means differentiable." A twelve-step blank of the epsilon argument spends the night those two questions need.
+
+The back of the flash should still match the sentence you would write if the exam says "state Theorem 3.4." The book asks for f defined and continuous in a neighborhood, the four partials continuous at the point, and the equations at the point. The card says u, v, and the four partials are continuous near z_0. "Near" is a stronger claim about the partials than the theorem makes, and it is the word Example 3.6 turns on.
+
+The section's own "prove this" exercise is the polar form, Exercise 10, which is Theorem 3.5. That is a three-part chain-rule derivation. It waits until the computational holes below are filled. So do the short proofs of Theorem 3.1 and Theorem 3.8.
+
+### Verdict
+
+ANOTHER BATCH
+
+The five recipes, the Theorem 3.3 drill, the chain-rule blank, and the conjugate integration are enough to start. They are not enough to sit the chapter's own exercise list. The endless cards train the success case, and the sheet repeats itself under the drills.
+
+### Ranked
+
+1. **Add the two uses of Theorem 3.4, and correct the flash.** Evidence: the live deck's Theorem 3.4 back says the partials are continuous near z_0. Nothing on the page is |z|², and nothing makes you compare the two paths in Example 3.6. The generator's choice "hold only on the axes" is never the answer (see 2). Change: keep Theorem 3.4 as one flash, with the book's three hypotheses and f'(z_0) = u_x + i v_x. Add a next-step on §3.1 Exercise 11: the equations hold only at 0, and f'(0) = 0. Add a three-step card on Example 3.6: the partials at 0, the equations hold there, the two limits are 1 and −1.
+
+2. **Make a generated card that can fail.** Evidence, four seeds each, on the preview. Cauchy-Riemann: u = x+2y−1, v = −2x+y; then u = x−y, v = x+y−2; then u = x+y, v = −x+y+2; then u = 2x+2y+1, v = −2x+2y. Clicking "fail at every point" was wrong every time, and the why cited Theorem 3.4. Harmonic: clicking "2" was wrong every time, on Re(−z²), Re(−2iz²), Re(2iz²), and Re(z²), and the why said Laplace holds. §3.2 Exercise 1(g) is the case the generator offers and never builds: the equations hold only on the real axis. §3.3 Exercise 2 asks whether any analytic f has imaginary part x³+y³. Change: some Cauchy-Riemann seeds hold only at a point or only on a line, and the derivative is claimed only there. Some harmonic seeds fail Laplace on the first step. A seed that passes asks for ∫ u_x dy and then for C'(x), the same three moves as Exercise 5(a).
+
+3. **Accept the line the exam wants, and show it after a miss.** Evidence, typed on the preview. On §3.2 Exercise 1(a), step 2, `u_x=0=v_y and u_y=-1=-v_x` was marked wrong and `both hold` was marked right. The why on the miss already prints those partials. On the chain rule, `5(z^2-iz+9)^4` was accepted, `5*(z^2-iz+9)^4` was rejected, and `-i+2z` was rejected for an inside derivative that `2z - i` passed. The miss showed "n[f(z)]^{n-1}" and left Next step hidden, so the factor never appeared. On §3.3 Exercise 5(a), the book's conjugate with the constant first, `C + x^3 - 3xy^2`, was marked wrong. The why explains C'(x) = 3x² and does not print v. Change: a miss prints the expected step under the why. The checker accepts the same sum with the terms in either order, and it accepts the four partials in place of the words "both hold."
+
+4. **Give L'Hôpital one limit.** Evidence: §3.1's memory ends with "The 0/0 rule, for functions analytic at the point, with g' not zero." The deck states Theorem 3.2. No card computes a limit. §3.1 Exercise 7 is six of them. Change: one next-step-blank for Exercise 7(a), page 83, lim_{z→i} (z⁴−1)/(z−i). Both are 0 at i, the quotient of the derivatives is 4z³, and the value is −4i.
+
+5. **One memory list, one tap from the stage.** Evidence, the live §3.1 list, in order: the five recipes, then "Same limit along every path," then "Analytic means a whole disk of derivatives" (recipe 3 already said that), then "Entire means the disk is the whole plane" (same recipe), then the singular-point line, then the quotient line again, then "Differentiable implies continuous" again, then L'Hôpital. §3.2's fifth recipe is "both hold and the partials are continuous, f' = u_x + i v_x," and the flash line under it is "Cauchy-Riemann plus continuous partials implies differentiable." That list starts at y=2996 on a 390×844 screen whose first view ends in the why. Change: Memory is the five recipes plus the three lines that are not already a recipe (singular point, the 0/0 rule, Example 3.6). The stage flag links there.
+
+6. **A missed card comes back next.** Evidence: each §3.2 card, after Show, offers Show (hidden) and Next card. Sixteen statements across the three stages, and a miss leaves the queue. Change: Missed puts that card next. Leave the intervals out. The cite already sits on the card; keep it there.
+
+### What to keep
+
+The five recipes per stage, especially §3.2's last two lines: if either equation fails there is no derivative, and if both hold with continuous partials then f' = u_x + i v_x. Theorem 3.3 as a blank and again as choices. The last choice set on the phone is u_y = −v_x against u_y = v_x, and the note says the sign is the usual miss. The chain-rule blank on (z² − iz + 9)⁵, which is §3.1 Exercise 1(a), page 83, once the checker accepts a reordered product. The Re z paths, horizontal 1 and vertical 0, with "differentiable only at 0" sitting there as the trap from |z|². The z + conjugate card: u and v are 2x and 0, against x and −y. The hand-written conjugate on u = y³ − 3x²y, whose steps match the book's solution v = x³ − 3xy² + C. The statement cards for analytic, entire, singular point, Theorem 3.1, Theorem 3.6, Theorem 3.7, and Laplace. Theorem 3.4 left as a statement.
+## appllama (ch3 batch 1)
+
+Branch `cursor/chapter-3`, commit `160ab62`. Used like a MAT 412 student on https://ch3-preview.complexanalysis.pages.dev/#chapter-3. That preview serves this commit: `js/book/chapter3.js` matches. Headless Chrome, light and dark, at 390×844 and at 1280×800. On the phone the finger was a touch. On the laptop it was the mouse. A press on the green dot with no move, a 2px nudge, a drag, a press off the dot, a press 18px out and a press 26px out. Play, a pause, a continue, and a drag while the button said Pause. The conj chip, then Play. Reduced motion through four steps, in the dark. The square's corner along its circle, Stretch, the level point into the origin, and Circles. The menu, The Book, Back, and `#chapter-3-3-3`. The same opening in the dark, at both widths. A second lap with the CPU slowed to 4×. No console errors. No sideways scroll (the phone's scrollWidth is 390, the laptop's is 1265).
+
+## Verdict
+
+ANOTHER BATCH. The clock holds. Play says Pause and the direction turns, a second press says Play and the angle is the same 500ms later, and the turn is a steady 60 frames a second, including at 4×. Reduced motion says Step, moves a quarter turn, and schedules nothing.
+
+The finger does not hold the point the page opens on. A drag from 1+i pulls the dot off the finger onto a smaller disk. At both widths the first screen shows the arrows. The claim and Play start below the window. The turn those arrows are there to show is a few pixels. One batch, then stop. It is the finger and the first screen. The clock stays.
+
+## The finger
+
+At rest the base point is 1+i, the angle is 0, and the claim is "The turn stays 45° and the stretch stays 2√2, for every direction." A press on the green dot, held, leaves both numbers. A 2px nudge leaves them. A press in the middle of the square, then a drag, leaves them, and the page does not scroll.
+
+A drag to the right does not keep the dot. The finger moved 12px. The dot moved 13px down and left, and finished 20px from the finger, at real part 0.90 and imaginary part 0.71. Ten more samples, still pulling right, leave the miss at 17, 24, 30, 37, 44, 51, 59, 66, 73, and 81px. The real part climbs toward 1.15 and the imaginary part falls. The claim becomes "The turn stays 19° and the stretch stays 2.3, for every direction." The dot is sliding on the circle of radius 1.15. The page opened at radius √2, outside that circle.
+
+Once the point is inside that disk, the dot stays on the finger. During Pause the miss is 0.36px on six samples, the real part follows, and the angle keeps climbing. A press 18px from the center grabs the dot. A press 26px out does not. The target is a 44px circle around a mark the phone draws 6px across.
+
+The square's green corner stays on the finger when the drag follows its circle. Eight samples, radius 35px, miss 0.1 to 0.5px, and the claim stays "Right angle, equal sides, and the marked corner still leads. A square." Stretch then says "Neither a right angle nor equal sides. Not a square." A straight drag leaves the circle, and the corner stays on it. That is the corner's path.
+
+The level point stays on the finger, miss at most 0.5px, while the claim is "The two curves cross at a right angle." Near the origin it snaps, 4px off the finger, to real part 0 and imaginary part 0, and the claim becomes "Both slopes vanish, so there is no angle to read." Circles, at the opening point 1+0.45i, says "The two curves do not cross at a right angle."
+
+A touch drag leaves the square unframed. The outline is none, and `:focus-visible` stays false. A mouse drag focuses the stage and the outline is none.
+
+## The clock
+
+Play moves the angle about 0.03 and the button says Pause. Over the next 1.5 seconds there were 91 frames, median 16.7ms, 95th percentile 16.7ms, none over 20ms. The claim stayed "The turn stays 13° and the stretch stays 2.3, for every direction." and Play stayed at the same y. Pause left the angle at 1.454832000000002. Five hundred milliseconds later it was the same number, the button said Play, and the page had scheduled 0 frames. The next press said Pause and continued from that angle.
+
+With the CPU slowed to 4×, one second of Play was 61 frames, median 16.7ms, maximum 16.8ms, none over 20ms.
+
+In the dark the same hold: the angle was 0.20996100000000079, and 400ms later it was that number, and the button said Play.
+
+Reduced motion, in the dark, opens on Step. Four presses advance the angle by a quarter turn each, schedule 0 frames, and the button stays Step. It does not say Pause. On z² the claim stays the 45° sentence, which is the sentence that is true for every direction.
+
+Conj is the sentence that moves. The claim becomes "The purple arrow is the mirror of the green one. This direction turns by 0°, and the turn moves when the direction moves." Play then runs the degree from 0° to −124° in 1.2 seconds, 73 wordings, the button says Pause, and the frame gap stays under 17ms. The claim box stays 105px and Play stays at one y for that whole sweep.
+
+Switching to conj is the jump. On the phone the z² claim is 52.7px and Play is at y = 461.6. The conj claim is 105.4px and Play is at y = 514.3.
+
+## The page
+
+On the phone the square is 208px, from y = 645 to 853, in an 844px window. The why ends where the square starts. The claim starts at 922. Play starts at 1035 and is 44px tall. The line between the square and the claim says "Play sweeps the direction. Drag the green dot." The green arrow is 22px. The orange turn is 4px across. The z² chip is 42px wide and 44px tall. conj is 59 by 44.
+
+On the laptop, at scroll 0, the square is 352px, from y = 495 to 847, in an 800px window. The claim starts at 889. Play starts at 975. The title is one line. The same why, the same square, the same button below the window. In the dark the page is rgb(13, 18, 28) and the sentence is rgb(233, 237, 245). The axes stay blue, the hand stays green, and the image stays purple. The same positions.
+
+The Book is a 70×17 link. Theme and the menu are 44. The menu is the eleven chapters, each row 44px, and it covers the page. This lens leaves the drawer.
+
+Mark stage complete is 44px tall. Pressing it says Stage complete, the flag says "3.1 · stage complete", the status says "Next is 3.2 The Cauchy-Riemann Equations. 1 of 3 stages.", and `mv:progress.test2` is `{"3.1":true}`.
+
+From a scroll of 700, The Book opens `#book` at scroll 0. Back returns to `#chapter-3` at scroll 0. The phone page is 12469px. `#chapter-3-3-3` opens Harmonic Functions at the top of the window, marked as the target.
+
+## Cut
+
+1. **The dot stays under the finger, including at 1+i.** A 12px drag from the opening point leaves the dot 20px from the finger, on the circle of radius 1.15. The page opened at radius √2. Inside the disk the miss is 0.36px, and a drag during Pause leaves the angle running. Open on a point the finger can hold, or let the finger hold 1+i, and keep the arrows inside the square.
+
+2. **The first screen is the square, the claim, and Play.** At 390, Play starts at y = 1035. At 1280, Play starts at y = 975. The orange turn is 4px across on the phone and 6 by 15 on the laptop, and the green arrow is 22px. Drop the 13rem cap. Cut "Play sweeps the direction. Drag the green dot." Put the why under Play. Give the turn a size the column can show. Play stays on the first screen at 390×844 and at 1280×800, in both themes.
+
+3. **One height for the claim.** On the phone, conj grows the claim from 52.7px to 105.4px and moves Play from 461.6 to 514.3. During the sweep the taller box holds still while the degree changes. Fit both sentences in one box so the button stays put when the chip changes.
+
+4. **The way up is 44px.** The Book is 70×17. Theme and the menu are already 44, and so is Play.
+
+5. **Back returns to the scroll the chapter had.** From 700px, Back opens `#chapter-3` at 0. The hash already stacks.
+
+## Keep
+
+The clock. Play, Pause, the hold, the continue, Step under reduced motion, and 60 frames a second with the CPU slowed. A paused picture schedules nothing. z² keeps one sentence for the whole turn, and the box stays 52.7px while a drag changes the degrees. The four teaching colours, in both themes. The square's corner on its circle. Stretch flips the sentence. The level point, the snap at the origin, and Circles saying the curves do not meet at a right angle. Two chips and one Play. A press off the dot changes nothing. A drag leaves the square unframed. The stage mark, and the deep link to 3.3.
+
+## Add
+
+Nothing. No slider, no scrubber, no spring, no second clock, no third chip.
+
+## ux-veteran (ch3 batch 2)
+
+Preview https://ch3-preview.complexanalysis.pages.dev/#chapter-3, tip `e684095`. The served `js/book/chapter3.js` matches that commit. Used like a student, touch first: 390×844 and 360×780, then 1280×800, light and dark. No product code changed. No console errors. No sideways scroll (`scrollWidth` equals the window at 360, 390, and 1280).
+
+### Verdict
+
+ANOTHER BATCH
+
+On a 390×844 phone the first screen teaches the derivative: the square, the 45° sentence, z² and conj, Play, and the why. Camps 3.2 and 3.3 open in the right order, and marking 3.1 leaves 3.2's title and why on that same screen. The way around that picture is still broken. The stage flag leaves the chapter. Back forgets a 13,000px scroll. The way up is a 17px label, and the last camp ends in a blank screen. At 360×780 and at 1280×800 the why is cut. One batch, these fixes, then this lens rests. Same type, same paper, same cards.
+
+### What the hand meets
+
+**390×844, light and dark.** Same boxes. The header is 56px. THE BOOK is 69.5×17 at y=81. The title is two lines, y=103 to 165. The square is 324px, y=214 to 538. The claim is 52.7px, y=546 to 599: "The turn stays 45° and the stretch stays 2√2, for every direction." z² is 42.4×44 and conj is 59×44, both at y=607. Play is 70×44, y=659 to 703. WHY YOU'D CARE is at y=719. The why is 105px, y=742 to 848, so 4px of the box sits past the 844 edge and the last line is on the fold. "Three stages, from the derivative to a harmonic conjugate." starts at y=848. "Next is 3.1 Differentiable and Analytic Functions. 0 of 3 stages." starts at y=933. The stage title starts at y=1051. The flag "3.1" is 20×44.
+
+In the dark the page is rgb(13, 18, 28) and the sentence is rgb(233, 237, 245). The axes stay blue, the short arrow green, the long arrow purple, the turn orange. Same positions.
+
+A 12px drag from 1+i keeps the dot on the finger, miss 0, and the claim becomes 40° with stretch 3.09. A drag that starts 18px from the dot moves it. A drag that starts 26px out leaves 1+i. The drawn dot is 9.5px across, inside a 44px grab (22px radius). Play says Pause, a second press says Play, and the angle is the same number 400ms later. conj keeps the claim at 52.7px and Play at y=659. The sentence becomes "The purple arrow mirrors the green one. The turn is 0°, and it moves." The words "drag the green dot" are the square's aria-label. 3.2 and 3.3 print that kind of line on the page. 3.1 does not.
+
+**360×780, light and dark.** Same boxes. Play ends at y=672, inside 780. The why is 132px, y=712 to 844, so 64px of it is below the window. The last words on screen are "Two directions that". The site name truncates: the box is 186px, the text is 196px, "One Point, Two Addre…". The square is 294px and the dot is 8.6px across.
+
+**1280×800, light.** The sidebar is the chapter list and the menu button is hidden. The square is 416px, the cap `100dvh - 24rem`. Play ends at y=776. WHY YOU'D CARE runs y=792 to 812, so the label is cut by the 800 edge. The why sentence starts at y=816. The status starts at y=927. The stage title starts at y=1019. A 12px drag again leaves the dot on the finger, miss 0. The dark frame uses the same colours as the phone.
+
+### The drawer
+
+At 390 the menu is 12 rows, each 44px. Chapter 3 is the current row. The drawer covers the page, body overflow is hidden, and `#view` is inert. Escape closes it. The rows are The Book and chapters 1 through 11. Chapter 11 ends near y=617, so the whole list fits. Test 1, the indexes, and test prep are absent from this drawer. At 1280 the same list is the sidebar. Chapters 3, 4, 10, and 11 wrap to about 47px. The others stay 44.
+
+### Back, and the way up
+
+From scrollY 900, THE BOOK opens `#book` at 0. Browser Back returns `#chapter-3` at 0. Scroll restoration is manual, and the router scrolls to 0 on every hash change.
+
+Two links point at `#book`. THE BOOK is 69.5×17, 12.5px type, letter-spacing 0.75px. "Back to the book" is 134×23. The gap from the last Mark stage complete button down to that link is 843px at 360, 907px at 390, and 844px at 1280. `.chapter-path` padding-bottom is `100dvh - var(--header-h)`: 724px, 788px, and 744px. The screen at the end of the chapter is empty paper, then the source line, then the 23px link.
+
+### The climb
+
+`#chapter-3-3-3` opens Harmonic Functions with the title at y=121, under the 56px header, and the card marked as the target. On that screen: the why, the picture, "Drag the green point. Orange is a level of u. Purple is the other family.", the right-angle sentence, Conjugates and Circles.
+
+The 3.2 heading, scrolled to the top, is the same order: 3.2, the title, page 85, the why, the square, "Drag the green corner.", the square sentence, Turn and Stretch. Those two camps are the pattern.
+
+3.1 puts the picture, the why, the lede, and the status ahead of its own name. "Differentiable and Analytic Functions" is the next screen. The first screen carries the chapter title and the why. It does not carry "3.1" or "0 of 3".
+
+The summit sentence is already on the page when the button still says Mark stage complete: "A derivative exists only when every tiny step is the same turn and the same stretch." Pressing it renames the button to Stage complete, sets aria-pressed, paints a green left edge, and writes `mv:progress.test2` as `{"3.1":true}`. The flag at the top of the stage becomes "3.1 · stage complete". On the screen in front of the button, 3.2's title and why are 98px below it. The status line "Next is 3.2 The Cauchy-Riemann Equations. 1 of 3 stages." updates at the top of the chapter, off this screen.
+
+The flag is the break. Its href is `#chapter-section-3-1-memory`. Tapping that 20×44 control loads a page titled "No such place" for that hash. The memory list is still on the chapter, under the label Memory. The route parser does not treat `chapter-section-…` as a chapter.
+
+The book, with that tick stored, still says "Next is §4.1, Exercise 3. 0 of 8 exercises." The button is Walk Chapter 4, 163×44, on the first screen. Chapter 3's card starts at y=724 and is cut by the 844 edge. Its three rows are spans. Tapping the 3.1 row leaves the hash on `#book`. "Open Chapter 3" is a 26px text link at y=1008.
+
+### Style
+
+Same system as chapter 4, chapter 5, and addresses, measured at 390, light. The title is Iowan Old Style, 25.85px, weight 600, rgb(26, 34, 48). Body is 17px system-ui. The lede is 16.8px, rgb(81, 91, 108). A card is white, 1px rgb(216, 210, 196), radius 10px, padding 16px. The paper is rgb(246, 243, 236) in the light and rgb(13, 18, 28) in the dark. Play is the white 44px button chapter 5 uses, radius 6px. Shown text inputs are 44px (`min-height: 44px`). Choice buttons are 44px. Turn, Stretch, Conjugates, and Circles are at least 44px in both directions. The four teaching colours are the arrows. This chapter already sits in the site's style.
+
+### Ranked
+
+1. **The stage flag stays on the chapter, and it is 44px wide.** Evidence: the 3.1 flag is 20.1×44, and the same width at 360 and 1280. Its href is `#chapter-section-3-1-memory`. The page that loads is titled "No such place". Change: point the flag at a hash the chapter route already opens, `#chapter-3-3-1` (and `-3-2`, `-3-3`), and scroll the memory list up under the header. Min-width 44px and min-height 44px. Leave the hash on the chapter.
+
+2. **Back returns to the scroll the chapter had.** Evidence: from scrollY 900, THE BOOK opens `#book` at 0, and history.back opens `#chapter-3` at 0. The chapter is 13,595px at 390. Change: the router stores the scroll for each hash and restores it. A deep link such as `#chapter-3-3-3` still brings that stage's title under the header, where it already lands at y=121.
+
+3. **One up control, 44px, with the source line directly under the last camp.** Evidence: THE BOOK is 69.5×17. "Back to the book" is 134×23. The gap under the last stage button is 843px at 360, 907px at 390, and 844px at 1280. Change: one `.station-link`, min-height 44, label "The Book", at the top of the chapter. The end of the page is the source line and that same control. Cut `.chapter-path`'s `padding-bottom: calc(100dvh - var(--header-h))`.
+
+4. **The why finishes on the first screen at 360×780 and at 1280×800, and that screen names the stage.** Evidence: at 360 the why runs y=712 to 844 in a 780 window, and the visible sentence stops at "Two directions that". At 1280 the why sentence starts at y=816. The status starts below the fold at every size (y=929, y=933, y=927) and the stage title is lower (y=1046, y=1051, y=1019). The drag instruction is an aria-label; the dot is 9.5px at 390 and 8.6px at 360. Change: one line under the chapter title, in the part-label type the menu already uses, "3.1 · Differentiable and Analytic Functions · 0 of 3". One line under the square, the same book-page type 3.2 already uses: "Drag the green dot." Cap the 3.1 square so that line, Play, and the last line of the why end inside 780 and inside 800. At 360 the square is 294px and the why needs about 64px back. At 1280 the square is 416px and the why needs about 70px back. Give z² `min-width: 44px`; it is 42.4×44, and every other chip on the chapter is already at least 44 wide. Leave 3.2 and 3.3 in the order they have: name, why, picture.
+
+5. **The book's button walks this mountain.** Evidence: with `{"3.1":true}` stored, `#book` still says "Next is §4.1, Exercise 3. 0 of 8 exercises." and the button is Walk Chapter 4. Chapter 3 starts at y=724. The 3.1 row is a span, and a tap leaves `#book`. "Open Chapter 3" is 26px tall at y=1008. Change: until 3 of 3 stages are marked, the button says Open Chapter 3 and the status counts those stages. Each of 3.1, 3.2, and 3.3 is a link, min-height 44, to `#chapter-3-3-1`, `#chapter-3-3-2`, and `#chapter-3-3-3`.
+
+6. **The phone list stops at chapter 7.** Evidence: the open drawer is The Book plus chapters 1–11, each row 44px, chapter 3 current. Chapter 8 starts at y=441. A later chapter opens the roadmap on a Later card. Change: this drawer lists chapters 1–7. Chapters 8–11 stay in the data and off this list. The 44px rows, the current-chapter mark, the cover, and Escape stay.
+
+### Keep
+
+The type, the paper, the white cards, and the four teaching colours, in both themes. Play, Pause, and the hold. conj keeps the claim at 52.7px and Play at one y. The dot stays under the finger from 1+i, and a drag that starts 26px out changes nothing. 3.2 and 3.3 open with the name, the why, the picture, and a drag sentence. Mark stage complete, the green edge, and 3.2's title and why 98px under that button. `#chapter-3-3-3` puts the stage title under the header. Drawer rows are 44px, the open drawer covers the page, and the page behind it does not scroll. Shown inputs and choice buttons are 44px tall. No sideways scroll.
+
+
+## skeptical-student (ch3 batch 2)
+
+Preview https://ch3-preview.complexanalysis.pages.dev/#chapter-3, tip `e684095`. Phone 390×844 first, then 1280×800, light and dark. I have not read Chapter 3. No console errors. No sideways scroll (the phone's scrollWidth is 390, the laptop's is 1280).
+
+I opened the chapter and the first screen was the title, two arrows, "The turn stays 45° and the stretch stays 2√2, for every direction," the chips z² and conj, and Play. On the phone Play ends at y=703, inside 844, and the why is on that same screen: a derivative is one number that turns and stretches every tiny step the same way. Two directions that disagree means there is no derivative. I pressed Play. It said Pause, the sentence stayed, and Pause put the button back. That much I could do.
+
+The arrows themselves are unnamed. Green, purple, and the orange arc are never labeled on the page. The sentence that would have told me, "Play sweeps the direction. Drag the green dot to move the base point," is the picture's accessible name. It is not text. I dragged the dot. The claim became "The turn stays 27° and the stretch stays 4.3, for every direction," and the purple arrow left the top-right of the frame. The sentence still said the turn stays the same for every direction, while the number I was looking at had changed. I had moved the point, and the page never said so.
+
+conj I did understand. From a fresh point the claim was "The purple arrow mirrors the green one. The turn is 0°, and it moves." Play ran that to −65° and the button said Pause. The angle between the arrows was big enough to see. z²'s 45° arc is a small hook in a large empty plot.
+
+At 1280×800, light and dark, Play ends at y=776, inside 800. The why starts at y=816, so the laptop's first screen is the arrows, the claim, and Play, with the word "WHY YOU'D CARE" cut off on the bottom edge. Dark is the same layout: page rgb(13, 18, 28), text rgb(233, 237, 245), blue axes, green step, purple image. The phone in the dark matches the phone in the light, Play still ending at 703.
+
+### The three pictures
+
+The opening picture teaches the sentence under it once I press Play on z², and it teaches the failure once I press Play on conj. It does not teach analytic, and it does not teach the Cauchy-Riemann equations. Those words are not on the picture.
+
+§3.2 does better. The why says the equations test whether the horizontal derivative and the vertical derivative are the same number. Under that, a green square has a purple image that is a turned square, and the line is "Drag the green corner. Green is the tiny square. Purple is its image." Dragging the green corner turned both, and the claim stayed "Right angle, equal sides, and the marked corner still leads. A square." The same drag in the dark. Stretch made a tall rectangle and said "A right angle, and the sides are not equal. Not a square." I could see that. I still could not see a partial derivative. Example 3.4, under the picture, is where u_x and v_y show up.
+
+§3.3 I could read off the picture. Orange and purple levels cross, and the claim says they cross at a right angle. The origin says "Both slopes vanish, so there is no angle to read." Circles, from the opening point, says "The two curves do not cross at a right angle," and the circle sitting on the hyperbolas is the reason. Tapping Circles while I was still on the origin kept the vanish sentence, so the comparison the chip is for did not appear until I dragged away.
+
+### Where I got lost
+
+Under the why, one thumb down, a status says "Next is 3.1 Differentiable and Analytic Functions. 0 of 3 stages." Then a 20×44 link reading "3.1", then the section title, then "In the book": Equation (3.1), Definition 3.1, Definition 3.2, Theorem 3.1, Equations (3.4)–(3.10), Theorem 3.2. Six names and pages. No statement. Example 3.1 then ends "so f'(z) = 3z² everywhere and f is entire." I had not been told what entire means. That word is in the memory list, below the exercises.
+
+The first time the page says "Cauchy-Riemann" is §3.1 Exercise 11, step 1: with u = x² + y² and v = 0, the equations hold only at 0, or everywhere, or nowhere, or on the real axis. I had not been given the equations. The section that states them is the next one. I could guess "hold only at 0" because the prompt already says "differentiable only at 0."
+
+The labels 3.1, 3.2, and 3.3 are links, 20px wide and 44px tall. 3.1 points at `#chapter-section-3-1-memory`. I tapped it. The chapter was gone. The title was "No such place · One Point, Two Addresses," and the page said nothing lives at that hash. 3.2 and 3.3 point at the same kind of hash.
+
+`#chapter-3-3-3` does open Harmonic Functions at the top of the phone, with the picture and the claim in view.
+
+### Misses
+
+A wrong answer explains the step and then hands me the line, and Next step is already there.
+
+On the chain rule I typed `5(z^2-iz+9)^5`. The note said "The outside power n = 5 contributes n[f(z)]^{n-1}. The step is 5(z^2 - iz + 9)^4." The carets are literal characters. Check and Next step were both on the card. I could go on without ever typing the factor.
+
+On Re z I tapped 0. The note said the real part changes by the whole step, so the quotient is 1, and "The step is 1." Next step was there. The 0 button was still live. Nothing said the tap was the wrong one. Tapping 1 afterwards locked the choices and dropped the words "The step is."
+
+On the proof of Theorem 3.3 I typed "no idea." The note explained the horizontal path and ended "The step is u_x + i v_x," with Next step showing. The same on the four choices: I tapped `u_x - i v_x` and the note ended "The step is u_x + i v_x." On the generator, u = x and v = 0, I tapped "hold at every point." The note said u_x = 1 and v_y = 0, then "The step is fail at every point." On u = x³ + y³ I tapped 0. The note said the sum is 6x + 6y, then "The step is 6x + 6y."
+
+A right answer is the useful version of the same note. `u_x + i*v_x` on the proof left "The denominator is x - x_0, so the quotient splits into the two partials in x," and hid Check. That is a miss that would have helped. The printed line on top of it means I never have to produce the step.
+
+### What I typed
+
+These counted: `5*(z^2-iz+9)^4`, `-i+2z`, `(2z-i)*5*(z^2-iz+9)^4`, `u_x + i*v_x`, `-i*u_y + v_y`, `x+4 and -y`, `-y and x + 4`, `u_x=0=v_y and u_y=-1=-v_x`, `both 0`, `4*z^3`, `-4i`, `C(x)-3xy^2`, `C + x^3 - 3xy^2`.
+
+These did not. `(z^2-iz+9)^4*5` was wrong, and `5*(z^2-iz+9)^4` was right: the star in front of the 5 is deleted, so `^4*5` becomes the exponent 45. `u=-y and v=x+4` was wrong, which is the line the step "u and v are" asked me to write. `4(-i)` was wrong, and the note's own sentence is 4(−i) = −4i. `0, 0` was wrong and `both 0` was right. `x^3 - 3xy^2` without the constant was wrong, and the note does say why the constant is there. `2z+i` was wrong, and that one is a real sign error.
+
+### Can I study from it
+
+The pieces are on the page. Theorem 3.3 is a four-step blank and the same proof again as four choices, and the last choice set is the sign. The chain rule, the two paths for Re z, L'Hôpital down to −4i, and the conjugate built up to `C + x^3 - 3xy^2` are the exam moves. Another on the Cauchy-Riemann card reached a polynomial that fails everywhere and one that is the real-axis pattern (u = x² + y², v = 2xy). Another on the harmonic card reached "Is there a harmonic conjugate?" for x³ + y³. The memory list is one list per stage, and I could cram the five lines of §3.2 and of §3.3 the night before. The §3.1 list is longer, and it is where entire, singular point, and the 0/0 rule finally get a sentence.
+
+The flash cards work as cards. Show on §3.2's first card, then Missed, and the front became "What extra hypothesis makes the Cauchy-Riemann equations guarantee a derivative?" while the count still said Card 1 of 5. Next card said Card 2 of 5 and brought the Cauchy-Riemann statement back. Theorem 3.4 stays that one statement. I can use the deck. I can also finish every proof blank by reading "The step is" and pressing Next step, so the blanks do not make me write the proof.
+
+### Verdict
+
+ANOTHER BATCH
+
+I can tell what Play does, and §3.2 and §3.3 show me a square and a right angle with a sentence that matches the picture. I cannot use the 3.1 label, the opening picture never says that a drag moved the point, and a wrong proof step lets me skip. One batch for those. The cards and the pictures can rest after that.
+
+### Ranked
+
+1. **The stage label stays on the chapter.** Evidence: 3.1, 3.2, and 3.3 are 20×44 links. Tapping 3.1 set the hash to `#chapter-section-3-1-memory`, the title became "No such place," and the square was gone. Change: the label scrolls to that stage's memory list and leaves the address at `#chapter-3`. Make the target 44px wide.
+
+2. **A miss makes me produce the line.** Evidence: `5(z^2-iz+9)^5` left Check and Next step both showing, and the note ended "The step is 5(z^2 - iz + 9)^4," carets and all. The same ending followed a wrong tap on Re z, on both copies of Theorem 3.3, on u = x with v = 0, and on x³ + y³. A right answer omits "The step is" and hides Check. Change: keep the reason, stop appending the expected line, hide Next step until the line is right, and mark the choice that was tapped. Render the reason as math where it is math.
+
+3. **The first picture says which gesture does what.** Evidence: the only line that names Play and the drag is the picture's accessible name. A drag replaced 45° and 2√2 with 27° and 4.3, the sentence still said "for every direction," and the purple arrow left the frame. At 1280 the why starts at y=816. Change: one visible line under the plot. "Green is the step. Purple is where it goes. Orange is the turn. Play turns the step. Drag moves the point." When the point moves, name the point in the claim. Keep both arrows inside the frame. Put the why on the first screen at 1280×800, where the phone already has it.
+
+4. **A word is stated before an exercise uses it.** Evidence: Example 3.1 ends "f is entire," and entire is defined in the memory list under the exercises. Exercise 11's first step is the first time the page says "Cauchy-Riemann," with four hold-or-fail choices, and the prompt has already said "only at 0." The statement of the equations is a flash card in §3.2. The "In the book" list above the example is six names and pages. Change: one sentence for analytic and one for entire before the worked example. Make Exercise 11 a two-path question, as Re z already is, and let §3.2 be the first question that asks for the equations.
+
+5. **The line I would write on the exam counts.** Evidence, typed on the phone: `(z^2-iz+9)^4*5` was marked wrong and `5*(z^2-iz+9)^4` was marked right, because deleting the star glues the 5 onto the exponent. `u=-y and v=x+4` was wrong and `x+4 and -y` was right. `4(-i)` was wrong while the note writes 4(−i) = −4i. Change: a star between an exponent and the next factor stays a factor. Accept u and v with their labels. Accept `4(-i)` as `-4i`.
+
+6. **Circles, after the origin, shows the curves that fail.** Evidence: the origin says "Both slopes vanish, so there is no angle to read." Tapping Circles there kept that sentence. From the opening point, Circles says "The two curves do not cross at a right angle," and the circle against the hyperbolas is on the screen. Change: choosing Circles from the origin puts the point back where the two families can be compared.
+
+### Keep
+
+The three why sentences, and the three summit sentences under the cards. Play and Pause. z² holds one sentence while the direction turns. conj's sentence moves, from 0° to −65° on the phone, with Pause showing. The square that stays a square while the green corner turns, in the light and in the dark, and Stretch's rectangle with the sentence that the sides are not equal. The conjugate levels crossing at a right angle, and the origin saying both slopes vanish. Circles from the opening point. Example 3.1's difference quotient, in rendered math. Theorem 3.3 as a blank and again as four choices, and a right step's note that explains the path and leaves the line I typed. The chain rule, the two paths for Re z, L'Hôpital through −4i, and the conjugate that accepts `C + x^3 - 3xy^2`. One memory list per stage. The flash cards, Missed putting that card next, and Theorem 3.4 left as a statement. Another, including u = x with v = 0 and u = x³ + y³. The deep link `#chapter-3-3-3`. Dark at both widths, with the same layout. Choice buttons at 44px.
+
+## Chapter 3 batch 3
+
+Branch `cursor/chapter-3`, on top of `402039a`. Headless Chrome, light and dark, at 390×844, 360×780, and 1280×800.
+
+The stage flag is 44×44. It points at `#chapter-3-3-1` (and `-3-2`, `-3-3`) and scrolls that stage's memory list to about y=72, under the header. The address stays on the chapter. `#chapter-section-3-1-memory` is gone, so it no longer opens "No such place".
+
+The first screen names the gesture: "Drag the green dot. Green is the step. Purple is where it goes. Orange is the turn." At 1+i the claim is still "The turn stays 45° and the stretch stays 2√2, for every direction." After a drag it names the point and drops that phrase (measured: "At 1.76 + 1.24i, the turn is 35° and the stretch is 4.3."). The purple arrow stays inside the square. "3.1 · Differentiable and Analytic Functions · 0 of 3" sits under the title. The why finishes inside the window: bottom y=759 at 390×844, y=771 at 360×780, y=783 at 1280×800. The opening square is 156px, 141px, and 304px at those three sizes. z² is 44×44.
+
+A miss keeps the reason and does not print "The step is". Next step stays hidden until the line is right. A wrong choice is marked and stays tappable. `-(i-2z)` matches `2z - i`. `-(i+2z)`, `i-2z`, and `-(2z-i)` do not.
+
+The way up is one 44px "The Book" station link. "Back to the book" is gone. The chapter path no longer pads by a viewport, so the source line follows the last stage instead of a blank screen. `#chapter-3-3-3` still puts the title at y=121. Back from the book restores the chapter's scroll.
+
+While Chapter 3 is unfinished, `#book` opens on "Open Chapter 3" (44px, top of the phone) and the status counts those stages. The three rows are 44px links to `#chapter-3-3-1`, `-3-2`, and `-3-3`. The book nav lists chapters 1–7.
+
+Analytic and entire are two sentences before Example 3.1. The Cauchy-Riemann equations are stated before Exercise 11, and that card is now the two paths for `|z|^2` (horizontal `2x_0`, vertical `-2iy_0`, agree only at 0). Section 3.2 states the equations again in the why. Circles tapped at the origin moves the point back to `1+0.45i` and says the curves do not cross at a right angle. The Cauchy-Riemann generator's seed mod 6 includes a family that holds only at 0, the `|z|^2` pattern, so that choice is sometimes the right one.
+
+`node tools/check_vectors.mjs` (234/234), `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed.
+
+## Still open
+
+The shared practice renderer is not on this branch, so the chapter still uses its local card. Theorem 3.4 is a statement and a flash, not a fill-in proof. The opening square is small on a phone so the why can finish; the arrows are the same picture, drawn smaller. The book button and the chapter list live in shared files, so the hand-merge with Chapter 2's "Open Chapter 2" still has to put both buttons on `#book`.
+
+## appllama (chapter-3 batch 3)
+
+Preview https://ch3-preview.complexanalysis.pages.dev/#chapter-3, tip `e18c094`. The served `js/book/ch3-pictures.js`, `js/book/chapter3.js`, `css/components.css`, and `js/app.js` match that commit. Phone 390×844 first, touch, light then dark, then 1280×800, mouse, light then dark. A press with no move, a 2px nudge, a 48px drag, a press 18px out and a press 26px out. Play, a pause, a continue, a second tap while Pause was showing, and a drag while the button said Pause. conj, then Play. Reduced motion through four steps, in the dark. The square's green corner along its circle, Stretch, the level point, the origin, and Circles. The menu, The Book, Back from scrollY 900, the 3.1 flag, and `#chapter-3-3-3`. The same opening in the dark, at both widths. A second lap with the CPU slowed to 4×. No console errors. No sideways scroll (the phone's scrollWidth is 390, the laptop's is 1280).
+
+## Verdict
+
+ANOTHER BATCH. The clock holds, and so do the two pictures under it. The opening picture does not. On the phone it is a 156px stamp in a 324px card, so the turn is a 7×17 hook and the handle is 4.5px across. A straight drag then peels that dot off the finger while the finger is still inside the square. One batch. The clock, the claim box, and §3.2 and §3.3 stay as they are.
+
+## The finger
+
+At rest the base point is 1+i, the angle is 0, and the claim is "The turn stays 45° and the stretch stays 2√2, for every direction." A press on the green dot, held, leaves both numbers. A 2px nudge leaves them. The same in the dark, and the same at 1280.
+
+A rightward drag stays on the finger, then leaves it. On the phone the miss along that drag is 0, 0, 0, 0, 0.7, 6, 11.5, and 17px. The peel starts while the finger is still 15px inside the square (finger x = 257, the square ends at 273). The dot has slid down off the horizontal: the point finishes at 1.99 + 0.8i, and the claim is "At 1.99 + 0.8i, the turn is 22° and the stretch is 4.3." The same eight misses in the dark. At 1280 the same 48px stays at miss 0 and the point is 1.76 + i, because each pixel is fewer units. The next drag, starting 18px to the right of the dot, is the peel on the laptop too: the point arrives at 1.98 + 0.84i. A press 26px out changes nothing, at both widths. The hit is a 44px circle. The drawn dot inside it is 4.5px on the phone and 8.9px on the laptop.
+
+The peel is the disk. The plane clamps to a circle of radius 2.15, and 1+i is already at radius √2, so a horizontal move dies at real part about 1.90 and the dot rides the circle away from the finger. The corners of the square are past that circle, so they are drawn and cannot be held.
+
+The square's green corner stays on the finger when the drag follows its circle. Six samples, radius 55px, miss 0, and the claim stays "Right angle, equal sides, and the marked corner still leads. A square." The corner is 9.4px across on a 324px square. Stretch then says "A right angle, and the sides are not equal. Not a square."
+
+The level point stays on the finger, miss 0 on six samples, claim "The two curves cross at a right angle." At the origin the claim is "Both slopes vanish, so there is no angle to read." Circles from there puts the point back at 1 + 0.45i and says the curves do not cross at a right angle.
+
+A touch drag leaves the square unframed. The outline is none, and `:focus-visible` stays false.
+
+## The clock
+
+Play moves the angle and the button says Pause. Over the next 1.5 seconds there were 90 frames, median 16.7ms, maximum 16.8ms, none over 20ms. Pause left the angle at 1.4248836000000018. Five hundred milliseconds later it was the same number, the button said Play, and no further frame had been requested. The next press said Pause and continued from that angle. A second tap in the same breath returns the button to Play and leaves it there.
+
+With the CPU slowed to 4×, one second of Play on z² was 63 frames, median 16.7ms, maximum 16.8ms, and the angle advanced 0.90, which is the clock's own speed. conj, same lap, was 61 frames, median 16.7ms, none over 20. The claim moved from 0° to 152° and the box stayed 52.7px.
+
+In the dark the same hold: the angle was 1.424941200000002, and 500ms later it was that number, and the button said Play.
+
+Reduced motion, in the dark, opens on Step. Four presses advance the angle by a quarter turn each (π/2, π, −π/2, 0), request nothing, and the button stays Step. On z² the claim stays the 45° sentence. conj at that opening says "The purple arrow mirrors the green one. The turn is 0°, and it moves." The claim is 52.7px and Step is at y = 570.5.
+
+A drag that starts while the button says Pause returns the button to Play. Switching to conj leaves the claim at 52.7px and Play at the same y, on the phone (570.5) and on the laptop (647.4), in both themes. During conj's sweep the degree changes and the box does not.
+
+The level drag is the frame that slips. The same 4× lap that held Play at 16.7ms rebuilt the level picture at median 33.3ms, maximum 50ms, every gap over 32ms. Each move replaces the whole grid. On the laptop, unthrottled, that same drag stays at 16.7ms.
+
+## The page
+
+On the phone the opening square is 155.5px, from y = 259 to 415, centered at x = 117 in a 324px card. §3.2 and §3.3 on that same phone are 324px squares. The orange turn is 6.8×16.5. The green arrow is 18px and the purple arrow is 36px. The handle is 4.5px. The gesture line, the 45° sentence, z² (44×44), conj (59×44), and Play (70×44, y = 570 to 614) sit under it. The why ends at y = 759, inside 844. The lede ends at 811. The status line starts at 844.
+
+On the laptop the opening square is 304px, from y = 240 to 544. The turn is 13.4×32.2, the green arrow is 36px, the purple arrow is 71px, and the handle is 8.9px. Play ends at y = 691. The why ends at y = 783, inside 800. The same boxes in the dark. The page is rgb(13, 18, 28) and the sentence is rgb(233, 237, 245). The axes stay blue, the hand stays green, the turn stays orange, and the image stays purple. Theme swaps those surfaces without moving Play or the square.
+
+The Book is 109×44. From scrollY 900 it opens `#book` at 0. Back returns `#chapter-3` at 900. The 3.1 flag is 44×44. It opens `#chapter-3-3-1` and puts the memory list at y = 72. `#chapter-3-3-3` puts Harmonic Functions at y = 121. The chapter path's bottom padding is 0. The source line sits 49px under the last stage button. The drawer is The Book and chapters 1 through 7, each row 44px, the page behind it does not scroll, and Escape closes it.
+
+## Cut
+
+1. **The opening square uses the column, on the phone.** Evidence: at 390 the stage is 155.5×155.5, centered, with 101px of card on either side. The orange turn is 6.8×16.5 and the handle is 4.5px. §3.2 and §3.3 are 324px on that screen, and the corner there is 9.4px. Play already ends at y = 614, so the stamp is what bought the why, which ends at y = 759. At 1280 the stage is 304px, the turn is 13.4×32.2, and the why still ends at y = 783 inside 800. Change: drop the 48% cap on the 3.1 stage for the phone column, and let that square be the 324px width §3.2 already uses. Keep the 1280 cap that holds the why inside 800. Play stays on the first screen. The why goes under Play on the phone. No new control.
+
+2. **The dot stays under the finger until the finger leaves the square.** Evidence: the phone's rightward drag is on the finger for 24px and then misses by 0.7, 6, 11.5, and 17px, the last of those while the finger is at the square's right edge. The point has left the horizontal, 1+i to 1.99+0.8i. At 1280 a longer drag does the same, 1+i to 1.98+0.84i. The clamp is a disk of radius 2.15, and the corners of the drawn square sit outside it. Change: clamp to the rectangle the axes already draw, so a straight drag keeps the dot on the finger for every point inside the frame. Past the frame, the drag ends. No spring.
+
+3. **The level drag keeps the frame Play already keeps.** Evidence: at 4×, Play on z² and on conj stays at median 16.7ms with nothing over 20ms. The level drag in that same lap is median 33.3ms, maximum 50ms, every gap over 32ms. Each move rebuilds every curve. Unthrottled, on the laptop, the same drag is 16.7ms and the miss is 0. Change: draw the faint families when the chip changes, and on a move update the point and the two live curves. One frame, the same clock.
+
+## Keep
+
+The clock. Play, Pause, the hold, the continue, Step under reduced motion, and 60 frames a second with the CPU slowed. A paused picture requests nothing. z² keeps one sentence for the whole turn. conj keeps the claim at 52.7px and Play at one y while the degree changes, at both widths and in both themes. The four teaching colours, in both themes, and a theme change that does not move the square. The square's corner on its circle, miss 0, and Stretch flipping the sentence. The level point on the finger, the snap at the origin, and Circles returning from the origin to 1+0.45i. Two chips and one Play. A press off the dot changes nothing. A 2px nudge changes nothing. A drag leaves the square unframed. The Book at 44px, Back restoring scrollY 900, the 44px flag, the memory list under the header, and `#chapter-3-3-3` at y = 121. The drawer, chapters 1–7, and Escape. No sideways scroll.
+
+## Add
+
+Nothing. No slider, no scrubber, no spring, no second clock, no third chip.
+
+## test-prep-coach (chapter-3 batch 3)
+
+Preview https://ch3-preview.complexanalysis.pages.dev/#chapter-3, tip `e18c094`. The served `js/book/chapter3.js`, `js/book/ch3-cards.js`, `js/book/ch3-grade.js`, `data/practice/ch3.json`, and both generators match that commit. Phone 390×844 first, then 1280×800, light and dark. No product code changed. No console errors. No sideways scroll (`scrollWidth` is 390 and 1280). The chapter is 13059px on the phone and 10837px on the laptop. In the dark the phone is rgb(13, 18, 28) with text rgb(233, 237, 245). At 1280 in the light the paper is rgb(246, 243, 236) with text rgb(26, 34, 48), and the dark frame uses the phone's colours. The why ends at y=759 on the phone and y=783 at 1280, in both themes.
+
+§3.1 Memory starts at y=3858 on the phone and y=3234 at 1280. The 3.1 flag is 44×44, its href is `#chapter-3-3-1`, and the list lands at y=72 under the header.
+
+### What the night before can use
+
+Eight lines on §3.1, five on §3.2, five on §3.3. The decks are 7, 5, and 4 cards. Theorem 3.4's back is the three hypotheses the exam asks you to state: f defined and continuous in a neighborhood of z_0, the four partials continuous at z_0, the Cauchy-Riemann equations at z_0, then f'(z_0) = u_x + i v_x. Cited Theorem 3.4, page 89, which is web Theorem 3.2.6. Missed on the §3.2 deck put that card on the front, left the count at Card 1 of 5, and hid the back. Next card brought the Cauchy-Riemann statement back as Card 2 of 5. Show and Next card are 141×44 once the back is open.
+
+Typed on the phone, and accepted: `(z^2-iz+9)^4*5`, `-(i-2z)`, `(2z-i)*5*(z^2-iz+9)^4`, `u=-y and v=x+4`, the two partial checks with the equations swapped, `i`, `C(x) - 3xy^2`, `C + x^3 - 3xy^2`, `both 0`, `4*z^3`, `4(-i)`, and `u_x + i*v_x`. A wrong proof step, "no idea", kept Next step hidden and the note stayed on the horizontal path. A wrong tap on Re z, the choice 0, stayed enabled, and the note said the quotient is 1.
+
+The Cauchy-Riemann generator, eight cards from the opening seed: two that hold everywhere, then u = x² + y² with v = 2xy, then u = x with v = 0, then u = x² + y² with v = 0, then three more that hold everywhere. Tapping "hold only on the real axis" on the third card was right. The note named §3.2 Exercise 1(g). Next step offered "2x, only on the real axis", "2z everywhere", "does not exist anywhere", and "0". The harmonic generator reached u = x³ + y³ on the fourth card and u = x² + y² on the eighth, each as "Is there a harmonic conjugate?"
+
+### What the chapter's exercises still ask
+
+§3.1 Exercise 1, page 83, is three derivatives. The blank is 1(a), the fifth power. 1(b) is h(z) = (2z+1)/(z+2). That quotient is absent from the prompts. The fourth memory line says polynomials, products, and quotients differentiate as in calculus, and a quotient fails where the denominator is 0. The rules card names the quotient rule. The formula is on neither.
+
+§3.1 Exercise 3 is the analytic question. f and g are entire. Which of [f(z)]³, f(z)g(z), f(z)/g(z), f(1/z), f(z−1), and f(g(z)) must be entire? The deck defines analytic, entire, and singular point. No prompt asks.
+
+§3.2 Exercise 1(a) is the iz + 4i blank, and it finishes at f' = i. Eight generated prompts are polynomials in x and y. Exercise 1(b), page 93, is (y + ix)/(x² + y²), which is i/z for z ≠ 0, with derivative −i/z². Exercise 3 on that page asks for the constants a and b so that (2x − y) + i(ax + by) is differentiable for every z. The book's solution is a = 1 and b = 2. The page has no a and no b.
+
+§3.3 Exercise 5(a), page 100, is the conjugate blank. The book's solution is v(x, y) = x³ − 3xy² + c. Typed `v = x^3 - 3xy^2 + C` was marked wrong, and Next step stayed hidden. `C + x^3 - 3xy^2` was marked right. Exercise 2 on that page asks whether any analytic f has imaginary part x³ + y³. The polynomial shows up as a real part, on the fourth generated card. The memory line builds v by integrating u_x. Exercise 5(c) hands you v = e^y sin x.
+
+Example 3.6, tapping "hold", printed "u_x = v_y = 1 and u_y = v_x = 0 at the origin." The values match the book, page 88 (web Example 3.2.5): u_x(0,0) = v_y(0,0) = 1 and u_y(0,0) = v_x(0,0) = 0. The written equation u_y = v_x is the sign the proof card's last choice is there to catch. The check is u_y = 0 = −v_x.
+
+On L'Hôpital's first step, `0, 0` was marked wrong and `both 0` was marked right. On the last step, the wrong value `4i` printed "4i³ = 4(−i) = −4i".
+
+### Verdict
+
+ANOTHER BATCH
+
+The sheet, the Theorem 3.4 card, the two-path cards, the proof of Theorem 3.3, the polynomial generator, and the conjugate of a given u will carry the first half of a Chapter 3 exam. Exercise 1(b), Exercise 3, the rational Cauchy-Riemann question, the constants a and b, and Exercise 2 in the book's wording are still open. One batch for those five, plus the line the book prints for the conjugate. Theorem 3.4 stays a statement. Theorem 3.5 stays a flash.
+
+### Ranked
+
+1. **Write the quotient, and drill §3.1 Exercise 1(b).** Evidence: the fourth §3.1 memory line says a quotient fails where the denominator is 0, and the rules card names the rule. The derivative blank is (z² − iz + 9)⁵, Exercise 1(a), page 83. Exercise 1(b), h(z) = (2z+1)/(z+2), is absent from the prompts. Change: put the quotient formula (g f' − f g')/g² on that memory line, beside the chain factor n[inside]^{n−1} times the inside derivative. Add one next-step-blank: the numerator is 3, h'(z) = 3/(z+2)², and z = −2 is the singular point.
+
+2. **One card for §3.1 Exercise 3.** Evidence: the §3.1 deck states analytic, entire, and singular point, and no item asks which expressions stay entire. Change: one next-step-mc. f and g are entire. [f]³, fg, f(z−1), and f(g(z)) must be entire. f/g need not be, because g may vanish, and f(1/z) need not be. The distractors swap those two with a composition that does stay entire.
+
+3. **One Cauchy-Riemann card outside the polynomials.** Evidence: the fixed blank is iz + 4i, and f' = i everywhere. Eight generated prompts, the opening seed through seven Anothers, are polynomials. §3.2 Exercise 1(b), page 93, is (y + ix)/(x² + y²) = i/z for z ≠ 0, with f' = −i/z², and the function is not analytic at 0. Change: one next-step on that function. The misses worth offering are "entire", "differentiable only at 0", and f' = i/z².
+
+4. **Pin §3.3 Exercise 2 as the imaginary part, and say what to do when the exam gives v.** Evidence: the fixed harmonic card is u = y³ − 3x²y, Exercise 5(a). u = x³ + y³ appears on the fourth generated card, after three Anothers, under "Is there a harmonic conjugate?", as the real part. Exercise 2, page 100, asks whether any analytic f has imaginary part x³ + y³. The memory line integrates u_x to build v. Exercise 5(c) gives v = e^y sin x. Change: a fixed two-step card in the book's words. The Laplacian is 6x + 6y, so no such f exists. Add one memory line: if the exam gives v, integrate −v_x in y, then fix C(x) from u_x = v_y.
+
+5. **Find the constants in §3.2 Exercise 3.** Evidence: the page never asks for a or b. The book's solution is a = 1 and b = 2 for f = (2x − y) + i(ax + by), page 93. The generator checks a finished pair of polynomials. Change: two blanks. u_x = 2 = v_y forces b = 2. u_y = −1 = −v_x forces a = 1. Offer the swapped pair, and a sign change, as the misses.
+
+6. **Take the line the book prints, and write the Example 3.6 check with the minus.** Evidence, typed on the phone: `v = x^3 - 3xy^2 + C` was marked wrong and Next step stayed hidden. `C + x^3 - 3xy^2` was marked right. The solution of Exercise 5(a) is v(x, y) = x³ − 3xy² + c. `0, 0` was marked wrong on the L'Hôpital opening, and `both 0` was marked right. Tapping "hold" on Example 3.6 printed "u_y = v_x = 0". The wrong last step on Exercise 7(a) printed "4i³ = 4(−i) = −4i". Change: accept a leading `v =`, and accept `0, 0` as the two zeros. The Example 3.6 note reads u_x = 1 = v_y and u_y = 0 = −v_x. A miss on the value stops before −4i. The right answer can show it.
+
+### What to keep
+
+The eight, five, and five memory lines, and the 44px flag that puts the §3.1 list at y=72. State Theorem 3.4 from the card. The fifth §3.2 recipe stays the computing rule: both equations, continuous partials, f' = u_x + i v_x. Missed, which puts the missed card next and leaves the intervals out. Theorem 3.3 as a blank and again as four choices, with u_y = −v_x against u_y = v_x. The chain-rule blank, factors in either order, including a star between the exponent and the next factor, and `-(i-2z)` for `2z - i`. The two paths for Re z, with "differentiable only at 0" as the |z|² trap, and the two paths for |z|²: horizontal 2x_0, vertical −2iy_0, agree only at 0, and f'(0) = 0. L'Hôpital through 4z³ and `4(-i)`. iz + 4i, partials in either order, f' = i. z + conjugate, with u and v equal to 2x and 0, failing at every point. The generator's four outcomes, Exercise 1(g) as a right answer, and "2z everywhere" beside "2x, only on the real axis". The conjugate built from u_x, with C(x) written first. The harmonic failure cards, once Another has been pressed, as extra drill beside the pinned Exercise 2. The statement cards for analytic, entire, singular point, the differentiation rules, Theorem 3.1, Theorem 3.2, Theorem 3.5, Theorem 3.6, Theorem 3.7, Laplace, the conjugate definition, Theorem 3.8, and Theorem 3.9. Theorem 3.5 remains a flash. The polar proof and the constant-modulus proof can wait until the five exercise holes above are cards.
+
+## ux-veteran (chapter-3 batch 4)
+
+Preview https://ch3-preview.complexanalysis.pages.dev/#chapter-3, tip `63cbc5e`. The served `js/book/chapter3.js`, `js/book/ch3-pictures.js`, `js/book/ch3-cards.js`, `css/components.css`, `js/app.js`, and `js/data/book-path.js` match that commit. Used like a student, touch first: 390×844 light then dark, then 1280×800 light then dark. No product code changed. No console errors. No sideways scroll (`scrollWidth` is 390 and 1280). The chapter is 15839px on the phone and 12802px on the laptop.
+
+### Verdict
+
+ANOTHER BATCH
+
+On a fresh phone the first screen is the climb: the square fills the column, the 45° sentence, the gesture, and Play, with 3.1 named under the title. Back returns the scroll. The camps open in order, and marking 3.1 leaves 3.2's title and why on that screen. Two labels still point the wrong way. After 3.1 is marked, a reload puts "3.2 · The Cauchy-Riemann Equations" over the derivative picture. The book, at 0 of 3, puts Walk Chapter 4 on the same first screen as Open Chapter 3, and it still says eleven chapters. One batch for those, and for the laptop line that the 800px window slices. The square, the 44px controls, and Back stay.
+
+### The first screen
+
+**390×844, light and dark.** Same boxes. The header is 56px. The Book is 108.7×44 at y=80. The title is two lines, y=132 to 194, Iowan Old Style 25.85px weight 600. The stage line is one line, y=202 to 218, 12.48px, and it fits (the text is 358px and the box is 358px): "3.1 · Differentiable and Analytic Functions · 0 of 3". The square is 324×324, y=259 to 583. The gesture is three lines, y=591 to 670: "Drag the green dot. Green is the step. Purple is where it goes. Orange is the turn." The claim is 52.7px, y=678 to 731: "The turn stays 45° and the stretch stays 2√2, for every direction." z² is 44×44, conj is 59×44, and Play is 69.8×44, all at y=739 to 783. WHY YOU'D CARE is y=799 to 818. The why is 105px, y=822 to 928, so the window closes on its first line and the rest is the next thumb. The lede starts at y=928. The status, "Next is 3.1 Differentiable and Analytic Functions. 0 of 3 stages.", starts at y=1013.
+
+In the dark the page is rgb(13, 18, 28) and the sentence is rgb(233, 237, 245). The stage line is rgb(166, 176, 195). The axes stay blue, the short arrow green, the turn orange, the image purple. Same positions. A theme change does not move Play or the square.
+
+Play says Pause, and a second press says Play, with the 45° sentence still the sentence. conj keeps the claim at 52.7px and Play at y=739. A rightward drag stays on the finger while the finger is inside the square (miss 0 through eight samples) and names the point: "At 2.02 + i, the turn is 26° and the stretch is 4.5." When the finger leaves the square the dot stops at the edge, "At 2.4 + i", and a further move does not pull it. A press that starts 26px from the dot leaves 1+i and the 45° sentence. The drawn dot is 9.5px across, inside the 44px grab. At 1280 a 48px drag stays on the finger, miss 0, and the claim is "At 1.76 + i, the turn is 30° and the stretch is 4.04."
+
+**1280×800, light and dark.** Same boxes. The menu button is hidden and the sidebar is the list. The square is 304px, y=240 to 544. The gesture is one line. Play ends at y=691. The why ends at y=783.5, inside 800, in both themes. The lede, "Three stages, from the derivative to a harmonic conjugate.", runs y=783.5 to 809.5, so the 800 edge cuts that line. The status starts at y=843. Fresh, the stage line is "3.1 · Differentiable and Analytic Functions · 0 of 3".
+
+### The drawer, Back, and the climb
+
+At 390 the menu is 8 rows, each 44×358. Chapter 3 is the current row. The drawer covers the page, body overflow is hidden, and `#view` is inert. Escape closes it and returns the page. The rows are The Book and chapters 1 through 7. At 1280 the same list is the sidebar. Chapters 3 and 4 wrap to 46.8px. The others stay 44.
+
+`history.scrollRestoration` is manual. From scrollY 900, The Book opens `#book` at 0. Browser Back returns `#chapter-3` at 900. From 1400, Back returns 1400. A cold Open Chapter 3, with nothing stored, opens `#chapter-3` at 0 on the 3.1 line.
+
+The 3.1 flag is 44×44. Its href is `#chapter-3-3-1`. Tapping it leaves the title "Chapter 3" and puts the memory list at y=72. `#chapter-3-3-3` puts Harmonic Functions at y=121.5, under the 56px header, with the why, the 324px picture, the drag sentence, the right-angle claim, and Conjugates and Circles. Those two chips are 44px tall and end at y=847, so the border sits on the 844 edge and the label is on the screen. `#chapter-3-3-2` is the same pattern: the title at y=121, the why, the square, "Drag the green corner.", the square sentence, and Turn and Stretch ending at y=847.
+
+Mark stage complete, scrolled into view, renames the button to Stage complete, sets aria-pressed, paints a 4px green left edge, and writes `mv:progress.test2` as `{"3.1":true}`. The flag becomes "3.1 · STAGE COMPLETE". The summit sentence is already on that screen. 3.2's title is 98px under the button, and its why is on the screen. The status, off this screen, becomes "Next is 3.2 The Cauchy-Riemann Equations. 1 of 3 stages."
+
+The line under the chapter title does not stay with the picture. After that mark, a reload opens the phone at scroll 0 on the derivative square, z² pressed, the 45° sentence, and the line "3.2 · The Cauchy-Riemann Equations · 1 of 3". The same line sits over the same square at 1280, light and dark. The opening picture is still camp 3.1. The kicker names camp 3.2.
+
+The way up is the other mislabel. At 0 of 3, `#book` on the phone shows Open Chapter 3 at y=265, 324×44, filled rgb(47, 62, 92), and the status "Chapter 3: 0 of 3 stages. Next is 3.1 Differentiable and Analytic Functions." Walk Chapter 4 is on that same screen, y=581, 324×44. Chapter 4's card is `data-state="next"`. The lede is "Eleven chapters, in the order Howell and Mathews print them." The drawer that opened this page lists chapters 1 through 7. The roadmap still lays out 8 Residue Theory through 11 Fourier Series and the Laplace Transform, from y=2108 to y=2527. With 3.1 stored, the same two buttons are on the first screen and the status counts 1 of 3, next 3.2. The three section rows are 44px links to `#chapter-3-3-1`, `-3-2`, and `-3-3`.
+
+The last Mark stage complete button and the chapter source line are 49px apart. The path's bottom padding is 0. The page does not end on an empty screen.
+
+### Style
+
+Same system as chapter 4, measured at 390. Light: the paper is rgb(246, 243, 236), the text is rgb(26, 34, 48), a card is white with a 1px rgb(216, 210, 196) border and radius 10px. Dark: the paper is rgb(13, 18, 28), the text is rgb(233, 237, 245), a card is rgb(21, 28, 43), radius 10px, which is the dark card chapter 4 uses. Play is the 44px button, radius 6px. Shown text inputs are 44px. The home wordmark is 237×30, the existing header, and the same control chapter 4 has. The chapter's own controls clear 44. Citation links in the prose are the short lines they already were. No new type and no new colour.
+
+### Ranked
+
+1. **The line under the title names the picture on the screen.** Evidence: a fresh phone reads "3.1 · Differentiable and Analytic Functions · 0 of 3" over the derivative square, and that line fits. After Mark stage complete, a reload at 390 and at 1280, light and dark, reads "3.2 · The Cauchy-Riemann Equations · 1 of 3" over the same square, with z² pressed and the claim still "The turn stays 45° and the stretch stays 2√2, for every direction." The status card, at y=1013 on the phone, is the line that already says "Next is 3.2". Change: the kicker keeps 3.1's name while this opening picture is the derivative, and the count updates, so the reload reads "3.1 · Differentiable and Analytic Functions · 1 of 3". Leave "Next is 3.2" on the status card.
+
+2. **One door while this mountain is unfinished.** Evidence: at 0 of 3, Open Chapter 3 is 324×44 at y=265 and Walk Chapter 4 is 324×44 at y=581, both inside the 844 window. The status says the next stage is 3.1. Chapter 4's card is `data-state="next"`. With 3.1 stored, both buttons are still on the first screen. Change: until 3 of 3 stages are marked, the card shows Open Chapter 3 only, and Chapter 4's flag does not say Next. Walk Chapter 4 returns when the status says Chapter 3 is done.
+
+3. **The book counts the chapters the drawer counts.** Evidence: the lede on the first screen is "Eleven chapters, in the order Howell and Mathews print them." The open drawer is The Book and chapters 1 through 7, each row 44px. The roadmap still has chapter 8 at y=2108 and chapter 11 at y=2527. Change: the lede says seven chapters. The roadmap lists chapters 1 through 7. Chapters 8 through 11 stay in the data and off this list.
+
+4. **The laptop's first screen ends on a whole line.** Evidence: at 1280×800, light and dark, the why ends at y=783.5, inside 800, and the lede "Three stages, from the derivative to a harmonic conjugate." runs y=783.5 to 809.5. The opening square is 304px. On the phone that lede is at y=928, and Play ends at y=783 with the square at 324px. Change: the lede finishes inside 800. The phone square stays the column width. A tighter height cap on the laptop square does that, about 10px, and it does not change the 324px phone square.
+
+### Keep
+
+The 324px phone square, the 45° sentence, the gesture line, and Play on the first screen, in both themes. The why starts on that screen. Do not shrink the square to pull the rest of it up. conj keeps the claim at 52.7px and Play at one y. The dot stays under the finger inside the square, a press 26px out changes nothing, and past the frame the dot stops. The four teaching colours. The Book at 44px. Back restoring scrollY 900 and 1400. The 44px flag, the memory list at y=72, and `#chapter-3-3-3` with the title at y=121. Mark stage complete, the green edge, and 3.2's title and why 98px under that button. The drawer, chapters 1 through 7, the cover, and Escape. Shown inputs at 44px. The source line 49px under the last camp. No sideways scroll. The type, the paper, and the cards, shared with chapter 4.
+
+## reviewer (ch3 batch 4)
+
+Reviewed `63cbc5e` on `cursor/chapter-3` (PR #46) against Howell & Mathews, Complex Analysis, 202 Updated Edition. One fix landed on the branch: the Exercise 1(a) note now says the key's quadratic is not \(g'(z)\), and it no longer prints the derivative of \(h\). Not merged. gh-pages untouched.
+
+### Verdict
+
+ACCEPT WITH FIXES
+
+Checked against the professor PDF (complexanalysis.org, 471 pages, title page "202 Updated Edition"). Printed pages 79–101 and the selected answers on 435–436. Chapter pins match those pages: Equation (3.1) and Example 3.1 on 79; Definitions 3.1 and 3.2, the singular-point sentence, and (3.4)–(3.12) on 81; Theorem 3.1 on 82; Theorem 3.2 and Exercises 1–3 on 83; Exercises 7 and 11 on 84; Theorem 3.3 and (3.14)–(3.16) on 86; Example 3.4 on 87; Example 3.6 on 88; Theorem 3.4 on 89; Theorem 3.5 and (3.22) on 91; Theorem 3.6 on 92; Theorem 3.7 and Exercises 1, 3, and 7 on 93; Laplace (3.26), Theorem 3.8, and the conjugate definition on 95; Example 3.11 on 96; Theorem 3.9 and (3.27) on 97; Exercises 2 and 5 on 100.
+
+The five new cards compute the book's answers. Exercise 1(b) is \(h'(z) = 3/(z+2)^2\), singular at \(-2\). Exercise 3: \([f]^3\), \(fg\), \(f(z-1)\), and \(f(g(z))\) must be entire; \(f/g\) and \(f(1/z)\) need not. Exercise 1(b) of §3.2 is \((y+ix)/(x^2+y^2) = i/z\) for \(z \neq 0\), with \(f' = -i/z^2\). Exercise 3 is \(a = 1\), \(b = 2\). Exercise 2 of §3.3 has Laplacian \(6x+6y\), so no such analytic \(f\). The answer key on page 435 prints \(15z^2-8z+7\) for 1(a) and files \(h'\) under 1(c). The card's derivative stays \(5(z^2-iz+9)^4(2z-i)\). A wrong last step on Exercise 7(a) does not print \(-4i\); \(4(-i)\) is accepted and then the why shows it.
+
+Generators recompute. Four hundred random polynomials in \(z\) of degree 2 or 3 had Laplace zero, passed Cauchy-Riemann, and rebuilt \(\operatorname{Im}(f)\) from \(\int u_x\,dy\) plus \(C(x)\). Two hundred generator seeds threw nothing, and each answer sat in its choices. The real-axis family is Exercise 1(g): \(f' = 2ax\) only on \(y = 0\). The origin family is the \(|z|^2\) pattern, \(f'(0) = 0\).
+
+Pictures. \(z^2\) at \(1+i\) is a turn of \(45^\circ\) and a stretch of \(2\sqrt{2}\). A turned square stays a square through a half-turn of samples. Stretch at angle 0 is a rectangle; at \(45^\circ\) the sides are equal and the angle is not. Conjugate levels of \(x^2-y^2\) and \(2xy\) meet at a right angle except at the origin. Circles do that only on the diagonal. A drag clamps to the drawn square.
+
+On the preview, at 390×844, the five cards graded in place: a wrong numerator on the quotient stayed on the step, \(b=2\) and \(a=1\) passed, \(a=-1\) did not, \(6y+6x\) passed, and "does not exist" was the right choice for \(v = x^3+y^3\). No console errors. `node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. No live file imports `kit/`. `js/core/map-route.js` is byte-identical to `kit/template/js/core/map-route.js`.
+
+### Leftovers
+
+1. The local card is still the renderer. Exercise 2's second step is a choice list inside a `next-step-blank` item. The local card treats any step with `choices` as multiple choice. A shared renderer that keys off the item kind would turn that step into a typed blank.
+2. Theorem 3.5 is still a flash. Exercise 10, the polar proof, is not a card. Theorem 3.6's constant-modulus proof is not a card.
+3. `#book` still has to grow "Open Chapter 2" when that branch meets this one. The Chapter 3 button is already on the page.
+4. The Theorem 3.4 flash memory line is the short form, "Cauchy-Riemann plus continuous partials." The flash back and the §3.2 recipe state the neighborhood, the partials continuous at the point, and the equations at the point.
+
+## unslop (chapter-3 batch 4)
+
+Preview https://ch3-preview.complexanalysis.pages.dev/#chapter-3, tip `63cbc5e`. The served `js/book/chapter3.js`, `js/book/ch3-pictures.js`, `css/components.css`, and `data/practice/ch3.json` match that commit. Phone 390×844 first, touch, light then dark, then 1280×800, light then dark. A rightward drag from 1+i, a drag to the frame and past it, Play, then Pause. §3.2, §3.3, Exercise 1(a), Exercise 3, the rational card, the constants card, and Exercise 2. No console errors. No sideways scroll (`scrollWidth` is 390 and 1280). Dark uses the same boxes as light. Body text is rgb(26, 34, 48) in the light and rgb(233, 237, 245) in the dark. No emoji, no gradient, no glow.
+
+## Verdict
+
+ANOTHER BATCH
+
+The phone square fills the card, and the finger holds the dot. The arrows that square is there to show disappear on the way to the frame, and Exercise 3's choices break on that same phone. One batch for the five cuts below. Then this lens rests.
+
+## What the hand does
+
+At rest the point is 1+i. On the phone the square is 324×324, from y=259 to 583, the same width as §3.2 and §3.3. The side gaps are 17px, the card's padding. The green step is 56px, the purple image is 158px, the orange turn is 14×34, and the handle is 9.5px. A rightward drag stays on the finger, miss 0.6px, and the imaginary part stays 1.00 through real part 2.19. At the frame the real part stops at 2.40. The dot stays on that edge while the finger goes on past it.
+
+Play says Pause, and the claim stays "The turn stays 45° and the stretch stays 2√2, for every direction." On the laptop the same drag keeps the miss at 0.3px. Play ends at y=783 on the phone and y=691 at 1280, inside both windows, in both themes.
+
+## What reads as unfinished
+
+**The drag erases the arrows.** From 1+i the green step, the purple image, and the orange turn are on the square. At real part 1.84 the green step is still drawn, about 8 units in the picture. At 1.99 its visibility is hidden. At 2.13 both arrows are hidden. At 2.28 the arc is hidden too. The claim at 2.19 + i still says the turn is 24° and the stretch is 4.82. The square shows a green dot.
+
+**Exercise 3 breaks a formula in the button.** On the phone, light and dark, the four choices sit in 290px buttons. `f(z−1)` draws as a 56×51 block, so the 1 drops onto a second line inside the button, and "and" sits beside the break. The fourth choice is 52px tall with a scroll width of 319: the last formula, `f(g(z))`, runs 30px past the button. At 1280 those four choices are 884×44, one line, and the formula stays inside the button. The prompt above them is whole at both widths. The rational card's four choices (`i/z`, `−i/z`, `1/z`, `iz`) are one line on the phone.
+
+**Exercise 1(a) speaks in the answer key.** Between the prompt and "Step 1 of 3" there is a paragraph, 133px on the phone and 53px at 1280: "The selected-answers key on page 435 prints 15z² − 8z + 7 for this derivative, and it labels h'(z) = 3/(z+2)² as 1(c). h is Exercise 1(b)." The next card is Exercise 1(b), and that derivative is the line it asks for. The card is already on the screen under the note. The paragraph is the unfinished piece. A wording that drops h'(z) and still tells the student what page 435 printed belongs off the card the same way.
+
+**The wide square sits apart from its sentence.** At 1280, both themes, the opening square is 304×304 at x=628. The gesture and the claim start at x=321. The paper between those two left edges is 307px, and the side gaps inside the 952px card are 324 and 324. §3.2 on that window is a 416px square. The why still ends at y=783, inside 800.
+
+**The first screen ends on a fragment.** On the phone, Play ends at y=783. "WHY YOU'D CARE" ends at 818. The why runs from y=822 to 928, so the window cuts it after "A derivative is one number that turns". At 1280 the why finishes, bottom 783, and the next line, "Three stages, from the derivative to a harmonic conjugate.", runs from y=783.5 to 809.5 and is cut by the 800 edge. The stage line already on that screen reads "3.1 · Differentiable and Analytic Functions · 0 of 3".
+
+## Cut
+
+1. **The arrows stay drawn for every point inside the square.** Evidence: on the phone the green step is hidden at real part 1.99, both arrows are hidden at 2.13, and the arc is hidden at 2.28, while the claim still names a turn and a stretch. The finger's miss on that drag is 0.6px and the imaginary part stays 1.00. Change: scale the step, the image, and the turn down so each one is still a mark at 1.99 and at 2.13. The point still stops at real part 2.40 when the finger leaves the frame.
+
+2. **Each formula in a choice stays one piece, inside the button.** Evidence: at 390, `f(z−1)` is a 56×51 block inside a 290×52 button, and the fourth choice's `f(g(z))` extends 30px past the button (scroll width 319). At 1280 the same choices are one line. Change: a choice may break between formulas. `f(z−1)` stays on one line, and every formula ends inside the button, at 390 and at 1280, in both themes.
+
+3. **The answer-key paragraph leaves Exercise 1(a).** Evidence, on the preview: the paragraph sits between the prompt and "Step 1 of 3", 133px on the phone, and it prints h'(z) = 3/(z+2)², the derivative the next card asks for. Change: the card keeps the prompt, the three steps, and the source line. The paragraph goes, including a later wording that still reports what the answer key printed.
+
+4. **The wide square shares the sentence's left edge.** Evidence: at 1280 the square's left edge is x=628 and the claim's left edge is x=321. The why ends at y=783 inside 800. Change: align the opening square with the claim, the edge the sentence already uses. Keep the cap that holds the why inside 800.
+
+5. **The first screen ends on a finished sentence.** Evidence: at 390 the why is cut after "A derivative is one number that turns" (the paragraph runs to y=928 in an 844 window). At 1280 the line "Three stages, from the derivative to a harmonic conjugate." is cut at y=809.5, and the stage line has already said 3.1 and 0 of 3. Change: on the phone this screen ends on Play, and the why starts whole on the next thumb, both sentences. Remove the "Three stages" line. The stage line and the status stay.
+
+## Keep
+
+The phone square at 324px, even with §3.2 and §3.3, and the 17px that is the card padding. The finger on the dot, miss at most 0.6px, imaginary part held at 1, and the stop at real part 2.40. Play on the first screen at both widths, in both themes, and the claim box that stays put when the point moves. The four teaching colours on the axes, the step, the turn, and the image. z² and conj, Turn and Stretch, Conjugates and Circles. §3.2's square filling its frame, and §3.3's two families crossing at a right angle. The five new cards as cards: the quotient, the entire-function question, the rational choices that already fit, the constants a and b, and the imaginary part x³+y³. Their source lines. The Book at 109×44. The kickers, in the site's small caps. No sideways scroll.
+
+## Add
+
+Nothing. No slider, no scrubber, no second clock, no third chip, no new hue.
+
+## Chapter 3 batch 5
+
+Branch `cursor/chapter-3`. Headless Chrome, 390×844 and 1280×800, light and dark. No console errors. No sideways scroll (`scrollWidth` 390 and 1265).
+
+The “Three stages…” lede is gone. On the phone Play ends at y=783 and the why, both sentences, starts at y=894. At 1280 the why ends at y=783 and the status starts at y=844. The stage line stays “3.1 · Differentiable and Analytic Functions” after 3.1 is marked; the count becomes 1 of 3, and the status says next is 3.2. The opening square is 324px on the phone and 304px at 1280, and its left edge matches the claim (x=321). At Re 1.99, 2.13, and 2.28 the green step, purple image, and orange turn stay visible inside the square. At the frame, Re 2.40, a step pointing out of the square has no interior left, so those marks hide and the claim still names the turn. Exercise 1(a) is the prompt, three steps, and the source line. Exercise 3’s formulas stay one piece inside the button at 390; the rational choices stay one line. The book lede says Chapters 1–7, the roadmap stops at 7, and Walk Chapter 4 is hidden until 3 of 3. Theorem 3.4’s memory line states the neighborhood, the continuous partials, and the equations at the point. Exercise 10 (page 94) and Theorem 3.6 (page 92) are proof blanks. Theorem 3.5 stays a flash.
+
+Deferred: the shared practice renderer is not on this branch, so a `next-step-blank` step that carries `choices` is still graded as a choice. Open Chapter 2 waits until that chapter’s page meets this one. Chapters 8–11 stay in the data and off the list.
+
+## taste-skill (chapter-3 batch 5)
+
+Preview https://ch3-preview.complexanalysis.pages.dev/#chapter-3, tip `369b9dd` (PR #46). Kit wins where it meets this lens: the four teaching colours, the one gesture, the one clock, the book’s small-caps labels, and the current type and paper stay. No product code changed. Headless Chrome, 390×844 then 1280×800, light then dark. No console errors. No sideways scroll (`scrollWidth` is 390 and 1280).
+
+Seen in one second: the green step, the purple image, and the orange turn, small in the upper right of a large square. On the wide page that square occupies the left third of its card. The live thing is the drag, and Play.
+
+## Verdict
+
+ANOTHER BATCH
+
+The phone’s first screen is the square, the claim, and Play, and the why starts whole on the next thumb. The wide page still reads as a square pushed to the left, with the sentence underneath and the rest of the card empty. A drag to the frame erases the three marks while the sentence still names a turn and a stretch. One batch for the six cuts below. The 3.3 summit repeats the why, and it can wait.
+
+## Ranked
+
+1. **On the wide page the sentence sits beside the square.** Evidence, light and dark, same boxes. At 1280 the opening square is 304×304 at x=321, y=240 to 544. The picture row is 918px wide, so 614px to the right of the square is empty card. The claim starts under the square at y=587. §3.2 and §3.3 are the same row: a 416×416 square at x=321 inside 918px, so 502px empty beside each. The why ends at y=783. A 44px margin under that why (`margin-bottom: 2.75rem`) holds the status at y=844, on the 800 edge. Change: from 56.25rem up, each picture is a row. The square stays on the left. The observe line, the claim, the chips, and Play sit in the open column, top-aligned with the square. Drop that 44px margin. The why follows the row at the normal gap. The phone stays a column. The opening square stays 304px wide on the laptop and 324px on the phone.
+
+2. **The drag ends on a frame that still has the three marks.** Evidence, a real drag on the light 1280 page, imaginary part held at 1. At 2.23+i the green step, the purple image, and the orange turn are visible, and the claim is a turn of 24° and a stretch of 4.88. At 2.38+i all three are `visibility: hidden`, and the claim still says the turn is 23° and the stretch is 5.17. At the clamp, 2.40+i, the square shows a green dot and the claim says the turn is 23° and the stretch is 5.2. Change: the point stops at the last place those three marks are drawn. On this horizontal that place is before 2.38. The claim keeps the degrees.
+
+3. **The phone’s book card sizes to its sentence, and a drawn chapter does not say Later.** Evidence, 390×844 light. `#book-next` is 358×342. Open Chapter 3 is 324×44. The status text is two lines, and the element is 256px tall (`flex: 1 1 16rem`). Chapter 1 starts at y=614 with the flag LATER and the line “Already drawn: One Point, Two Addresses.” Chapter 2 says Later and “Already drawn: A Function Is a Motion.” Chapter 3, flagged Open, starts at y=954, below the fold. At 1280 the same door is one row, 78px tall, and the same Later flags sit above the open chapter. Walk Chapter 4 is hidden. The basis is not a theme rule. Change: in the phone column the status is the height of its text. Chapters 1 and 2 keep “Already drawn” and drop Later. Chapter 3 stays Open. The order stays 1–7.
+
+4. **The line under the picture is one sentence, in the claim’s ink.** Evidence, both themes. On the phone the 3.1 observe line is `book-page`, rgb(81, 91, 108) in the light and rgb(166, 176, 195) in the dark, three lines, y=591 to 670 (79px). The claim under it is full ink, y=678 to 731 (53px): “The turn stays 45° and the stretch stays 2√2, for every direction.” At 1280 that observe line is one muted line, y=552 to 579, still above the claim. §3.2’s observe line on the phone is 53px of the same grey. Change: “Drag the green dot.” “Drag the green corner.” “Drag the green point.” One line each, the claim’s colour. The colour clauses go. The claim stays the sentence under that line.
+
+5. **The status stops repeating the heading it sits on.** Evidence, the phone scrolled to the why. The card reads “Next is 3.1 Differentiable and Analytic Functions. 0 of 3 stages.” Under it the flag is 3.1 and the heading is “Differentiable and Analytic Functions,” two lines. The kicker already on the first screen is “3.1 · Differentiable and Analytic Functions · 0 of 3.” At 1280 that status card starts at y=844. Change: while the count is 0, that row goes. The kicker keeps the name and the count. The heading keeps the name. Once a stage is marked, the status says “Next is 3.2.” and it sits with the stage that was just finished.
+
+6. **The pin list goes. The sentences already cite the pages.** Evidence, the same screen as the status card. “IN THE BOOK” is six links: Equation (3.1), Definition 3.1, Definition 3.2, Theorem 3.1, Equations (3.4)–(3.10), Theorem 3.2. The next two sentences are the definitions, and each one ends “Definition 3.1, page 81” or “Definition 3.2, page 81.” The worked card under them carries Example 3.1 and its source line. §3.2 and §3.3 open the same list. Change: cut the label and the six-pin list on each stage. The page numbers stay on the sentences and on the source tags.
+
+## What to keep
+
+The phone square at 324px, Play ending at y=783, and the why, both sentences, starting at y=894. The 72px padding that keeps a sliced why off the 844 fold. At 1280 the why ending at y=783, in both themes. Dark matches light: page rgb(13, 18, 28), claim rgb(233, 237, 245), square and Play on the same coordinates. The kicker on a fresh load names 3.1 over the derivative square. z² and conj, Turn and Stretch, Conjugates and Circles. The claim box that holds two lines so Play stays put. The four teaching colours. Exercise 1(a) as the prompt, the steps, and the source line. Exercise 3’s formulas inside the buttons, one piece each, at 390 and at 1280. The book lede, Chapters 1–7. Walk Chapter 4 hidden. The Book at 109×44. The source line under the last camp, then the footer, with no empty viewport between them. The book’s small caps, the serif title, the paper, and the cards. No sideways scroll.
+
+## reviewer (ch3 batch 5)
+
+Reviewed `369b9dd` on `cursor/chapter-3` (PR #46) against Howell & Mathews, *Complex Analysis*, 202 Updated Edition (professor PDF, 471 pages, title page “202 Updated Edition”). One fix is on the branch: Exercise 10 no longer accepts the partials in the wrong order. Not merged. gh-pages untouched.
+
+### Verdict
+
+ACCEPT WITH FIXES
+
+Checked against printed pages 79–101 and the selected answers on 435–436. HTML anchors open the same statements; the HTML numbers them 3.1.n / 3.2.n / 3.3.n. Pins match those pages: Equation (3.1) and Example 3.1 on 79; Example 3.2 and Remark 3.1 on 80; Definitions 3.1 and 3.2, singular points, and (3.4)–(3.12) on 81; Theorem 3.1 on 82; Theorem 3.2 (proof deferred to Corollary 7.11) and Exercises 1–3 on 83; Exercises 7 and 11 on 84; Theorem 3.3 and (3.14)–(3.16) on 86; Example 3.4 on 87; Example 3.6 on 88; Theorem 3.4 on 89; Theorem 3.5 and (3.22)–(3.24) on 91; Theorem 3.6 and (3.25) on 92; Theorem 3.7 and Exercises 1, 3, and 7 on 93; Exercise 10 on 94; Laplace (3.26), Theorem 3.8, and the conjugate definition on 95; Example 3.11 on 96; Theorem 3.9 and (3.27) on 97; Exercises 2 and 5 on 100.
+
+### Fixed
+
+Exercise 10(a), page 94, asks for ∂x/∂r and ∂y/∂r, then ∂x/∂θ and ∂y/∂θ, in that order. The book’s results are cos θ and sin θ, then −r sin θ and r cos θ. The blank treated “and” as a set, and the accept list named the swapped pair, so “sin θ and cos θ” and “r cos θ and −r sin θ” were marked right. An “and” of two expressions now keeps the sentence’s order. An “and” of equations is still a set, so the Theorem 3.6 system can be written either way, and u = −y and v = x + 4 still matches the labeled form. The swapped unlabeled pair for u and v fails. `5(z^2−iz+9)^45` still fails.
+
+### Checked and left as is
+
+The cards compute the book’s answers. Exercise 1(a) is 5(z²−iz+9)⁴(2z−i). Equation (3.12), page 81, is that factor; the chain rule proper is (3.10). The selected answer on page 435 prints 15z²−8z+7 and files h′ under 1(c). The card does not. Exercise 1(b) is 3/(z+2)², singular at −2. Exercise 3: [f]³, fg, f(z−1), and f(g(z)) must be entire. Exercise 7(a) is −4i; a wrong last step does not print it. |z|²: horizontal limit 2x₀, vertical limit −2iy₀, agree only at 0 with f′(0) = 0. Example 3.6: u_x = v_y = 1 and u_y = −v_x = 0 at the origin, paths 1 and −1. Exercise 1(a) of §3.2 is f′ = i. Exercise 1(b) is i/z off 0, f′ = −i/z². Exercise 1(g), the generator’s real-axis family, is f′ = 2x only for y = 0 (answer key, page 436). Exercise 3 is a = 1, b = 2. Exercise 7(b) is nowhere differentiable. Exercise 10(b) is r U_r = V_θ and r V_r = −U_θ, the form the book says verifies (3.22). Theorem 3.6’s system is u u_x − v u_y = 0 and v u_x + u u_y = 0, then both partials of u are 0 (pages 92–93). Exercise 2 of §3.3 has Laplacian 6x+6y, so no such analytic f. Exercise 5(a) is x³ − 3xy² + c (page 436). Theorem 3.4’s flash and the §3.2 recipe state the neighborhood, the four partials continuous at the point, and the equations at the point.
+
+At 1+i, z² turns by 45° and stretches by 2√2 for every direction. At 2.4+i the turn is 23° and the stretch is 5.2. A turned square stays a square through a half-turn of samples. Stretch never does. Conjugate levels of x²−y² and 2xy meet at a right angle off the origin. Circles do that on the diagonal and not at 1+0.45i. Four hundred generator seeds threw nothing, and each answer sat in its choices. The real-axis seed is u = x²+y², v = 2xy.
+
+On the local page, which matches the preview except this grader fix, 390×844 then 1280×800, light and dark: Play ends at y=783 on the phone and the why starts at y=894. At 1280 the why ends at y=783.5 and the status starts at y=844.5. The phone square is 324px. The laptop square is 304px at x=321, the claim’s edge. After 3.1 is marked, the kicker stays 3.1 and the status says next is 3.2. Arrows stay drawn at Re 1.99, 2.13, and 2.28. At Re 2.40 they hide. Walk Chapter 4 is hidden until 3 of 3, then it returns, and a Chapter 4 tick survives. The roadmap is chapters 1–7. No console errors. No sideways scroll. Exercise 3’s formulas stay inside the button (scroll width equals the button).
+
+`node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed after the fix. No live file imports `kit/`. `js/core/map-route.js` is byte-identical to `kit/template/js/core/map-route.js`.
+
+### Leftovers
+
+1. At Re 2.40 the claim still names the turn and the stretch, and the arrows are hidden. Inside the square, through Re 2.28, they stay drawn.
+2. Exercise 2’s second step is a choice list on a `next-step-blank` item. The local card grades it as a choice. A shared renderer that keys off the item kind would not.
+3. The Theorem 3.5 flash states the polar equations and not f′ = e^{−iθ}(U_r + i V_r), Equations (3.23) and (3.24), page 91.
+4. Open Chapter 2 is not on the book page. Chapter 2 is not a page on this branch.
+
+## ux-veteran (chapter-3 batch 5)
+
+Preview https://ch3-preview.complexanalysis.pages.dev/#chapter-3, tip `369b9dd`. The served `js/book/chapter3.js`, `js/book/ch3-pictures.js`, `js/stations/book.js`, `css/components.css`, `js/app.js`, `js/data/book-path.js`, and `js/book/ch3-cards.js` match that commit. The branch then moved to `919cb7a`, a grader fix for the order of Exercise 10's polar partials. That commit does not change the chapter chrome, the book, or the nav. Used like a student, touch first: 390×844 light then dark, then 1280×800 light then dark. No product code changed. The page raised no console error on the walk. No sideways scroll (`scrollWidth` equals the window, 390 and 1280). The chapter is 16537px on the phone and 13371px on the laptop.
+
+### Verdict
+
+ANOTHER BATCH
+
+The chapter's first screen is the climb. On the phone the square fills the column, the 45° sentence, the gesture, and Play, and the name under the title stays 3.1 after the stage is marked. At 1280 the why finishes inside 800 and the square shares the sentence's left edge. Back returns the scroll. The book, on that same phone, spends the first screen on an empty card, and the menu's later chapters cannot sit under the header. One batch for the book and the up control. The square, Play, and the 44px chapter controls stay.
+
+### The first screen
+
+**390×844, light and dark.** Same boxes. The header is 56px. The Book is 108.7×44 at y=80. The title is two lines, y=132 to 194, Iowan Old Style 25.85px weight 600. The stage line is one line, y=202 to 218, 12.48px, and it fits: "3.1 · Differentiable and Analytic Functions · 0 of 3". The square is 324×324, x=33, y=259 to 583. The gesture is three lines, y=591 to 670: "Drag the green dot. Green is the step. Purple is where it goes. Orange is the turn." The claim is 52.7px, y=678 to 731: "The turn stays 45° and the stretch stays 2√2, for every direction." z² is 44×44, conj is 59×44, and Play is 69.8×44, all at y=739 to 783. The window closes on Play. WHY YOU'D CARE is at y=871, and the why, both sentences, runs y=894 to 1000. "Three stages" is gone.
+
+In the dark the page is rgb(13, 18, 28) and the sentence is rgb(233, 237, 245). The stage line is rgb(166, 176, 195). The axes stay blue, the short arrow green, the turn orange, the image purple. Same positions. A theme change does not move Play or the square.
+
+Play says Pause, and a second press says Play, with the 45° sentence still the sentence and the angle held. conj, from a fresh point, keeps the claim at 52.7px and Play at y=739: "The purple arrow mirrors the green one. The turn is 0°, and it moves." A press that starts 26px from the dot leaves 1+i and the 45° sentence. A rightward drag stays on the finger, miss 0, imaginary part 1. At real part 1.98 the green step is 7.4px, the purple image is 10.8px, and the orange turn is drawn. At the frame, real part 2.40, the finger has left the square, miss 1.5, and the step, the image, and the turn are hidden. The claim still says "At 2.4 + i, the turn is 23° and the stretch is 5.2."
+
+**1280×800, light and dark.** Same boxes. The menu button is hidden and the sidebar is the list. The square is 304px, x=321, y=240 to 544, the same left edge as the gesture and the claim. The gesture is one line. Play ends at y=691. The why ends at y=783.5, both sentences, inside 800. The status, "Next is 3.1 Differentiable and Analytic Functions. 0 of 3 stages.", starts at y=844.5. Chapters 3 and 4 in the sidebar wrap to 46.8px. The others stay 44.
+
+### The drawer, Back, and the climb
+
+At 390 the menu is 8 rows, each 44×358. Chapter 3 is the current row. The drawer covers the page, body overflow is hidden, and `#view` and the footer are inert. Escape closes it. The rows are The Book and chapters 1 through 7. Chapters 8 through 11 are absent.
+
+`history.scrollRestoration` is manual. From scrollY 900, The Book opens `#book` at 0. Browser Back returns `#chapter-3` at 900. From 1400, Back returns 1400.
+
+The 3.1 flag is 44×44. A tap leaves the title "Chapter 3" and puts the memory list at y=72.5, under the 56px header. `#chapter-3-3-3` puts Harmonic Functions at y=121, with the why, the 324px picture, the drag sentence, the right-angle claim, and Conjugates and Circles. Those chips are 44px tall and end at y=847, so the border meets the 844 edge and the label is on the screen. `#chapter-3-3-2` is the same pattern: the title at y=121, and Turn and Stretch ending at y=847.
+
+A cold `#chapter-3-3-1` is the other landing. Scroll is 186. The stage line, which at scroll 0 sits at y=202, lands at y=16, behind the header. The square starts at y=73. The section title "Differentiable and Analytic Functions" is at y=948, the next screen. The book row for 3.1 uses this hash. `#chapter-3` at scroll 0 still shows the stage line.
+
+Mark stage complete, scrolled into view, renames the button to Stage complete, sets aria-pressed, paints a 4px green left edge rgb(38, 112, 42), and writes `mv:progress.test2` as `{"3.1":true}`. The flag becomes "3.1 · STAGE COMPLETE", 165×44. The summit sentence is already on that screen. 3.2's title is 98px under the button, and its why is on the screen. The status, off this screen, becomes "Next is 3.2 The Cauchy-Riemann Equations. 1 of 3 stages." A reload opens at scroll 0 on the derivative square, z² pressed, the 45° sentence, and the line "3.1 · Differentiable and Analytic Functions · 1 of 3".
+
+The last Mark stage complete button and the chapter source line are 49px apart. The path's bottom padding is 0.
+
+Exercise 1(a) is the prompt, the three steps, and the source line. The answer field is 287×44. Exercise 3's four choices are 287px wide, overflow 0, and each formula is one span inside the button. Two of the buttons are 55.7px because the formulas wrap onto a second line. The rational card's four choices are one line, 44px. At 1280 the Exercise 3 choices are 884×44, overflow 0.
+
+### The book
+
+**390×844, light and dark.** The lede is "Chapters 1–7, in the order Howell and Mathews print them." Open Chapter 3 is 324×44 at y=265, filled rgb(47, 62, 92). Walk Chapter 4 is hidden. The status sentence is "Chapter 3: 0 of 3 stages. Next is 3.1 Differentiable and Analytic Functions." The box around that sentence is 256px tall, y=317 to 573. The card under it is blank. Chapter 1, flagged Later, starts at y=614 and is cut by the window. Chapter 3, flagged Open, starts at y=954. In the dark the status is the same 256px and the card is rgb(21, 28, 43). The roadmap is seven chapters. The footer says chapters 3, 4, and 5 are open and the others are later.
+
+With 3 of 3 stored, Open Chapter 3 hides, the status is still 256px ("Next is §4.1, Exercise 3. 0 of 8 exercises."), and Walk Chapter 4 is 324×44 at y=529. Chapter 4's flag is Next. Chapter 3's flag is Done.
+
+At 1280 the same sentence is 26.3px, sitting beside the 166×44 button. Walk Chapter 4 is hidden. Chapter 1's Later card starts at y=318.
+
+The menu rows for chapters that have no page scroll the roadmap. `#chapter-1` puts that Later card at y=56. `#chapter-2` puts its card at y=56. `#chapter-6` stops at scroll 1354, the end of the page, and the card is at y=441. `#chapter-7` is at y=572 on that same maximum, and the current row is The Book. `#chapter-4` and `#chapter-5` open those chapters and mark the row.
+
+On the phone book, the door "One Point, Two Addresses" under chapter 1 is 245×49. "A Function Is a Motion" under chapter 2 is 178×23. The three section rows under chapter 3 are 44px links.
+
+Chapter 4 and chapter 5, at 390 and at 1280, put the way back in a 69.5×17 control, THE BOOK. Chapter 3's control on those same two windows is the 108.7×44 station link.
+
+### Style
+
+Same system as chapter 4, measured at 390. Light: the paper is rgb(246, 243, 236), the text is rgb(26, 34, 48), a card is white with a 1px rgb(216, 210, 196) border and radius 10px. Dark: the paper is rgb(13, 18, 28), the text is rgb(233, 237, 245), a card is rgb(21, 28, 43). The title is Iowan Old Style. Play is the 44px button, radius 6px. The four teaching colours are the arrows. The drift is the up control: chapter 3 uses the station link, and chapters 4 and 5 keep the 17px label. The header wordmark is 237×30, the existing header. Citation links in the prose are the short lines they already were.
+
+### Ranked
+
+1. **The phone status sizes to the sentence.** Evidence: at 390, light and dark, the status is 256px tall, y=317 to 573, for one two-line sentence. Open Chapter 3 is on that screen, at y=265, and the Open card for the chapter starts at y=954. Chapter 1 Later is the card the window reaches, at y=614. At 1280 the same sentence is 26.3px beside the button. With 3 of 3 stored the phone status is still 256px, and Walk Chapter 4 sits at y=529 under the blank. The 16rem basis is a width in the row and a height in the phone column. Change: on the phone the status is as tall as the sentence. Chapter 3's card then reaches the first screen, under the button and the two lines. Walk Chapter 4 stays hidden until 3 of 3.
+
+2. **A later chapter from the menu sits under the header, and that row stays current.** Evidence: `#chapter-1` and `#chapter-2` put the Later card at y=56. `#chapter-6` is stuck at scroll 1354, the page maximum, with the card at y=441. `#chapter-7` is at y=572 on that same maximum, and the current row is The Book. Chapters 4 and 5 open their pages and mark the row. Change: the roadmap gets the bottom padding the chapter path already uses, so chapters 6 and 7 can sit under the header the way 1 and 2 already do. When the roadmap is focused on a chapter, that row is current, and the row can say Later. The Book is current on `#book`.
+
+3. **Chapters 4 and 5 use Chapter 3's Book control.** Evidence: at 390 and at 1280, Chapter 3's up control is 108.7×44, "The Book". Chapter 4 and Chapter 5 are 69.5×17, THE BOOK, on both windows. Change: the same `.station-link`, min-height 44, label "The Book".
+
+4. **A cold open of 3.1 keeps the camp name on the screen.** Evidence: `#chapter-3` at scroll 0 shows "3.1 · Differentiable and Analytic Functions · 0 of 3" at y=202. `#chapter-3-3-1` from the book row scrolls to 186, so that line lands at y=16, behind the 56px header, and the square starts at y=73. `#chapter-3-3-2` and `#chapter-3-3-3` put the section title at y=121. The flag is a different path: it leaves the hash on `#chapter-3-3-1` and puts the memory list at y=72.5. Change: a cold `#chapter-3-3-1` lands at scroll 0, the first screen that already names 3.1. The flag still scrolls the memory list.
+
+5. **The already-drawn door is 44px.** Evidence: on the phone book, "A Function Is a Motion" is 178×23. "One Point, Two Addresses" wraps to 245×49. Those are the doors on the Later cards for chapters 1 and 2. Change: both doors are the station link, min-height 44.
+
+6. **The drag's last frame still shows the arrows.** Evidence: at real part 1.98 the green step is 7.4px, the purple image is 10.8px, the turn is drawn, and the miss is 0. At real part 2.40 the finger has left the square and the step, the image, and the turn are hidden, while the claim still names a turn of 23° and a stretch of 5.2. Change: the dot stops at the last point inside the square where those three marks are still drawn. Reaching the frame leaves them on the square. No new control.
+
+### Keep
+
+The 324px phone square, the 45° sentence, the gesture line, and Play ending at y=783, in both themes. The why, both sentences, starts whole on the next thumb. The phone square stays 324px. At 1280 the square is 304px at x=321, the why ends at y=783.5, and the status starts at y=844.5, in both themes. conj keeps the claim at 52.7px and Play at one y. The dot stays under the finger inside the square, a press 26px out changes nothing, and at real part 1.98 the three marks are still drawn. The four teaching colours. The Book on this chapter at 44px. Back restoring scrollY 900 and 1400. The 44px flag and the memory list at y=72.5. `#chapter-3-3-2` and `#chapter-3-3-3` with the title at y=121. Mark stage complete, the green edge, and 3.2's title and why 98px under that button. The reload line "3.1 · Differentiable and Analytic Functions · 1 of 3", with "Next is 3.2" on the status. The drawer, chapters 1 through 7, the cover, and Escape. Walk Chapter 4 hidden until 3 of 3, and the lede that counts seven chapters. The seven roadmap cards, and chapter 3's 44px section rows. Exercise 1(a) as the prompt, the steps, and the source line. Exercise 3's formulas, each one piece inside the button, at 390 and at 1280. Shown inputs at 44px. The source line 49px under the last camp. The type, the paper, and the cards, shared with chapter 4. No sideways scroll.
+
+## Chapter 3 batch 6
+
+Branch `cursor/chapter-3`. Headless Chrome, 390×844 and 1280×800, light and dark. No console errors. No sideways scroll (`scrollWidth` 390 and 1265).
+
+A drag at Im = 1 stops at Re 2.29, before the frame. The green step, purple image, and orange turn stay visible, and the claim still quotes the turn (24°) and the stretch (5). At 2.28 the point is unchanged. The picture line is one sentence in the claim's ink: "Drag the green dot." "Drag the green corner." "Drag the green point."
+
+On a phone the square stays 324px. Play ends at y=730, because the gesture is one line. The why, both sentences, still starts at y=894. At 0 of 3 the status row is gone. After 3.1 is marked, the kicker stays 3.1 and the status says "Next is 3.2." on that stage. The pin list is gone. A cold `#chapter-3-3-1` stays at scroll 0, with the camp name at y=202. The flag still puts the memory list at y=72. `#chapter-3-3-2` puts the title at y=121.
+
+From 56.25rem the sentence sits beside the square. The opening square is 304px at x=321. §3.2 stays 416px. The 44px margin under the why is gone, so on the laptop the why ends at y=636.
+
+On the phone book the status is 53px, the height of the two lines. Chapter 3's Open card starts at y=766. Chapters 1 and 2 say Already drawn and do not say Later. Both doors are 44px station links. Chapters 4 and 5 use the same "The Book" control, 109×44. `#chapter-6` and `#chapter-7` sit at y=56 under the header, and those rows are current. `#book` marks The Book. Walk Chapter 4 stays hidden until 3 of 3.
+
+Theorem 3.5's flash back now includes \(f'(z_0)=e^{-i\theta_0}(U_r+iV_r)\), Equations (3.23) and (3.24), page 91. §3.3 Exercise 2 is a Laplace blank (`next-step-blank`) and a separate choice (`next-step-mc`).
+
+Deferred: Open Chapter 2 waits until that chapter's page meets this branch. The §3.3 summit still restates the why. The shared practice renderer is not on this branch. Chapters 8–11 stay in the data and off the list.
+
+## unslop (chapter-3 batch 6)
+
+Preview https://ch3-preview.complexanalysis.pages.dev/#chapter-3, tip `6d229c3` (PR #46). The served `js/book/chapter3.js`, `js/book/ch3-pictures.js`, `js/book/ch3-math.js`, `js/stations/book.js`, `js/data/book-path.js`, `js/app.js`, and `css/components.css` match that commit. Kit wins where it meets this lens: the four teaching colours, the one gesture, the one clock, the book's small-caps labels, and the current type and paper stay. No product code changed. Phone 390×844 first, light then dark, then 1280×800, light then dark. A rightward drag on the light phone. The book at 0 of 3, then chapters 4 and 5. No console errors. No sideways scroll (`scrollWidth` is 390 and 1280).
+
+The picture is the moment. The chrome stays the paper it already is. Light page rgb(246, 243, 236), text rgb(26, 34, 48). Dark page rgb(13, 18, 28), text rgb(233, 237, 245). Same boxes in both themes.
+
+## Verdict
+
+ANOTHER BATCH
+
+The one-line gesture, the row beside the square, the missing pin list, the missing status at 0 of 3, and the Later word on chapters 1 and 2 all landed. The row then stretched the sentence down the square, the one-line gesture left a blank under Play, and the §3.3 summit still says the why. One batch for the six cuts below. Then this lens rests.
+
+## What the hand does
+
+At rest the point is 1+i. On the phone the square is 324×324, x=33, y=259 to 583, in both themes. The gesture is one line, y=591, the claim's ink: "Drag the green dot." The claim is two lines, y=626 to 679: "The turn stays 45° and the stretch stays 2√2, for every direction." z², conj, and Play are 44px at y=686. Play ends at 730. A rightward drag at imaginary part 1 stops at real part 2.29. The green step, the purple image, and the orange turn stay visible. The claim reads "At 2.29 + i, the turn is 24° and the stretch is 5."
+
+At 1280 the same square is 304×304 at x=321, y=240. "Drag the green dot." starts at x=649, y=240, beside it. The claim is one line in a 53px box at y=330. Play is at y=445. The why, both sentences, runs y=584 to 637, inside 800. §3.2 and §3.3 are 416×416 squares at x=321, with the gesture at the square's top and the chips lower in the same column.
+
+## What reads as the page
+
+The kicker is one line, "3.1 · Differentiable and Analytic Functions · 0 of 3". At 0 of 3 the status row is absent. After 3.1 is marked, the kicker stays 3.1 and the status says "Next is 3.2." on that stage. "IN THE BOOK" is gone. The definitions still end on their pages, and the worked card still carries its source line. §3.2's line is "Drag the green corner." §3.3's line is "Drag the green point." Each is one line, the claim's colour, in both themes. A cold `#chapter-3-3-1` stays at scroll 0, with the kicker at y=202.
+
+On the book, chapters 1 and 2 have no flag. The line is "Already drawn." The doors are 44px: "One Point, Two Addresses" is 242×44, "A Function Is a Motion" is 212×44. Chapters 4 and 5 use "The Book" at 109×44, in both themes. Walk Chapter 4 is hidden. The status box is 53px.
+
+## What is still loose
+
+**The wide sentence is stretched down the square.** The gesture, the claim, and the chips sit in separate rows, and the square's height opens those rows. On the phone the same three sit 8px apart. At 1280, both themes, §3.1 leaves 64px between the gesture and the claim and 62px between the claim and Play. §3.2 leaves 101px and 100px. §3.3 leaves 100px and 100px. The claim on that width is one line inside a 53px box. The why then sits 16px under the square, tighter than the picture's own lines.
+
+**The phone ends on a blank.** Play ends at y=730. The why block's padding-top is 124.8px, so "WHY YOU'D CARE" is at y=871 and the why at y=894. The 844 window closes on 114px of empty card. The screenshot is the same in the dark. The pad is the height the three-line gesture used to occupy.
+
+**The §3.3 summit says the why again.** The why is "You rebuild the missing part by integrating the Cauchy-Riemann equations. Where both gradients are nonzero, the level curves of a conjugate pair cross at a right angle." The memory list ends on that right angle. The summit, 132px and five lines, is both sentences in the other order. The picture's claim is already "The two curves cross at a right angle." §3.2's summit is six lines, 158px, and its second clause repeats that stage's why: the equations are the test that the horizontal and vertical derivatives are the same number.
+
+**Later still names the wrong chapters.** Chapters 1 and 2 dropped the word. The footer on the chapter and on the book still says "Chapters 3, 4, and 5 are open. The other chapters are later." Chapter 4's flag is Later, and at 0 of 3 its first row is "4.1 Sequences and Series p. 102 Next". The book status, 53px under Open Chapter 3, reads "Chapter 3: 0 of 3 stages. Next is 3.1 Differentiable and Analytic Functions."
+
+## Cut
+
+1. **The sentence beside the square is one stack, at the phone's gap.** Evidence, 1280, light and dark, same boxes. §3.1: gesture y=240, claim y=330 (64px), Play y=445 (62px), square 304px ending at 544. §3.2: 101px then 100px beside a 416px square. §3.3: 100px then 100px. On the phone those gaps are 8px. Change: column 2 is one stack, gap 8px, top-aligned with the square. The square's height does not open the stack. On this width the claim is as tall as its line. The phone keeps the two-line claim box, so Play stays at one y.
+
+2. **The blank under Play goes.** Evidence, 390×844, both themes. Play ends at y=730. The why block's padding-top is 124.8px. The label is at y=871, past the fold, and the first screen is 114px of empty card. Change: that padding goes. The why follows Play at the label's 16px margin. The label and the first three lines sit on this screen. The fourth line starts under the fold. A 4px nudge is enough if a line would be cut through the middle.
+
+3. **The summit is one sentence the why has not already said.** Evidence: the §3.3 why, the last memory line, the claim, and the summit are the same right angle, and the summit adds the integral the why already used. The summit is five lines. §3.2's summit spends its second clause on the why. Change: §3.3's summit is one sentence, the circles, the pair the picture draws when Circles is pressed. §3.2's summit keeps the square and the marked corner, and drops the Cauchy-Riemann clause. §3.1's summit stays, one sentence.
+
+4. **The footer stops sorting chapters the flags already sort.** Evidence, on `#chapter-3` and on `#book`, both widths: "Chapters 3, 4, and 5 are open. The other chapters are later." Chapters 1 and 2 say Already drawn. Chapter 4's flag says Later. Change: "The book path for MAT 412. It runs in your browser and works offline." The lede keeps chapters 1–7. The flags keep Open and Later.
+
+5. **Chapter 4 does not say Later while 4.1 says Next.** Evidence, the book at 0 of 3, phone, light and dark. The flag is Later. The row under it is "4.1 Sequences and Series p. 102 Next". Chapters 6 and 7 say Later and have no section rows. Change: chapter 4's flag is empty until 3 of 3, then Next. 4.1 says Next only when that flag says Next. Chapters 6 and 7 keep Later. Chapters 1 and 2 stay Already drawn, with no flag.
+
+6. **The book status is the count.** Evidence, 390, both themes, the card under Open Chapter 3: "Chapter 3: 0 of 3 stages. Next is 3.1 Differentiable and Analytic Functions.", 324×53. The button, the chapter kicker, and the heading already carry that name. The chapter page, after a mark, already says "Next is 3.2." Change: "Chapter 3: 0 of 3." After a stage is marked, "Chapter 3: 1 of 3. Next is 3.2."
+
+## Keep
+
+The phone square at 324px, the one-line gesture in the claim's ink, and Play ending at y=730, in both themes. "Drag the green corner." and "Drag the green point.", one line each. The claim box on the phone, two lines, so Play stays at one y. The drag that stops at real part 2.29 with the three marks still drawn, and the claim that names 24° and a stretch of 5. At 1280 the square beside the sentence: 304px at x=321 for the opening, 416px for §3.2 and §3.3, and the why ending at y=637 inside 800. The status row absent at 0 of 3. After a mark, "Next is 3.2." on that stage, and the kicker still naming 3.1 with the count. The pin list gone, the pages left on the sentences and the source tags. Chapters 1 and 2 with no Later flag, "Already drawn", and 44px doors. "The Book" at 109×44 on chapters 3, 4, and 5. The book status at 53px tall. Walk Chapter 4 hidden. A cold `#chapter-3-3-1` at scroll 0. The four teaching colours. The small caps. The serif title, the paper, and the cards. No sideways scroll.
+
+## Add
+
+Nothing. No slider, no scrubber, no second clock, no third chip, no new hue.
+
+## ux-veteran (chapter-3 batch 6)
+
+Preview https://ch3-preview.complexanalysis.pages.dev/#chapter-3, tip `6d229c3`. The served `js/book/chapter3.js`, `js/book/ch3-pictures.js`, `js/stations/book.js`, `css/components.css`, `js/app.js`, `js/data/book-path.js`, and `js/book/ch3-cards.js` match that commit. Used like a student, touch first: 390×844 light then dark, then 1280×800 light then dark. No product code changed. The page raised no console error on the walk. No sideways scroll (`scrollWidth` equals the window, 390 and 1280). The chapter is 16347px on the phone and 12677px on the laptop.
+
+### Verdict
+
+ANOTHER BATCH
+
+The phone's first screen is the climb. The square fills the column, the gesture is one line in the claim's ink, and Play ends at y=730. The status row is gone at 0 of 3. Back returns the scroll. The cold hashes land where this batch said they would, and the drag stops at Re 2.29 with the three marks still drawn. The book status is the height of its two lines, and that fix stops short of the open chapter: the title "3 Analytic and Harmonic Functions" is cut by the fold. On the wide page the sentence beside the square is stretched down the picture, and the next definition is cut. One batch for the six cuts below. The square, Play, the drawer, and the cold landings stay.
+
+### The first screen
+
+**390×844, light and dark.** Same boxes. The header is 56px. The Book is 108.7×44 at y=80. The title is two lines, y=132 to 194, Iowan Old Style 25.85px weight 600. The stage line is one line, y=202 to 218, 12.48px, and it fits: "3.1 · Differentiable and Analytic Functions · 0 of 3". The square is 324×324, x=33, y=259 to 583. The gesture is one line, y=591 to 618, in the claim's ink, rgb(26, 34, 48) in the light and rgb(233, 237, 245) in the dark: "Drag the green dot." The claim is 52.7px, y=626 to 678: "The turn stays 45° and the stretch stays 2√2, for every direction." z² is 44×44, conj is 59×44, and Play is 69.8×44, all at y=686 to 730. Nothing on this screen is sliced. WHY YOU'D CARE is at y=871, and the why, both sentences, runs y=894 to 1000. The status row is not in the document at 0 of 3.
+
+In the dark the page is rgb(13, 18, 28) and the sentence is rgb(233, 237, 245). The stage line is rgb(166, 176, 195). The axes stay blue, the short arrow green, the turn orange, the image purple. Same positions. A theme change does not move Play or the square.
+
+Play says Pause, and a second press says Play, with the angle held. A press that starts 26px from the dot leaves 1+i and the 45° sentence. A rightward drag stays on the finger, miss 0, imaginary part 1, through real part 2.27. At real part 2.29 the green step is 6.1px, the purple image is 6.6px, and the orange turn is drawn. The claim is "At 2.29 + i, the turn is 24° and the stretch is 5." The finger can go on to the frame (the square ends at x=357, the dot stops at x=350) and the three marks stay. Past the frame the dot does not follow.
+
+**1280×800, light and dark.** Same boxes. The menu button is hidden and the sidebar is the list. The square is 304px, x=321, y=240 to 544. "Drag the green dot." is at y=240, x=649, beside the square. The claim is at y=330, 63px below that line. Play is at y=445, 63px below the claim, and it ends at y=489, inside 800. The why, both sentences, ends at y=636. The 3.1 flag, the heading "Differentiable and Analytic Functions", Page 79, and the analytic sentence then sit on this same screen. "Entire means analytic at every point of the complex plane. Definition 3.2, page 81." runs y=795 to 847, so the 800 edge takes the top of that sentence. Chapters 3 and 4 in the sidebar wrap to 46.8px. The others stay 44.
+
+§3.2 at 1280 puts the title at y=121. The square is 416px, y=297 to 713. "Drag the green corner." is at y=297. The claim is at y=424. Turn and Stretch are at y=577, 44px, inside 800. The same three rows on the opening picture are spread by the height of the square.
+
+### The drawer, Back, and the climb
+
+At 390 the menu is 8 rows, each 44×358. Chapter 3 is the current row on the chapter. The drawer covers the page, body overflow is hidden, and `#view` and the footer are inert. Escape closes it and returns the page. The rows are The Book and chapters 1 through 7. The wordmark is 237×30, and the full name fits. The theme button and the menu button are 44×44.
+
+`history.scrollRestoration` is manual. From scrollY 1400, The Book opens `#book` at 0. Browser Back returns `#chapter-3` at 1400. From the book, "One Point, Two Addresses" opens `#addresses`. That page's list is the Test 1 places, 25 rows, and the up control is The Map, 128×44. Back returns `#book`.
+
+The 3.1 flag is 44×44. A tap leaves the title "Chapter 3" and puts the memory list at y=72. `#chapter-3-3-3` puts Harmonic Functions at y=121. `#chapter-3-3-2` puts The Cauchy-Riemann Equations at y=121, the why finishes on that screen, and Turn and Stretch end at y=820, inside 844. A cold `#chapter-3-3-1` stays at scroll 0. The stage line is at y=202. `#chapter-3` is that same screen. `#chapter-1` puts the card at y=56 and the row is current. `#chapter-6` puts the card at y=56 and the row is current. `#chapter-7` puts the card at y=56 and the row is current. `#book` marks The Book.
+
+Mark stage complete renames the button to Stage complete, sets aria-pressed, paints a 4px green left edge rgb(38, 112, 42), and writes `mv:progress.test2` as `{"3.1":true}`. The summit sentence is on that screen. The status card under the button is 60px: "Next is 3.2." The 3.2 title is on the screen. The 3.2 why runs y=735 to 867, so the 844 edge cuts it after "are the same". A reload opens at scroll 0 on the derivative square, the 45° sentence, the line "3.1 · Differentiable and Analytic Functions · 1 of 3", and the status "Next is 3.2."
+
+The last Mark stage complete button and the chapter source line are 49px apart. The path's bottom padding is 0. The §3.3 summit says the same thing as the why: the levels cross at a right angle, and the conjugate is recovered by integrating the Cauchy-Riemann equations.
+
+### The book
+
+**390×844, light and dark.** The lede is "Chapters 1–7, in the order Howell and Mathews print them." Open Chapter 3 is 324×44 at y=265, filled rgb(47, 62, 92) in the light. Walk Chapter 4 is hidden. The status is 52.7px, y=317 to 370, the two lines: "Chapter 3: 0 of 3 stages. Next is 3.1 Differentiable and Analytic Functions." Chapter 1 is 162px, y=411 to 572, with no Later flag. "One Point, Two Addresses" is 242×44. Chapter 2 is 162px. "A Function Is a Motion" is 212×44. Chapter 3's card starts at y=766. OPEN ends at y=802. The title "3 Analytic and Harmonic Functions" runs y=806 to 860, so the 844 edge cuts the second line. The 3.1 row, 322×44, starts at y=898.
+
+Chapter 4's flag is Later. Its 4.1 row is a span, 26px, and the mark on that row says Next. Chapter 5's flag is Open. The footer says "Chapters 3, 4, and 5 are open. The other chapters are later."
+
+With 3 of 3 stored, Open Chapter 3 hides, the status is one line, 26px, "Next is §4.1, Exercise 3. 0 of 8 exercises.", and Walk Chapter 4 is 324×44. Chapter 4's flag is Next. Chapter 5's flag is still Open.
+
+At 1280 the status is 26px beside the 166×44 button. The same Later, Next, and Open flags are on the cards. Chapter 4's section names are spans. Chapter 3's three rows are 44px links.
+
+Chapter 4 and chapter 5, at 390, put The Book at 108.7×44. Each also ends on "Back to the book", 134×23. Chapter 4's path padding is 788px. The last section ends at y=4888 and that link is at y=5709. Chapter 5's first screen cuts the status: it runs y=825 to 878, and the window closes on "0 of 2".
+
+### Style
+
+Same system as chapter 4, measured at 390. Light: the paper is rgb(246, 243, 236), the text is rgb(26, 34, 48), a card is white with a 1px rgb(216, 210, 196) border and radius 10px. Dark: the paper is rgb(13, 18, 28), the text is rgb(233, 237, 245), a card is rgb(21, 28, 43). The title is Iowan Old Style. Play is the 44px button, radius 6px. The four teaching colours are the arrows. Shown inputs on the practice cards are 44px. Exercise 3's formulas stay inside the button. The header wordmark is the existing header. Citation links in the prose are the short lines they already were.
+
+### Ranked
+
+1. **The phone book finishes the open chapter's name, and the 3.1 door, inside the screen.** Evidence: at 390, light and dark, the status is 52.7px and Open Chapter 3 is 324×44 at y=265. Chapter 3's card starts at y=766. OPEN ends at y=802. "3 Analytic and Harmonic Functions" runs y=806 to 860, and the 844 edge cuts it. The 3.1 row is 322×44 at y=898. Chapters 1 and 2 are 162px each, with a page line and an "Already drawn" line above a 44px door. Change: on the phone, those two cards drop the page line, and "Already drawn" sits on the door's row. The open title ends inside 844, and the 3.1 row ends inside 844. The order stays 1–7. The status stays the two lines. Open Chapter 3 stays.
+
+2. **On the wide page the gesture, the claim, and the chips stack at the top of the square.** Evidence, light and dark, same boxes. At 1280 the opening line "Drag the green dot." is y=240 and the claim is y=330. Play is y=445. On §3.2 the square is 416px, y=297 to 713. "Drag the green corner." is y=297, the claim is y=424, and Turn and Stretch are y=577. Change: the text column aligns to the top of the square. The line, the claim, and the chips keep the gap they use on the phone. The open paper stays below the chips. The square's size stays.
+
+3. **The wide first screen ends on a whole sentence.** Evidence: at 1280, light and dark, the why ends at y=636. The analytic sentence ends at y=795. "Entire means analytic at every point of the complex plane. Definition 3.2, page 81." runs y=795 to 847. Change: that sentence starts at or below 800. The analytic sentence stays, and it already ends inside the window.
+
+4. **Chapter 5's status finishes on the phone, and chapters 4 and 5 use the one Book control.** Evidence: at 390, Chapter 5's status runs y=825 to 878, and the window closes on "0 of 2". The Book on that page is 108.7×44. "Back to the book" is 134×23, on chapter 4 and on chapter 5. Chapter 4's path padding is 788px, and the link sits at y=5709, 821px under the last section. Change: the chapter 5 square gives up the height that lets the status end inside 844. The footer link goes. Chapter 4's path padding goes to 0, the way chapter 3's path already has. The 44px Book stays.
+
+5. **The roadmap has one next camp.** Evidence, at 0 of 3: Open Chapter 3 is the button, chapter 4's flag is Later, the 4.1 row says Next, and chapter 5's flag is Open. The footer says "Chapters 3, 4, and 5 are open. The other chapters are later." With 3 of 3 stored, chapter 4's flag is Next and chapter 5's flag is still Open. Change: while chapter 3 is unfinished, chapter 4's section marks stay empty and chapter 5's flag says Later. The footer says chapter 3 is open, chapters 1 and 2 are already drawn, and the rest are later. Chapter 5 says Open when chapter 4 is done.
+
+6. **The next camp's why finishes under the stage button.** Evidence: after Mark stage complete, on the phone, the summit is on the screen, the button says Stage complete, and the status is a 60px card reading "Next is 3.2." The 3.2 why runs y=735 to 867, and the 844 edge cuts it after "are the same". Change: that status is the height of the sentence. The why's last line, "number. Theorem 3.3, page 86.", ends inside 844.
+
+### Keep
+
+The 324px phone square, the one-line gesture in the claim's ink, the 45° sentence, and Play ending at y=730, in both themes. The why, both sentences, starts whole at y=894. z² is 44×44. A press 26px out leaves 1+i. The drag stops at Re 2.29 with the green step, the purple image, and the orange turn still drawn, and the claim still names the turn and the stretch. The four teaching colours. The status row absent at 0 of 3. The reload line "3.1 · Differentiable and Analytic Functions · 1 of 3", with "Next is 3.2." on the status, over the derivative square. The Book on chapters 3, 4, and 5 at 108.7×44. Back restoring scrollY 1400. Back from the already-drawn door returning to `#book`. The 44px flag and the memory list at y=72. A cold `#chapter-3-3-1` at scroll 0, with the camp name at y=202. `#chapter-3-3-2` and `#chapter-3-3-3` with the title at y=121. The drawer, chapters 1 through 7, each row 44px, the cover, and Escape. `#chapter-6` and `#chapter-7` at y=56, those rows current. The phone book status at 52.7px, Walk Chapter 4 hidden until 3 of 3, and the two doors at 44px with no Later flag. The lede that counts seven chapters. The source line 49px under the last camp. The type, the paper, and the cards. No sideways scroll.
+
+## reviewer (ch3 batch 6)
+
+Reviewed `6d229c3` on `cursor/chapter-3` (PR #46) against Howell & Mathews, *Complex Analysis*, 202 Updated Edition (professor PDF, 471 pages, title page "202 Updated Edition"). Two fixes are on the branch. Not merged. gh-pages was not touched.
+
+### Verdict
+
+ACCEPT WITH FIXES
+
+Checked against printed pages 79–101 and the selected answers on 435–436. HTML anchors open the same statements; the HTML numbers them 3.1.n / 3.2.n / 3.3.n.
+
+### Fixed
+
+Theorem 3.5, page 91, gives two formulas. Equation (3.23) is \(f'(z_0)=e^{-i\theta_0}(U_r+iV_r)\). Equation (3.24) is \(f'(z_0)=e^{-i\theta_0}(V_\theta-iU_\theta)/r_0\). The flash named both numbers as one formula, and the note said they give one form. The back now states the neighborhood, the four continuous partials, the polar system that verifies (3.22), and each derivative with its own number. The singular-point note keeps the definition on page 81 and puts the \(1/z\) and square-root examples on page 83, where the book prints them.
+
+A horizontal drag at Im = 1 used to stop at Re 2.29. The claim there is true of \(z^2\): the turn is 24° and the stretch is 5. The green shaft was 9px in the 480px square and the handle is a 14px disc, so the shaft sat inside the dot. Purple was a sliver. Orange had no pixels. The drag now stops at Re 2.1, the last place the step, the image, and the turn clear the handle. The claim there is the derivative: turn 25°, stretch 4.65. Asking for 2.29 returns that same place. At 1.6 + i the point is unchanged.
+
+### Checked and left as is
+
+Pins match those pages: Equation (3.1) and Example 3.1 on 79; Example 3.2 and Remark 3.1 on 80; Definitions 3.1 and 3.2, singular points, and (3.4)–(3.12) on 81; Theorem 3.1 on 82; Theorem 3.2, proof deferred to Corollary 7.11, and Exercises 1–3 on 83; Exercises 7 and 11 on 84; Theorem 3.3 and (3.14)–(3.16) on 86; Example 3.4 on 87; Example 3.6 on 88; Theorem 3.4 on 89; Theorem 3.5 and (3.22)–(3.24) on 91; Theorem 3.6 and (3.25) on 92; Theorem 3.7 and Exercises 1, 3, and 7 on 93; Exercise 10 on 94; Laplace (3.26), Theorem 3.8, and the conjugate definition on 95; Example 3.11 on 96; Theorem 3.9 and (3.27) on 97; Exercises 2 and 5 on 100.
+
+The cards compute the book's answers. Exercise 1(a) is \(5(z^2-iz+9)^4(2z-i)\). The key on page 435 prints \(15z^2-8z+7\) and files \(h'\) under 1(c). The card does not. Exercise 1(b) is \(3/(z+2)^2\), singular at \(-2\). Exercise 3: \([f]^3\), \(fg\), \(f(z-1)\), and \(f(g(z))\) must be entire. Exercise 7(a) is \(-4i\). \(|z|^2\): horizontal \(2x_0\), vertical \(-2iy_0\), agree only at 0 with \(f'(0)=0\). Example 3.6: \(u_x=v_y=1\) and \(u_y=-v_x=0\) at the origin, paths 1 and \(-1\). Exercise 1(a) of §3.2 is \(f'=i\). Exercise 1(b) is \(i/z\) off 0, \(f'=-i/z^2\). Exercise 3 is \(a=1\), \(b=2\). Exercise 7(b) is nowhere differentiable. Exercise 10(a) keeps the order: \(\cos\theta\) and \(\sin\theta\), then \(-r\sin\theta\) and \(r\cos\theta\). The swapped pairs fail. Exercise 10(b) is \(rU_r=V_\theta\) and \(rV_r=-U_\theta\). Theorem 3.6 accepts the system in either order. Exercise 2 of §3.3 is a Laplace blank, \(6x+6y\), and a separate choice, "does not exist". Exercise 5(a) is \(x^3-3xy^2+c\).
+
+On the preview and on the local page, 390×844 then 1280×800, light and dark: Play ends at y=730 on the phone. The why starts at y=894. At 1280 the square is 304px at x=321 and the sentence sits beside it; the why ends at y=636. Cold `#chapter-3-3-1` stays at scroll 0, camp line at y=202. The flag puts the memory list at y=72. The phone book status is 53px. Chapters 1 and 2 say Already drawn, and each door link is 44px. Chapters 4 and 5 use "The Book" at 44px. `#chapter-6` sits at y=56. No console errors. No sideways scroll. No live file imports `kit/`. `js/core/map-route.js` is byte-identical to `kit/template/js/core/map-route.js`.
+
+`node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed after the fixes.
+
+### Leftovers
+
+1. The §3.3 summit still restates the why.
+2. The shared practice renderer is not on this branch. A `next-step-blank` that grew a `choices` list would still be graded as a choice. Exercise 2 no longer does that.
+3. Open Chapter 2 is not on the book page. Chapter 2 is not a page on this branch.
+4. The selected-answers key on page 435 still prints \(15z^2-8z+7\) for §3.1 Exercise 1(a). The card keeps the chain-rule derivative.
+
+## Chapter 3 batch 7
+
+Branch `cursor/chapter-3`. Headless Chrome, 390×844 and 1280×800, light and dark. No console errors. No sideways scroll (`scrollWidth` equals `clientWidth`, 390 and 1265).
+
+From 56.25rem the gesture, the claim, and the chips are one stack, 8px apart, top-aligned with the square. The square stays 304px (opening) and 416px (§3.2 and §3.3). The claim on that width is one line. Open paper sits under the chips. The phone claim box stays two lines, and Play still ends at y=730.
+
+On the phone the why label is 16px under Play. The why's third line ends at y=840. The fourth line starts at y=844. The book status is "Chapter 3: 0 of 3." After a mark it is "Chapter 3: 1 of 3. Next is 3.2." Chapters 1 and 2 drop the page line, and "Already drawn" shares the 44px door. "3 Analytic and Harmonic Functions" ends at y=728. The 3.1 row ends at y=842.
+
+The §3.3 summit names the Circles pair, one level of \(x^2-y^2\) and the circle \(x^2+y^2\). The §3.2 summit keeps the square and the marked corner. The §3.1 summit is unchanged.
+
+While Chapter 3 is unfinished, Chapter 4's flag is empty and 4.1 does not say Next. At 3 of 3 the flag is Next and 4.1 says Next. Chapter 5 says Later until Chapter 4 is done, then Open. Chapters 6 and 7 stay Later. The footer names one camp, says chapters 1 and 2 are already drawn, and calls the rest later.
+
+The wide analytic sentence ends at y=795. "Entire means…" starts at y=815. Chapter 4's path padding is 0. The "Back to the book" footer is gone on chapters 4 and 5. The Book control stays 109×44. Chapter 5's status ends at y=833. After Mark, the status is the sentence "Next is 3.2." and the §3.2 why, through "Theorem 3.3, page 86.", sits inside 844.
+
+Deferred: the shared practice renderer is not on this branch. Open Chapter 2 waits until that page meets this branch. The selected-answers key on page 435 still prints \(15z^2-8z+7\) for §3.1 Exercise 1(a); the card stays the chain rule. Chapters 8–11 stay off the list. When Chapter 4 is finished, the top control still says "Back to the book." That is the next button, not the footer link.
+
+## taste-skill (chapter-3 batch 7)
+
+Preview https://ch3-preview.complexanalysis.pages.dev/#chapter-3, tip `e411299` (PR #46). The served `js/data/book-path.js`, `js/book/chapter3.js`, `js/stations/book.js`, `js/book/path-note.js`, `js/book/ch3-pictures.js`, and `css/components.css` match that commit. Kit wins where it meets this lens: the four teaching colours, the one gesture, the one clock, the book's small-caps labels, and the current type and paper stay. No product code changed. Headless Chrome, 390×844 then 1280×800, light then dark. No console errors. No sideways scroll (`scrollWidth` is 390 and 1280).
+
+Seen in one second, on the phone: the square, the 45° sentence, Play, and a why that stops at "means". On the wide page: the square, and a tight stack in the upper right of a card whose lower half is empty. The live thing is still the drag, and Play.
+
+## Verdict
+
+ANOTHER BATCH
+
+The wide stack is 8px and top-aligned, the book count is the count, the roadmap has one next camp, the why sits 16px under Play, and chapters 4 and 5 use the 44px Book with the footer link gone. What a stranger still sees is a sentence cut on the first phone screen, "A square." alone beside the wide Turn picture, a summit that names a chip, and a door title crowded by a new line of tiny caps. One batch for the six cuts below. Then this lens rests.
+
+## Ranked
+
+1. **The phone's first screen ends on a whole sentence.** Evidence, 390×844, light and dark. The square is 324×324, y=259 to 583. Play ends at y=730. WHY YOU'D CARE is 16px under it, y=746 to 766. The why is two sentences. The third line ends at y=840 on "means". The fourth line, "there is no derivative.", starts at y=844 and ends at y=867. The same cut is the last line of the dark phone. Change: the first sentence ends on this screen, at "the same way." The second sentence starts at or below 844, whole. The square stays 324. Play stays at y=730.
+
+2. **The wide Turn claim is one line.** Evidence, 1280, light. The §3.2 square is 416×416 at x=321. The stack is 8px apart and top-aligned. The claim box is 52.7px: "Right angle, equal sides, and the marked corner still leads." then "A square." alone, 75px wide. Stretch, in that same column, is one line, 26.3px: "A right angle, and the sides are not equal. Not a square." The opening claim and the §3.3 claim are one line. Dark uses the same opening boxes. Change: the Turn claim is one line, the height of the Stretch claim. "A square: right angle, equal sides, marked corner still leading." The stack stays 8px, top-aligned with the square.
+
+3. **The §3.3 summit says the fact the why does not.** Evidence, the phone summit, three lines, 80px: "Circles draws the other pair through the point: one level of \(x^2-y^2\) and the circle \(x^2+y^2\)." Pressing Circles at the opening point sets the claim to "The two curves do not cross at a right angle." The why, and the last memory line, already say a conjugate pair crosses at a right angle. Change: one sentence, and the chip is not the subject. "One level of \(x^2-y^2\) and the circle \(x^2+y^2\) cross at a right angle on the diagonal, and not at \(1+0.45i\)."
+
+4. **The phone door uses the wide door's note, and the title fits.** Evidence, 390, both themes. "ALREADY DRAWN" is 11.52px, uppercase, letter-spacing 0.46px. The title's last letter, s, ends at x=363. The card's content edge is x=358. The title's scroll width is 208 and its client width is 193. At 1280 the same note is sentence case, "Already drawn", and the title fits on the row. Change: the phone note is that sentence-case line, with no tracking. "One Point, Two Addresses" ends inside the card. The row stays 44px, so the chapter title still ends at y=728 and the 3.1 row still ends at y=842.
+
+5. **On the wide page the why sits in the open column.** Evidence, 1280, light and dark, same boxes. The opening square is 304×304, x=321, y=240 to 544. The stack ends at y=353, so 191px of the card beside the square is empty. §3.2 leaves 277px beside the 416px square. §3.3 leaves 303px. The why then starts under the square, at y=560. Change: from 56.25rem, the why label and the why sit in that column, 16px under the chips. The heading stays under the square. The phone stays a column, with the why 16px under Play. The 8px stack stays.
+
+6. **Chapter 5's phone status is one line, and the wide lede starts under the fold.** Evidence, 390, light. The status runs y=781 to 833. The first line is the exercise. The second line is "0 of 2 exercises.", 77px. The Book is 109×44. There is no footer "Back to the book". At 1280, Play ends at y=774 and the lede starts at y=798, so the tops of that line sit on the 800 edge. The status on that width is one line, at y=907. Change: "Next is §5.1, Exercise 1. 0 of 2." Page 135 stays on the exercise. The phone line ends inside 844. On the wide page the lede starts at or below 800.
+
+## What to keep
+
+The phone square at 324px, the one-line gesture in the claim's ink, the two-line claim box, and Play ending at y=730, in both themes. A drag at imaginary part 1 stops at real part 2.1. The green step, the purple image, and the orange turn stay drawn, and the claim says the turn is 25° and the stretch is 4.65. Play says Pause, and a second press says Play. The four teaching colours. At 1280 the opening stack is 8px apart, top-aligned, the square is 304px at x=321, and that claim is one line. §3.3's claim is one line in the same column. The why, both sentences, ends at y=636, inside 800. The analytic sentence ends at y=792. "Entire means…" starts at y=815. The status row is absent at 0 of 3. After a mark the kicker stays "3.1 · Differentiable and Analytic Functions · 1 of 3", the status is the 26px sentence "Next is 3.2.", and the §3.2 why, through "Theorem 3.3, page 86.", ends at y=548, inside 844. §3.1's summit stays the one sentence about the turn and the stretch. §3.2's summit stays the square and the marked corner. The book status is "Chapter 3: 0 of 3." After 3.1 it is "Chapter 3: 1 of 3. Next is 3.2." At 3 of 3, Open Chapter 3 hides, the status names §4.1 Exercise 3, and Walk Chapter 4 is the button. Chapter 4's flag is empty, and 4.1 does not say Next, until 3 of 3, when both say Next. Chapter 5 says Later until Chapter 4 is done, then Open. Chapters 6 and 7 stay Later. The footer names one camp, says chapters 1 and 2 are already drawn, and calls the rest later. "The Book" is 109×44 on chapters 3, 4, and 5. Chapter 4's path padding is 0. The footer "Back to the book" is gone. When Chapter 4 is finished, the path's own button is "Back to the book", 177×44. Chapter 4's phone status is one line, and Exercise 3 is on that first screen. The chapter 3 title on the phone book ends at y=728, and the 3.1 row ends at y=842. The wide door already says "Already drawn" in sentence case, and that title fits. The serif title, the paper, the cards, and the book's small caps. No sideways scroll.

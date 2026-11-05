@@ -16,6 +16,7 @@ import { filmsFor } from './data/films.js';
 import { BOOK } from './data/book.js';
 import { parseBookRoute } from './book/route.js';
 import { BOOK_CHAPTERS } from './data/book-path.js';
+import { bookFooterText } from './book/path-note.js';
 import { cssVar, getTheme, setTheme, onThemeChange, prefersReducedMotion, initTheme } from './core/theme.js';
 import { createStore } from './core/store.js';
 import { watchIds } from './core/ids.js';
@@ -213,7 +214,7 @@ export function start() {
     const note = document.getElementById('site-footer-note');
     if (!note) return;
     if (bookRoute) {
-      note.textContent = 'The book path for MAT 412. Chapters 4 and 5 are open. The other chapters are later. It runs in your browser and works offline.';
+      note.textContent = bookFooterText(store);
       return;
     }
     note.textContent = mapId === 'test2'
@@ -230,6 +231,7 @@ export function start() {
       ])));
     const list = el('ul', { class: 'nav-list', id: 'nav-chapters', 'aria-label': 'Chapters' });
     for (const ch of BOOK_CHAPTERS) {
+      if (ch.n > 7) continue;
       list.append(el('li', {}, el('a', {
         class: 'nav-link', id: `nav-chapter-${ch.n}`, href: `#chapter-${ch.n}`, 'data-chapter': String(ch.n),
       }, [
@@ -305,7 +307,9 @@ export function start() {
     for (const a of nav.querySelectorAll('a.nav-link')) {
       let on = false;
       if (bookRoute) {
-        on = bookRoute.kind === 'chapter'
+        // #book marks The Book. A chapter hash, including a later chapter
+        // that only scrolls the roadmap, marks that chapter's row.
+        on = bookRoute.chapter
           ? a.dataset.chapter === String(bookRoute.chapter)
           : a.id === 'nav-book';
       } else {
@@ -392,10 +396,22 @@ export function start() {
 
   // ------------------------------------------------------------ mounting
 
+  let liveHash = location.hash || '#';
+  const scrollMemory = new Map();
+  let popped = false;
+
+  function rememberScroll() {
+    scrollMemory.set(liveHash || '#', window.scrollY);
+  }
+
   function navigate(token) {
     const hash = `#${String(token).replace(/^#/, '')}`;
-    if (location.hash === hash) render();
-    else location.hash = hash;
+    if (location.hash === hash) {
+      render();
+      return;
+    }
+    rememberScroll();
+    location.hash = hash;
   }
 
   function makeCtx(route, st, mapId) {
@@ -499,11 +515,20 @@ export function start() {
     view.dataset.route = route.raw || 'home';
     view.dataset.station = st ? st.id : '';
     view.dataset.map = mapId;
-    window.scrollTo(0, 0);
+    const nextHash = location.hash || '#';
+    const restoreY = popped && scrollMemory.has(nextHash) ? scrollMemory.get(nextHash) : null;
+    popped = false;
+    liveHash = nextHash;
+    if (restoreY == null) window.scrollTo(0, 0);
+    const finishScroll = () => {
+      if (seq !== state.seq || restoreY == null) return;
+      window.scrollTo(0, restoreY);
+    };
     markCurrent(st ? st.id : null, route.book);
 
     if (route.book) {
       await renderBook(seq, route, first);
+      finishScroll();
       return;
     }
 
@@ -512,6 +537,7 @@ export function start() {
       document.title = documentTitle('No such place');
       view.append(buildNoSuchPlace(route.raw));
       finish(first, 'No such place');
+      finishScroll();
       return;
     }
 
@@ -571,6 +597,7 @@ export function start() {
       view.dataset.state = 'error';
       finish(first, `${st.title}: under construction`);
     }
+    finishScroll();
   }
 
   // ------------------------------------------------------------ wiring
@@ -625,6 +652,14 @@ export function start() {
     });
   }
 
+  listen(document, 'click', (e) => {
+    const a = e.target instanceof Element ? e.target.closest('a[href^="#"]') : null;
+    if (a) rememberScroll();
+  }, true);
+  listen(window, 'popstate', () => {
+    scrollMemory.set(liveHash || '#', window.scrollY);
+    popped = true;
+  });
   listen(window, 'hashchange', render);
 
   const mv = (window.__mv = window.__mv || { planes: new Map() });

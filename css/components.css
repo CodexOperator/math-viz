@@ -1039,6 +1039,14 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   margin: 0;
 }
 
+#book-open-3 { min-height: var(--tap); }
+
+@media (max-width: 40rem) {
+  #book-next { flex-direction: column; align-items: stretch; }
+  /* 16rem is the row's width. In the phone column it was a 256px blank. */
+  #book-next > .book-status { flex: 0 0 auto; }
+}
+
 .book-path,
 .chapter-path,
 .book-sections {
@@ -1055,8 +1063,13 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   gap: var(--space-3);
 }
 
-/* The last section can still scroll its title up under the header. */
-.chapter-path { padding-bottom: calc(100dvh - var(--header-h)); }
+/* Chapter 3 and Chapter 4 end on the last section. The roadmap keeps the
+   padding so chapters 6 and 7 can sit under the header. */
+.chapter-path { padding-bottom: 0; }
+
+/* Chapters 6 and 7 have no page of their own. The same padding lets those
+   roadmap cards sit under the header. */
+#book-path { padding-bottom: calc(100dvh - var(--header-h)); }
 
 .exp-picture {
   display: flex;
@@ -1220,6 +1233,225 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 }
 
 .section-idea { max-width: 62ch; margin: 0; }
+
+.ch3-picture .exp-stage {
+  width: min(100%, calc(100dvh - 24rem));
+}
+
+/* Phone: the opening square uses the column, the same width §3.2 already uses.
+   The height cap is the 1280 size that keeps the why inside an 800px window.
+   The square shares the claim's left edge. On a phone that edge is the column. */
+#chapter-section-3-1-picture .exp-stage {
+  width: min(100%, calc(100dvh - 31rem));
+}
+
+/* Phone: the label stays 16px under Play. The paragraph sits high enough that
+   its third line clears 844 and the fourth line starts on the next thumb. */
+@media (max-width: 40rem) {
+  #chapter-section-3-1-why { margin-top: -6px; }
+}
+
+/* The gesture, the claim, and the chips are one stack. On a phone the gaps
+   stay 8px and the claim keeps two lines, so Play does not hop. */
+.ch3-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+/* Wide: that stack sits at the top of the square. The square's height is its
+   own, and the paper under the chips stays empty. */
+@media (min-width: 56.25rem) {
+  .ch3-picture {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--space-4);
+    align-items: start;
+  }
+
+  .ch3-picture > .exp-stage {
+    grid-column: 1;
+    grid-row: 1;
+    width: calc(100dvh - 24rem);
+    max-width: none;
+    justify-self: start;
+  }
+
+  #chapter-section-3-1-picture .exp-stage {
+    width: calc(100dvh - 31rem);
+    max-width: none;
+  }
+
+  .ch3-picture > .ch3-stack {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: start;
+  }
+
+  /* The analytic sentence stays inside 800. The next sentence starts below it. */
+  #chapter-section-3-1-term-2 { margin-top: 1.25rem; }
+}
+
+.ch3-path { padding-bottom: 0; }
+.ch4-path { padding-bottom: 0; }
+
+/* After a mark, the status is the sentence. The card padding was a second line. */
+.ch3-status {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#chapter-back { margin-bottom: var(--space-2); }
+
+#chapter-stage-line {
+  margin: var(--space-1) 0 0;
+  font-family: var(--font);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.3;
+  color: var(--text-muted);
+}
+
+.ch3-deriv-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+#chapter-deriv-sq { min-width: var(--tap); }
+
+.ch3-picture .exp-claim {
+  min-height: calc(1.0625rem * 1.55 * 2);
+}
+
+@media (min-width: 56.25rem) {
+  .ch3-picture .exp-claim { min-height: 0; }
+}
+
+.ch3-observe {
+  margin: 0;
+  max-width: 62ch;
+  color: var(--text);
+}
+
+.book-door .station-link {
+  max-width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.book-door-note { color: var(--text-muted); }
+
+/* Phone: the page line on an already-drawn door is gone, and the words share
+   the door's row, so chapter 3's title and the 3.1 row finish inside the screen. */
+@media (max-width: 40rem) {
+  #book-page-1,
+  #book-page-2 { display: none; }
+
+  #book-door-1 .station-link,
+  #book-door-2 .station-link {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    width: 100%;
+    min-height: var(--tap);
+    gap: 0.5rem;
+    padding-inline: var(--space-2);
+  }
+
+  #book-door-1 .book-door-note,
+  #book-door-2 .book-door-note {
+    flex: 0 0 auto;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  #book-door-1 .book-door-title,
+  #book-door-2 .book-door-title {
+    min-width: 0;
+    white-space: nowrap;
+  }
+}
+
+/* Phone: the exponential square gives up a little height so the status ends
+   on this screen. The Book control stays 44px. */
+@media (max-width: 40rem) {
+  #chapter-exp .exp-stage {
+    width: min(100%, calc(100% - 2.75rem));
+  }
+}
+
+a.book-flag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--tap);
+  min-height: var(--tap);
+  padding: 0 var(--space-2);
+  text-decoration: none;
+}
+
+#book-sections-3 li { align-items: center; min-height: var(--tap); }
+#book-sections-3 a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  min-width: var(--tap);
+  text-decoration: none;
+}
+
+/* html already pads the scrollport by the header. A second margin would park the list a header too low. */
+.ch3-memory { scroll-margin-top: 0; }
+
+#chapter-deriv-stage:focus:not(:focus-visible),
+#chapter-square-stage:focus:not(:focus-visible),
+#chapter-level-stage:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.ch3-choices {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.ch3-choices .btn {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  min-height: var(--tap);
+  white-space: normal;
+  text-align: left;
+  row-gap: 0.15rem;
+}
+
+.ch3-choices .btn > span {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.ch3-choices .btn[data-right="false"] { border-color: var(--danger); }
+.ch3-choices .btn[data-right="true"] { border-color: var(--ok); }
+
+.ch3-card p { margin: 0; }
+.ch3-card input[type="text"] { width: min(100%, 24rem); }
 .chapter-exercises { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
 .chapter-card { min-width: 0; }
 .chapter-card p { min-width: 0; }
