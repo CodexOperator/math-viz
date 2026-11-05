@@ -264,6 +264,7 @@ const CITE_HREF = {
   'Equation (1.50)': sectionHref(TOP, 'OpenDisk'),
   'Example 1.25': sectionHref(TOP, 'TopologyEx'),
   'Figure 1.30': sectionHref(TOP, 'fig_ch-01-30'),
+  'Bounded set': sectionHref(TOP, 'sec_topology-27'),
   '§1.6, Exercise 6': sectionHref(TOP, 'x1_6_6'),
   '§1.6, Exercise 9': sectionHref(TOP, 'x1_6_9'),
   '§1.6, Exercise 1(a)': sectionHref(TOP, 'x1_6_1'),

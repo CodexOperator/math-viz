@@ -184,8 +184,9 @@ check('eleven chapters, 1, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_C
     const worked = CHAPTER_1.sections.find((s) => s.id === '1.3').worked.body;
     check('a negative argument keeps the book’s e to the minus i theta',
       neg.steps[1].answer.startsWith('-') && matchesCh1(book, neg.steps[2]) && matchesCh1(neg.steps[2].answer, neg.steps[2]));
-    check('the half-closed annulus is Figure 1.30, and Example 1.6 is another pair',
-      ann.cite.ref === 'Figure 1.30' && ann.cite.page === 39 && !/Exercise 9/.test(ann.prompt) && /Page 40/.test(ann.steps[0].why)
+    check('the half-closed annulus cites the bounded set, and Example 1.6 is another pair',
+      ann.cite.ref === 'Bounded set' && ann.cite.page === 40 && !/Exercise 9/.test(ann.prompt) && /Page 40/.test(ann.steps[0].why)
+      && /Figure 1\.30/.test(ann.steps[0].why) && /open annulus/.test(ann.steps[0].why)
       && /1\+2i/.test(worked) && /3\+2i/.test(worked) && !/\\sqrt\{3\}\+2i/.test(worked) && !/same length/.test(worked));
   }
   {

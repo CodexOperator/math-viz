@@ -1798,3 +1798,43 @@ Every stage folds like 1.2: the cards that open it, the summit, the action row, 
 The book lede says seven chapters. Chapters 8–11 are off the page. “Complex Numbers” and “Elementary Functions” are 44px. The 1+i card cites Example 1.7, page 22. The modulus flash names Identities (1.25) and (1.26). The addition flash names Definitions 1.1 and 1.2. The closed-disk flash cites Equations (1.51) and (1.52), page 37. Example 1.25 stays on the boundary.
 
 The shared practice engine is not on this branch, so Chapter 1 still renders the schema with the local card. Progress is still localStorage. The plane was left at the size that keeps Times i on the 800px screen, so the stage title begins at that edge.
+
+## reviewer (chapter-1 batch 5)
+
+Preview https://ch1-preview.complexanalysis.pages.dev, tip `b1a7c70` on `cursor/chapter-1` (PR #44), checked against Howell & Mathews, Complex Analysis, 202 Updated Edition (PDF, 471 pages; page labels i–ii are the contents, printed pages 1–42). Two corrections are pushed on `cursor/chapter-1`. Did not merge. Did not touch `gh-pages`.
+
+### Verdict
+
+ACCEPT WITH FIXES. The stage arithmetic, the named pages, and the generator values match the print edition. One source tag pointed at a different set, and one blank rejected the formula the book prints.
+
+### What the book says
+
+Equation (1.6), page 3, is \((2+\sqrt{-1})+(2-\sqrt{-1})=4\). The same page says that \(x=4\) solves \(x^3-15x-4=0\) and can be checked by hand. Formula (1.3) is page 2. Property (P1) is named on page 12, and its proof is page 13: definition, real commute, definition again, ending at \(z_2+z_1\). Page 13 also has \((0,1)(0,1)=(-1,0)=-1\) and \(i=(0,1)\). Definitions 1.1 and 1.2 are page 10, equations (1.8) and (1.9). Definition 1.3 is page 10. Definition 1.4 is page 11. Definitions 1.5–1.7 and identities (1.12)–(1.19) are page 14. Exercise 1(a), page 15, is \(i^{275}\). Exercise 1(f) is \((7-2i)(3i+5)\). Exercise 6 asks to prove or disprove the real-part sum and the real-part product.
+
+Definition 1.8, page 17, is \(|z|=\sqrt{x^2+y^2}\), and the same page computes \(|4+3i|=5\). Figure 1.10, page 18, draws that point. The distance formula and identity (1.22) are page 18. Theorem 1.2, equation (1.23), is page 18, and the proof on page 19 bounds \(\operatorname{Re}(z_1\overline{z_2})\) by identity (1.21), then takes square roots. Identity (1.24) is \(|z_1+z_2|\ge |z_1|-|z_2|\), page 19. Identity (1.25) is \(|z_1 z_2|=|z_1||z_2|\). Identity (1.26) is the quotient, \(z_2\neq 0\). Example 1.6, page 20, is \(1+2i\) and \(3+2i\). Exercise 1(a) is \(\sqrt{10}\), Exercise 1(c) is \(2^{25}\), Exercise 2(a) is \(2+3i\) and \(4+i\), and Exercise 3(b) is \(\sqrt{2}+i(\sqrt{2}+1)\) on \(|z-i|=2\).
+
+Example 1.7, page 22, is the first polar form of \(1+i\): length \(\sqrt{2}\), angle \(\pi/4\), written \(r(\cos\theta+i\sin\theta)\). Definition 1.11, page 23, equation (1.30), is the one value in \((-\pi,\pi]\). Example 1.9 on that page is \(\operatorname{Arg}(1+i)=\pi/4\). Euler’s formula is equation (1.32), page 25, and the exponential form is (1.35) on that page. Figure 1.16 writes \(e^{i 7\pi/4}=e^{-i\pi/4}\). Theorem 1.3, page 26, is the set equality \(\arg(z_1 z_2)=\arg z_1+\arg z_2\). Exercise 7, page 28, is \(z_1=-1+i\sqrt{3}\) and \(z_2=-\sqrt{3}+i\).
+
+Equation (1.40), page 30, is De Moivre for cosine and sine. Theorem 1.4 on that page says precisely \(n\) solutions, not necessarily distinct. Equation (1.43), page 31, is \(e^{i 2\pi k/n}\). Equation (1.45), page 32, is the general root. Theorem 1.5 and Example 1.21, page 33, solve \(z^2+(1+i)z+5i=0\). The square roots of \(-18i\) are \(3-3i\) and \(-3+3i\), and the roots are \(1-2i\) and \(-2+i\). Exercise 2, page 34, is \((\sqrt{3}+i)^4=-8+8\sqrt{3}\,i\).
+
+Equation (1.48), page 35, is \(z(t)=z_0+(z_1-z_0)t\) for \(0\le t\le 1\). Exercise 1(a), page 41, is the segment from \(0\) to \(1+i\). Equations (1.50), (1.51), and (1.52) are page 37: the open disk, the closed disk \(|z-z_0|\le\varepsilon\), and the punctured disk \(0<|z-z_0|<\varepsilon\). The boundary point, every neighborhood meeting the set and its complement, is the same page. Example 1.25, page 38, is \(D_1(0)\) with \(\varepsilon=1-|z_0|\), exterior \(|z|>1\), boundary \(|z|=1\). Figure 1.30, page 39, is the open annulus \(1<|z|<2\), and the page calls that annulus a connected open set. Page 40 defines a region and a bounded set. Exercise 6, page 41, is the open disk as a domain and the closed disk not.
+
+The contents, pages i–ii, print chapters 1–7 on the pages the book path uses, from page 1 through page 239. Chapters 8–11 begin at page 244.
+
+`generate(seed, params)` recomputed cleanly across 400 seeds of add, subtract, multiply, divide, modulus, Arg, and polar form. Arg stays in \((-\pi,\pi]\). A \(2\pi\) shift is rejected, and \(-\pi\) is not \(\operatorname{Arg}(-1)\).
+
+### Fixes
+
+The half-closed annulus \(\{z:1<|z|\le 2\}\) was cited as Figure 1.30, page 39. That figure is the open annulus, which is a domain. The card’s answer, bounded, is the page 40 definition, and the why now says the figure is the other set. The source tag is “Bounded set, page 40,” opening `sec_topology.html#sec_topology-27`.
+
+The segment blank asked for the trip from \(0\) to \(1+i\) and accepted only \(z_0+t(z_1-z_0)\). Equation (1.48) prints \(z_0+(z_1-z_0)t\), and Exercise 1(a) is \(t(1+i)\). Both are accepted now, with \(t+it\). The reversed segment is still a miss.
+
+`node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. `js/core/map-route.js` is byte-identical to the kit copy. No live file imports `kit/`. Headless Chrome on the preview, 390×844 and 1280×800, light and dark: no console errors, no failed requests, no sideways scroll. Times i ends at y = 724 on the phone and y = 794 on the laptop. The stage title starts at y = 724 on the phone and y = 794 on the laptop. Two presses say \(i^2\) landed on \(-1\), and the tick stays shut until the sum is 4 and the cubic is 0. That opening writes Bombelli’s 4 and Equation (1.6), page 3. Two further presses say “Back at 1.” and leave the tick enabled. After the mark, the only control is Go to 1.2. The book lede is the seven chapters, every chapter heading is at least 44px, and chapters 8–11 are absent.
+
+### Still open
+
+1. The length card for \((\sqrt{3}+i)^{10}\) says ten times \(\pi/6\) is \(5\pi/3\). That product is an argument. \(\operatorname{Arg}\) of the power is \(-\pi/3\), the value in \((-\pi,\pi]\). The blank only asks for \(1024\).
+2. The 1.4 idea and the picture claim call \(\pi/4\) Arg and cite Example 1.7. The example writes the angle. Example 1.9, page 23, is the sentence \(\operatorname{Arg}(1+i)=\pi/4\). The card’s angle step already cites Definition 1.11.
+3. The 1.4 summit calls polar form the length times \(e^{i\theta}\). Definition 1.9 is \(r(\cos\theta+i\sin\theta)\). Equation (1.35), page 25, is the exponential form.
+4. The shared practice engine is not on this branch. Chapter 1 still renders the schema with the local card. Progress is still localStorage.
+5. On a 1280×800 window the stage title begins at y = 794. Times i is on that screen. The plane was left at that size on purpose.

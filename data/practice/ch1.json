@@ -1816,8 +1816,8 @@
     "chapter": 1,
     "section": "1.6",
     "cite": {
-      "ref": "Figure 1.30",
-      "page": 39
+      "ref": "Bounded set",
+      "page": 40
     },
     "kind": "next-step-mc",
     "prompt": "Classify $\\{z: 1<|z|\\le 2\\}$.",
@@ -1832,7 +1832,7 @@
           "domain",
           "bounded"
         ],
-        "why": "The set sits inside $|z|\\le 2$, so it is bounded. The outer circle is in the set, so it is not open and not a domain. The inner circle is out, so it is not closed. Page 40.",
+        "why": "Page 40: a set inside some closed disk is bounded. The outer circle is in this set, so it is not open and not a domain. The inner circle is out, so it is not closed. Figure 1.30, page 39, is the open annulus $1<|z|<2$.",
         "slips": [
           {
             "match": [
@@ -1877,7 +1877,13 @@
           "z0+t(z1-z0)",
           "z_0+t(z_1-z_0)",
           "z_0 + t(z_1 - z_0)",
-          "z_0+t(z_1-z_0)"
+          "z0+(z1-z0)t",
+          "z_0+(z_1-z_0)t",
+          "t(1+i)",
+          "(1+i)t",
+          "t+it",
+          "t+ti",
+          "0+t(1+i)"
         ],
         "why": "Equation (1.48), page 35: start at $z_0$ and add the fraction $t$ of $z_1-z_0$.",
         "slips": [
