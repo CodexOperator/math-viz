@@ -1593,3 +1593,41 @@ The Book, at the top of the chapter, is 69×17. Back to the book, at the bottom,
 ### What to keep
 
 The drag, once it hits, is the lesson. Left of the blue line, the purple point drops below the orange line. Off the line, it leaves the parabola. Inside the circle, outside the circle, and on the centre the page tells me to move. On x = 1 the purple point sits on the orange circle. At 0 it vanishes, and the sentence says 1/z is not a point of the plane. I saw that in the light and in the dark. The claim is on the first screen at both sizes: it ends at y = 693 on the phone and y = 718 on the laptop. The lede's four colours are the colours on the squares. Open Chapter 2 is a real 44px button, and after a mark the book does say "Chapter 2: 1 of 5 stages marked." A wrong parabola choice names the line x = 1 and leaves the other choices open. Another goes from x = 4 to x = 5. hello gets "A number written like 3+2i." The i on the branch card says "i is the limit from above the cut." Show the back stays closed until I ask, and "One z, one w." is the line I would remember. The four root buttons are one row, each 44px tall, and they fit. The theme button and the menu are 44px. Nothing scrolls sideways. The console stays quiet.
+
+## reviewer (Ch2 batch 3)
+
+Reviewed `52997b5` on `cursor/chapter-2` against Howell & Mathews, *Complex Analysis*, 202 Updated Edition (the attached PDF; printed page n is PDF page n+9). Preview https://ch2-preview.complexanalysis.pages.dev was that tip. Not merged. No deploy.
+
+### Verdict
+
+ACCEPT WITH FIXES
+
+The five pictures and the static answers match the book. Two memory lines cited the wrong page, and the roots card marked two of its four choices right. Those are fixed on this branch. The tip after the fixes is in the commit that adds this section.
+
+### What matches the book
+
+Checked every claim in `js/stations/chapter2.js`, `js/stations/ch2-picture.js`, and `data/practice/ch2.json`, and recomputed the generators for seeds 1–80.
+
+- §2.1, page 43: a function sends each z in D to one w. Image, into, inverse image, and one-to-one are page 46. Translation is page 48. Rotation and magnification are named on page 49. The linear map w = Az + B is page 50.
+- Example 2.9, pages 50–51. w = iz + i. Re z ≥ 1 maps onto Im w ≥ 2, because v = x + 1. The picture’s true sentence is that half-plane, boundary included. Left of the line, v is strictly below 2.
+- Exercise 13, page 54. w = (2+i)z − 2i. The vertices −2+i, −2+2i, and 2+i go to −5−2i, −6, and 3+2i. The domain triangle is right-angled, and a linear map keeps the angle, so “right triangle” is a true accept.
+- Definition 2.1, page 55, with −π < Arg ≤ π as on page 56. Example 2.12, page 56: x = a ≠ 0 goes to u = a² − y², v = 2ay, and Equation (2.10) is u = a² − v²/(4a²). Exercise 1(b), page 59, is x = 2, so u = 4 − v²/16. Page 58: w = zⁿ multiplies arguments by n. Definition 2.2, page 59, is the principal nth root only.
+- Definition 2.3, page 61. Definition 2.4, Example 2.16, and the statement of Theorem 2.1 are page 62. The proof, including |u−u₀| ≤ |f(z)−w₀|, the minimum of δ₁ and δ₂, and the two halves adding to ε, is page 63. The conjugate keeps distance, so δ = ε. The book’s solution says “y axis”; conjugation reflects in the real axis, and the picture does that. Theorems 2.2 and 2.3 and Definitions 2.5 and 2.6 are page 64. Theorem 2.4 starts on page 64; the composition bullet, which needs f continuous in a neighborhood of g(z₀), is page 65. The card states that neighborhood. Exercise 1(a), page 66, is lim (z→2+i) (z² − 4z + 2 + 5i) = −3+5i. (2+i)² = 3+4i.
+- Example 2.21, pages 68–69. At a negative real number the limit from above is i√r₀ and from below is −i√r₀. Near −1, the lower choice −i is the book’s limit. A branch, page 68, is one continuous single-valued choice.
+- §2.5 opens on page 72. Figure 2.22, the sphere and the north pole, is page 73. Equation (2.32), page 74, sends 0 to ∞. Example 2.24, page 76: the line x = a ≠ 0 goes to the circle with centre 1/(2a) and radius |1/(2a)|. The picture’s x = 1 circle is |w − 1/2| = 1/2. The card’s x = 2 circle is |w − 1/4| = 1/4.
+- Equation (1.45), page 32, is the full set of nth roots: modulus to the 1/n, argument (Arg + 2πk)/n, k = 0,…,n−1. The roots card was citing Definition 2.2 for that formula.
+
+Generator arithmetic, recomputed rather than read off the string: each linear image is (a+bi)(x+yi)+(c+di); each vertical line satisfies Equation (2.10); each reciprocal sample sits on the circle of radius |1/(2a)|; each listed root powers back to the number. `0-6i` is still rejected for −6. `2i+3`, `-6.0`, and `(3+2i)` still count. `js/core/map-route.js` matches `kit/template/js/core/map-route.js`. Live code does not import `kit/`. `node tools/check_vectors.mjs` (234/234), `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. The roots card was graded in headless Chrome on this tree: the title is Equation (1.45), page 32; “i and −i” on the square roots of 1 says those are the square roots of −1 and stays a wrong choice; “1 and −1” locks. No console errors on that load.
+
+### Fixes pushed to cursor/chapter-2
+
+- The roots card listed the roots in both orders and accepted both, so two of the four buttons were right. One order is the answer. Each other button names the dropped roots (k = 0 only, the square roots of 1, or the square roots of −1). The cite is Equation (1.45), page 32, not Definition 2.2.
+- The §2.2 sheet cited page 59 for Equation (2.10). That equation is on page 56. The sheet now says u = a² − y², v = 2ay, and u = a² − v²/(4a²), page 56. The nth-root line cites Equation (1.45), page 32.
+- The §2.5 sheet cited page 72 for the circle and wrote radius 1/(2a) with no absolute value. Example 2.24, page 76, uses |1/(2a)|. The lines-and-circles flash why now says page 76, which is where that sentence is. The section still opens on page 72, and that pin stays on Further reading.
+
+### Leftovers not fixed
+
+1. **Below the cut, but not near it, the §2.4 sentence says to cross the ray.** At about −1.1 − 1.38i, Arg is about −2.24, which is not near −π, and the principal square root is still in the lower half-plane. The claim says “Off the cut, Arg does not jump. Cross the blue ray.” The jump is only beside the cut: the code asks for an argument within 0.55 of ±π, which is what Example 2.21 computes. That restriction should stay. Widening “near −π” to the whole lower half-plane would be false. The miss is the instruction. A point with negative real part and negative imaginary part is already on the lower side. At z = 0 the same fallback says Arg does not jump, and page 69 calls the origin the branch point.
+2. **At 0, the §2.5 sentence does not name ∞.** “At 0, 1/z is not a point of the plane” is true of the finite plane, and the purple dot is hidden. Equation (2.32) on page 74 sends that point to ∞, the north pole of Figure 2.22. The worked line does not say so.
+3. **A finished card appends a second memory line.** The sheet line carries the page. The earned `memory` string does not, so it is added again without the page. Neither line is false.
+4. **Another on the roots card repeats three numbers.** Seeds cycle the square roots of 1, the fourth roots of 1, and the square roots of −1. Each list satisfies Equation (1.45). The fourth press reprints the first. A modulus other than 1 is not in the pool.

@@ -823,7 +823,7 @@
       {
         "text": "",
         "answer": "1/z sends lines and circles to lines and circles. A line that misses 0 becomes a circle.",
-        "why": "Section 2.5, page 72."
+        "why": "Section 2.5, page 76."
       }
     ],
     "generator": null,
@@ -834,8 +834,8 @@
     "chapter": 2,
     "section": "2.2",
     "cite": {
-      "ref": "Definition 2.2",
-      "page": 59
+      "ref": "Equation (1.45)",
+      "page": 32
     },
     "kind": "mc",
     "prompt": "Another set of roots. The values are computed.",

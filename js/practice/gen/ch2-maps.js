@@ -226,6 +226,7 @@ function recipLine(rng, seed) {
 }
 
 function rootItem(seed) {
+  // Equation (1.45), page 32. Every case here has modulus 1, so each root is e^{i(Arg+2πk)/n}.
   const cases = [
     { n: 2, label: '-1', arg: Math.PI },
     { n: 2, label: '1', arg: 0 },
@@ -241,22 +242,32 @@ function rootItem(seed) {
     roots.push(fmtComplex(q(re), q(im)));
   }
   const answer = roots.join(' and ');
-  const dropped = roots[0];
-  const choices = [answer, dropped, roots.slice().reverse().join(' and '), '1 and -1'].filter((v, i, all) => all.indexOf(v) === i);
-  while (choices.length < 4) choices.push(`only ${dropped}`);
+  const principal = roots[0];
   const miss = {};
-  miss[dropped] = 'That keeps k = 0 and drops the root from Arg + 2π.';
-  if (choices.includes(`only ${dropped}`)) miss[`only ${dropped}`] = 'That keeps k = 0 and drops the root from Arg + 2π.';
+  const choices = [answer];
+  const add = (choice, why) => {
+    if (!choice || choice === answer || choices.includes(choice)) return;
+    choices.push(choice);
+    miss[choice] = why;
+  };
+  add(principal, 'That keeps k = 0 and drops the roots from Arg + 2πk.');
+  add('1 and -1', row.n === 4
+    ? 'That is only k = 0 and k = 2. Equation (1.45) also needs k = 1 and k = 3.'
+    : 'Those are the square roots of 1.');
+  add('i and -i', row.n === 4
+    ? 'That is only k = 1 and k = 3. The fourth roots also include 1 and -1.'
+    : 'Those are the square roots of -1.');
+  add(`only ${principal}`, 'That keeps k = 0 and drops the roots from Arg + 2πk.');
   return {
     kind: 'mc',
     prompt: `The ${row.n === 2 ? 'square' : `${row.n}th`} roots of \\(${row.label}\\) are`,
     answer,
-    accept: [answer, roots.slice().reverse().join(' and ')],
+    accept: [answer],
     choices: choices.slice(0, 4),
     miss,
-    why: `Divide \\(\\operatorname{Arg} + 2\\pi k\\) by ${row.n}, for \\(k = 0\\) through \\(${row.n - 1}\\).`,
+    why: `Equation (1.45), page 32: modulus 1, argument \\((\\operatorname{Arg} + 2\\pi k)/${row.n}\\) for \\(k = 0\\) through \\(${row.n - 1}\\).`,
     memory: 'The other roots come from Arg + 2πk.',
-    values: { n: row.n },
+    values: { n: row.n, arg: row.arg },
   };
 }
 
@@ -329,6 +340,13 @@ export function selfCheck() {
     if (a === 1 || a === 2) throw new Error(`line seed ${seed} repeats a worked line`);
     const expect = `u = ${a * a} - v^2/${4 * a * a}`;
     if (line.answer !== expect) throw new Error(`line seed ${seed}`);
+    {
+      const y = 1;
+      const u = a * a - y * y;
+      const v = 2 * a * y;
+      const onCurve = a * a - (v * v) / (4 * a * a);
+      if (Math.abs(u - onCurve) > 1e-9) throw new Error(`line identity ${seed}`);
+    }
     if (!line.prompt.endsWith('z^2\\).') && !line.prompt.endsWith('z^2).')) throw new Error(`line prompt ${line.prompt}`);
     if (!line.choices.includes(line.answer) || new Set(line.choices).size !== 4) throw new Error(`line choices ${seed}`);
 
@@ -346,12 +364,46 @@ export function selfCheck() {
     const A = circ.values.a;
     if (A === 1 || A === 2) throw new Error(`recip seed ${seed} repeats a shown line`);
     if (circ.answer !== `|w - 1/${2 * A}| = 1/${2 * A}`) throw new Error(`recip ${seed}`);
+    {
+      const y = 1;
+      const den = A * A + y * y;
+      const u = A / den;
+      const v = -y / den;
+      const centre = 1 / (2 * A);
+      const radius = Math.abs(centre);
+      const dist = Math.hypot(u - centre, v);
+      if (Math.abs(dist - radius) > 1e-9) throw new Error(`recip identity ${seed}`);
+    }
     if (new Set(circ.choices).size !== 4) throw new Error(`recip choices ${seed}`);
 
     const root = generate(seed, { kind: 'root' });
-    if (!root.choices.includes(root.answer)) throw new Error(`root choices ${seed}`);
-    const dropped = Object.keys(root.miss || {});
-    if (!dropped.length || !/2π|2\\pi|Arg/.test(root.miss[dropped[0]])) throw new Error(`root miss ${seed}`);
+    if (!root.choices.includes(root.answer) || new Set(root.choices).size !== 4) throw new Error(`root choices ${seed}`);
+    const keyed = root.choices.filter((choice) => answerMatches(choice, root));
+    if (keyed.length !== 1 || keyed[0] !== root.answer) throw new Error(`root double key ${seed}: ${keyed.join(' | ')}`);
+    const reversed = root.answer.split(' and ').reverse().join(' and ');
+    if (reversed !== root.answer && answerMatches(reversed, root)) throw new Error(`root reverse ${seed}`);
+    const parts = root.answer.split(' and ');
+    if (parts.length !== root.values.n) throw new Error(`root count ${seed}`);
+    const wantRe = Math.cos(root.values.arg);
+    const wantIm = Math.sin(root.values.arg);
+    for (const part of parts) {
+      const z = parseComplex(part);
+      if (!z) throw new Error(`root part ${seed} ${part}`);
+      let re = 1;
+      let im = 0;
+      for (let k = 0; k < root.values.n; k += 1) {
+        const nextRe = re * z.re - im * z.im;
+        im = re * z.im + im * z.re;
+        re = nextRe;
+      }
+      if (Math.abs(re - wantRe) > 1e-6 || Math.abs(im - wantIm) > 1e-6) throw new Error(`root power ${seed} ${part}`);
+    }
+    for (const choice of root.choices) {
+      if (choice === root.answer) continue;
+      const line = root.miss && root.miss[choice];
+      if (!line || /3\+2i/.test(line)) throw new Error(`root miss ${seed} ${choice}`);
+    }
+    if (!/Arg \+ 2πk/.test(Object.values(root.miss).join(' '))) throw new Error(`root miss text ${seed}`);
   }
   if (answerMatches('0-6i', { answer: '-6', accept: ['-6+0i'] })) throw new Error('0-6i must stay -6i');
   if (!answerMatches('-6.0', { answer: '-6', accept: [] })) throw new Error('.0');

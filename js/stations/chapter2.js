@@ -43,8 +43,8 @@ const COPY = {
     picture: mountPower,
     next: '2.3',
     sheet: [
-      { text: 'On $x = a$, $y = v/(2a)$ and $u = a^2 - y^2$. Page 59.' },
-      { text: 'The $n$ roots: modulus to the $1/n$, argument $(\\operatorname{Arg} + 2\\pi k)/n$. Page 59.' },
+      { text: 'On $x = a \\neq 0$, $u = a^2 - y^2$ and $v = 2ay$, so $u = a^2 - v^2/(4a^2)$. Equation (2.10), page 56.' },
+      { text: 'The $n$ roots of a nonzero number: modulus to the $1/n$, argument $(\\operatorname{Arg} + 2\\pi k)/n$ for $k = 0, \\ldots, n-1$. Equation (1.45), page 32.' },
     ],
     read: [
       { pin: 'Definition 2.1, principal square root, page 55', href: sectionHref(S22, 'sec_z_n-6') },
@@ -96,7 +96,7 @@ const COPY = {
     picture: mountReciprocal,
     next: null,
     sheet: [
-      { text: 'On $x = a$, $|w - 1/(2a)| = 1/(2a)$. Page 72. Example 2.24, page 76.' },
+      { text: 'On $x = a \\neq 0$, the centre is $1/(2a)$ and the radius is $|1/(2a)|$. Example 2.24, page 76.' },
     ],
     read: [
       { pin: 'Section 2.5, page 72', href: sectionHref(S25) },
