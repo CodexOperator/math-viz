@@ -1997,3 +1997,17 @@ The green point at `r = 6`. The square is the drag target. A drag that misses th
 The menu. Eight rows, each at least 44px, all on the first phone screen, Chapter 7 marked, the list stopping at Chapter 7. The camp stored from that menu. Laurent left at y = 96 and came back at y = 96, and it was still there a second later, with the why in view. The same return from Chapter 1 and from The Map, by Back. Already drawn links at 44px. Chapters 4 and 5 opening on the 87×44 Book row, with pins and picture chips at 44px. A fresh book still walking Chapter 4.
 
 The type and the paper. Iowan at 25.85px on the phone and 36px at 1280. Body 17px. Paper `rgb(246, 243, 236)`. White cards, 10px radius, and in the dark `rgb(21, 28, 43)`. No sideways scroll.
+
+## Chapter 7, batch 6
+
+Branch `cursor/chapter-7`, on top of `bc6d882` (Theorem 7.17, page 242). Draft only. `gh-pages` was not touched.
+
+The order-2 blank sits under the readout and above Play the pole. Until it is right, the two rings stay and the button does not start the pole. The claim and the readout are weight 600. The line above the picture is weight 400 and changes with the phase: the drag, then "Two turns.", then "The other way." The duplicate line under Play is gone on 7.2, 7.4, and 7.5. 7.3 keeps "Leave the annulus and come back." Reduced motion says Next step, and the last zero step says Play the pole. It does not say Pause.
+
+At 1280 the claim, the readout, and Play are centered on the 480 square. The stage line sits under the square: the square ends at y = 747 and the status starts at y = 763. The phone first screen is the same stack: the square starts at y = 362, Play is 70×44 and ends at y = 835, and "Press Play until the curve comes back." starts at y = 843. Dark paper is `rgb(13, 18, 28)`. With a camp title at y = 96, the colour line starts below the fold (Laurent at y = 894, Taylor at y = 860, 7.5 at y = 861). On the order-2 phone the claim is the two-turn sentence, the blank is "The zero has order ___." with the field at y = 738–782, and Play the pole ends at y = 834.
+
+The memory list is the muted ink. The 7.1 sheet no longer repeats the summit as its first bullet. L'Hôpital is the quotient \(f'(\alpha)/g'(\alpha)\). Exercise 6(a) and 6(b) are headed on page 243. Each step is one blank, and a right blank replaces the underscore. \(g'(1+i)=-8+8i\), and the limit is \((-1-i)/16\). Exercise 6(c), page 243, is 3. Exercise 6(d), page 243, is \(1/60\). Example 7.15 starts at \(\sec z=1/\cos z\), and the series is the one why under the last value. Exercises 3(a), 3(c), and 3(g) start at the function. Exercise 1 of §7.3, page 230, says the inner series is for \(0<|z|<1\). Chapters 4 and 5 end on Back to the book at 44px. A flash section marks only after every back has been shown. The long Already drawn row wraps to 63px; the shorter ones stay 44px.
+
+`node tools/check_vectors.mjs` is 234/234. `node tools/fractal-smoke.mjs` and `node kit/smoke.mjs` passed. No live `kit/` import. `map-route.js` matches the kit copy.
+
+Left open: the shared practice renderer stays the local card until the practice engine lands. Chapters 1–3 and 6 stay roadmap rows. This batch does not build their walks. Chapter 8 and later were not touched.

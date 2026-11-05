@@ -30,8 +30,6 @@ const WAIT = {
   '7.4': 'Walk once around the orange circle.',
   '7.5': 'Drag the point toward 0.',
 };
-const POLE_WAIT = 'Play on. The image winds the other way.';
-
 function slug(id) {
   return String(id).replace(/\./g, '-');
 }
@@ -175,6 +173,7 @@ export function mountChapter7(el, ctx, focus) {
     const scope = `chapter-section-${slug(stage.id)}`;
     const kids = [];
     const lead = stage.id !== '7.1';
+    let gesture = null;
     if (lead) {
       kids.push(
         h('p', { class: 'book-flag', id: `${scope}-flag` }, stage.id),
@@ -185,9 +184,9 @@ export function mountChapter7(el, ctx, focus) {
       appendRich(why, stage.why);
       kids.push(why);
       if (stage.observe) {
-        const observe = h('p', { class: 'ch7-observe', id: `${scope}-observe` });
-        appendRich(observe, stage.observe);
-        kids.push(observe);
+        gesture = h('p', { class: 'ch7-observe', id: `${scope}-observe` });
+        appendRich(gesture, stage.observe);
+        kids.push(gesture);
       }
     }
 
@@ -206,10 +205,23 @@ export function mountChapter7(el, ctx, focus) {
           poleEarned = true;
           refreshGates();
         },
+        mayPlayPole() {
+          return ticks['ch7-7.4-picture'] === true;
+        },
+        onPhase(name) {
+          if (!gesture || stage.id !== '7.4') return;
+          const line = name === 'pole'
+            ? 'The other way.'
+            : name === 'order2'
+              ? 'Two turns.'
+              : 'Drag the green point once around the orange circle.';
+          if (gesture.textContent !== line) gesture.textContent = line;
+        },
       }));
       if (stage.id === '7.1') {
         picture.id = 'chapter-hero';
         picture.classList.add('ch7-hero');
+        picture.prepend(status);
         hero = picture;
       } else kids.push(picture);
     }
@@ -252,7 +264,7 @@ export function mountChapter7(el, ctx, focus) {
     const host = h('div', { class: 'chapter-exercises', id: `${scope}-practice` });
     const ordered = [];
     let wait = null;
-    if (picture) {
+    if (picture && (stage.id === '7.1' || stage.id === '7.3')) {
       wait = h('p', { class: 'ch7-read ch7-wait', id: `${scope}-wait` }, WAIT[stage.id] || '');
       picture.append(wait);
     }
@@ -270,14 +282,13 @@ export function mountChapter7(el, ctx, focus) {
         card.hidden = blocked || needsClaim || needsPole;
         blocked = true;
       }
+      if (picture && stage.id === '7.4') {
+        const asking = ordered.some((card) => card.classList.contains('ch7-inline') && !card.hidden);
+        picture.classList.toggle('ch7-asking', asking);
+      }
       if (!wait) return;
-      if (!claimEarned) {
-        wait.hidden = false;
-        wait.textContent = WAIT[stage.id] || '';
-      } else if (stage.id === '7.4' && !poleEarned) {
-        wait.hidden = false;
-        wait.textContent = POLE_WAIT;
-      } else wait.hidden = true;
+      wait.hidden = claimEarned;
+      if (!claimEarned) wait.textContent = WAIT[stage.id] || '';
     };
     for (const item of sectionItems) {
       const card = mountPracticeItem(item, {
@@ -290,7 +301,12 @@ export function mountChapter7(el, ctx, focus) {
         },
       });
       const underPlay = picture && item.id.endsWith('-picture');
-      if (underPlay) picture.append(card);
+      if (underPlay && stage.id === '7.4') {
+        const slot = picture.querySelector('#chapter-winding-slot');
+        card.classList.add('ch7-inline');
+        if (slot) slot.append(card);
+        else picture.append(card);
+      } else if (underPlay) picture.append(card);
       else host.append(card);
       ordered.push(card);
     }
@@ -363,9 +379,9 @@ export function mountChapter7(el, ctx, focus) {
     h('header', { class: 'station-header ch7-head' },
       up,
       h('h1', { id: 'chapter-title' }, 'Chapter 7. Taylor and Laurent Series'),
-      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Drag the green point toward 1 until it leaves the orange band. Press Play and watch it come back.')),
-    status);
+      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Drag the green point toward 1 until it leaves the orange band. Press Play and watch it come back.')));
   if (hero) el.append(hero);
+  else el.append(status);
   el.append(
     path,
     sourceTag({ pin: CHAPTER_7.pin, href: CHAPTER_7.href }));

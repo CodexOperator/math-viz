@@ -44,8 +44,14 @@ function missLine(item) {
 function typesetLine(text) {
   const raw = showMath(String(text || ''));
   if (raw.includes('$')) return raw;
-  if (/\\|[_^{}]/.test(raw) || (raw.includes('/') && /\d/.test(raw))) return `$${raw}$`;
+  if (/\\|[_^{}]/.test(raw) || (raw.includes('/') && /\d/.test(raw)) || /[0-9]i\b/.test(raw)) return `$${raw}$`;
   return raw;
+}
+
+function filledSentence(step) {
+  const text = String(step.text || '');
+  if (!text.includes('___')) return '';
+  return showMath(text).replace('___', typesetLine(step.answer));
 }
 
 function missCopy(item, step) {
@@ -59,7 +65,7 @@ export function mountPracticeItem(item, opts) {
   const onDone = opts && opts.onDone;
   const id = slug(item.id);
   const card = h('article', { class: 'card problem-card chapter-card ch7-card', id: `ch7-card-${id}`, 'data-practice': item.id });
-  const prompt = h('div', { id: `ch7-prompt-${id}` });
+  const prompt = h('div', { class: 'ch7-prompt', id: `ch7-prompt-${id}` });
   rich(prompt, showMath(item.prompt));
   const stepsHost = h('div', { class: 'ch7-steps', id: `ch7-steps-${id}` });
   card.append(
@@ -83,15 +89,21 @@ export function mountPracticeItem(item, opts) {
   function stepView(step, i) {
     const wrap = h('div', { class: 'ch7-step', id: `ch7-step-${id}-${i + 1}` });
     const line = h('p', { class: 'ch7-step-text' });
-    rich(line, showMath(step.text));
+    const filled = state[i] ? filledSentence(step) : '';
+    rich(line, filled || showMath(step.text));
     wrap.append(line);
     const why = h('p', { class: 'hint-note', id: `ch7-why-${id}-${i + 1}`, hidden: '' });
     if (state[i]) {
-      const done = h('p', { class: 'ch7-answered' });
-      rich(done, typesetLine(step.answer));
-      rich(why, showMath(step.why));
-      why.hidden = false;
-      wrap.append(done, why);
+      if (!filled) {
+        const done = h('p', { class: 'ch7-answered' });
+        rich(done, typesetLine(step.answer));
+        wrap.append(done);
+      }
+      if (step.why) {
+        rich(why, showMath(step.why));
+        why.hidden = false;
+        wrap.append(why);
+      }
       return wrap;
     }
     if (item.kind.endsWith('-mc') || (step.choices && step.choices.length)) {
@@ -190,6 +202,7 @@ export function mountFlashDeck(items, prefix, opts) {
   if (!items.length) return h('div');
   let index = 0;
   let open = false;
+  const seen = new Set();
   const host = h('div', { class: 'ch7-flash', id: `${prefix}-flash` });
   const count = h('p', { class: 'ch7-read', id: `${prefix}-flash-count` });
   const front = h('p', { class: 'ch7-flash-face', id: `${prefix}-flash-front` });
@@ -208,8 +221,9 @@ export function mountFlashDeck(items, prefix, opts) {
   }
   show.addEventListener('click', () => {
     open = true;
+    seen.add(index);
     paint();
-    if (opts && opts.onSeen) opts.onSeen();
+    if (seen.size === items.length && opts && opts.onSeen) opts.onSeen();
   });
   next.addEventListener('click', () => {
     index = (index + 1) % items.length;

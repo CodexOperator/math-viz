@@ -291,33 +291,44 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
   const hopB = practice.find((item) => item.id === 'ch7-7.5-lhopital-b');
   const divide = practice.find((item) => item.id === 'ch7-7.5-divide');
   const ex3a = practice.find((item) => item.id === 'ch7-7.4-ex3a');
+  const hopC = practice.find((item) => item.id === 'ch7-7.5-lhopital-c');
+  const hopD = practice.find((item) => item.id === 'ch7-7.5-lhopital-d');
+  const ex1 = practice.find((item) => item.id === 'ch7-7.3-ex1-mc');
   check('theorem 7.14 is pinned and L\'Hôpital has a next step',
     readFileSync(new URL('../js/data/chapter-7.js', import.meta.url), 'utf8').includes('Theorem 7.14, page 240')
-    && hop && hop.cite.page === 240 && hop.kind === 'next-step-blank'
+    && hop && hop.cite.ref === 'Exercise 6(a)' && hop.cite.page === 243 && hop.kind === 'next-step-blank'
     && hop.steps.length === 2
-    && answerMatches('0 and -8+8i', hop.steps[0])
+    && answerMatches('-8+8i', hop.steps[0])
+    && answerMatches('8i-8', hop.steps[0])
     && answerMatches('(-1-i)/16', hop.steps[1])
     && answerMatches('-(1+i)/16', hop.steps[1])
     && answerMatches('(-1\u2212i)/16', hop.steps[1])
     && answerMatches('1/(\u22128+8i)', hop.steps[1])
     && hop.steps[1].miss === 'Divide the derivatives and simplify.'
-    && hopB && hopB.steps.length === 2
+    && hopB && hopB.cite.page === 243 && hopB.steps.length === 2
     && answerMatches('0/0', hopB.steps[0])
     && answerMatches('-1/4', hopB.steps[1])
+    && hopC && hopC.cite.page === 243 && answerMatches('2i', hopC.steps[0]) && answerMatches('3', hopC.steps[1])
+    && hopD && hopD.cite.page === 243 && answerMatches('5', hopD.steps[0]) && answerMatches('1/60', hopD.steps[1])
+    && answerMatches('2/120', hopD.steps[1])
     && /Pr_Series_Division/.test(readFileSync(new URL('../js/data/chapter-7.js', import.meta.url), 'utf8'))
     && /Bd__Analytic_Thm/.test(readFileSync(new URL('../js/data/chapter-7.js', import.meta.url), 'utf8'))
     && divide && divide.cite.ref === 'Example 7.15' && divide.cite.page === 240 && divide.steps.length === 3
-    && /Theorem 7\.14/.test(divide.prompt)
-    && /Laurent/.test(divide.prompt)
+    && /\\sec z/.test(divide.prompt)
+    && !/Theorem 7\.14/.test(divide.prompt)
+    && /Laurent/.test(divide.memory)
     && answerMatches('1', divide.steps[0])
     && answerMatches('1/2', divide.steps[1])
     && answerMatches('5', divide.steps[2])
+    && divide.steps[0].why === '' && divide.steps[1].why === '' && /5\/24/.test(divide.steps[2].why)
     && ex3a && ex3a.steps[0].answer === 'a pole of order 1'
+    && /^Classify/.test(ex3a.prompt)
     && answerMatches('6/z', ex3a.steps[1])
     && answerMatches('\\frac{6}{z}', ex3a.steps[1])
     && /448/.test(ex3a.steps[0].why)
-    && practice.some((item) => item.id === 'ch7-7.4-ex3c' && item.steps[0].answer === 'essential')
-    && practice.some((item) => item.id === 'ch7-7.4-ex3g' && item.steps[0].answer === 'removable'));
+    && practice.some((item) => item.id === 'ch7-7.4-ex3c' && item.steps[0].answer === 'essential' && /^Classify/.test(item.prompt))
+    && practice.some((item) => item.id === 'ch7-7.4-ex3g' && item.steps[0].answer === 'removable' && /^Classify/.test(item.prompt))
+    && ex1 && /0<\|z\|<1/.test(ex1.prompt) && /0<\|z\|<1/.test(ex1.steps[0].text) && !/For \$\|z\|<1/.test(ex1.steps[0].text));
   const samples = exercise3Samples();
   check('exercise 3(d)(e)(f)(h) cards match the series',
     samples.tanOrder === 1

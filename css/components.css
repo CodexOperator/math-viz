@@ -1216,21 +1216,23 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   list-style: none;
 }
 .book-read li { margin: 0; }
-.book-read a,
-.book-door a {
+.book-read a {
   display: flex;
   align-items: center;
   min-height: var(--tap);
   min-width: 0;
   max-width: 100%;
 }
+.book-door a {
+  display: inline;
+  min-height: 0;
+}
 .chapter-card a.chip { min-height: var(--tap); }
 .book-door {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.35rem;
+  display: block;
   min-height: var(--tap);
+  padding: 0.55rem 0;
+  line-height: 1.35;
 }
 .book-label {
   margin: var(--space-3) 0 var(--space-1);
@@ -1281,6 +1283,8 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    align-self: center;
+    justify-content: center;
     gap: var(--space-2);
     grid-column: 2;
     grid-row: 1;
@@ -1300,6 +1304,14 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   .ch7-picture > .ch7-card {
     grid-column: 1 / -1;
   }
+  .ch7-hero > .ch7-where {
+    grid-column: 1;
+    grid-row: 2;
+    margin-top: var(--space-2);
+  }
+  .ch7-hero > .ch7-wait { grid-column: 1 / -1; grid-row: 3; }
+  .ch7-hero > .ch7-card { grid-column: 1 / -1; grid-row: 4; }
+  .ch7-hero > .ch7-key { grid-column: 1 / -1; grid-row: 5; }
 }
 
 .ch7-head { margin-bottom: 0; }
@@ -1345,14 +1357,47 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   margin: 0;
 }
 
-.ch7-claim { line-height: 1.55; min-height: calc(1.0625rem * 1.55 * 2); }
+.ch7-claim { line-height: 1.55; min-height: calc(1.0625rem * 1.55 * 2); font-weight: 600; }
+.ch7-read:not(.ch7-wait) { font-weight: 600; }
 
 .ch7-key,
-.ch7-read { color: var(--text-muted); }
+.ch7-read,
+.ch7-memory { color: var(--text-muted); }
+
+@media (max-width: 56.24rem) {
+  /* The status used to be its own row in the station, with the station's gap
+     under it. Inside the picture, that gap has to be put back so Play stays
+     the last control on the first screen. */
+  .ch7-hero > .ch7-where { margin-bottom: calc(var(--space-4) - var(--space-2)); }
+  .section-node .ch7-picture > .ch7-key { margin-top: 6rem; }
+  .ch7-picture.ch7-asking { gap: 0.15rem; }
+}
 
 .ch7-summit { font-weight: 600; }
 
 .ch7-memory { padding-left: 1.2rem; }
+
+.ch7-slot { min-width: 0; max-width: 40rem; }
+.ch7-slot:has(> [hidden]:only-child) { display: none; }
+.ch7-inline {
+  position: relative;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.ch7-inline > h3,
+.ch7-inline > .ch7-prompt {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 .ch7-sheet summary {
   display: flex;
@@ -1366,7 +1411,7 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   cursor: pointer;
 }
 
-.ch7-observe { font-weight: 600; }
+.ch7-observe { font-weight: 400; }
 
 .ch7-steps { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
 

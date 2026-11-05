@@ -386,10 +386,10 @@
       "page": 230
     },
     "kind": "next-step-mc",
-    "prompt": "Exercise 1 of §7.3, page 230, asks for two Laurent series of $1/(z^3-z^4)$ in powers of $z$.",
+    "prompt": "Two Laurent series of $1/(z^3-z^4)$ in powers of $z$: one on $0<|z|<1$, and one for $|z|>1$.",
     "steps": [
       {
-        "text": "For $|z|<1$, the first move is",
+        "text": "For $0<|z|<1$, the first move is",
         "answer": "write $1/(1-z)$ as $\\sum z^n$ and multiply by $z^{-3}$",
         "choices": [
           "write $1/(1-z)$ as $\\sum z^n$ and multiply by $z^{-3}$",
@@ -397,7 +397,7 @@
           "differentiate the geometric series for $1/(1-z)^2$",
           "drop the negative powers, because the only singularity is at infinity"
         ],
-        "why": "$1/(z^3-z^4)=z^{-3}/(1-z)$. Inside the unit disk the geometric series runs in $z$."
+        "why": "$1/(z^3-z^4)=z^{-3}/(1-z)=\\sum_{n=0}^{\\infty} z^{n-3}$ on the annulus $0<|z|<1$. The disk $|z|<1$ includes the pole at $0$."
       }
     ],
     "generator": null,
@@ -523,7 +523,7 @@
     "prompt": "What did the picture just show?",
     "steps": [
       {
-        "text": "The purple image went around twice, so the zero has order ___.",
+        "text": "The zero has order ___.",
         "answer": "2",
         "accept": [
           "two",
@@ -615,7 +615,7 @@
     "section": "7.4",
     "cite": { "ref": "§7.4, Exercise 3(a)", "page": 238 },
     "kind": "next-step-blank",
-    "prompt": "Exercise 3(a) of §7.4, page 238. Classify the singularity of $z^2/(z-\\sin z)$ at $0$.",
+    "prompt": "Classify the singularity of $z^2/(z-\\sin z)$ at $0$.",
     "steps": [
       {
         "text": "The singularity at $0$ is",
@@ -673,7 +673,7 @@
     "section": "7.4",
     "cite": { "ref": "§7.4, Exercise 3(c)", "page": 238 },
     "kind": "next-step-mc",
-    "prompt": "Exercise 3(c) of §7.4, page 238. Classify the singularity of $z\\exp(1/z)$ at $0$.",
+    "prompt": "Classify the singularity of $z\\exp(1/z)$ at $0$.",
     "steps": [
       {
         "text": "The singularity is",
@@ -784,7 +784,7 @@
     "section": "7.4",
     "cite": { "ref": "§7.4, Exercise 3(g)", "page": 238 },
     "kind": "next-step-mc",
-    "prompt": "Exercise 3(g) of §7.4, page 238. Classify the singularity of $(\\exp z-1)/z$ at $0$.",
+    "prompt": "Classify the singularity of $(\\exp z-1)/z$ at $0$.",
     "steps": [
       {
         "text": "The singularity is",
@@ -924,16 +924,16 @@
     "id": "ch7-7.5-lhopital",
     "chapter": 7,
     "section": "7.5",
-    "cite": { "ref": "Corollary 7.11", "page": 240 },
+    "cite": { "ref": "Exercise 6(a)", "page": 243 },
     "kind": "next-step-blank",
-    "prompt": "Exercise 6(a) of §7.5, page 243. $\\lim_{z\\to 1+i}(z-1-i)/(z^4+4)$. Corollary 7.11, page 240, needs both functions zero and $g'\\neq 0$.",
+    "prompt": "$\\lim_{z\\to 1+i}(z-1-i)/(z^4+4)$. At $1+i$ both functions are zero.",
     "steps": [
       {
-        "text": "At $1+i$, $f$ and $g$ are both ___, and $g'(1+i)=$ ___",
-        "answer": "0 and -8+8i",
-        "accept": ["0, -8+8i", "0 and -8+8i", "zero and -8+8i", "both 0, -8+8i", "0 and 8i-8", "0, 8i-8", "both zero and -8+8i", "-8+8i and 0", "0 and -8+8i ≠ 0"],
-        "miss": "Evaluate both functions at $1+i$, then $g'(z)=4z^3$.",
-        "why": "$(1+i)^4=-4$, so $g(1+i)=0$. And $4(1+i)^3=-8+8i\\neq 0$, so Corollary 7.11 applies."
+        "text": "$g'(1+i)=$ ___",
+        "answer": "-8+8i",
+        "accept": ["-8+8i", "8i-8", "-8 + 8i", "8i - 8", "-8+8i ≠ 0", "-8+8i\\neq 0"],
+        "miss": "Differentiate $z^4+4$ and evaluate at $1+i$.",
+        "why": "$g'(z)=4z^3$ and $4(1+i)^3=-8+8i\\neq 0$, so Corollary 7.11, page 240, applies."
       },
       {
         "text": "The limit equals ___",
@@ -950,9 +950,9 @@
     "id": "ch7-7.5-lhopital-b",
     "chapter": 7,
     "section": "7.5",
-    "cite": { "ref": "Corollary 7.11", "page": 240 },
+    "cite": { "ref": "Exercise 6(b)", "page": 243 },
     "kind": "next-step-blank",
-    "prompt": "Exercise 6(b) of §7.5, page 243. $\\lim_{z\\to i}(z^2-2iz-1)/(z^4+2z^2+1)$.",
+    "prompt": "$\\lim_{z\\to i}(z^2-2iz-1)/(z^4+2z^2+1)$.",
     "steps": [
       {
         "text": "One differentiation is still ___",
@@ -973,30 +973,82 @@
     "memory": "If one differentiation is still $0/0$, the zero was not simple. Cancel and try again."
   },
   {
+    "id": "ch7-7.5-lhopital-c",
+    "chapter": 7,
+    "section": "7.5",
+    "cite": { "ref": "Exercise 6(c)", "page": 243 },
+    "kind": "next-step-blank",
+    "prompt": "$\\lim_{z\\to i}(1+z^{6})/(1+z^2)$. At $i$ both functions are zero.",
+    "steps": [
+      {
+        "text": "$g'(i)=$ ___",
+        "answer": "2i",
+        "accept": ["2i", "+2i", "2*i"],
+        "miss": "The denominator is $1+z^2$. Its derivative is $2z$.",
+        "why": "$g'(z)=2z$, so $g'(i)=2i\\neq 0$. Corollary 7.11, page 240, applies."
+      },
+      {
+        "text": "The limit equals ___",
+        "answer": "3",
+        "accept": ["3.0", "6i/2i", "6i/(2i)"],
+        "miss": "Divide $f'(i)=6i^5$ by $g'(i)=2i$.",
+        "why": "$f'(z)=6z^5$ and $f'(i)=6i$. The quotient is $6i/(2i)=3$. The same value is $z^4-z^2+1$ at $z=i$."
+      }
+    ],
+    "generator": null,
+    "memory": "A simple zero of the denominator, not cancelled, is one application of L'Hôpital."
+  },
+  {
+    "id": "ch7-7.5-lhopital-d",
+    "chapter": 7,
+    "section": "7.5",
+    "cite": { "ref": "Exercise 6(d)", "page": 243 },
+    "kind": "next-step-blank",
+    "prompt": "$\\lim_{z\\to 0}(\\sin z+\\sinh z-2z)/z^{5}$.",
+    "steps": [
+      {
+        "text": "The numerator's series starts at order ___",
+        "answer": "5",
+        "accept": ["five", "z^5"],
+        "miss": "$\\sin z$ and $\\sinh z$ cancel the $z$ and $z^3$ terms.",
+        "why": "$\\sin z+\\sinh z=2z+z^5/60+\\cdots$. Subtracting $2z$ leaves a zero of order 5."
+      },
+      {
+        "text": "The limit equals ___",
+        "answer": "1/60",
+        "accept": ["\\frac{1}{60}", "2/120", "2/5!"],
+        "miss": "Divide the $z^5$ term by $z^5$. The coefficient is $1/60$.",
+        "why": "The $z^5$ terms are $1/5!$ from each of $\\sin z$ and $\\sinh z$, so $2/120=1/60$."
+      }
+    ],
+    "generator": null,
+    "memory": "When every derivative through order 4 still vanishes, read the series. The limit is the first coefficient that survives."
+  },
+  {
     "id": "ch7-7.5-divide",
     "chapter": 7,
     "section": "7.5",
     "cite": { "ref": "Example 7.15", "page": 240 },
     "kind": "next-step-blank",
-    "prompt": "Example 7.15, page 240. $\\sec z=1/\\cos z$ for $|z|<\\pi/2$. Theorem 7.14, page 240, divides the series because $\\cos 0\\neq 0$. A zero of the denominator is where you stop dividing and switch to a Laurent series.",
+    "prompt": "$\\sec z=1/\\cos z$ for $|z|<\\pi/2$.",
     "steps": [
       {
-        "text": "The numerator is $1$, so $a_0=$ ___. Since $b_0=\\cos 0\\neq 0$, the constant term is $a_0/b_0$.",
+        "text": "The constant term $a_0=$ ___",
         "answer": "1",
         "accept": ["1.0"],
-        "why": "Theorem 7.14: $a_n=b_0 c_n+\\cdots+b_n c_0$. Here $a_0=1$ and $b_0=1$, so $c_0=1$."
+        "why": ""
       },
       {
-        "text": "Long division gives the coefficient of $z^2$ as ___",
+        "text": "The coefficient of $z^2$ is ___",
         "answer": "1/2",
         "accept": ["0.5", "\\frac{1}{2}", "1/2"],
-        "why": "The book writes $\\sec z=1+\\frac{1}{2}z^2+\\frac{5}{24}z^4+\\cdots$."
+        "why": ""
       },
       {
-        "text": "$f^{(4)}(0)/4!=5/24$, so the fourth derivative at $0$ is ___",
+        "text": "The fourth derivative at $0$ is ___",
         "answer": "5",
         "accept": ["5.0"],
-        "why": "$\\frac{5}{24}\\cdot 4!=5$."
+        "why": "The series is $1+\\frac{1}{2}z^2+\\frac{5}{24}z^4+\\cdots$ (Example 7.15, page 240). Then $f^{(4)}(0)/4!=5/24$, so $f^{(4)}(0)=5$."
       }
     ],
     "generator": null,

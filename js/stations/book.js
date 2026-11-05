@@ -331,7 +331,7 @@ function mountChapter4(el, ctx, focus) {
       sourceTag({ pin: CHAPTER_4.pin, href: CHAPTER_4.href })),
     h('div', { class: 'book-next', id: 'chapter-next-row' }, status, nextBtn),
     path,
-    h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
+    h('p', { class: 'book-footer-link' }, h('a', { class: 'nav-link ch7-up', href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
 
   if (focus) {
     const card = cards.find((c) => c.getAttribute('data-problem') === focus);
@@ -450,7 +450,7 @@ function mountChapter5(el, ctx, focus) {
     walk,
     later,
     sourceTag({ pin: 'Chapter 5, Elementary Functions, page 130', href: sectionHref('sec_exponential-function.html') }),
-    h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
+    h('p', { class: 'book-footer-link' }, h('a', { class: 'nav-link ch7-up', href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
 
   paint();
 

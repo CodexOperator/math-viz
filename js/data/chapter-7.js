@@ -38,7 +38,6 @@ export const CHAPTER_7 = deepFreeze({
         body: 'Compare with a series of constants. On the disk $|z|\\le 1/2$, each term of the geometric series satisfies $|z^k|\\le (1/2)^k$, and $\\sum (1/2)^k$ converges. Theorem 7.1, page 212, says the geometric series converges uniformly on that disk. The card under this line fills in why one comparison is enough for the whole set.',
       },
       memory: [
-        'One $N_\\varepsilon$ for the whole set. If $N$ needs $z$, the convergence is only pointwise.',
         'The negation (7.3), page 211: one $\\varepsilon>0$ such that for every $N$ there is some $n\\ge N$ and some $z$ still outside the band.',
         'On $|z|\\le 1/2$, compare with $M_k=(1/2)^k$.',
         '$-\\mathrm{Log}(1-z)=\\sum_{n=1}^{\\infty} z^n/n$ for $|z|<1$ (Example 7.2, page 214).',
@@ -155,8 +154,8 @@ export const CHAPTER_7 = deepFreeze({
       },
       memory: [
         'On a connected domain, an analytic function that is not identically zero has isolated zeros (Theorem 7.13, page 239).',
-        'A bounded isolated singularity is removable (Theorem 7.15, page 240). $\\sin z/z$ at 0 is filled in by the value 1.',
-        'L\'Hôpital: if $f(\\alpha)=g(\\alpha)=0$ and $g\'(\\alpha)\\neq 0$, then $\\lim f/g = f\'(\\alpha)/g\'(\\alpha)$ (Corollary 7.11, page 240).',
+        '$\\sin z/z$ at 0 is filled in by the value 1 (Theorem 7.15, page 240).',
+        'L\'Hôpital (Corollary 7.11, page 240): the limit is the quotient $f\'(\\alpha)/g\'(\\alpha)$.',
         'Divide the series when $g(\\alpha)\\neq 0$. The coefficients satisfy $a_n=b_0 c_n+\\cdots+b_n c_0$ (Theorem 7.14, page 240). A zero of $g$ is where you stop dividing and switch to a Laurent series.',
         '$|f(z)|\\to\\infty$ means a pole (Theorem 7.16, page 241). A limit of $|f|$ that does not exist means essential (Theorem 7.17, page 242).',
       ],

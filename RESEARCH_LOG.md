@@ -949,3 +949,11 @@ The Later titles for 5.2–5.5 stay. The kicker, the colours, the flags, and the
 Branch `cursor/book-chapter-path-df29`, after the batch 7 review at `ee723a8`. Two cuts.
 
 A mouse drag focuses the square while `:focus-visible` is false, and the browser draws its auto outline. That outline is suppressed. The 3px keyboard ring on `:focus-visible` stays. On both exercise cards the order is the pin and its cite, the question, the blank, Tick, then the hint. The wording, the tick window, and the modulus blank are unchanged.
+
+## Chapter 7, batch 6 — Exercise 6(c)(d) and the inner annulus
+
+Howell & Mathews, *Complex Analysis*, 202 Updated Edition. Printed pages. The HTML edition at complexanalysis.org numbers the same exercises as 7.5.6 and 7.3.1.
+
+Exercise 6 of §7.5, page 243, is four limits. (a) and (b) were already cards. (c) is \(\lim_{z\to i}(1+z^6)/(1+z^2)\). Both functions vanish, \(g'(i)=2i\neq 0\), and \(f'(i)/g'(i)=6i/(2i)=3\). Cancelling \(1+z^2\) leaves \(z^4-z^2+1\), which is also 3 at \(z=i\). (d) is \(\lim_{z\to 0}(\sin z+\sinh z-2z)/z^5\). The odd powers through \(z^3\) cancel. The \(z^5\) terms are \(1/5!\) from each series, so \(2/120=1/60\).
+
+Exercise 1 of §7.3, page 230, asks for two Laurent series of \(1/(z^3-z^4)\) in powers of \(z\). The book's solution is \(\sum z^{n-3}\) for \(0<|z|<1\), and \(-\sum z^{-n-3}\) for \(|z|>1\). The disk \(|z|<1\) includes the pole at 0, so the card now says the annulus.

@@ -41,8 +41,11 @@ function rich(el, text) {
   appendRich(el, text);
 }
 
-function pictureParts(parent, frame, claim, read, play) {
-  parent.append(frame, h('div', { class: 'ch7-side' }, claim, read, play));
+function pictureParts(parent, frame, claim, read, play, slot) {
+  const side = h('div', { class: 'ch7-side' }, claim, read);
+  if (slot) side.append(slot);
+  side.append(play);
+  parent.append(frame, side);
 }
 
 function bindMotion(button, steps, onN, initial) {
@@ -628,8 +631,9 @@ export function mountWinding(parent, hooks) {
   const claim = h('p', { id: 'chapter-winding-claim', class: 'ch7-claim', 'aria-live': 'polite' });
   const read = h('p', { id: 'chapter-winding-read', class: 'ch7-read' });
   const play = h('button', { type: 'button', class: 'btn', id: 'chapter-winding-play' }, 'Play');
+  const slot = h('div', { id: 'chapter-winding-slot', class: 'ch7-slot' });
   const frame = h('div', { class: 'exp-stage ch7-stage', id: 'chapter-winding-frame' }, stage);
-  pictureParts(parent, frame, claim, read, play);
+  pictureParts(parent, frame, claim, read, play, slot);
 
   let theta = 0.5;
   let claimText = '';
@@ -741,6 +745,16 @@ export function mountWinding(parent, hooks) {
     if (reduced) return 'Next step';
     return 'Play';
   }
+  function blankReady() {
+    return !!(hooks && typeof hooks.mayPlayPole === 'function' && hooks.mayPlayPole());
+  }
+  let told = '';
+  function tell() {
+    const name = phase === 'pole' ? 'pole' : (zeroWatched && atEnd() ? 'order2' : 'zero');
+    if (name === told) return;
+    told = name;
+    if (hooks && hooks.onPhase) hooks.onPhase(name);
+  }
   function resetZero() {
     zeroState.origin = lap[0];
     zeroState.last = lap[0];
@@ -764,6 +778,7 @@ export function mountWinding(parent, hooks) {
     if (phase === 'pole') applyPole(lap[index]);
     else applyZero(lap[index]);
     play.textContent = label();
+    tell();
   }
   function revealed() {
     return Number(stage.dataset.travel) >= 2 * Math.PI - 0.05;
@@ -782,9 +797,11 @@ export function mountWinding(parent, hooks) {
     else zeroWatched = true;
     playing = false;
     play.textContent = label();
+    tell();
   }
   function run(which, from) {
     phase = which;
+    tell();
     const start = Math.max(0, Math.min(lap.length - 1, from));
     index = start;
     if (reduced) {
@@ -811,6 +828,11 @@ export function mountWinding(parent, hooks) {
       return;
     }
     if (phase === 'zero' && zeroWatched && atEnd()) {
+      if (!blankReady()) {
+        const field = document.getElementById('ch7-blank-ch7-7-4-picture-1');
+        if (field) field.focus();
+        return;
+      }
       resetPole();
       run('pole', 0);
       return;
@@ -861,10 +883,12 @@ export function mountWinding(parent, hooks) {
     const im = 1.4 - (local.y / size) * 2.8;
     return Math.atan2(im, re);
   }
+  function nudge(next) {
+    if (phase === 'pole') applyPole(next);
+    else if (!zeroKept) applyZero(next);
+  }
   const stopDrag = bindDrag(stage, (ev) => {
-    const ang = angleOf(ev);
-    if (zeroTold) applyPole(ang);
-    else applyZero(ang);
+    nudge(angleOf(ev));
   });
   stage.addEventListener('keydown', onKey);
   function onKey(ev) {
@@ -872,8 +896,7 @@ export function mountWinding(parent, hooks) {
     const move = { ArrowRight: step, ArrowLeft: -step, ArrowUp: step, ArrowDown: -step }[ev.key];
     if (move === undefined) return;
     ev.preventDefault();
-    if (zeroTold) applyPole(theta + move);
-    else applyZero(theta + move);
+    nudge(theta + move);
   }
   return function unmount() {
     stopMotion();
