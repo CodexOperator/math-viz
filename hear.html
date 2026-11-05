@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Drag a point on a domain colouring and hear it. The angle of w is pitch, the size of w is loudness, and a zero goes quiet while a pole climbs and beats.">
+  <title>Hear the point · One Point, Two Addresses</title>
+  <link rel="icon" href="favicon.ico" sizes="48x48">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/hear.css">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('mv:theme');
+        if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#stage">Skip to the picture</a>
+  <main class="hear-page" id="view">
+    <p class="hear-back"><a href="index.html#lab">One Point, Two Addresses</a></p>
+    <h1>Hear the point</h1>
+    <p class="lede" id="observe">Drag the green point. Black is a zero of tan, where the note goes quiet. The bright spot is where cos z is 0, so tan runs off and the note climbs. Arrow keys move the point once the picture is focused.</p>
+
+    <div class="hear-stage" id="stage" tabindex="0" role="application" aria-label="Domain colouring of tan z. Drag or use the arrow keys to move the green point.">
+      <canvas id="hear-color" aria-hidden="true"></canvas>
+      <canvas id="hear-overlay" aria-hidden="true"></canvas>
+    </div>
+
+    <div class="hear-controls">
+      <ul class="chips" role="list">
+        <li><button type="button" class="chip" id="chip-tan" data-preset="tan" aria-pressed="true">tan z</button></li>
+        <li><button type="button" class="chip" id="chip-exp" data-preset="exp" aria-pressed="false">e<sup>z</sup></button></li>
+        <li><button type="button" class="chip" id="chip-log" data-preset="log" aria-pressed="false">Log z</button></li>
+      </ul>
+      <div class="hear-audio">
+        <button type="button" class="btn btn-primary hear-toggle" id="hear-toggle" aria-pressed="false">Hear this point</button>
+        <p id="hear-state">Silent. Sound stays off until you press Hear.</p>
+      </div>
+    </div>
+
+    <p class="hear-claim" id="claim" role="status">w is neither a zero nor a pole. Pitch is the angle of w, and loudness is its size.</p>
+
+    <div class="hear-readrow">
+      <p class="readout" id="hear-readout"></p>
+      <div class="hear-compass-wrap">
+        <svg class="hear-compass" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+          <circle cx="32" cy="32" r="28"></circle>
+          <line id="hear-needle" x1="32" y1="32" x2="56" y2="32"></line>
+        </svg>
+        <p class="hear-compass-cap">Orange is the angle of w, and that angle is the pitch.</p>
+      </div>
+    </div>
+
+    <h2>How the note is made</h2>
+    <dl class="hear-map" id="hear-map"></dl>
+
+    <div class="hear-wheel-row">
+      <canvas id="hear-wheel" width="84" height="84" aria-hidden="true"></canvas>
+      <p>The paint is the same pair of numbers as the note. Colour is the angle of w. Brightness is the size of w. Black is a zero. White is where the size runs off.</p>
+    </div>
+
+    <h2>What the colours are</h2>
+    <ul class="hear-key">
+      <li><span class="key-swatch" data-key="cart"></span><span>Blue is the axes: where z sits.</span></li>
+      <li><span class="key-swatch" data-key="polar"></span><span>Orange is the angle of w, drawn as the needle, and heard as the pitch.</span></li>
+      <li><span class="key-swatch" data-key="input"></span><span>Green is the point you drag.</span></li>
+      <li><span class="key-swatch" data-key="output"></span><span>Purple is the output: the sentence, read from w. The note is that same output.</span></li>
+    </ul>
+
+    <p class="source-tag">Howell &amp; Mathews, <cite>Complex Analysis</cite>, 202 Updated Edition.
+      <a href="https://complexanalysis.org/web/sec_trig-hyperbolics.html">§5.4</a> defines tan z (Definition 5.6, page 148). Page 151: sin z = 0 exactly at nπ, and cos z = 0 exactly at (n + ½)π, so tan is undefined there.
+      The book names that blow-up a pole in <a href="https://complexanalysis.org/web/sec_singularities.html">§7.4</a>, page 232.
+      <a href="https://complexanalysis.org/web/sec_exponential-function.html">§5.1</a>, Identity (5.1), page 132, is e^z = e^x (cos y + i sin y).
+      <a href="https://complexanalysis.org/web/sec_complex-log.html">§5.2</a>, Definition 5.2, page 137, is Log, and the principal value is on page 138.
+      Timbre uses the derivative, <a href="https://complexanalysis.org/web/sec_diff-analytic.html#Deriv_Def_1">Equation (3.1), page 79</a>.
+      From Howell &amp; Mathews, Complex Analysis, complexanalysis.org, CC BY 4.0.
+    </p>
+  </main>
+  <script>
+    if (location.protocol === 'file:') {
+      document.getElementById('view').insertAdjacentHTML('afterbegin',
+        '<p class="scope-banner">Open this from a web server. The picture is a module, and a file path will not load it.</p>');
+    }
+  </script>
+  <script type="module" src="js/hear.js"></script>
+</body>
+</html>
