@@ -1107,6 +1107,12 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   .exp-claim { min-height: calc(1.0625rem * 1.55 * 2); }
 }
 
+/* 6.1's resting claim is one line. The half-turn slot keeps one line from the first paint. */
+#ch6-real-claim,
+#ch6-real-half {
+  min-height: calc(1.0625rem * 1.55);
+}
+
 .exp-blanks {
   margin: 0;
   padding: 0;
@@ -1223,37 +1229,44 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 
 .book-sections li {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-wrap: nowrap;
+  align-items: flex-start;
   gap: 0.35rem 0.75rem;
   min-width: 0;
+  min-height: var(--tap);
 }
 
+/* The page shares the first line. The title wraps under the name. */
 .book-sections a {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--tap);
-  min-width: 0;
-}
-
-.book-section-page { margin-left: auto; font-variant-numeric: tabular-nums; }
-/* The title may wrap inside the link. The page stays on the right of the row. */
-#book-sections-6 li {
-  flex-wrap: nowrap;
-  align-items: center;
-  min-height: var(--tap);
-}
-#book-sections-6 a {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   flex: 1 1 auto;
   min-width: 0;
   height: auto;
   min-height: var(--tap);
+  padding-top: calc((var(--tap) - 1.0625rem * 1.55) / 2);
 }
-#book-sections-6 .book-section-name { min-width: 0; white-space: normal; }
-#book-sections-6 .book-section-page { flex: 0 0 auto; white-space: nowrap; }
-.book-section-mark { font-size: 0.82rem; font-weight: 700; }
+
+.book-section-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: normal;
+}
+
+.book-section-page {
+  margin-left: auto;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  padding-top: calc((var(--tap) - 1.0625rem * 1.55) / 2);
+  line-height: calc(1.0625rem * 1.55);
+}
+.book-section-mark {
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding-top: calc((var(--tap) - 1.0625rem * 1.55) / 2);
+  line-height: calc(1.0625rem * 1.55);
+}
 .book-section-mark:empty { display: none; }
 .book-sections [data-state="next"] .book-section-mark { color: var(--text); }
 .book-sections [data-state="done"] .book-section-mark { color: var(--ok); }
@@ -1367,6 +1380,7 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .section-node .btn[data-done="true"] { border-color: var(--ok); }
 .chapter-exercises { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
 .chapter-card { min-width: 0; }
-.chapter-card p { min-width: 0; }
+.chapter-card h3,
+.chapter-card p { min-width: 0; max-width: 62ch; }
 .section-mark { margin-top: var(--space-2); }
 .book-footer-link { margin-top: var(--space-2); }

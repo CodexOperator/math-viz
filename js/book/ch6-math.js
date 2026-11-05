@@ -371,8 +371,15 @@ export function nearHalfTurn(T) {
 }
 
 export function turnPhase(T) {
-  const w = realIntegral(wrapTurn(T));
-  if (Math.hypot(w.re, w.im) <= TURN_TOL) return 'full';
+  const raw = Number(T) || 0;
+  let u = raw % TWO_PI;
+  if (u < 0) u += TWO_PI;
+  // A completed turn lands on 2π. The positive real start, parameter 0, has not passed π.
+  if (raw > Math.PI && u <= 1e-12) u = TWO_PI;
+  const w = realIntegral(u);
+  const passed = u > Math.PI;
+  if (passed && Math.hypot(w.re, w.im) <= TURN_TOL) return 'full';
+  if (!passed && Math.hypot(w.re, w.im) <= TURN_TOL) return 'start';
   if (Math.hypot(w.re, w.im - 2) <= TURN_TOL) return 'half';
   return 'move';
 }
@@ -381,7 +388,9 @@ export function claim61(T) {
   const phase = turnPhase(T);
   const near = nearHalfTurn(T);
   // The full-turn value is the blank. The claim says where the point is.
+  // Home is only after the parameter has passed π, so the start is not already home.
   if (phase === 'full') return { holds: true, phase, near, text: 'A full turn brings the point home.' };
+  if (phase === 'start') return { holds: false, phase, near, text: 'The point is at the start.' };
   return { holds: false, phase, near, text: 'The total has left $0$.' };
 }
 
@@ -506,7 +515,7 @@ export function claim65(z) {
   if (where === 'edge') {
     return { holds: false, where, text: 'The green point is on the circle. The formula stops.' };
   }
-  return { holds: false, where, text: 'Outside, that integral is $0$.' };
+  return { holds: false, where, text: 'Outside, the formula does not apply.' };
 }
 
 // Liouville via Cauchy's estimate |f'| ≤ M/R with M = 1.
@@ -740,7 +749,7 @@ function circleLines(n, inside, tex) {
   }
   return {
     cite: { ref: 'Theorem 6.5', page: 183 },
-    miss: 'The pole is outside the circle, so the integrand is analytic inside and on $C$. Theorem 6.5, page 183, applies. The value stays covered.',
+    miss: 'The pole is outside the circle, so the integrand is analytic in a simply connected domain that contains this simple closed contour. Theorem 6.5, page 183, applies. The value stays covered.',
     why: `The pole is outside the circle. Theorem 6.5, page 183, says the integral is $${tex}$.`,
   };
 }
@@ -855,7 +864,7 @@ function segmentCard(start, end, pole, n, tex, value) {
   const integrand = powerTex(pole.re, pole.im, n);
   const why = n === -1
     ? 'On a straight segment the integral of $1/(z-a)$ is the change in $\\log|z-a|$ plus $i$ times the change in argument.'
-    : `The antiderivative of $(z-a)^{${n}}$ is $(z-a)^{${n + 1}}/${n + 1}$. Theorem 6.1, page 172, writes the contour integral as an ordinary integral in $t$, and that antiderivative is evaluated at the two ends.`;
+    : `Theorem 6.1, page 172, writes the contour integral as an ordinary integral in $t$. Theorem 6.9, page 194, evaluates the antiderivative $(z-a)^{${n + 1}}/${n + 1}$ at the two ends.`;
   return {
     prompt: `Let $C$ be the segment from $${fmtPole(start.re, start.im)}$ to $${fmtPole(end.re, end.im)}$.`,
     steps: [{

@@ -399,7 +399,7 @@
       }
     ],
     "generator": null,
-    "memory": "Reach for Theorem 6.5 when \\(f\\) is analytic inside and on a simple closed contour. The integral is \\(0\\)."
+    "memory": "Reach for Theorem 6.5 when \\(f\\) is analytic in a simply connected domain and the contour is a simple closed curve in that domain. The integral is \\(0\\)."
   },
   {
     "id": "ch6-6.3-which-mc",

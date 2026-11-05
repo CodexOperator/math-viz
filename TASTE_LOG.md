@@ -2024,3 +2024,17 @@ Back inside the chapter. Go writes the camp hash and returns to the scroll you l
 The Book kicker and Back to the book, the words at the size they were, the hit at 44px. Walk Chapter 6 at 163×44. Section rows that wrap the title and keep the page on the right. 6.1's Next beside p. 163.
 
 Wrapped choices, the whole sentence on the button, Check at 85×44, inputs at 44px. The flashcard's "1 of 2" and "Still this card." The type, the paper, the 6px button, the 10px card, the same on chapter 4 and chapter 5.
+
+## Chapter 6, batch 6
+
+Branch `cursor/chapter-6`, on top of `453e317` (the branch tip also had the batch 5 UX note). Headless Chrome, fresh storage. 390×844 and 1280×800, light and dark. No console errors. No failed assets. `scrollWidth` was 390 and 1265.
+
+`#ch6-real-half` is in the stack from the first paint, empty, 26px, and that height does not change when the left side latches or when Play is pressed. The sentence is "The point is on the left side." It does not print \(2i\). On the phone the 6.1 claim is one line (26px, not the two-line box). Play ends at y = 789 in the 844 window and at y = 737 in the 800 window, at rest, while pausing, and after a full turn, both themes. The square stays 284px and 272px. From 6.4, The Book and Back return the flag to y = 73.
+
+The 6.4 why and summit still name a simply connected domain (Theorem 6.9, page 194). One gesture sits above 6.2. 6.3 keeps the bridge and "Play subdivides the triangle." 6.5's why is "6.4 needs an antiderivative." 6.6's line above the square is the drag and the bound \(1/R\). The 6.2 worked line stops at the segment, then multiply by \(z'(t)\) and integrate in \(t\). The power \(-1\) stays on the 6.3 sheet. The pole label is gone. The deform gesture stays. For the exam stays.
+
+Two or more flashes say "1 of 2" at the flag's size. The `h3` is the question, and the cite stays on the source tag. A single card has no count. Book section rows, Chapter 4 and Chapter 6, put the page on the first line of a wrapped title.
+
+The positive real start is not home. A full turn after the parameter has passed \(\pi\) says the point is home. Outside the unit circle the claim is "Outside, the formula does not apply." Typing 0 there checks right, and moving inside clears that mark. Theorem 6.5 on the 6.3 sheet is the book's hypothesis: analytic in a simply connected domain, simple closed contour in that domain (page 183). A segment card splits Theorem 6.1, page 172 (parametrize) from Theorem 6.9, page 194 (evaluate at the ends).
+
+Deferred: the shared practice engine is another loop, so this chapter still renders `data/practice/ch6.json` with the local card. Chapter 7 is that loop's page and stays a Later card here. Chapters 8–11 are outside this loop.

@@ -137,11 +137,24 @@ export function mountPractice(host, items) {
   return () => { for (const stop of stops) stop(); };
 }
 
+// The cite's name stays on the source tag. The heading is the question.
+function flashQuestion(item) {
+  let q = String(item.prompt || '').trim();
+  const ref = (item.cite && item.cite.ref) || '';
+  if (ref && q.toLowerCase().startsWith(ref.toLowerCase())) {
+    q = q.slice(ref.length).trim();
+    q = q.replace(/^,\s*[^.]{1,40}\.\s+/, '');
+    q = q.replace(/^\.\s+/, '');
+  } else {
+    q = q.replace(/^(?:Morera|Liouville)'s theorem\.\s+/i, '');
+  }
+  return q.trim();
+}
+
 function flashDeck(items, scope) {
   let index = 0;
   let open = false;
   let stayed = false;
-  const front = h('p', { class: 'ch6-flash-front', id: `${scope}-flash-front` });
   const back = h('p', { class: 'ch6-flash-back', id: `${scope}-flash-back`, hidden: '' });
   const stay = h('p', { class: 'ch6-flash-stay', id: `${scope}-flash-stay`, hidden: '' }, 'Still this card.');
   const why = h('p', { class: 'hint-note', id: `${scope}-flash-why`, hidden: '' });
@@ -149,13 +162,20 @@ function flashDeck(items, scope) {
   const missed = h('button', { type: 'button', class: 'btn', id: `${scope}-flash-miss` }, 'Missed');
   const recalled = h('button', { type: 'button', class: 'btn', id: `${scope}-flash-next` }, 'Recalled');
   const tag = h('div', { id: `${scope}-flash-cite` });
+  const count = h('p', { class: 'book-flag', id: `${scope}-flash-count` });
   const title = h('h3', { id: `${scope}-flash-title` });
   const card = h('article', { class: 'card chapter-card', id: `${scope}-flash` });
   function paint() {
     const item = items[index];
-    title.textContent = `Flashcard · ${index + 1} of ${items.length}`;
+    if (items.length > 1) {
+      count.hidden = false;
+      count.textContent = `${index + 1} of ${items.length}`;
+    } else {
+      count.hidden = true;
+      count.textContent = '';
+    }
+    fillMath(title, flashQuestion(item));
     tag.replaceChildren(sourceTag(citeOf(item)));
-    fillMath(front, item.prompt);
     fillMath(back, item.steps[0].answer);
     fillMath(why, item.steps[0].why || '');
     back.hidden = !open;
@@ -190,8 +210,8 @@ function flashDeck(items, scope) {
   });
   paint();
   card.append(
-    title,
-    tag, front, stay, show, back, why,
+    count, title,
+    tag, stay, show, back, why,
     h('div', { class: 'problem-actions' }, missed, recalled));
   return card;
 }

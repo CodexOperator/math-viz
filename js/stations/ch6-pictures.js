@@ -192,14 +192,17 @@ export function mountRealIntegral(parent) {
   trail.setAttribute('cy', map.Y(1));
   trail.setAttribute('r', map.X(1) - map.X(0));
 
-  const half = h('p', { id: 'ch6-real-half', class: 'exp-claim', hidden: '' });
+  // The slot is in the stack from the first paint, empty until the latch,
+  // and it keeps that height after the point moves on.
+  const half = h('p', { id: 'ch6-real-half', class: 'exp-claim', 'aria-hidden': 'true' });
   play.before(half);
   let latched = false;
   let claimText = '';
   function paint(u) {
-    const T = wrapTurn(u * Math.PI * 2);
+    const raw = u >= 1 - 1e-9 ? Math.PI * 2 : wrapTurn(u * Math.PI * 2);
+    const T = wrapTurn(raw);
     const w = realIntegral(T);
-    const sentence = claim61(T);
+    const sentence = claim61(raw);
     handle.setAttribute('cx', map.X(Math.cos(T)));
     handle.setAttribute('cy', map.Y(Math.sin(T)));
     value.setAttribute('cx', map.X(w.re));
@@ -207,12 +210,10 @@ export function mountRealIntegral(parent) {
     stage.dataset.holds = sentence.holds ? 'true' : 'false';
     stage.dataset.phase = sentence.phase;
     if (sentence.near) latched = true;
-    half.hidden = !latched;
-    if (latched && !half.childElementCount) {
-      half.append(document.createTextNode('A half turn, the left side, integrates to '));
-      const tail = h('span', { class: 'ch6-keep' });
-      appendRich(tail, '$2i$.');
-      half.append(tail);
+    if (latched && !half.dataset.filled) {
+      half.dataset.filled = 'true';
+      half.removeAttribute('aria-hidden');
+      appendRich(half, 'The point is on the left side.');
     }
     if (sentence.text !== claimText) {
       claimText = sentence.text;

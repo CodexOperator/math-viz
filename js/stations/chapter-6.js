@@ -43,6 +43,7 @@ const STAGES = [
   },
   {
     id: '6.2',
+    why: '',
     gesture: 'Drag the green point along the segment. Orange points are the eight samples.',
     picture: 'sum',
     read: [
@@ -52,10 +53,9 @@ const STAGES = [
     ],
     workedPin: 'Example 6.7, page 172',
     workedHref: sectionHref('sec_contour-integrals.html', 'Cont_Int_Ex_1'),
-    why: 'Orange dots are pieces of the path. Add them up.',
     go: '6.3',
     goLabel: 'Go to 6.3',
-    worked: 'The segment from $0$ to $2+i\\pi/4$ is $z(t)=(2+i\\pi/4)t$ for $0\\le t\\le 1$. Theorem 6.1, page 172, says multiply $e^{z(t)}$ by $z\'(t)$ and integrate in $t$.',
+    worked: 'The segment from $0$ to $2+i\\pi/4$. Multiply by $z\'(t)$ and integrate in $t$.',
     sheet: [
       'Theorem 6.1, page 172: $\\int_C f(z)\\,dz=\\int_a^b f(z(t))z\'(t)\\,dt$.',
       'A segment from $A$ to $B$ is $z(t)=A+(B-A)t$.',
@@ -66,10 +66,10 @@ const STAGES = [
   },
   {
     id: '6.3',
-    why: '6.2 computes one path. This camp is a closed curve, and the integrand is analytic inside it.',
+    why: '6.2 computes one path. This camp is a closed curve.',
     go: '6.4',
     goLabel: 'Go to 6.4',
-    gesture: 'Play subdivides the triangle. The integrand is analytic.',
+    gesture: 'Play subdivides the triangle.',
     picture: 'goursat',
     read: [
       { pin: 'Theorem 6.5, page 183', href: sectionHref('sec_cauchy-goursat.html', 'CG_Thm') },
@@ -80,14 +80,14 @@ const STAGES = [
     ],
     workedPin: 'Corollary 6.1, page 188',
     workedHref: sectionHref('sec_cauchy-goursat.html', 'x2Pi_or_zero'),
-    worked: 'Both circles are positively oriented and the integrand is $1/z$. Corollary 6.1, page 188, is the power $-1$. Watch whether the pole stays inside the green circle.',
+    worked: 'Both circles are positively oriented and the integrand is $1/z$.',
     sheet: [
-      'Analytic inside and on a simple closed curve: Theorem 6.5, page 183, the integral is $0$.',
+      'Theorem 6.5, page 183: if $f$ is analytic in a simply connected domain and $C$ is a simple closed contour in that domain, the integral is $0$.',
       'Same singularity inside two closed curves, analytic between them: Theorem 6.6, page 187, the integrals match.',
       'Only a parametrization: Theorem 6.1, page 172, multiply by $z\'$.',
       '$1/(z-z_0)$ with $z_0$ inside: Corollary 6.1, page 188, $2\\pi i$. Every other integer power is $0$.',
     ],
-    summit: 'Analytic inside and on a simple closed curve: Theorem 6.5, page 183.',
+    summit: 'Theorem 6.5, page 183, needs $f$ analytic in a simply connected domain and a simple closed contour in that domain.',
     deformSummit: 'Deforming a closed contour through analytic points leaves the integral unchanged.',
   },
   {
@@ -112,7 +112,7 @@ const STAGES = [
   },
   {
     id: '6.5',
-    why: '6.4 needs an antiderivative. This formula returns the inside value.',
+    why: '6.4 needs an antiderivative.',
     go: '6.6',
     goLabel: 'Go to 6.6',
     gesture: 'Drag the green point. The integrand is $z/(z-z_0)$ on the unit circle.',
@@ -124,7 +124,7 @@ const STAGES = [
     ],
     workedPin: 'Theorem 6.10, page 197',
     workedHref: sectionHref('sec_cauchy-integral-formulas.html', 'Cauchy_Int_Formula'),
-    worked: 'For $f(z)=z$ on the unit circle, the formula is $\\dfrac{1}{2\\pi i}\\int \\dfrac{z}{z-z_0}\\,dz$. It applies while the green point stays inside.',
+    worked: 'For $f(z)=z$ on the unit circle, the formula is $\\dfrac{1}{2\\pi i}\\int \\dfrac{z}{z-z_0}\\,dz$.',
     sheet: [
       'Theorem 6.10, page 197: $f(z_0)=\\dfrac{1}{2\\pi i}\\int_C \\dfrac{f(z)}{z-z_0}\\,dz$ when $z_0$ is inside $C$.',
       'Theorem 6.12, page 199, equation (6.48): $f^{(n)}(z_0)=\\dfrac{n!}{2\\pi i}\\int_C \\dfrac{f(z)}{(z-z_0)^{n+1}}\\,dz$. The power in the denominator is $n+1$.',
@@ -133,11 +133,11 @@ const STAGES = [
   },
   {
     id: '6.6',
-    why: 'Purple is a bound on the derivative. Watch it as the circle grows.',
+    why: '',
     next: 'Next camp is Chapter 7, Taylor and Laurent series.',
     go: 'book',
     goLabel: 'Back to the book',
-    gesture: 'Drag the green radius across the circles. When $|f|\\le 1$, purple is the bound $1/R$ on $|f\'|$.',
+    gesture: 'Drag the green radius across the circles. Purple is the bound $1/R$.',
     picture: 'liouville',
     read: [
       { pin: 'Theorem 6.13, page 203', href: sectionHref('sec_morera-liouville.html', 'Morera_s_Thm') },
@@ -146,7 +146,7 @@ const STAGES = [
     ],
     workedPin: 'Theorem 6.18, page 206',
     workedHref: sectionHref('sec_morera-liouville.html', 'Liouville_s_Thm'),
-    worked: 'If $|f|\\le M$ on every circle, Theorem 6.17, page 205, says $|f\'(z_0)|\\le M/R$. One circle is not every circle.',
+    worked: 'If $|f|\\le M$ on every circle, Theorem 6.17, page 205, says $|f\'(z_0)|\\le M/R$.',
     sheet: [
       'Theorem 6.13, page 203: if $f$ is continuous in a simply connected domain and every closed contour integrates to $0$, then $f$ is analytic.',
       '',
@@ -182,6 +182,7 @@ function studentBlank(id, prompt, readStep, onGrade) {
     const right = matches(step, input.value);
     line.dataset.right = right ? 'true' : 'false';
     wrap.dataset.right = right ? 'true' : 'false';
+    wrap.dataset.graded = step.where || '';
     note.hidden = false;
     note.replaceChildren();
     appendRich(note, right ? (step.why || '') : (step.miss || 'The value stays covered.'));
@@ -301,7 +302,7 @@ export function mount(section, ctx) {
     } else if (stage.id === '6.3') {
       blanks.zero = studentBlank('ch6-blank-zero', 'The integral over the triangle is ', fixed(
         '0', ['0+0i'],
-        'The integrand is analytic inside and on the triangle. Theorem 6.5, page 183, is the result. The value stays covered.',
+        'The integrand is analytic in a simply connected domain, and the triangle is a simple closed contour in that domain. Theorem 6.5, page 183, is the result. The value stays covered.',
         'Theorem 6.5, page 183, says the integral is $0$.',
       ), () => paintAll());
       blankHost.append(blanks.zero);
@@ -313,11 +314,31 @@ export function mount(section, ctx) {
       ), () => paintAll());
       blankHost.append(blanks.bend);
     } else if (stage.id === '6.5') {
-      blanks.cauchy = studentBlank('ch6-blank-cauchy', 'The formula returns ', fixed(
-        'the green point', ['green point', 'z_0', 'f(z_0)', '$z_0$'],
-        'Theorem 6.10 returns $f(z_0)$ while the point is inside. Name that point. The words stay covered.',
-        'Inside the circle, the formula returns the green point.',
-      ), () => paintAll());
+      blanks.cauchy = studentBlank('ch6-blank-cauchy', 'The formula returns ', () => {
+        const where = section.querySelector('#ch6-cauchy-stage') && section.querySelector('#ch6-cauchy-stage').dataset.where;
+        if (where === 'outside') {
+          return {
+            where: 'outside',
+            answer: '0', accept: ['0+0i', '$0$'], lock: false,
+            miss: 'Outside, the integral is $0$. The value stays covered.',
+            why: 'Outside, the integral is $0$.',
+          };
+        }
+        if (where === 'inside') {
+          return {
+            where: 'inside',
+            answer: 'the green point', accept: ['green point', 'z_0', 'f(z_0)', '$z_0$'],
+            miss: 'Theorem 6.10 returns $f(z_0)$ while the point is inside. Name that point. The words stay covered.',
+            why: 'Inside the circle, the formula returns the green point.',
+          };
+        }
+        return {
+          where: 'edge',
+          answer: '', accept: [], lock: false,
+          miss: 'The green point is on the circle. Move it inside or outside before you write a value.',
+          why: '',
+        };
+      }, () => paintAll());
       blankHost.append(blanks.cauchy);
     } else {
       blanks.liouville = studentBlank('ch6-blank-liouville', 'If the bound holds on every circle, $f$ is ', fixed(
@@ -366,7 +387,6 @@ export function mount(section, ctx) {
     ];
     let body;
     if (stage.id === '6.3') {
-      const beat = h('p', { class: 'book-label', id: `${scope}-beat` }, 'A pole is the next beat');
       const beatGesture = h('p', { class: 'ch6-gesture', id: `${scope}-deform-gesture` });
       appendRich(beatGesture, 'Drag the green handle. The integrand is $1/z$.');
       const deform = h('div', { class: 'ch6-picture', id: 'ch6-picture-deform' });
@@ -400,7 +420,6 @@ export function mount(section, ctx) {
         ...head,
         blankHost,
         ...summitBlock,
-        beat,
         beatGesture,
         deform,
         worked,
@@ -426,6 +445,20 @@ export function mount(section, ctx) {
     return !!(node && node.dataset.right === 'true');
   }
 
+  // A check is about the point where it was made. Moving the point clears an
+  // unlocked mark so an outside 0 does not count once the point is inside.
+  function dropStale(node, where) {
+    if (!node || node.dataset.right !== 'true') return;
+    if (!node.dataset.graded || node.dataset.graded === where) return;
+    const input = node.querySelector('input');
+    if (input && input.disabled) return;
+    node.dataset.right = 'false';
+    const line = node.querySelector('.exp-blank');
+    if (line) line.dataset.right = 'false';
+    const note = node.querySelector('.hint-note');
+    if (note) note.hidden = true;
+  }
+
   function paintAll() {
     const real = section.querySelector('#ch6-real-stage');
     const sum = section.querySelector('#ch6-sum-stage');
@@ -449,6 +482,7 @@ export function mount(section, ctx) {
     setTick(ticksBtn['6.4'], tickWhys['6.4'], ticks['6.4'] === true, bent && ready(blanks.bend),
       bent ? 'Fill the line' : 'Bend the path');
     const inside = spot === 'inside';
+    dropStale(blanks.cauchy, spot || '');
     setTick(ticksBtn['6.5'], tickWhys['6.5'], ticks['6.5'] === true, inside && ready(blanks.cauchy),
       inside ? 'Fill the line' : 'Bring the point inside');
     const every = !!(liouville && liouville.dataset.every === 'true');

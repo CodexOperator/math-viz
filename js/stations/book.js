@@ -136,7 +136,7 @@ function mountRoadmap(el, ctx, spec) {
       for (const s of ch.sections) {
         const label = `${s.id} ${s.title}`;
         const link = h('a', { href: `#${chapterHash(ch.n, s.id)}`, id: `book-section-link-${slug(s.id)}` },
-          ch.n === 6 ? h('span', { class: 'book-section-name' }, label) : label);
+          h('span', { class: 'book-section-name' }, label));
         sections.append(h('li', { 'data-section': s.id, id: `book-section-${slug(s.id)}` },
           link,
           h('span', { class: 'book-section-page' }, `p. ${s.page}`),
