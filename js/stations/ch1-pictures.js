@@ -214,7 +214,7 @@ export function mountRoots(parent) {
 }
 
 export function mountDisk(parent) {
-  const { view } = plane(parent, 'ch1-disk', [-2.4, 2.4],
+  const { host, view } = plane(parent, 'ch1-disk', [-2.4, 2.4],
     'Drag the green point. Orange is the unit circle. Inside it is the open disk.');
   const claim = h('p', { class: 'ch1-claim', id: 'ch1-disk-claim' });
   let z = { re: 1.5, im: 0 };
@@ -230,6 +230,7 @@ export function mountDisk(parent) {
     drawCircle(ctx, p, ZERO, 1, { color: '--polar', width: 2 });
   });
   function paint() {
+    host._point = z;
     const c = diskClaim(z);
     say(claim, c.text, c.holds);
     view.requestDraw();

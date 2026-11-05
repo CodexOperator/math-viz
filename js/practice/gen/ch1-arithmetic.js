@@ -16,11 +16,9 @@ const TRIPLES = Object.freeze([
 ]);
 
 // Points whose argument is an exact multiple of pi/4. Scale is applied later.
+// Axis points are omitted: Arg and polar follow the modulus generator and skip a zero coordinate.
+// The four diagonals keep a fourth-quadrant case.
 const EXACT = Object.freeze([
-  { re: 1, im: 0, p: 0, q: 1 },
-  { re: 0, im: 1, p: 1, q: 2 },
-  { re: -1, im: 0, p: 1, q: 1 },
-  { re: 0, im: -1, p: -1, q: 2 },
   { re: 1, im: 1, p: 1, q: 4 },
   { re: -1, im: 1, p: 3, q: 4 },
   { re: -1, im: -1, p: -3, q: 4 },
@@ -195,10 +193,9 @@ export function generate(seed, params) {
       answer = fmtCart(w.re, w.im);
       accept = [answer];
     }
-    return {
-      prompt,
-      steps: [step(`The ${word(mode)} is ___`, answer, accept, citeWhy(mode), { re: w.re, im: w.im })],
-    };
+    const row = step(`The ${word(mode)} is ___`, answer, accept, citeWhy(mode), { re: w.re, im: w.im });
+    if (mode === 'div') row.miss = 'Multiply by the conjugate of the denominator first.';
+    return { prompt, steps: [row] };
   }
   if (mode === 'mod') {
     const t = TRIPLES[irand(next, 0, TRIPLES.length - 1)];
@@ -222,10 +219,20 @@ export function generate(seed, params) {
     const ang = angleTex(spot.p, spot.q);
     const theta = (spot.p / spot.q) * PI;
     const r = rTex(re, im);
+    const fourth = re > 0 && im < 0;
+    const argSlips = fourth ? [{
+      match: ['0', '7\\pi/4', '7pi/4', '7π/4'],
+      near: 0,
+      miss: 'The point is in the fourth quadrant, and Arg stays in $(-\\pi,\\pi]$.',
+    }] : [];
+    const argMiss = 'Measure from the positive real axis, and keep the one angle in $(-\\pi,\\pi]$.';
+    const argStep = step('The argument is ___', ang, [ang, ang.replace(/\\/g, '')], 'Definition 1.11, page 23. The angle is measured from the positive real axis.', { angle: theta });
+    argStep.miss = argMiss;
+    argStep.slips = argSlips;
     if (mode === 'arg') {
       return {
         prompt: `Find $\\operatorname{Arg}(${fmtCart(re, im)})$, in $(-\\pi,\\pi]$.`,
-        steps: [step('The argument is ___', ang, [ang, ang.replace(/\\/g, '')], 'Definition 1.11, page 23. The angle is measured from the positive real axis.', { angle: theta })],
+        steps: [argStep],
       };
     }
     const form = r.tex === '1' && theta !== 0 ? `e^{i${ang.startsWith('-') ? `(${ang})` : ang}}` : (theta === 0 ? r.tex : `${r.tex}\\,e^{i${ang.startsWith('-') ? `(${ang})` : ang}}`);
@@ -233,7 +240,7 @@ export function generate(seed, params) {
       prompt: `Write $${fmtCart(re, im)}$ in polar form $re^{i\\theta}$.`,
       steps: [
         step('The modulus is ___', r.tex, r.accept, 'Definition 1.8, page 17.', { real: r.real }),
-        step('The argument is ___', ang, [ang], 'Definition 1.11, page 23.', { angle: theta }),
+        argStep,
         step('The polar form is ___', form, [form, `${r.tex}e^{i${ang}}`, `${r.tex} cis ${ang}`], 'Definition 1.9, page 22, is $r(\\cos\\theta+i\\sin\\theta)$, and Euler writes that as $re^{i\\theta}$.', null),
       ],
     };

@@ -1262,6 +1262,8 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 }
 
 .ch1-sheet li { margin: 0.2rem 0; }
+.ch1-done { width: 100%; }
+.ch1-done .book-status { flex: 1 1 14rem; }
 
 .ch1-steps {
   margin: 0;

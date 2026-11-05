@@ -1505,3 +1505,17 @@ The grader accepts a parsed value. \(\sqrt{10}\), `sqrt(10)`, and 1.414 for \(\s
 2. The 1.2 deck is still Card 1 of 17. The 1.3 deck is still Card 1 of 8.
 3. Proof of (P1) is still both a blank and a multiple choice.
 4. Arg and polar still draw axis points, where one coordinate is zero, on about half of 200 seeds. The modulus generator does not.
+
+## Chapter 1, batch 3
+
+Started from `9b9c273`. Headless Chrome, 390×844 and 1280×800, light and dark. No console errors. No sideways scroll. Times i still ends at y = 724 and y = 794.
+
+Mark stage complete stays disabled until the faded item and the next item on that stage are both right. Flashcards stay outside the gate. The action row repeats “Next is stage 1.1. 0 of 6 stages.” On 1.1 the button stayed disabled after the sum and enabled after the cubic check.
+
+1.2 opens on (0,1)·(0,1), then Exercise 1(f), then i^275, then one copy of the (P1) proof. The deck is Card 1 of 5. The 1.3 deck is Card 1 of 5. Got it and Missed stay. The sheet and the pin links sit under the summit.
+
+A miss names the slip. 5 on Bombelli’s sum, the product-of-coordinates choice, 41+11i in the first factor blank, 0 as the sum of the Args, and “neither is a domain” each got their own line, and the next step stayed closed. Arg and polar skip a zero coordinate and still include a fourth-quadrant point (seed 4 is Arg(3−3i)).
+
+The worked paragraphs stop before the number. 1.3 opens on |4+3i|. 1.4 opens on 1+i. 1.5 practices (√3+i)^10, the k=1 angle 2π/5, and both square roots in Example 1.21. Next root states 2πk/5. 1.6 says the unit circle is the boundary of D1(0), keeps ε=1−|z0|, and asks for the half-closed annulus, the green point, and z(t). (1+i)(1−i)=0 is a distractor, and the miss says conjugate products are |z|^2 > 0.
+
+`node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed.

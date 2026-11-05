@@ -1,5 +1,6 @@
-// Chapter 1 as six stages. A stage is complete when its tick is on.
-// The tick is the same memory as the other chapters.
+// Chapter 1 as six stages. The tick is the same memory as the other chapters.
+// Mark stage complete stays off until the faded blank and the next item are right.
+// Flashcards are outside that gate.
 
 import { CHAPTER_1, chapter1Walk } from '../data/chapter1.js';
 import { loadSharedTicks, saveSharedTicks, toggleTick, sectionFinished, chapterTally } from '../book/progress.js';
@@ -30,10 +31,16 @@ function nextSentence(t) {
   return `Next is stage ${t.nextId}. ${t.sectionsFinished} of ${t.sectionTotal} stages.`;
 }
 
+function gateIds(sectionId) {
+  const items = practiceItems(sectionId);
+  return items.slice(0, Math.min(2, items.length)).map((item) => item.id);
+}
+
 export function mountChapter1(el, ctx, focus) {
   const store = ctx.store;
   const walk = chapter1Walk();
   let ticks = loadTicks(store);
+  const earned = new Map();
   const stops = [];
   const path = h('ol', { class: 'chapter-path', id: 'chapter-path' });
   const status = h('p', { class: 'book-status', id: 'chapter-status' });
@@ -94,14 +101,19 @@ export function mountChapter1(el, ctx, focus) {
       sheet.append(li);
     }
     const practice = h('div', { class: 'chapter-exercises ch1-practice', id: `${scope}-practice` });
-    mountPractice(practice, practiceItems(section.id));
+    mountPractice(practice, practiceItems(section.id), (id) => {
+      if (!earned.has(section.id)) earned.set(section.id, new Set());
+      earned.get(section.id).add(id);
+      paintTicks();
+    });
     const deck = h('div', { class: 'ch1-deck', id: `${scope}-deck` });
     mountDeck(deck, flashItems(section.id), store);
     const summit = h('p', { class: 'stage-summit', id: `${scope}-summit` });
     appendRich(summit, section.summit);
     const tick = h('button', {
       type: 'button', class: 'btn', id: `chapter-tick-${slug(section.id)}`, 'aria-pressed': 'false',
-    }, 'Stage complete');
+    }, 'Mark stage complete');
+    const where = h('p', { class: 'book-status', id: `${scope}-next` });
     tick.addEventListener('click', () => {
       ticks = toggleTick(ticks, section.id);
       saveSharedTicks(store, ticks);
@@ -119,20 +131,22 @@ export function mountChapter1(el, ctx, focus) {
       ...lead,
       h('p', { class: 'book-label' }, 'Why you\'d care'),
       why,
-      h('p', { class: 'book-label' }, 'Pinned'),
-      read,
       h('p', { class: 'book-label' }, 'Worked example'),
       worked,
-      h('p', { class: 'book-label' }, 'Memory'),
-      sheet,
       h('p', { class: 'book-label' }, 'Practice'),
       practice,
       h('p', { class: 'book-label' }, 'Cards'),
       deck,
       h('p', { class: 'book-label' }, 'Summit'),
       summit,
-      h('div', { class: 'problem-actions' }, tick));
+      h('p', { class: 'book-label' }, 'Memory'),
+      sheet,
+      h('p', { class: 'book-label' }, 'Pinned'),
+      read,
+      h('div', { class: 'problem-actions ch1-done', id: `${scope}-actions` }, where, tick));
     node._tick = tick;
+    node._where = where;
+    node._gate = gateIds(section.id);
     return node;
   }
 
@@ -170,11 +184,23 @@ export function mountChapter1(el, ctx, focus) {
     return body;
   }
 
+  function gateMet(node) {
+    const need = node._gate || [];
+    if (!need.length) return false;
+    const got = earned.get(node.getAttribute('data-section'));
+    if (!got) return false;
+    return need.every((id) => got.has(id));
+  }
+
   function paintTicks() {
+    const sentence = nextSentence(chapterTally(walk, ticks));
     for (const section of walk) {
       const node = path.querySelector(`#chapter-section-${slug(section.id)}`);
       if (!node || !node._tick) continue;
+      if (node._where) node._where.textContent = sentence;
       const on = ticks[section.id] === true;
+      const open = on || gateMet(node);
+      node._tick.disabled = !open;
       node._tick.setAttribute('aria-pressed', on ? 'true' : 'false');
       node._tick.textContent = on ? 'Stage complete' : 'Mark stage complete';
     }

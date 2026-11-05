@@ -127,12 +127,13 @@ check('eleven chapters, 1, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_C
   const walked = CHAPTER_1.sections.filter((s) => s.exercises.length);
   const flashes = practiceCh1.filter((item) => item.kind === 'flash');
   const refs = new Set(flashes.map((item) => item.cite.ref));
-  const need = ['Equation (1.6)', 'Equation (1.7)', 'Definition 1.1', 'Definition 1.3', 'Definition 1.4', 'Definition 1.8', 'Identity (1.22)', 'Definition 1.9', 'Definition 1.11', 'Theorem 1.3', 'Equation (1.40)', 'Equation (1.43)', 'Equation (1.50)'];
+  const need = ['Equation (1.6)', 'Definition 1.1', 'Definition 1.3', 'Definition 1.4', 'Definition 1.8', 'Identity (1.22)', 'Definition 1.9', 'Definition 1.11', 'Theorem 1.3', 'Equation (1.40)', 'Equation (1.43)', 'Equation (1.50)'];
+  const flashCount = (section) => flashes.filter((item) => item.section === section).length;
   check('chapter 1 walks all six stages',
     walked.map((s) => s.id).join() === '1.1,1.2,1.3,1.4,1.5,1.6'
     && chapter1StageIds().join() === '1.1,1.2,1.3,1.4,1.5,1.6'
     && CHAPTER_1.sections.every((s) => s.memory.length > 0));
-  check('chapter 1 flashes are the lines the exam writes', need.every((ref) => refs.has(ref)) && !refs.has('Equation (1.1)') && !refs.has('Equation (1.3)'));
+  check('chapter 1 flashes are the lines the exam writes', need.every((ref) => refs.has(ref)) && !refs.has('Equation (1.1)') && !refs.has('Equation (1.3)') && flashCount('1.2') === 5 && flashCount('1.3') === 5);
   {
     const prod = practiceCh1.find((item) => item.id === 'ch1-1.2-ex1f').steps.at(-1);
     const modLast = practiceCh1.find((item) => item.id === 'ch1-1.3-ex1a').steps.at(-1);
@@ -144,9 +145,11 @@ check('eleven chapters, 1, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_C
       && matchesCh1('sqrt(2)', modFirst) && !matchesCh1('sqrt(10)', modFirst)
       && diff.steps.length === 2 && /difference/.test(diff.steps[1].text) && diff.steps[1].answer.includes('-2+2i'));
   }
-  check('chapter 1 practice has a proof in both forms and a generator',
-    practiceCh1.some((item) => item.kind === 'proof-blank' && item.section === '1.2')
-    && practiceCh1.some((item) => item.kind === 'proof-mc' && item.section === '1.2')
+  const proofs = practiceCh1.filter((item) => item.section === '1.2' && (item.kind === 'proof-blank' || item.kind === 'proof-mc'));
+  const order12 = practiceCh1.filter((item) => item.section === '1.2' && item.kind !== 'flash').map((item) => item.id);
+  check('chapter 1 practice has one commutativity proof and a generator',
+    proofs.length === 1 && proofs[0].kind === 'proof-mc'
+    && order12[0] === 'ch1-1.2-ii' && order12[1] === 'ch1-1.2-ex1f' && order12[2] === 'ch1-1.2-ex1a'
     && practiceCh1.some((item) => item.kind === 'next-step-blank' && item.cite.page === 15)
     && practiceCh1.some((item) => item.generator && item.generator.template === 'ch1-arithmetic' && item.generator.params.mode === 'polar'));
   const made = generateCh1(7, { mode: 'div', re: [-4, 4], im: [-4, 4] });
@@ -170,6 +173,7 @@ check('eleven chapters, 1, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_C
     && modulusClaim({ re: 3.5, im: 3.5 }).holds === false && modulusClaim({ re: 5, im: 1 }).holds === false
     && polarClaim({ re: 1, im: 1 }).holds === true && polarClaim({ re: -1, im: 0 }).holds === false
     && rootClaim(0).holds === true && rootClaim(1).holds === false
+    && rootClaim(1).text.includes('2\\pi\\cdot 1/5') && rootClaim(0).text.includes('Five equal turns')
     && diskClaim({ re: 0.2, im: 0 }).holds === true && diskClaim({ re: 1, im: 0 }).holds === false && diskClaim({ re: 1.5, im: 0 }).holds === false);
   {
     let zeroCoord = false;
@@ -204,8 +208,9 @@ check('eleven chapters, 1, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_C
       return { re: (a.re * b.re + a.im * b.im) / d, im: (a.im * b.re - a.re * b.im) / d };
     };
     let argOk = true;
-    let sawPi = false;
     let sawNeg = false;
+    let sawQ4 = false;
+    let axisPoint = false;
     for (let seed = 1; seed <= 48; seed++) {
       for (const mode of ['add', 'sub', 'mul', 'div']) {
         const g = generateCh1(seed, { mode, re: [-5, 5], im: [-5, 5] });
@@ -232,15 +237,16 @@ check('eleven chapters, 1, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_C
         if (theta <= -Math.PI || theta > Math.PI + 1e-9) argOk = false;
         if (!matchesCh1(argStep.answer, argStep)) argOk = false;
         if (argStep.answer.includes('\\pi') && matchesCh1(argStep.answer.replace('\\pi', '3\\pi'), argStep)) argOk = false;
-        if (Math.abs(theta - Math.PI) < 1e-9) {
-          sawPi = true;
-          if (matchesCh1('-\\pi', argStep) || matchesCh1('-pi', argStep)) argOk = false;
-        }
+        if (z.re === 0 || z.im === 0) axisPoint = true;
+        if (z.re > 0 && z.im < 0) sawQ4 = true;
         if (theta < 0) sawNeg = true;
         if (mode === 'polar' && !close(g.steps[0].value.real, Math.hypot(z.re, z.im))) argOk = false;
       }
     }
-    check('chapter 1 generator answers recompute, and Arg stays principal', argOk && sawPi && sawNeg);
+    const onAxis = { answer: '\\pi', accept: ['\\pi', 'pi'], value: { angle: Math.PI } };
+    check('chapter 1 generator answers recompute, and Arg stays principal',
+      argOk && sawNeg && sawQ4 && axisPoint === false
+      && matchesCh1('\\pi', onAxis) && !matchesCh1('-\\pi', onAxis) && !matchesCh1('-pi', onAxis));
   }
   {
     const euler = CHAPTER_1.sections.find((s) => s.id === '1.4').read.find((item) => item.pin.startsWith('Euler'));

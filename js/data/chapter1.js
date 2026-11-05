@@ -30,7 +30,7 @@ export const CHAPTER_1 = deepFreeze({
       id: '1.1',
       title: 'The Origin of Complex Numbers',
       page: 1,
-      why: 'The cubic $x^3-15x-4=0$ has the real root $4$. Formula (1.3), page 2, writes that root as two cube roots, and the number under the square root is negative. The picture is the quarter turn that $\\sqrt{-1}$ is asking you to allow.',
+      why: 'The cubic $x^3-15x-4=0$ has a real root you can check by hand. Formula (1.3), page 2, writes a root as two cube roots, and the number under the square root is negative. The picture is the quarter turn that $\\sqrt{-1}$ is asking you to allow.',
       summit: 'Bombelli’s $4$ is $(2+\\sqrt{-1})+(2-\\sqrt{-1})$. Equation (1.6), page 3.',
       idea: 'Equation (1.6), page 3: $(2+\\sqrt{-1})+(2-\\sqrt{-1})=4$, and $4$ satisfies $x^3-15x-4=0$.',
       read: [
@@ -42,7 +42,7 @@ export const CHAPTER_1 = deepFreeze({
         pin: 'Equation (1.6), page 3',
         href: sectionHref(ORIGIN, 'x1_1_6'),
         title: 'Check the root the imaginaries produced',
-        body: 'Bombelli reached $(2+\\sqrt{-1})+(2-\\sqrt{-1})$. The square roots cancel and the sum is $4$. Then $4^3-15\\cdot 4-4=64-60-4=0$, so $4$ really is a root of $x^3-15x-4=0$. The detour was not optional: the formula passed through $\\sqrt{-1}$ on the way to a number you can see.',
+        body: 'Bombelli reached $(2+\\sqrt{-1})+(2-\\sqrt{-1})$. The square roots of $-1$ are opposites. Add the pair, then substitute that sum into $x^3-15x-4$. The formula passed through $\\sqrt{-1}$ on the way to a number you can see.',
       },
       memory: [
         'This stage is the story. The written work starts at 1.2.',
@@ -71,7 +71,7 @@ export const CHAPTER_1 = deepFreeze({
         pin: 'Page 13, from Definition 1.3',
         href: sectionHref(ALG1, 'sec_algebra-1-24'),
         title: 'Multiply $(0,1)$ by itself',
-        body: 'Definition 1.3 says $(x_1,y_1)(x_2,y_2)=(x_1 x_2-y_1 y_2,\\, x_1 y_2+x_2 y_1)$. So $(0,1)(0,1)=(0\\cdot 0-1\\cdot 1,\\, 0\\cdot 1+1\\cdot 0)=(-1,0)$. The book identifies $(-1,0)$ with the real number $-1$. That is $i^2=-1$, with $i$ the point one unit above the origin. Example 1.1, page 10, is the same addition on a different pair: $(3,7)+(5,-6)=(8,1)$.',
+        body: 'Definition 1.3 says $(x_1,y_1)(x_2,y_2)=(x_1 x_2-y_1 y_2,\\, x_1 y_2+x_2 y_1)$. Apply that rule to $(0,1)$ and $(0,1)$. Page 13 identifies the resulting pair with a real number, and that real number is what $i^2$ is. Example 1.1, page 10, is addition on a different pair, $(3,7)+(5,-6)$.',
       },
       memory: [
         'Add or subtract coordinate by coordinate. Definitions 1.1 and 1.2.',
@@ -103,7 +103,7 @@ export const CHAPTER_1 = deepFreeze({
         pin: 'Page 17, and Figure 1.10 on page 18',
         href: sectionHref(GEO1, 'fig_ch-01-10'),
         title: 'The length of $4+3i$',
-        body: 'Definition 1.8 gives $|4+3i|=\\sqrt{4^2+3^2}=\\sqrt{25}=5$. The legs of the right triangle are $|\\operatorname{Re}(z)|=4$ and $|\\operatorname{Im}(z)|=3$, and Identity (1.21) says each leg is at most the hypotenuse. Example 1.6, page 20, is the same length doing arithmetic: $|1+2i|\\,|3+2i|=\\sqrt{5}\\sqrt{13}=\\sqrt{65}=|z_1 z_2|$.',
+        body: 'Definition 1.8 writes $|4+3i|$ as $\\sqrt{4^2+3^2}$. The legs are the real part and the imaginary part, and Identity (1.21) says each leg is at most the hypotenuse. Example 1.6, page 20, is the same length doing arithmetic on a different pair.',
       },
       memory: [
         '$|z|=\\sqrt{x^2+y^2}$. That is the distance to $0$. Definition 1.8.',
@@ -133,7 +133,7 @@ export const CHAPTER_1 = deepFreeze({
         pin: 'Example 1.13, page 27',
         href: sectionHref(GEO2, 'sec_geometry-2-43'),
         title: '$1+i$ in polar form',
-        body: 'Definition 1.8 gives $|1+i|=\\sqrt{2}$. Definition 1.11 puts the angle in $(-\\pi,\\pi]$, and that angle is $\\pi/4$. Definition 1.9 writes $1+i=\\sqrt{2}\\,(\\cos\\pi/4+i\\sin\\pi/4)$. Euler\'s formula, page 25, is the same point as $\\sqrt{2}\\,e^{i\\pi/4}$.',
+        body: '$1+i$ sits one unit right and one unit up. Definition 1.8 is the length, Definition 1.11 is the angle in $(-\\pi,\\pi]$, and Definition 1.9 is the polar form. Euler\'s formula, page 25, writes the same point.',
       },
       memory: [
         'Arg $z$ is the one angle in $(-\\pi,\\pi]$. Definition 1.11, page 23. It is undefined at $0$.',
@@ -163,7 +163,7 @@ export const CHAPTER_1 = deepFreeze({
         pin: '§1.5, Exercise 2, page 34',
         href: sectionHref(ALG2, 'x1_5_2a'),
         title: '$(\\sqrt{3}+i)^4$ by De Moivre',
-        body: '$|\\sqrt{3}+i|=2$ and Arg $=\\pi/6$. Equation (1.40) multiplies the angle by $4$ and raises the length to the fourth: $2^4$ at angle $2\\pi/3$ is $16(-1/2+i\\sqrt{3}/2)=-8+8\\sqrt{3}\\,i$.',
+        body: 'Exercise 2, page 34, raises $\\sqrt{3}+i$ to the fourth power. Read the length and the argument, then Equation (1.40) multiplies the angle by $4$ and raises the length to the fourth. The practice below uses a different exponent.',
       },
       memory: [
         'De Moivre, Equation (1.40), page 30: $(\\cos\\theta+i\\sin\\theta)^n=\\cos n\\theta+i\\sin n\\theta$. The length becomes $r^n$.',
@@ -178,7 +178,7 @@ export const CHAPTER_1 = deepFreeze({
       id: '1.6',
       title: 'The Topology of Complex Numbers',
       page: 35,
-      why: 'The sets in the rest of the book are disks, circles, and the regions between them. Open, closed, and domain are the words the exercises grade.',
+      why: 'The unit circle from stage 1.5 is the boundary of $D_1(0)$. Open, closed, and domain are the words the exercises grade for the disk inside that circle and for the regions between circles.',
       summit: 'The open unit disk is a domain. The closed disk is not, because the boundary is not interior.',
       idea: 'Equation (1.50), page 37: $D_\\varepsilon(z_0)=\\{z:\\,|z-z_0|<\\varepsilon\\}$. Exercise 6, page 41: $D_1(0)$ is a domain and the closed disk is not.',
       read: [
@@ -191,7 +191,7 @@ export const CHAPTER_1 = deepFreeze({
         pin: 'Example 1.25, page 38',
         href: sectionHref(TOP, 'TopologyEx'),
         title: 'The open unit disk',
-        body: '$S=D_1(0)=\\{z:\\,|z|<1\\}$. Example 1.25 takes a point inside and chooses $\\varepsilon=1-|z_0|$, so a whole disk about that point stays in $S$. The exterior is $|z|>1$ and the boundary is the circle $|z|=1$. Exercise 6, page 41, records the consequence: $S$ is a domain, and the closed disk is not.',
+        body: '$S=D_1(0)=\\{z:\\,|z|<1\\}$. Example 1.25 takes a point inside and chooses $\\varepsilon=1-|z_0|$, so a whole disk about that point stays in $S$. The exterior is $|z|>1$ and the boundary is the circle $|z|=1$.',
       },
       memory: [
         'A segment from $z_0$ to $z_1$ is $z(t)=z_0+t(z_1-z_0)$ for $0\\le t\\le 1$. Equation (1.48), page 35.',
@@ -259,6 +259,7 @@ const CITE_HREF = {
   'Equation (1.50)': sectionHref(TOP, 'OpenDisk'),
   'Example 1.25': sectionHref(TOP, 'TopologyEx'),
   '§1.6, Exercise 6': sectionHref(TOP, 'x1_6_6'),
+  '§1.6, Exercise 9': sectionHref(TOP, 'x1_6_9'),
   '§1.6, Exercise 1(a)': sectionHref(TOP, 'x1_6_1'),
 };
 
@@ -326,17 +327,31 @@ export function polarClaim(z) {
   return { holds: false, text: 'Arg is the angle from the positive real axis, in $(-\\pi,\\pi]$. This point is not $1+i$.' };
 }
 
-// The fifth roots of unity. True only at k = 0, which is 1.
+// The fifth roots of unity. Each state names its angle 2πk/5.
+// The spacing sentence is the one that holds, and it holds only at k = 0.
 export function rootClaim(k) {
   const n = ((Math.round(k) % 5) + 5) % 5;
-  if (n === 0) return { holds: true, k: n, text: 'The root for $k=0$ is $1$. Equation (1.43), page 31.' };
-  return { holds: false, k: n, text: `This root is $e^{i 2\\pi \\cdot ${n}/5}$, not $1$.` };
+  const angle = `$2\\pi\\cdot ${n}/5$`;
+  if (n === 0) {
+    return { holds: true, k: n, text: `Angle ${angle}. Five equal turns, and this one is $1$.` };
+  }
+  return { holds: false, k: n, text: `Angle ${angle}. One of the five turns, not the finished spacing.` };
 }
 
 export function rootPoint(k) {
   const n = ((Math.round(k) % 5) + 5) % 5;
   const t = (2 * Math.PI * n) / 5;
   return { re: Math.cos(t), im: Math.sin(t) };
+}
+
+// inside / boundary / outside, using the same cut as the picture sentence.
+export function diskPlace(z) {
+  const re = Number(z && z.re);
+  const im = Number(z && z.im);
+  const r = Math.hypot(re, im);
+  if (r < 1 - 1e-4) return 'inside';
+  if (r <= 1 + 1e-4) return 'boundary';
+  return 'outside';
 }
 
 // True only inside the open unit disk. The boundary sentence is the circle itself.

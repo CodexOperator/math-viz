@@ -2,8 +2,8 @@
 // One flashcard at a time. A blank or a choice stays closed until the student answers.
 
 import ITEMS from '../../data/practice/ch1.json' with { type: 'json' };
-import { generate, matches } from '../practice/gen/ch1-arithmetic.js';
-import { citeHref } from '../data/chapter1.js';
+import { generate, matches, normMath } from '../practice/gen/ch1-arithmetic.js';
+import { citeHref, diskPlace } from '../data/chapter1.js';
 import { h, appendRich, sourceTag } from './test2-ui.js';
 
 export function itemsFor(section, kind) {
@@ -47,11 +47,50 @@ function withBlank(parent, text, control) {
   });
 }
 
-export function mountPractice(parent, items) {
-  for (const item of items) parent.append(practiceCard(item));
+export function mountPractice(parent, items, onItem) {
+  for (const item of items) parent.append(practiceCard(item, onItem));
 }
 
-function practiceCard(item) {
+function missFor(step, raw) {
+  const got = normMath(raw);
+  const slips = Array.isArray(step.slips) ? step.slips : [];
+  for (const slip of slips) {
+    const list = slip.match || [];
+    if (list.some((item) => normMath(item) === got)) return slip.miss;
+  }
+  if (/^-?\d+(\.\d+)?$/.test(got)) {
+    const n = Number(got);
+    for (const slip of slips) {
+      if (typeof slip.near === 'number' && Math.abs(n - slip.near) < 1e-9) return slip.miss;
+    }
+  }
+  if (step.miss) return step.miss;
+  return 'That is a different move.';
+}
+
+function diskNow() {
+  const host = document.getElementById('ch1-disk-host');
+  return host && host._point ? host._point : null;
+}
+
+function diskWhy(place) {
+  if (place === 'inside') return 'Inside means $|z|<1$. Example 1.25, page 38.';
+  if (place === 'boundary') return 'The open disk does not include $|z|=1$. Example 1.25, page 38.';
+  return 'Outside means $|z|>1$. Example 1.25, page 38.';
+}
+
+function diskMiss(picked, place) {
+  if (!place) return 'Drag the green point on the picture, then choose again.';
+  if (picked === 'inside' && place === 'outside') return 'The length from $0$ is greater than $1$.';
+  if (picked === 'inside' && place === 'boundary') return 'The open disk does not include the circle.';
+  if (picked === 'outside' && place === 'inside') return 'The length from $0$ is less than $1$.';
+  if (picked === 'outside' && place === 'boundary') return 'The green point is on the orange circle.';
+  if (picked === 'boundary' && place === 'outside') return 'The green point is not on the orange circle.';
+  if (picked === 'boundary' && place === 'inside') return 'The boundary is the circle. This point is off that circle.';
+  return 'Look at the green point against the orange circle.';
+}
+
+function practiceCard(item, onItem) {
   let seed = seedOf(item.id);
   const slug = domId(item.id);
   const card = h('article', { class: 'ch1-item', id: `ch1-card-${slug}` });
@@ -79,7 +118,10 @@ function practiceCard(item) {
     stepsHost.replaceChildren();
     memory.hidden = true;
     view.steps.forEach((step, index) => {
-      stepsHost.append(stepRow(item, step, index, () => { memory.hidden = false; }));
+      stepsHost.append(stepRow(item, step, index, () => {
+        memory.hidden = false;
+        if (typeof onItem === 'function') onItem(item.id);
+      }));
     });
     openFirst(stepsHost);
   }
@@ -97,17 +139,38 @@ function stepRow(item, step, index, onRight) {
   const row = h('li', { class: 'ch1-step', id: `ch1-step-${slug}-${index}`, 'data-right': 'false' });
   const note = h('p', { class: 'ch1-note', id: `ch1-why-${slug}-${index}` });
   note.hidden = true;
-  const reveal = (right) => {
+  const reveal = (right, line) => {
     row.dataset.right = right ? 'true' : 'false';
     note.hidden = false;
     note.replaceChildren();
-    appendRich(note, right ? step.why : (step.miss || 'Not that one.'));
+    const text = right ? (line || step.why || '') : (line || missFor(step, ''));
+    appendRich(note, text);
     if (!right) return;
     const next = row.nextElementSibling;
     if (next) next.hidden = false;
     else onRight();
   };
-  if (step.choices && step.choices.length) {
+  if (step.live === 'disk' && step.choices && step.choices.length) {
+    const ask = h('p', { class: 'ch1-ask' });
+    withBlank(ask, step.text, null);
+    const choices = h('div', { class: 'ch1-choices', id: `ch1-choices-${slug}-${index}` });
+    const places = step.places || [];
+    step.choices.forEach((choice, n) => {
+      const b = h('button', { type: 'button', class: 'btn', id: `ch1-choice-${slug}-${index}-${n}` });
+      appendRich(b, choice);
+      b.addEventListener('click', () => {
+        if (row.dataset.right === 'true') return;
+        const z = diskNow();
+        const place = z ? diskPlace(z) : null;
+        const picked = places[n];
+        const right = place != null && picked === place;
+        b.dataset.right = right ? 'true' : 'false';
+        reveal(right, right ? diskWhy(place) : diskMiss(picked, place));
+      });
+      choices.append(b);
+    });
+    row.append(ask, choices, note);
+  } else if (step.choices && step.choices.length) {
     const ask = h('p', { class: 'ch1-ask' });
     withBlank(ask, step.text, null);
     const choices = h('div', { class: 'ch1-choices', id: `ch1-choices-${slug}-${index}` });
@@ -118,7 +181,7 @@ function stepRow(item, step, index, onRight) {
         if (row.dataset.right === 'true') return;
         const right = matches(choice, step);
         b.dataset.right = right ? 'true' : 'false';
-        reveal(right);
+        reveal(right, right ? step.why : missFor(step, choice));
       });
       choices.append(b);
     });
@@ -137,7 +200,7 @@ function stepRow(item, step, index, onRight) {
     const go = () => {
       if (row.dataset.right === 'true') return;
       const right = matches(input.value, step);
-      reveal(right);
+      reveal(right, right ? step.why : missFor(step, input.value));
       if (right) input.disabled = true;
     };
     check.addEventListener('click', go);
