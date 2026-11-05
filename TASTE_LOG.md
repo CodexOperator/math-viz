@@ -1932,3 +1932,52 @@ The worked paragraph starts at the rule or the verb. The source tag still carrie
 The length card names the Arg wrap, \(-\pi/3\), and the blank is still 1024. Example 1.9, page 23, is \(\operatorname{Arg}(1+i)=\pi/4\). Example 1.7, page 22, stays the angle. The 1.4 summit calls polar form Definition 1.9, \(r(\cos\theta+i\sin\theta)\), and Equation (1.35), page 25, the exponential form.
 
 The shared practice engine is not on this branch, so Chapter 1 still renders the schema with the local card. Progress is still localStorage. Sign-in is not on this branch. Chapters 8 and later were not touched.
+
+## reviewer (chapter-1 batch 6)
+
+Preview https://ch1-preview.complexanalysis.pages.dev, tip `295e9e2` on `cursor/chapter-1` (PR #44), checked against Howell & Mathews, Complex Analysis, 202 Updated Edition (PDF, 471 pages; title page “202 Updated Edition”; contents i–ii; printed pages 1–42). Two corrections are pushed on `cursor/chapter-1`. Did not merge. Did not touch `gh-pages`.
+
+### Verdict
+
+ACCEPT WITH FIXES. The stage arithmetic, the named pages, and the batch 6 sentences match the print edition. One pin drop removed Equation (1.52) from the page, and one memory line still called the exponential form polar form. Those are corrected.
+
+### What the book says
+
+Definition 1.9, page 22, is identity (1.27): \(z=r(\cos\theta+i\sin\theta)\). Example 1.7, the same page, writes \(1+i\) with length \(\sqrt{2}\) and angle \(\pi/4\). Definition 1.11, page 23, is the one value in \((-\pi,\pi]\). Example 1.9, the same page, is \(\operatorname{Arg}(1+i)=\pi/4\). Euler’s formula is equation (1.32), page 25. The exponential form is equation (1.35) on that page, \(z=re^{i\theta}\). The HTML anchor `sec_geometry-2-13` is that Arg sentence; the HTML heading numbers it Example 1.4.7. `Exponential_Form` is \(z=re^{i\theta}\); the HTML tag is (1.4.9).
+
+\((\sqrt{3}+i)\) has length \(2\) and argument \(\pi/6\). The tenth power has length \(2^{10}=1024\) and argument \(5\pi/3\). Arg, in \((-\pi,\pi]\), is \(-\pi/3\). Exercise 2, page 34, is the fourth power, \(-8+8\sqrt{3}\,i\).
+
+Equation (1.48), page 35, prints \(z(t)=z_0+(z_1-z_0)t\) for \(0\le t\le 1\). Equations (1.50), (1.51), and (1.52), page 37, are the open disk, the closed disk \(|z-z_0|\le\varepsilon\), and the punctured disk \(0<|z-z_0|<\varepsilon\). Example 1.25, page 38, chooses \(\varepsilon=1-|z_0|\) inside \(D_1(0)\). Definition 1.8, page 17, computes \(|4+3i|=5\). The distance \(|z_1-z_2|\) is the paragraph on page 18. Figure 1.9, on page 17, is the difference \(z_1-z_2\).
+
+`node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. Fractal smoke was run again after the corrections. `js/core/map-route.js` is byte-identical to the kit copy. No live file imports `kit/`.
+
+### Fixes
+
+The closed-disk memory linked \(|z-z_0|\le\varepsilon\) under the name of both (1.51) and (1.52), and the pin that named the punctured disk was dropped. The line now links the closed disk to Equation (1.51) and the punctured disk \(0<|z-z_0|<\varepsilon\) to Equation (1.52). Both open `sec_topology-14`. The combined pin stays off the list.
+
+The generated card’s memory said polar form is the length times \(e\) to the \(i\) times the angle. That sentence is Equation (1.35). The memory now says so, and it names Definition 1.9 as \(r(\cos\theta+i\sin\theta)\). The card’s source tag is Equation (1.35), page 25. The headings are “Exponential form” and “A fresh exponential form.” The 1.4 opener names that pair.
+
+### The walk
+
+Headless Chrome on the preview, 390×844 then 1280×800, light then dark. Fresh storage. No console errors. No failed requests. No sideways scroll (`scrollWidth` 390 at 390; 1265 at 1280, matching the client width).
+
+The plane is 324×324 on the phone and 400×400 on the laptop, at x = 33 and x = 321, the same x as the claim. Times i is 94×44 and ends at y = 724 on the phone and y = 742 on the laptop, in both themes. The stage title is a whole line, y = 724 to 751 on the phone and y = 742 to 769 on the laptop. Page 1 ends at y = 782 on the phone and sits on the 800 edge on the laptop. From the sidebar breakpoint up, the in-page Book is `display: none` and the sidebar row is 263×44. The phone keeps the 109×44 Book. Paper is `rgb(246, 243, 236)` in the light and `rgb(13, 18, 28)` in the dark. The title is `rgb(26, 34, 48)` and `rgb(233, 237, 245)`.
+
+Two presses say \(i^2\) landed on \(-1\). Two more say “Back at 1.” The \(1+i\) chip says length \(\sqrt{2}\), angle \(\pi/4\), Example 1.7, page 22, and Arg \(\pi/4\), Example 1.9, page 23. The \(4+3i\) chip says the length is 5. On the phone the 1.3 claim is 324×53, and “It is not 5.” is one line.
+
+With nothing marked, the only Next is the 1.1 row, and the button is Walk Chapter 1. After the six stages, the only Next is 4.1, the status is “Next is §4.1, Exercise 3. 0 of 8 exercises,” and the button is Walk Chapter 4. Chapter 1 then says Open. Later and Open are sentence case. Chapter 1 has no “Already drawn” line. Chapters 2 and 3 keep theirs. On a book route the menu is named Chapters, “Show the chapters.” On the map it is Places.
+
+“The first two unlock the stage.” is absent. The first cards of 1.2 and 1.3 have no repeated heading. The 1.2, 1.5, and 1.6 paragraphs start at the rule or the verb. Stage 1.1 keeps its three pins. On 1.3 through 1.6 the linked formula is not listed again. The length card says ten times \(\pi/6\) is \(5\pi/3\), Arg wraps it to \(-\pi/3\), and the blank is \(2^{10}\).
+
+### Still open
+
+1. The 1.3 worked paragraph still opens “Definition 1.8 writes \(|4+3i|\) as \(\sqrt{4^2+3^2}\).” The tag already names page 17 and Figure 1.10.
+2. The segment memory writes \(z(t)=z_0+t(z_1-z_0)\). Equation (1.48) prints \(z_0+(z_1-z_0)t\). The blank accepts both.
+3. The polar flash still faces “Polar form” and answers \(r(\cos\theta+i\sin\theta)=re^{i\theta}\). The why splits Definition 1.9 and Equation (1.35). The equality is true.
+4. The distance link opens Figure 1.9, the difference picture. The formula sentence is the next paragraph, printed page 18.
+5. Several memory lines still name the definition in prose after the formula that is already the link.
+6. The shared practice engine is not on this branch. Chapter 1 still renders the schema with the local card. Progress is still localStorage.
+
+### What to keep
+
+The four colours, the Iowan title, the muted lede, the paper, and the button, in light and in dark. The plane at 400×400 on the 800px screen and 324×324 on the phone, with Times i ending at y = 742 and y = 724. The stage title as a whole line. The sidebar Book at the wide breakpoint, and the 109×44 Book on the phone. One Next, on the row the walk points at. The Chapters name on a book route, and Places on the map. The Arg wrap on the length card, with the blank still 1024. Example 1.9 on the \(1+i\) claim, and the 1.4 summit splitting Definition 1.9 from Equation (1.35). The first cards of 1.2 and 1.3 without a repeated heading. The opener sentence in the action row. Stage 1.1’s three pins. “It is not 5.” on one line. Two presses landing on \(-1\), and “Back at 1.” leaving the sentence able to be earned again only by the turn the picture shows.

@@ -1292,8 +1292,8 @@
     "chapter": 1,
     "section": "1.4",
     "cite": {
-      "ref": "Definition 1.9",
-      "page": 22
+      "ref": "Equation (1.35)",
+      "page": 25
     },
     "kind": "blank",
     "prompt": "A fresh pair, from the same rule.",
@@ -1319,7 +1319,7 @@
         ]
       }
     },
-    "memory": "Polar form is the length times $e$ to the $i$ times the angle."
+    "memory": "Equation (1.35), page 25, is $re^{i\\theta}$. Definition 1.9 is $r(\\cos\\theta+i\\sin\\theta)$."
   },
   {
     "id": "ch1-1.4-gen-arg",

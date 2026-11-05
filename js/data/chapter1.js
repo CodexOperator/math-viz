@@ -196,7 +196,7 @@ export const CHAPTER_1 = deepFreeze({
       memory: [
         'A segment from $z_0$ to $z_1$ is [[$z(t)=z_0+t(z_1-z_0)$@@Equation (1.48)]] for $0\\le t\\le 1$. Equation (1.48), page 35.',
         'The open disk is [[$|z-z_0|<\\varepsilon$@@Equation (1.50)]]. Equation (1.50), page 37. The boundary is not included.',
-        'The closed disk is [[$|z-z_0|\\le\\varepsilon$@@Equations (1.51) and (1.52)]]. Equation (1.51). The punctured disk leaves out the center.',
+        'The closed disk is [[$|z-z_0|\\le\\varepsilon$@@Equation (1.51)]]. The punctured disk is [[$0<|z-z_0|<\\varepsilon$@@Equation (1.52)]], so the center is left out.',
         'A boundary point has every neighborhood meeting the set and its complement.',
         'A domain is open and connected. [[Exercise 6@@§1.6, Exercise 6]], page 41: $D_1(0)$ is one, and the closed disk is not.',
       ],
@@ -264,6 +264,8 @@ const CITE_HREF = {
   '§1.5, Exercise 2': sectionHref(ALG2, 'x1_5_2a'),
   'Equation (1.48)': sectionHref(TOP, 'sec_topology-3'),
   'Equation (1.50)': sectionHref(TOP, 'OpenDisk'),
+  'Equation (1.51)': sectionHref(TOP, 'sec_topology-14'),
+  'Equation (1.52)': sectionHref(TOP, 'sec_topology-14'),
   'Example 1.25': sectionHref(TOP, 'TopologyEx'),
   'Figure 1.30': sectionHref(TOP, 'fig_ch-01-30'),
   'Bounded set': sectionHref(TOP, 'sec_topology-27'),

@@ -40,7 +40,7 @@ const OPENERS = {
   '1.1': 'The sum and the cubic check open this.',
   '1.2': '$(0,1)(0,1)$ and Exercise 1(f) open this.',
   '1.3': 'The length of $4+3i$ and $|(1+i)(2+i)|$ open this.',
-  '1.4': '$1+i$ in polar form and the next polar pair open this.',
+  '1.4': 'The exponential form of $1+i$ and the next pair open this.',
   '1.5': 'The length of $(\\sqrt{3}+i)^{10}$ and the angle $2\\pi/5$ open this.',
   '1.6': 'Where the green point sits, and the annulus, open this.',
 };
@@ -200,10 +200,10 @@ export function mountChapter1(el, ctx, focus) {
       'Equation (1.45)': 'Equation (1.45)',
       'Equation (1.48)': 'Equation (1.48)',
       'Equation (1.50)': 'Equation (1.50)',
-      'Equations (1.51) and (1.52)': 'Equations (1.51)',
     };
     for (const ref of refs) if (prefix[ref]) drop.push(prefix[ref]);
     if (refs.has('Identity (1.24)') && refs.has('Identities (1.25) and (1.26)')) drop.push('Identities (1.24)');
+    if (refs.has('Equation (1.51)') && refs.has('Equation (1.52)')) drop.push('Equations (1.51)');
     if (!drop.length) return section.read;
     return section.read.filter((item) => !drop.some((p) => item.pin.startsWith(p)));
   }
