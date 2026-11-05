@@ -7,6 +7,12 @@ import { turnClaim, turnPoint, timesIClaim, modulusClaim, polarClaim, rootClaim,
 import { h, appendRich } from './test2-ui.js';
 
 const ZERO = { re: 0, im: 0 };
+const diskListeners = new Set();
+
+export function watchDiskMove(fn) {
+  diskListeners.add(fn);
+  try { fn(); } catch { /* a detached card still waits for the next move */ }
+}
 
 function say(el, text, holds) {
   if (el.dataset.claim === text) return;
@@ -43,7 +49,7 @@ function keyLine(parent, id, text) {
   parent.append(p);
 }
 
-export function mountTurn(parent) {
+export function mountTurn(parent, onClaim) {
   const { host, view } = plane(parent, 'ch1-turn', [-2, 2],
     'The point 1, turned by i. Purple is the point. Orange is the quarter turn. Blue axes.');
   let n = 0;
@@ -59,6 +65,7 @@ export function mountTurn(parent) {
   function paint() {
     const c = turnClaim(n);
     say(claim, c.text, c.holds);
+    if (typeof onClaim === 'function') onClaim(c);
     view.requestDraw();
   }
   btn.addEventListener('click', () => { n += 1; paint(); });
@@ -217,14 +224,26 @@ export function mountDisk(parent) {
   const { host, view } = plane(parent, 'ch1-disk', [-2.4, 2.4],
     'Drag the green point. Orange is the unit circle. Inside it is the open disk.');
   const claim = h('p', { class: 'ch1-claim', id: 'ch1-disk-claim' });
-  let z = { re: 1.5, im: 0 };
+  const start = { re: 1.5, im: 0 };
+  let z = { re: start.re, im: start.im };
+  let moved = false;
+  diskListeners.clear();
+  host._moved = false;
+  host._point = z;
   view.addPoint({
     id: 'z',
     z,
     color: '--input',
     step: 0.1,
     name: 'z',
-    onDrag: (w) => { z = { re: w.re, im: w.im }; paint(); },
+    onDrag: (w) => {
+      z = { re: w.re, im: w.im };
+      if (!moved && (Math.abs(z.re - start.re) > 1e-9 || Math.abs(z.im - start.im) > 1e-9)) {
+        moved = true;
+        host._moved = true;
+      }
+      paint();
+    },
   });
   view.addLayer((ctx, p) => {
     drawCircle(ctx, p, ZERO, 1, { color: '--polar', width: 2 });
@@ -233,10 +252,13 @@ export function mountDisk(parent) {
     host._point = z;
     const c = diskClaim(z);
     say(claim, c.text, c.holds);
+    for (const fn of diskListeners) {
+      try { fn(); } catch { /* a card that has gone still leaves the picture moving */ }
+    }
     view.requestDraw();
   }
   parent.append(claim);
   keyLine(parent, 'ch1-disk-key', 'Green is the point you drag. Orange is $|z|=1$. Inside the circle the disk is open.');
   paint();
-  return () => view.destroy();
+  return () => { diskListeners.clear(); view.destroy(); };
 }

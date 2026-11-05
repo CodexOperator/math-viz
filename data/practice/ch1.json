@@ -269,7 +269,7 @@
       "page": 13
     },
     "kind": "proof-mc",
-    "prompt": "The same proof. Pick the line the definition allows.",
+    "prompt": "Addition of pairs commutes. Which line is Definition 1.1?",
     "steps": [
       {
         "text": "By Definition 1.1, $z_1+z_2$ equals ___",
@@ -692,17 +692,17 @@
     "chapter": 1,
     "section": "1.2",
     "cite": {
-      "ref": "Identity $i^2=-1$",
-      "page": 13
+      "ref": "§1.2, Exercise 1(a)",
+      "page": 15
     },
     "kind": "flash",
     "prompt": "Powers of $i$.",
     "steps": [
       {
         "text": "Powers of $i$.",
-        "answer": "$i$, $-1$, $-i$, $1$, and then the cycle repeats.",
+        "answer": "$i^{275}=-i$. The cycle is $i$, $-1$, $-i$, $1$.",
         "accept": [],
-        "why": "Page 13. The powers repeat every four."
+        "why": "Exercise 1(a), page 15. Remainder 3 is $-i$."
       }
     ],
     "generator": null,
@@ -1529,7 +1529,7 @@
       "page": 30
     },
     "kind": "next-step-blank",
-    "prompt": "Equation (1.40), page 30. Use De Moivre to write $(\\sqrt{3}+i)^{10}$ as $a+bi$. Exercise 2, page 34, is the same move on a different exponent.",
+    "prompt": "Equation (1.40), page 30. Find the length of $(\\sqrt{3}+i)^{10}$. Exercise 2, page 34, is the same move on a different exponent.",
     "steps": [
       {
         "text": "The modulus of $\\sqrt{3}+i$ is ___",
@@ -1581,21 +1581,6 @@
           }
         ],
         "miss": "The length $2$ is raised to the tenth."
-      },
-      {
-        "text": "$1024(\\cos 5\\pi/3+i\\sin 5\\pi/3)=$ ___",
-        "answer": "512-512\\sqrt{3} i",
-        "accept": [
-          "512-512\\sqrt{3}i",
-          "512-512\\sqrt{3}\\,i",
-          "512 - 512\\sqrt{3} i"
-        ],
-        "why": "$\\cos 5\\pi/3=1/2$ and $\\sin 5\\pi/3=-\\sqrt{3}/2$. Equation (1.40), page 30.",
-        "value": {
-          "re": 512,
-          "im": -886.8100134752651
-        },
-        "miss": "Half of $1024$ is the real part, and the sine at $5\\pi/3$ is negative."
       }
     ],
     "generator": null,
@@ -1802,7 +1787,7 @@
       "page": 38
     },
     "kind": "next-step-mc",
-    "prompt": "The green point opens outside the orange circle. Drag it, then say where it is. Example 1.25, page 38.",
+    "prompt": "Drag the green point, then say where it is. Example 1.25, page 38.",
     "steps": [
       {
         "text": "The green point is ___",
@@ -1835,37 +1820,37 @@
       "page": 39
     },
     "kind": "next-step-mc",
-    "prompt": "Figure 1.30, page 39, draws the open annulus $1<|z|<2$ from page 38. Close the outer edge and leave the inner edge open: $\\{z: 1<|z|\\le 2\\}$.",
+    "prompt": "Figure 1.30, page 39, draws the open annulus $1<|z|<2$. This set is $\\{z: 1<|z|\\le 2\\}$.",
     "steps": [
       {
         "text": "This set is ___",
-        "answer": "a region, and not a domain: the inner circle is out and the outer circle is in",
+        "answer": "bounded",
         "accept": [],
         "choices": [
-          "a region, and not a domain: the inner circle is out and the outer circle is in",
-          "a domain, because the set is connected",
-          "a closed region",
-          "unbounded"
+          "open",
+          "closed",
+          "domain",
+          "bounded"
         ],
-        "why": "The inner circle is missing, so the set is not closed. The outer circle is included, so a boundary point is in the set and the set is not open. A domain has to be open. Page 40: a region is a domain together with some, none, or all of its boundary points. The set sits inside $|z|\\le 2$.",
+        "why": "The set sits inside $|z|\\le 2$, so it is bounded. The outer circle is in the set, so it is not open and not a domain. The inner circle is out, so it is not closed. Page 40.",
         "slips": [
           {
             "match": [
-              "a domain, because the set is connected"
+              "open"
             ],
-            "miss": "Connected is not enough. The outer circle is in the set, so the set is not open."
+            "miss": "The outer circle is in the set, so the set is not open."
           },
           {
             "match": [
-              "a closed region"
+              "closed"
             ],
-            "miss": "A closed region includes the whole boundary. The inner circle is not in the set."
+            "miss": "The inner circle is not in the set, so the set is not closed."
           },
           {
             "match": [
-              "unbounded"
+              "domain"
             ],
-            "miss": "The set sits inside the closed disk of radius $2$."
+            "miss": "A domain is open. The outer circle is in the set, so the set is not open."
           }
         ],
         "miss": "Check the inner circle and the outer circle separately."

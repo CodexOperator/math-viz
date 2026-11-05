@@ -4,6 +4,7 @@
 import ITEMS from '../../data/practice/ch1.json' with { type: 'json' };
 import { generate, matches, normMath } from '../practice/gen/ch1-arithmetic.js';
 import { citeHref, diskPlace } from '../data/chapter1.js';
+import { watchDiskMove } from './ch1-pictures.js';
 import { h, appendRich, sourceTag } from './test2-ui.js';
 
 export function itemsFor(section, kind) {
@@ -68,9 +69,22 @@ function missFor(step, raw) {
   return 'That is a different move.';
 }
 
+function diskHost() {
+  return document.getElementById('ch1-disk-host');
+}
+
 function diskNow() {
-  const host = document.getElementById('ch1-disk-host');
+  const host = diskHost();
   return host && host._point ? host._point : null;
+}
+
+function diskMoved() {
+  const host = diskHost();
+  return !!(host && host._moved);
+}
+
+function watchDisk(fn) {
+  watchDiskMove(fn);
 }
 
 function diskWhy(place) {
@@ -99,8 +113,10 @@ function practiceCard(item, onItem) {
   const memory = h('p', { class: 'ch1-note', id: `ch1-memory-${slug}` });
   appendRich(memory, item.memory || '');
   memory.hidden = true;
+  const title = h('h3', { id: `ch1-title-${slug}` });
+  appendRich(title, item.cite.ref);
   card.append(
-    h('h3', { id: `ch1-title-${slug}` }, item.cite.ref),
+    title,
     sourceTag({ pin: `${item.cite.ref}, page ${item.cite.page}`, href: citeHref(item.cite.ref) }),
     prompt,
     stepsHost,
@@ -156,10 +172,11 @@ function stepRow(item, step, index, onRight) {
     const choices = h('div', { class: 'ch1-choices', id: `ch1-choices-${slug}-${index}` });
     const places = step.places || [];
     step.choices.forEach((choice, n) => {
-      const b = h('button', { type: 'button', class: 'btn', id: `ch1-choice-${slug}-${index}-${n}` });
+      const b = h('button', { type: 'button', class: 'btn', id: `ch1-choice-${slug}-${index}-${n}`, disabled: 'true' });
+      b.title = 'Drag the green point first.';
       appendRich(b, choice);
       b.addEventListener('click', () => {
-        if (row.dataset.right === 'true') return;
+        if (row.dataset.right === 'true' || b.disabled) return;
         const z = diskNow();
         const place = z ? diskPlace(z) : null;
         const picked = places[n];
@@ -168,6 +185,14 @@ function stepRow(item, step, index, onRight) {
         reveal(right, right ? diskWhy(place) : diskMiss(picked, place));
       });
       choices.append(b);
+    });
+    watchDisk(() => {
+      if (row.dataset.right === 'true') return;
+      const open = diskMoved();
+      for (const b of choices.querySelectorAll('button')) {
+        b.disabled = !open;
+        if (open) b.removeAttribute('title');
+      }
     });
     row.append(ask, choices, note);
   } else if (step.choices && step.choices.length) {
@@ -248,11 +273,11 @@ export function mountDeck(parent, items, store) {
       actions.hidden = true;
       return;
     }
-    actions.hidden = false;
+    actions.hidden = true;
     if (i >= left.length) i = 0;
     const item = left[i];
     count.textContent = `Card ${i + 1} of ${left.length}.`;
-    face.replaceChildren(flashCard(item));
+    face.replaceChildren(flashCard(item, () => { actions.hidden = false; }));
   }
 
   function mark(keep) {
@@ -275,7 +300,7 @@ export function mountDeck(parent, items, store) {
   return () => {};
 }
 
-function flashCard(item) {
+function flashCard(item, onShow) {
   const slug = domId(item.id);
   const card = h('article', { class: 'ch1-item', id: `ch1-flash-${slug}` });
   const front = h('p', { id: `ch1-front-${slug}` });
@@ -291,9 +316,12 @@ function flashCard(item) {
     back.hidden = false;
     show.hidden = true;
     show.setAttribute('aria-expanded', 'true');
+    if (typeof onShow === 'function') onShow();
   });
+  const title = h('h3');
+  appendRich(title, item.cite.ref);
   card.append(
-    h('h3', null, item.cite.ref),
+    title,
     sourceTag({ pin: `${item.cite.ref}, page ${item.cite.page}`, href: citeHref(item.cite.ref) }),
     front,
     show,

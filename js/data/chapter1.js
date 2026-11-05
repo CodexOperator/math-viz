@@ -31,7 +31,7 @@ export const CHAPTER_1 = deepFreeze({
       title: 'The Origin of Complex Numbers',
       page: 1,
       why: 'The cubic $x^3-15x-4=0$ has a real root you can check by hand. Formula (1.3), page 2, writes a root as two cube roots, and the number under the square root is negative. The picture is the quarter turn that $\\sqrt{-1}$ is asking you to allow.',
-      summit: 'Bombelli’s $4$ is $(2+\\sqrt{-1})+(2-\\sqrt{-1})$. Equation (1.6), page 3.',
+      summit: 'Two turns. $i^2$ landed on $-1$.',
       idea: 'Equation (1.6), page 3: $(2+\\sqrt{-1})+(2-\\sqrt{-1})=4$, and $4$ satisfies $x^3-15x-4=0$.',
       read: [
         { pin: 'Equation (1.1), the general cubic, page 1', href: sectionHref(ORIGIN, 'Cubic_Equation') },
@@ -120,7 +120,7 @@ export const CHAPTER_1 = deepFreeze({
       title: 'The Geometry of Complex Numbers, Part II',
       page: 22,
       why: 'Multiplication has a direction. The modulus is the length you already have, and Arg is the angle from the positive real axis, kept in $(-\\pi,\\pi]$.',
-      summit: 'Polar form is the length times $e^{i\\theta}$, and $\\theta$ is the one angle in $(-\\pi,\\pi]$.',
+      summit: 'Polar form is the length times $e^{i\\theta}$. Definition 1.9 allows any argument. The one value in $(-\\pi,\\pi]$ is Arg, Definition 1.11.',
       idea: 'Example 1.13, page 27: $1+i$ has length $\\sqrt{2}$ and Arg $\\pi/4$.',
       read: [
         { pin: 'Definition 1.9, polar representation, page 22', href: sectionHref(GEO2, 'def_polar_rep') },
@@ -154,7 +154,7 @@ export const CHAPTER_1 = deepFreeze({
       idea: 'Equation (1.40), page 30, is De Moivre. Equation (1.43), page 31, is the $n$th roots of unity.',
       read: [
         { pin: "De Moivre's formula, Equation (1.40), page 30", href: sectionHref(ALG2, 'De_Moivre_s_formula') },
-        { pin: 'Theorem 1.4, a degree-n polynomial has n roots, page 30', href: sectionHref(ALG2, 'NRoots') },
+        { pin: 'Theorem 1.4, precisely $n$ solutions, not necessarily distinct, page 30', href: sectionHref(ALG2, 'NRoots') },
         { pin: 'Equation (1.43), the $n$th roots of unity, page 31', href: sectionHref(ALG2, 'Roots_of_Unity') },
         { pin: 'Equation (1.45), the $n$th roots of a number, page 32', href: sectionHref(ALG2, 'sec_algebra-2-26-2') },
         { pin: 'Definition 1.12, a primitive $n$th root, page 31', href: sectionHref(ALG2, 'Primitive_nth_Root') },
@@ -282,10 +282,12 @@ export function chapter1StageIds() {
 
 // The sentence under the 1.1 picture. True only when two quarter turns have landed on -1.
 export function turnClaim(quarter) {
-  const q = ((Math.round(quarter) % 4) + 4) % 4;
+  const raw = Math.round(Number(quarter) || 0);
+  const q = ((raw % 4) + 4) % 4;
   if (q === 2) return { holds: true, quarter: q, text: 'Two turns. $i^2$ landed on $-1$.' };
   if (q === 1) return { holds: false, quarter: q, text: 'One turn. This point is $i$, not $-1$.' };
   if (q === 3) return { holds: false, quarter: q, text: 'Three turns. This point is $-i$, not $-1$.' };
+  if (raw > 0) return { holds: false, quarter: q, text: 'Back at $1$.' };
   return { holds: false, quarter: q, text: 'This point is $1$. It has not been turned.' };
 }
 
@@ -335,9 +337,9 @@ export function rootClaim(k) {
   const n = ((Math.round(k) % 5) + 5) % 5;
   const angle = `$2\\pi\\cdot ${n}/5$`;
   if (n === 0) {
-    return { holds: true, k: n, text: `Angle ${angle}. Five equal turns, and this one is $1$.` };
+    return { holds: true, k: n, text: `Angle ${angle}. Five equal turns on this circle, and this one is $1$.` };
   }
-  return { holds: false, k: n, text: `Angle ${angle}. This root is not $1$.` };
+  return { holds: false, k: n, text: `Angle ${angle}. Five equal turns on this circle. This root is not $1$.` };
 }
 
 export function rootPoint(k) {

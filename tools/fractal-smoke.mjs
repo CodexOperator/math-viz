@@ -167,6 +167,7 @@ check('eleven chapters, 1, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_C
     && matchesCh1(polar.steps[1].answer, polar.steps[1]));
   check('the chapter 1 sentences flip',
     turnClaim(2).holds === true && turnClaim(0).holds === false && turnClaim(2).text !== turnClaim(0).text
+    && turnClaim(4).text.includes('Back at') && turnClaim(0).text.includes('not been turned')
     && timesIClaim({ re: 0, im: 1 }).holds === true && timesIClaim({ re: 1, im: 0 }).holds === false
     && modulusClaim({ re: 4, im: 3 }).holds === true && modulusClaim({ re: 1, im: 1 }).holds === false
     && modulusClaim({ re: 5, im: 0 }).holds === true && modulusClaim({ re: -3, im: 4 }).holds === true
@@ -177,7 +178,7 @@ check('eleven chapters, 1, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_C
     && !rootClaim(1).text.includes('not the finished')
     && diskClaim({ re: 0.2, im: 0 }).holds === true && diskClaim({ re: 1, im: 0 }).holds === false && diskClaim({ re: 1.5, im: 0 }).holds === false);
   {
-    const neg = generateCh1(2, { mode: 'polar' });
+    const neg = generateCh1(4, { mode: 'polar' });
     const book = `${neg.steps[0].answer}e^{-i${neg.steps[1].answer.slice(1)}}`;
     const ann = practiceCh1.find((item) => item.id === 'ch1-1.6-annulus');
     const worked = CHAPTER_1.sections.find((s) => s.id === '1.3').worked.body;
@@ -198,10 +199,12 @@ check('eleven chapters, 1, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_C
   }
   {
     const fresh = bookWalkTarget({ complete: false, nextId: '1.1' }, { complete: false });
+    const stage = bookWalkTarget({ complete: false, nextId: '1.2' }, { complete: false });
     const later = bookWalkTarget({ complete: true, nextId: null }, { complete: false });
     const done = bookWalkTarget({ complete: true, nextId: null }, { complete: true });
     check('the roadmap walks Chapter 1 before Chapter 4',
       fresh.label === 'Walk Chapter 1' && fresh.href === '#chapter-1-1-1' && fresh.chapter === 1
+      && stage.label === 'Go to 1.2' && stage.href === '#chapter-1-1-2'
       && later.label === 'Walk Chapter 4' && later.href === '#chapter-4'
       && done.label === 'Open Chapter 5' && done.href === '#chapter-5');
   }
@@ -223,6 +226,7 @@ check('eleven chapters, 1, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_C
     let sawNeg = false;
     let sawQ4 = false;
     let axisPoint = false;
+    let sawSixth = false;
     for (let seed = 1; seed <= 48; seed++) {
       for (const mode of ['add', 'sub', 'mul', 'div']) {
         const g = generateCh1(seed, { mode, re: [-5, 5], im: [-5, 5] });
@@ -249,7 +253,8 @@ check('eleven chapters, 1, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_C
         if (theta <= -Math.PI || theta > Math.PI + 1e-9) argOk = false;
         if (!matchesCh1(argStep.answer, argStep)) argOk = false;
         if (argStep.answer.includes('\\pi') && matchesCh1(argStep.answer.replace('\\pi', '3\\pi'), argStep)) argOk = false;
-        if (z.re === 0 || z.im === 0) axisPoint = true;
+        if (Math.abs(z.re) < 1e-9 || Math.abs(z.im) < 1e-9) axisPoint = true;
+        if (Math.abs(Math.abs(theta) - Math.PI / 6) < 1e-6 || Math.abs(Math.abs(theta) - Math.PI / 3) < 1e-6) sawSixth = true;
         if (z.re > 0 && z.im < 0) sawQ4 = true;
         if (theta < 0) sawNeg = true;
         if (mode === 'polar' && !close(g.steps[0].value.real, Math.hypot(z.re, z.im))) argOk = false;
@@ -257,7 +262,7 @@ check('eleven chapters, 1, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_C
     }
     const onAxis = { answer: '\\pi', accept: ['\\pi', 'pi'], value: { angle: Math.PI } };
     check('chapter 1 generator answers recompute, and Arg stays principal',
-      argOk && sawNeg && sawQ4 && axisPoint === false
+      argOk && sawNeg && sawQ4 && axisPoint === true && sawSixth
       && matchesCh1('\\pi', onAxis) && !matchesCh1('-\\pi', onAxis) && !matchesCh1('-pi', onAxis));
   }
   {
@@ -265,7 +270,7 @@ check('eleven chapters, 1, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_C
     const roots = CHAPTER_1.sections.find((s) => s.id === '1.5').read.find((item) => item.pin.startsWith('Theorem 1.4'));
     check('Euler’s formula and Theorem 1.4 open the printed statements',
       euler.href.endsWith('#Euler_s_Formula') && euler.pin.includes('(1.32)')
-      && roots.href.endsWith('#NRoots') && roots.pin.includes('degree-n'));
+      && roots.href.endsWith('#NRoots') && roots.pin.includes('not necessarily distinct'));
   }
   const mem = { 'progress.test2': { '4.1.3': true, '5.1.1': true } };
   const store = {

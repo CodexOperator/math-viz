@@ -213,7 +213,9 @@ export function bookChapter(n) {
 export function bookWalkTarget(ch1, ch4) {
   if (!ch1 || !ch1.complete) {
     const id = (ch1 && ch1.nextId) || '1.1';
-    return { label: 'Walk Chapter 1', href: `#chapter-1-${String(id).replace(/\./g, '-')}`, chapter: 1 };
+    const href = `#chapter-1-${String(id).replace(/\./g, '-')}`;
+    const label = id === '1.1' ? 'Walk Chapter 1' : `Go to ${id}`;
+    return { label, href, chapter: 1 };
   }
   if (ch4 && ch4.complete) return { label: 'Open Chapter 5', href: '#chapter-5', chapter: 5 };
   return { label: 'Walk Chapter 4', href: '#chapter-4', chapter: 4 };

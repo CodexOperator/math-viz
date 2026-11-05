@@ -1055,8 +1055,16 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   gap: var(--space-3);
 }
 
-/* The last section can still scroll its title up under the header. */
+/* The last section can still scroll its title up under the header.
+   Chapter 1 puts that room under The Book, so the link sits at the end of 1.6. */
 .chapter-path { padding-bottom: calc(100dvh - var(--header-h)); }
+.ch1-path { padding-bottom: 0; }
+.ch1-path + .book-footer-link { margin-bottom: calc(100dvh - var(--header-h)); }
+
+/* The phone’s first screen ends on the colour key. The stage title starts under that fold. */
+@media (max-width: 40rem) {
+  #chapter-section-1-1-picture { margin-bottom: 3rem; }
+}
 
 .exp-picture {
   display: flex;
@@ -1193,12 +1201,17 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 
 .book-sections { display: flex; flex-direction: column; gap: var(--space-1); margin-top: var(--space-2); }
 
-.book-sections li {
+.book-sections li { min-width: 0; }
+
+.book-section-link {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   gap: 0.35rem 0.75rem;
-  min-width: 0;
+  min-height: var(--tap);
+  width: 100%;
+  color: inherit;
+  text-decoration: none;
 }
 
 .book-section-page { margin-left: auto; font-variant-numeric: tabular-nums; }

@@ -1635,3 +1635,26 @@ Example 1.6 no longer says it is the same length as \(4+3i\). It names \(1+2i\) 
 3. Writing \(1+i\) in polar form is Example 1.7, page 22. Example 1.13 states the same length and Arg, then computes the inverse. The card’s numbers are the ones the example states.
 4. The 1.4 summit says the polar angle is the one value in \((-\pi,\pi]\). Definition 1.9 allows any argument. That one value is Arg, Definition 1.11. The memory sheet already separates them.
 5. Arg and polar still use only the four diagonal directions. Seed 4 is \(\operatorname{Arg}(3-3i)=-\pi/4\). They do not draw an axis point, and they do not draw the book’s \(\pi/3\) or \(\pi/6\).
+
+## Chapter 1, batch 4
+
+Started from `d1b0c09`. Headless Chrome, 390×844 and 1280×800, light and dark. No console errors. No sideways scroll. Times i still ends at y = 724 on the phone and y = 794 on the laptop. The phone’s colour key ends at y = 812, and the stage title starts at y = 860. Not merged. `gh-pages` was not touched.
+
+The practice heading and the source line for \(i^2=-1\) render. Got it and Missed stay hidden until Show the back. Stage 1.1 stays closed until two presses land on \(-1\) and the cubic card is right; the summit names 4 only then. A fourth press says “Back at 1.” The tick row, once the stage is marked, is Go to 1.2 with href `#chapter-1-1-2`. While the tick is disabled, the row names the sum and the cubic check. On the book, that same label is the walk button, the section row is the link, and Next sits inside it.
+
+Stage 1.2 puts “The first two unlock the stage,” those two cards, the summit, and Mark stage complete together. The proof prompt states the claim: addition of pairs commutes. Next root names the angle on every press and keeps “Five equal turns on this circle.” The \((\sqrt{3}+i)^{10}\) card asks for the length, not the rectangular expansion. The 1.6 place buttons stay disabled until the green point moves. The annulus buttons are open, closed, domain, and bounded.
+
+Back from The Book returns to the stage hash and the scroll that was left. A later chapter in the drawer leaves the hash on `#book` and scrolls to that card. Chapters 8–11 are off the drawer. The Book sits at the end of 1.6; the scroll room is under that link. The inner status card is gone.
+
+Theorem 1.4 says precisely \(n\) solutions, not necessarily distinct. The powers-of-\(i\) card cites Exercise 1(a), page 15, and \(i^{275}=-i\). The 1.4 summit names Arg, Definition 1.11. Arg and polar draw an axis point and \(\pi/6\) or \(\pi/3\).
+
+`node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. No live file imports `kit/`.
+
+### Still open after batch 4
+
+1. The shared practice engine is not on this branch. Chapter 1 still renders the schema with the local card.
+2. Progress is still localStorage.
+3. The \(1+i\) card cites Example 1.13, page 27. Example 1.7, page 22, is where the book first writes that polar form. The numbers are the ones Example 1.13 states.
+4. Stages 1.3 through 1.6 still keep the summit at the foot. Only 1.2 folds the first two cards above it.
+5. On a 1280×800 window the colour key sits just under the fold. Times i is on that screen. The phone is the screen the key ends.
+6. Chapters 8–11 stay on the book page. They are not in the drawer.

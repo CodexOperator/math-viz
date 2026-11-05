@@ -121,9 +121,14 @@ function mountRoadmap(el, ctx, spec) {
       const sections = h('ol', { class: 'book-sections', id: `book-sections-${ch.n}` });
       for (const s of ch.sections) {
         sections.append(h('li', { 'data-section': s.id, id: `book-section-${slug(s.id)}` },
-          h('a', { href: `#chapter-${ch.n}-${slug(s.id)}` }, `${s.id} ${s.title}`),
-          h('span', { class: 'book-section-page' }, `p. ${s.page}`),
-          h('span', { class: 'book-section-mark' }, '')));
+          h('a', {
+            class: 'book-section-link',
+            href: `#chapter-${ch.n}-${slug(s.id)}`,
+            id: `book-section-link-${slug(s.id)}`,
+          },
+            h('span', { class: 'book-section-name' }, `${s.id} ${s.title}`),
+            h('span', { class: 'book-section-page' }, `p. ${s.page}`),
+            h('span', { class: 'book-section-mark' }, ''))));
       }
       kids.push(sections);
     }
@@ -149,7 +154,9 @@ function mountRoadmap(el, ctx, spec) {
     h('div', { class: 'book-next', id: 'book-next' }, status, walk),
     list);
 
-  const focus = spec && spec.chapter;
+  const pending = window.__mv && window.__mv.bookScroll;
+  if (window.__mv) window.__mv.bookScroll = '';
+  const focus = pending || (spec && spec.chapter);
   if (focus) {
     const node = el.querySelector(`#book-node-${focus}`);
     if (node) node.scrollIntoView({ block: 'start' });

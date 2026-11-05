@@ -15,14 +15,22 @@ const TRIPLES = Object.freeze([
   [12, 16, 20],
 ]);
 
-// Points whose argument is an exact multiple of pi/4. Scale is applied later.
-// Axis points are omitted: Arg and polar follow the modulus generator and skip a zero coordinate.
-// The four diagonals keep a fourth-quadrant case.
-const EXACT = Object.freeze([
-  { re: 1, im: 1, p: 1, q: 4 },
-  { re: -1, im: 1, p: 3, q: 4 },
-  { re: -1, im: -1, p: -3, q: 4 },
-  { re: 1, im: -1, p: -1, q: 4 },
+// Exact arguments. Each part is [integer, coefficient of √3], scaled by k later.
+// Diagonals are multiples of π/4. Axis points are Arg 0, π, π/2, −π/2.
+// The book’s π/6 and π/3 are √3+i and 1+i√3, with the fourth-quadrant pair.
+const ANGLES = Object.freeze([
+  { re: [1, 0], im: [1, 0], p: 1, q: 4, r: 'sqrt2' },
+  { re: [-1, 0], im: [1, 0], p: 3, q: 4, r: 'sqrt2' },
+  { re: [-1, 0], im: [-1, 0], p: -3, q: 4, r: 'sqrt2' },
+  { re: [1, 0], im: [-1, 0], p: -1, q: 4, r: 'sqrt2' },
+  { re: [1, 0], im: [0, 0], p: 0, q: 1, r: 'k' },
+  { re: [-1, 0], im: [0, 0], p: 1, q: 1, r: 'k' },
+  { re: [0, 0], im: [1, 0], p: 1, q: 2, r: 'k' },
+  { re: [0, 0], im: [-1, 0], p: -1, q: 2, r: 'k' },
+  { re: [0, 1], im: [1, 0], p: 1, q: 6, r: '2k' },
+  { re: [1, 0], im: [0, 1], p: 1, q: 3, r: '2k' },
+  { re: [0, 1], im: [-1, 0], p: -1, q: 6, r: '2k' },
+  { re: [1, 0], im: [0, -1], p: -1, q: 3, r: '2k' },
 ]);
 
 export const TEMPLATE_ID = 'ch1-arithmetic';
@@ -108,20 +116,37 @@ function angleTex(p, q) {
   return `${sign}${ap}\\pi/${qq}`;
 }
 
-function rTex(re, im) {
-  const r2 = re * re + im * im;
-  const n = Math.round(Math.sqrt(r2));
-  if (n * n === r2) return { tex: String(n), accept: [String(n)], real: n };
-  for (let k = 1; k <= 12; k++) {
-    if (k * k * 2 === r2) {
-      const tex = k === 1 ? '\\sqrt{2}' : `${k}\\sqrt{2}`;
-      const accept = k === 1 ? ['\\sqrt{2}', 'sqrt(2)', '√2'] : [`${k}\\sqrt{2}`, `${k}sqrt(2)`, `${k}√2`];
-      return { tex, accept, real: k * Math.SQRT2 };
-    }
+function numPart(pair, k) {
+  return pair[0] * k + pair[1] * k * Math.sqrt(3);
+}
+
+function fmtPart(pair, k) {
+  const a = pair[0] * k;
+  const b = pair[1] * k;
+  if (a === 0 && b === 0) return null;
+  if (b === 0) return String(a);
+  const surd = Math.abs(b) === 1 ? '\\sqrt{3}' : `${Math.abs(b)}\\sqrt{3}`;
+  if (a === 0) return b < 0 ? `-${surd}` : surd;
+  return b < 0 ? `${a}-${surd}` : `${a}+${surd}`;
+}
+
+function fmtSpot(spot, k) {
+  const re = fmtPart(spot.re, k);
+  const im = fmtPart(spot.im, k);
+  if (!im) return re;
+  const imag = im === '1' ? 'i' : im === '-1' ? '-i' : `${im}i`;
+  if (!re) return imag;
+  return imag.startsWith('-') ? `${re}${imag}` : `${re}+${imag}`;
+}
+
+function radiusOf(spot, k) {
+  if (spot.r === 'k') return { tex: String(k), accept: [String(k)], real: k };
+  if (spot.r === '2k') {
+    const n = 2 * k;
+    return { tex: String(n), accept: [String(n)], real: n };
   }
-  const r = Math.hypot(re, im);
-  const tex = r.toFixed(4).replace(/0+$/, '').replace(/\.$/, '');
-  return { tex, accept: [tex], real: r };
+  if (k === 1) return { tex: '\\sqrt{2}', accept: ['\\sqrt{2}', 'sqrt(2)', '√2'], real: Math.SQRT2 };
+  return { tex: `${k}\\sqrt{2}`, accept: [`${k}\\sqrt{2}`, `${k}sqrt(2)`, `${k}√2`], real: k * Math.SQRT2 };
 }
 
 function pair(next, rangeRe, rangeIm) {
@@ -212,13 +237,14 @@ export function generate(seed, params) {
     };
   }
   if (mode === 'arg' || mode === 'polar') {
-    const spot = EXACT[irand(next, 0, EXACT.length - 1)];
+    const spot = ANGLES[irand(next, 0, ANGLES.length - 1)];
     const k = irand(next, 1, 3);
-    const re = spot.re * k;
-    const im = spot.im * k;
+    const re = numPart(spot.re, k);
+    const im = numPart(spot.im, k);
+    const written = fmtSpot(spot, k);
     const ang = angleTex(spot.p, spot.q);
     const theta = (spot.p / spot.q) * PI;
-    const r = rTex(re, im);
+    const r = radiusOf(spot, k);
     const fourth = re > 0 && im < 0;
     const argSlips = fourth ? [{
       match: ['0', '7\\pi/4', '7pi/4', '7π/4'],
@@ -231,7 +257,7 @@ export function generate(seed, params) {
     argStep.slips = argSlips;
     if (mode === 'arg') {
       return {
-        prompt: `Find $\\operatorname{Arg}(${fmtCart(re, im)})$, in $(-\\pi,\\pi]$.`,
+        prompt: `Find $\\operatorname{Arg}(${written})$, in $(-\\pi,\\pi]$.`,
         steps: [argStep],
       };
     }
@@ -242,7 +268,7 @@ export function generate(seed, params) {
       ? [`${r.tex}e^{-i${ang.slice(1)}}`, `${r.tex}\\,e^{-i${ang.slice(1)}}`]
       : [];
     return {
-      prompt: `Write $${fmtCart(re, im)}$ in polar form $re^{i\\theta}$.`,
+      prompt: `Write $${written}$ in polar form $re^{i\\theta}$.`,
       steps: [
         step('The modulus is ___', r.tex, r.accept, 'Definition 1.8, page 17.', { real: r.real }),
         argStep,

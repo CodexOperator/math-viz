@@ -36,31 +36,35 @@ function gateIds(sectionId) {
   return items.slice(0, Math.min(2, items.length)).map((item) => item.id);
 }
 
+const OPENERS = {
+  '1.1': 'The sum and the cubic check open this.',
+  '1.2': '$(0,1)(0,1)$ and Exercise 1(f) open this.',
+  '1.3': 'The length of $4+3i$ and $|(1+i)(2+i)|$ open this.',
+  '1.4': '$1+i$ in polar form and the next polar pair open this.',
+  '1.5': 'The length of $(\\sqrt{3}+i)^{10}$ and the angle $2\\pi/5$ open this.',
+  '1.6': 'Where the green point sits, and the annulus, open this.',
+};
+
+const SUMMIT_FOUR = 'Two turns. $i^2$ landed on $-1$. Bombelli’s $4$ is $(2+\\sqrt{-1})+(2-\\sqrt{-1})$. Equation (1.6), page 3.';
+
+function setLine(el, text) {
+  if (!el || el.dataset.line === text) return;
+  el.dataset.line = text;
+  el.replaceChildren();
+  appendRich(el, text);
+}
+
 export function mountChapter1(el, ctx, focus) {
   const store = ctx.store;
   const walk = chapter1Walk();
   let ticks = loadTicks(store);
+  let turnHolds = false;
   const earned = new Map();
   const stops = [];
-  const path = h('ol', { class: 'chapter-path', id: 'chapter-path' });
-  const status = h('p', { class: 'book-status', id: 'chapter-status' });
-  const nextBtn = h('button', { type: 'button', class: 'btn btn-primary', id: 'chapter-next' }, 'Next');
+  const path = h('ol', { class: 'chapter-path ch1-path', id: 'chapter-path' });
 
   function paint() {
     const t = chapterTally(walk, ticks);
-    status.textContent = nextSentence(t);
-    if (t.complete) {
-      nextBtn.hidden = false;
-      nextBtn.textContent = 'Back to the book';
-      nextBtn.dataset.jump = 'book';
-    } else if (t.nextId && t.nextId !== '1.1') {
-      nextBtn.hidden = false;
-      nextBtn.textContent = `Go to ${t.nextId}`;
-      nextBtn.dataset.jump = t.nextId;
-    } else {
-      nextBtn.hidden = true;
-      nextBtn.dataset.jump = '';
-    }
     for (const node of path.querySelectorAll('.section-node')) {
       const id = node.getAttribute('data-section');
       const section = CHAPTER_1.sections.find((s) => s.id === id);
@@ -75,12 +79,6 @@ export function mountChapter1(el, ctx, focus) {
     }
   }
 
-  nextBtn.addEventListener('click', () => {
-    const jump = nextBtn.dataset.jump;
-    if (jump === 'book') { ctx.navigate('book'); return; }
-    if (jump) ctx.navigate(`chapter-1-${slug(jump)}`);
-  });
-
   for (const section of CHAPTER_1.sections) {
     path.append(section.exercises.length ? fullStage(section) : stubStage(section));
   }
@@ -91,7 +89,12 @@ export function mountChapter1(el, ctx, focus) {
     appendRich(why, section.why);
     const picture = h('div', { class: 'ch1-stage-picture', id: `${scope}-picture` });
     const mount = PICTURES[section.picture];
-    if (mount) stops.push(mount(picture));
+    if (mount) {
+      const onClaim = section.id === '1.1'
+        ? (c) => { turnHolds = !!c.holds; paintTicks(); }
+        : undefined;
+      stops.push(mount(picture, onClaim));
+    }
     const read = linkList(section.read, `${scope}-read`);
     const worked = workedBlock(section, scope);
     const sheet = h('ul', { class: 'ch1-sheet', id: `${scope}-sheet` });
@@ -100,12 +103,22 @@ export function mountChapter1(el, ctx, focus) {
       appendRich(li, line);
       sheet.append(li);
     }
+    const items = practiceItems(section.id);
+    const fold = section.id === '1.2';
     const practice = h('div', { class: 'chapter-exercises ch1-practice', id: `${scope}-practice` });
-    mountPractice(practice, practiceItems(section.id), (id) => {
+    const more = h('div', { class: 'chapter-exercises ch1-practice', id: `${scope}-more` });
+    const onItem = (id) => {
       if (!earned.has(section.id)) earned.set(section.id, new Set());
       earned.get(section.id).add(id);
+      if (section.id === '1.1' && id === 'ch1-1.1-eq16') setLine(summit, SUMMIT_FOUR);
       paintTicks();
-    });
+    };
+    if (fold) {
+      mountPractice(practice, items.slice(0, 2), onItem);
+      mountPractice(more, items.slice(2), onItem);
+    } else {
+      mountPractice(practice, items, onItem);
+    }
     const deck = h('div', { class: 'ch1-deck', id: `${scope}-deck` });
     mountDeck(deck, flashItems(section.id), store);
     const summit = h('p', { class: 'stage-summit', id: `${scope}-summit` });
@@ -113,6 +126,8 @@ export function mountChapter1(el, ctx, focus) {
     const tick = h('button', {
       type: 'button', class: 'btn', id: `chapter-tick-${slug(section.id)}`, 'aria-pressed': 'false',
     }, 'Mark stage complete');
+    const go = h('a', { class: 'btn btn-primary ch1-go', id: `${scope}-go` }, 'Go');
+    go.hidden = true;
     const where = h('p', { class: 'book-status', id: `${scope}-next` });
     tick.addEventListener('click', () => {
       ticks = toggleTick(ticks, section.id);
@@ -125,26 +140,47 @@ export function mountChapter1(el, ctx, focus) {
     const lead = section.id === '1.1'
       ? [flag, picture, title, page]
       : [flag, title, page, picture];
-    const node = h('li', {
-      class: 'section-node', id: scope, 'data-section': section.id, 'data-state': 'ahead',
-    },
+    const actions = h('div', { class: 'problem-actions ch1-done', id: `${scope}-actions` }, where, tick, go);
+    const head = [
       ...lead,
       h('p', { class: 'book-label' }, 'Why you\'d care'),
       why,
       h('p', { class: 'book-label' }, 'Worked example'),
       worked,
       h('p', { class: 'book-label' }, 'Practice'),
-      practice,
-      h('p', { class: 'book-label' }, 'Cards'),
-      deck,
-      h('p', { class: 'book-label' }, 'Summit'),
-      summit,
-      h('p', { class: 'book-label' }, 'Memory'),
-      sheet,
-      h('p', { class: 'book-label' }, 'Pinned'),
-      read,
-      h('div', { class: 'problem-actions ch1-done', id: `${scope}-actions` }, where, tick));
+    ];
+    const tail = fold
+      ? [
+        h('p', { class: 'book-status', id: `${scope}-unlock` }, 'The first two unlock the stage.'),
+        practice,
+        h('p', { class: 'book-label' }, 'Summit'),
+        summit,
+        actions,
+        more,
+        h('p', { class: 'book-label' }, 'Cards'),
+        deck,
+        h('p', { class: 'book-label' }, 'Memory'),
+        sheet,
+        h('p', { class: 'book-label' }, 'Pinned'),
+        read,
+      ]
+      : [
+        practice,
+        h('p', { class: 'book-label' }, 'Cards'),
+        deck,
+        h('p', { class: 'book-label' }, 'Summit'),
+        summit,
+        h('p', { class: 'book-label' }, 'Memory'),
+        sheet,
+        h('p', { class: 'book-label' }, 'Pinned'),
+        read,
+        actions,
+      ];
+    const node = h('li', {
+      class: 'section-node', id: scope, 'data-section': section.id, 'data-state': 'ahead',
+    }, ...head, ...tail);
     node._tick = tick;
+    node._go = go;
     node._where = where;
     node._gate = gateIds(section.id);
     return node;
@@ -187,9 +223,24 @@ export function mountChapter1(el, ctx, focus) {
   function gateMet(node) {
     const need = node._gate || [];
     if (!need.length) return false;
-    const got = earned.get(node.getAttribute('data-section'));
+    const id = node.getAttribute('data-section');
+    if (id === '1.1' && !turnHolds) return false;
+    const got = earned.get(id);
     if (!got) return false;
-    return need.every((id) => got.has(id));
+    return need.every((item) => got.has(item));
+  }
+
+  function blocked(section) {
+    const line = OPENERS[section.id] || 'The first two cards open this.';
+    if (section.id === '1.1' && !turnHolds) return `Press Times i until two turns land on $-1$. ${line}`;
+    return line;
+  }
+
+  function goTarget(id) {
+    const i = walk.findIndex((s) => s.id === id);
+    const nxt = walk[i + 1];
+    if (!nxt) return { href: '#book', label: 'Back to the book' };
+    return { href: `#chapter-1-${slug(nxt.id)}`, label: `Go to ${nxt.id}` };
   }
 
   function paintTicks() {
@@ -197,12 +248,23 @@ export function mountChapter1(el, ctx, focus) {
     for (const section of walk) {
       const node = path.querySelector(`#chapter-section-${slug(section.id)}`);
       if (!node || !node._tick) continue;
-      if (node._where) node._where.textContent = sentence;
       const on = ticks[section.id] === true;
       const open = on || gateMet(node);
+      setLine(node._where, open ? sentence : blocked(section));
       node._tick.disabled = !open;
       node._tick.setAttribute('aria-pressed', on ? 'true' : 'false');
       node._tick.textContent = on ? 'Stage complete' : 'Mark stage complete';
+      const go = node._go;
+      if (go) {
+        if (on) {
+          const target = goTarget(section.id);
+          go.hidden = false;
+          go.href = target.href;
+          go.textContent = target.label;
+        } else {
+          go.hidden = true;
+        }
+      }
     }
     paint();
   }
@@ -215,21 +277,58 @@ export function mountChapter1(el, ctx, focus) {
       sourceTag({ pin: CHAPTER_1.pin, href: CHAPTER_1.href })),
     path,
     h('p', { class: 'book-footer-link' }, h('a', { class: 'station-link', id: 'chapter-back-end', href: '#book' }, 'The Book')));
-  const statusRow = h('div', { class: 'book-next', id: 'chapter-next-row' }, status, nextBtn);
-  const firstPicture = path.querySelector('#chapter-section-1-1-picture');
-  if (firstPicture) firstPicture.after(statusRow);
-  else el.append(statusRow);
 
   paintTicks();
 
   const focusId = focus && CHAPTER_1.sections.some((s) => s.id === focus) ? `chapter-section-${slug(focus)}` : '';
   const target = focusId ? el.querySelector(`#${focusId}`) : null;
-  if (target) {
+  if (target && !ctx.keepScroll) {
     target.classList.add('is-target');
     target.scrollIntoView({ block: 'start' });
   }
 
+  let hashReady = false;
+  let hashFrame = 0;
+  function stageInView() {
+    const header = document.querySelector('.site-header');
+    const line = ((header && header.offsetHeight) || 56) + 8;
+    let current = null;
+    for (const node of path.querySelectorAll('.section-node')) {
+      if (node.getBoundingClientRect().top <= line) current = node;
+    }
+    return current;
+  }
+  function syncStageHash() {
+    const node = stageInView();
+    if (!node) return;
+    const id = node.getAttribute('data-section');
+    const next = `#chapter-1-${slug(id)}`;
+    const y = window.scrollY;
+    const prev = history.state && typeof history.state === 'object' ? history.state : {};
+    try { history.replaceState({ ...prev, y, hash: next }, '', next); }
+    catch { /* keep the hash the visit already has */ }
+    const mem = window.__mv && window.__mv.scrollMem;
+    if (mem) mem.set(next, y);
+  }
+  function onScroll() {
+    if (!hashReady) return;
+    if (hashFrame) return;
+    hashFrame = requestAnimationFrame(() => {
+      hashFrame = 0;
+      syncStageHash();
+    });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  const arm = requestAnimationFrame(() => {
+    hashReady = true;
+    syncStageHash();
+  });
+
   return function unmount() {
+    hashReady = false;
+    cancelAnimationFrame(arm);
+    if (hashFrame) cancelAnimationFrame(hashFrame);
+    window.removeEventListener('scroll', onScroll);
     for (const stop of stops) stop();
   };
 }
