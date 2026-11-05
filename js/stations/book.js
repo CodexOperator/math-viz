@@ -426,9 +426,7 @@ function mountChapter4(el, ctx, focus) {
         href: item.href, target: '_blank', rel: 'noopener noreferrer', id: `${scope}-read-${i + 1}`,
       }, item.pin)));
     });
-    const door = SECTION_DOOR[section.id];
-    const titleAttrs = door ? linkAttrs(door, `${scope}-door`) : null;
-    if (titleAttrs) titleAttrs.class = 'chapter-door';
+    // The title is a heading. The chips and the stills are the doors into the picture.
     const extra = [];
     if (section.id === '4.1') extra.push(pair41(), proof41());
     if (section.id === '4.2') extra.push(sets42(), orbit42(), beatNewton(), beatDisk());
@@ -438,7 +436,7 @@ function mountChapter4(el, ctx, focus) {
       class: 'section-node chapter-stage', id: scope, 'data-section': section.id, 'data-state': 'ahead',
     },
       h('p', { class: 'book-flag', id: `${scope}-flag` }, section.id),
-      door ? h('h2', { id: `${scope}-title` }, h('a', titleAttrs, section.title)) : h('h2', { id: `${scope}-title` }, section.title),
+      h('h2', { id: `${scope}-title` }, section.title),
       h('p', { class: 'book-page' }, `Page ${section.page}`),
       idea,
       ...extra,
@@ -629,7 +627,8 @@ function mountChapter4(el, ctx, focus) {
       sourceTag({ pin: CHAPTER_4.pin, href: CHAPTER_4.href })),
     h('div', { class: 'book-next', id: 'chapter-next-row' }, status, nextBtn),
     path,
-    upLink('chapter-back-end', '#book', 'The Book'));
+    upLink('chapter-back-end', '#book', 'The Book'),
+    h('div', { class: 'chapter-end-pad', 'aria-hidden': 'true' }));
 
   paint();
 
@@ -790,7 +789,7 @@ function mountChapter5(el, ctx, focus) {
     h('header', { class: 'station-header' },
       h('h1', { id: 'chapter-title' }, 'Chapter 5. The exponential'),
       h('p', { class: 'where-line', id: 'where-line' }, 'Chapter 5 · The exponential'),
-      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Drag the green dot. Play turns the angle. A blank fills when the picture makes it true.'),
+      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Drag the green ring. Play turns the angle. A blank fills when the picture makes it true.'),
       sourceTag({ pin: 'Chapter 5, Elementary Functions, page 130', href: sectionHref('sec_exponential-function.html') })),
     picture,
     off,
@@ -798,7 +797,8 @@ function mountChapter5(el, ctx, focus) {
     walk,
     stage54,
     later,
-    upLink('chapter-back-end', '#book', 'The Book'));
+    upLink('chapter-back-end', '#book', 'The Book'),
+    h('div', { class: 'chapter-end-pad', 'aria-hidden': 'true' }));
 
   paint();
 

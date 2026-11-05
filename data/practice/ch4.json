@@ -937,7 +937,7 @@
       {
         "text": "Because that modulus is less than $1$, the limit is ___.",
         "answer": "$0$",
-        "why": "Powers of a number inside the unit disk go to $0$. Exercise 1(a), page 108.",
+        "why": "This base has modulus $\\sqrt{5}/4<1$, so these powers go to $0$. Exercise 1(a), page 108. If $|w|<1$, then $w^n\\to 0$ is §4.3, Exercise 6, page 123.",
         "hints": [
           "A modulus under $1$ forces the powers inward.",
           "The limit is the origin, not the base itself."
@@ -948,7 +948,7 @@
       }
     ],
     "generator": null,
-    "memory": "If $|w|<1$, then $w^n\\to 0$. Exercise 1(a), page 108."
+    "memory": "$\\left(\\frac{1}{2}+\\frac{i}{4}\\right)^n\\to 0$. Exercise 1(a), page 108. If $|w|<1$, then $w^n\\to 0$ is §4.3, Exercise 6, page 123."
   },
   {
     "id": "ch4-4.2-ex-3",

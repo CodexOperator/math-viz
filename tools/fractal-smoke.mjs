@@ -7,7 +7,7 @@ import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute, bookModuleFor } from '../js/app.js';
 import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, chapter4ExerciseIds, chapter5ExerciseIds, activeWalk, pictureGroup } from '../js/data/book-path.js';
 import { chapterTally, sectionFinished, foldLegacyExercises, saveSharedTicks, toggleTick } from '../js/book/progress.js';
-import { EXP_DURATION, expFrame, finishedStops, createLivePlayer } from '../js/core/live-film.js';
+import { EXP_DURATION, expFrame, finishedStops, createLivePlayer, settleFrame } from '../js/core/live-film.js';
 import { compile } from '../js/core/parse.js';
 import { parseBookRoute } from '../js/book/route.js';
 import { answersMatch, parseComplex } from '../js/practice/check.js';
@@ -214,7 +214,7 @@ check('One Newton Step keeps Example 4.7', /Example 4\.7, page 110/.test(readFil
     && /top of the unit circle/.test(place[2]) && !/real axis/.test(place[2])
     && /left of the unit circle/.test(place[3]) && /real axis/.test(place[3]));
   const between = expFrame(1, { re: 0 });
-  check('between the stops the point is on the unit circle', Math.abs(between.x) < 1e-12 && between.claim.text === 'The point sits on the unit circle.');
+  check('between the stops e^z is on the unit circle', Math.abs(between.x) < 1e-12 && between.claim.text === '$e^{z}$ sits on the unit circle.');
   check('a larger radius stays the radius sentence off the axis', /\$e\^\{x\}\$/.test(expFrame(stops[0], { re: Math.log(2) }).claim.text) && /larger than 1/.test(expFrame(stops[0], { re: Math.log(2) }).claim.text));
   const opened = createLivePlayer({
     duration: EXP_DURATION,
@@ -240,6 +240,12 @@ check('One Newton Step keeps Example 4.7', /Example 4\.7, page 110/.test(readFil
   check('a film that opens at the end still steps to the first stop',
     Math.abs(fromEnd.t - EXP_DURATION / 4) < 1e-6 && Math.abs(fromEnd.scene().y + Math.PI / 2) < 1e-6);
   fromEnd.destroy();
+  const atOne = settleFrame(8, { re: 1, im: 0 });
+  const onCircle = settleFrame(8, { re: Math.SQRT1_2, im: Math.SQRT1_2 });
+  check('z = 1 on the unit circle settles at 1',
+    Math.abs(atOne.mod - 1) < 1e-12 && atOne.claim.holds === true && /Settles at 1/.test(atOne.claim.text) && !/do not settle/.test(atOne.claim.text));
+  check('other unit-circle points do not settle at one point',
+    Math.abs(onCircle.mod - 1) < 1e-9 && onCircle.claim.holds === false && /does not settle at one point/.test(onCircle.claim.text) && !/modulus is 1, so/.test(onCircle.claim.text));
 }
 {
   const legacy = foldLegacyExercises({ '4.2.4': true }, { exercises: { '4.1.3': true, nope: true }, sections: { '4.1': true } }, chapter4ExerciseIds());

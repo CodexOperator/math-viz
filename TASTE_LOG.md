@@ -1897,3 +1897,19 @@ The phone's first screen: the lede, the 358px square, the claim, and Play, in bo
 The book: closed chapters as one line, Chapter 4 on the first screen, Continue at 44px, §5.4 marked Open, the later sections marked Later. The drawer row reads Test prep. Chapter 4's chips, the stills drawn at the size they are shown, and the orbit printed as `i`, `−1+i`, `−i`. The five-line §5.4 recipe, with the page on each line. Practice opening at the top, on the question, with three chips. The four teaching colours, the paper, the serif title, and the white card.
 
 No slider, no scrubber, no second clock, no new chrome. The §§5.2, 5.3, and 5.5 pictures stay out of this fix.
+
+## Chapter 4 and 5, batch 5
+
+Started from `6570a3e` on `cursor/chapter-4-5-2649`. The merged list from the batch-4 council.
+
+The §5.1 picture uses the stage scroll margin, so the title lands the square about 8px under the sticky Book link. The square’s size is the room under the title at scroll 0, so a resize while the picture is scrolled keeps the 358px first screen. The resting claim is “$e^{z}$ sits on the bottom of the unit circle.” The lede says drag the green ring. The book count names the span: “in Chapters 4 and 5.” Camp titles on Chapter 4 are headings. The chips and the stills stay the doors. Definition and theorem pins are 44px. The chapter end is padded, and an opened Later row uses the stage clearance and an outline.
+
+$z=1$ settles at 1. Every other point on the unit circle does not settle at one point. The same split is in `films/film-settle.html`. Exercise 1(a), page 108, is the one limit $\bigl(\tfrac12+\tfrac i4\bigr)^n\to 0$. The general fact $|w|<1\Rightarrow w^n\to 0$ is §4.3, Exercise 6, page 123. §§5.2, 5.3, and 5.5 stay Later. No picture on those sections was already the lesson.
+
+On a local server, 390×844 and 1280×800, light and dark: the phone square is 358px and Play ends at 821; the laptop square is 352px and Play ends at 788. The §5.1 title and an opened Later row both sit 8px under the Book link. Pins are 44px. No console errors.
+
+`node tools/check_vectors.mjs` 234/234. `node tools/fractal-smoke.mjs` passed. `node kit/smoke.mjs` passed. No live `kit/` import. `js/core/map-route.js` matches the kit template.
+
+Theorem 4.9 stays page 113, connectedness. Theorem 4.11 stays page 116, the main cardioid and an attracting fixed point.
+
+Still open: §§5.2, 5.3, and 5.5 have no picture. Chapters 1–3, 6, and 7 are roadmap lines. The circuit stations stay off the §5.4 stage.

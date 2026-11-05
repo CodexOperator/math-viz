@@ -1108,6 +1108,9 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   align-items: flex-start;
   gap: var(--space-2);
   min-width: 0;
+  /* html already has scroll-padding for the site header. This extra is the sticky Book link,
+     the same clearance a stage flag uses, so the axes land about 8px under that link. */
+  scroll-margin-top: 2.25rem;
 }
 
 .exp-stage {
@@ -1355,6 +1358,22 @@ a.station-link.chapter-up {
 .book-sections [data-state="done"] .book-section-mark { color: var(--ok); }
 .book-sections [data-state="later"] .book-section-mark { color: var(--text-muted); }
 
+/* A later row opened from the book uses the stage clearance, about 8px under the sticky Book link. */
+#chapter-later-sections > .book-node {
+  scroll-margin-top: 2.25rem;
+}
+
+#chapter-later-sections > .book-node.is-target {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Room under the last camp, so that row can sit under the Book link instead of at the page end. */
+.chapter-end-pad {
+  height: calc(100dvh - var(--header-h) - var(--tap) - 0.5rem);
+  pointer-events: none;
+}
+
 /* A later chapter on the roadmap is one line: the number and the title.
    The Next card stays a card, so it can sit under the status on the first screen. */
 #book-path > .book-node[data-state="later"] {
@@ -1397,6 +1416,11 @@ a.station-link.chapter-up {
 
 .book-read { margin: 0; padding-left: 1.2rem; }
 .book-read li { margin: 0.15rem 0; }
+.book-read a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+}
 .book-label {
   margin: var(--space-3) 0 var(--space-1);
   font-family: var(--font);

@@ -7,6 +7,7 @@
 html[data-theme=light]{--bg:#f6f3ec;--panel:#ffffff;--fg:#1a2230;--muted:#515b6c;--line:#d8d2c4;--rule:#d8d2c4;
  --cart:#0b63ad;--polar:#a84300;--input:#006e53;--output:#9d3a8a;--grid:#e6e0d3;--axis:#757d8d;--y:#845b00}
 .ln2{position:absolute;left:560px;width:684px;font:26px/1.25 "DV";white-space:nowrap;color:var(--fg)}
+#r4{white-space:normal}
 .ln2.m{color:var(--muted)} .ln2.s{font-size:24px}
 .lbl{position:absolute;font:24px/1 "DVM";white-space:nowrap;color:var(--fg);transform:translate(-50%,-50%)}
 .in{color:var(--input)} .out{color:var(--output)} .po{color:var(--polar)} .ca{color:var(--cart)}
@@ -82,7 +83,8 @@ function draw(t){
   txt('r1','z = '+cz(re,im)+',  |z| = '+num(mod));
   txt('r2','terms shown: '+num(shown,4)+', step '+num(step,5));
   txt('r3','|z^n| = '+num(Math.hypot(cx,cy)));
-  txt('r4', mod<1-1e-6?'Settles at 0. The modulus is |z|^n.':(Math.abs(mod-1)<1e-6?'Stays. The modulus is 1, so it does not settle.':'Leaves. The modulus is bigger than 1.'));
+  const atOne=Math.hypot(re-1,im)<1e-9;
+  txt('r4', mod<1-1e-6?'Settles at 0. The modulus is |z|^n.':(Math.abs(mod-1)<1e-6?(atOne?'Settles at 1. The powers are 1, 1, 1, \u2026.':'Stays. Every other point on the unit circle does not settle at one point.'):'Leaves. The modulus is bigger than 1.'));
   op('r1',1); op('r2',1); op('r3',1); op('r4',1);
 }
 

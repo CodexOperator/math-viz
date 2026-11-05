@@ -309,13 +309,10 @@ export function pictureGroup(id) {
     CHAPTER_PICTURE[k].station === pic.station && CHAPTER_PICTURE[k].chip === pic.chip));
 }
 
-// Where a section title goes. 4.x open the picture. 5.1 stays on this page.
-// 5.2, 5.3, and 5.5 open their Later rows. 5.4 opens its stage, not the circuit.
+// Chapter 4 titles are headings. The chips and the stills open those pictures.
+// 5.1 scrolls to the picture on this page. 5.2, 5.3, and 5.5 open their Later
+// rows. 5.4 opens its stage, not the circuit.
 export const SECTION_DOOR = deepFreeze({
-  '4.1': '#sequence-chapter-4-1-3',
-  '4.2': '#julia',
-  '4.3': '#geometric-chapter-4-3-1',
-  '4.4': '#powerseries-chapter-4-4-6',
   '5.1': '#chapter-exp',
   '5.2': '#chapter-5-5-2',
   '5.3': '#chapter-5-5-3',

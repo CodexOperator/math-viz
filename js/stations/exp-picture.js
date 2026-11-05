@@ -38,7 +38,7 @@ export function mountExpPicture(parent, pose) {
     viewBox: '0 0 480 480',
     tabindex: '0',
     role: 'img',
-    'aria-label': 'The image of e to the z. Drag the green dot to change the radius. Purple is e to the z. Green is that radius on the real axis. Orange is the unit circle.',
+    'aria-label': 'The image of e to the z. Drag the green ring to change the radius. Purple is e to the z. Green is that radius on the real axis. Orange is the unit circle.',
   });
   const axisX = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2' });
   const axisY = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2' });
@@ -119,10 +119,14 @@ export function mountExpPicture(parent, pose) {
 
   // The square uses the column, unless the claim and Play need that room
   // to stay on the first screen. Status sits under Play, so it is not reserved.
+  // The room is the square's place under the title at scroll 0. A resize while
+  // the picture is scrolled must not read the scrolled viewport top.
   function fitSquare() {
     if (!frame.isConnected) return;
     const parent = frame.parentElement;
-    const top = frame.getBoundingClientRect().top;
+    const scroller = document.scrollingElement || document.documentElement;
+    const scrolled = scroller.scrollTop || 0;
+    const top = frame.getBoundingClientRect().top + scrolled;
     const gap = parent ? (parseFloat(getComputedStyle(parent).rowGap) || 0) : 0;
     const below = claim.offsetHeight + play.offsetHeight + gap * 2 + 12;
     const room = window.innerHeight - top - below;

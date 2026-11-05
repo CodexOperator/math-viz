@@ -35,6 +35,7 @@ export function continueTarget(ticks) {
 export function continueSentence(ticks) {
   const { tally } = continueTarget(ticks);
   const name = tally.nextExercise ? exerciseLabel(tally.nextExercise) : '';
-  if (tally.complete) return `Done. ${tally.exercisesTicked} of ${tally.exerciseTotal} exercises.`;
-  return `Next is ${name}. ${tally.exercisesTicked} of ${tally.exerciseTotal} exercises.`;
+  // The front door counts Chapters 4 and 5 together. A chapter page keeps its own count.
+  if (tally.complete) return `Done. ${tally.exercisesTicked} of ${tally.exerciseTotal} exercises in Chapters 4 and 5.`;
+  return `Next is ${name}, in Chapters 4 and 5. ${tally.exercisesTicked} of ${tally.exerciseTotal} exercises.`;
 }
