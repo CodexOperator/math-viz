@@ -2013,3 +2013,79 @@ On `#julia` the colour sentence sits under the title, then the plane. At 390 the
 Theorem 4.9 stays page 113, connectedness. Theorem 4.11 stays page 116, the main cardioid and an attracting fixed point. Howell & Mathews, 202 Updated Edition.
 
 Still open: §§5.2, 5.3, and 5.5 have no picture. Chapters 1–3, 6, and 7 are roadmap lines for their own loops. The circuit stations stay off the §5.4 stage. The shared practice engine was not rebuilt; only the due count and the stored attempt changed. A new card is counted as new until it is graded, and it is due on a later day.
+
+## taste-skill (chapters-4-5 batch 6)
+
+Branch `cursor/chapter-4-5-2649`, tip `dd97fb2`. Preview https://book-preview.complexanalysis.pages.dev. `js/stations/book.js`, `js/stations/exp-picture.js`, and `css/components.css` on that host are the same bytes as this tip. Fresh storage. Phone first, 390×844, light and then dark, then 1280×800, light and dark. The book, Chapter 4, `#chapter-4-4-2`, `#julia`, Chapter 5 at scroll 0, `#chapter-5-5-1`, `#chapter-5-5-4`, `#chapter-5-5-2`, Practice 4.1, and the flash deck. A drag of the green ring from the bottom of the circle. No product code was changed. No console errors. No failed requests. `scrollWidth` was 390 and 1280.
+
+Taste-skill at `12af471f`, the critique passes for hierarchy, spacing, restraint, and what to cut. kit/SKILL.md wins where they meet. `inspect.mjs` was not run. Its house rules ban the kicker, the tracked where-line, the four teaching colours, and the 1px card, and the kit keeps those. The measurements below are from Chrome. This pass does not restyle the page.
+
+### Verdict
+
+ANOTHER BATCH. At scroll 0 the circle is the page, in both themes, at both widths, and `#chapter-5-5-1` lands that circle 8px under The Book. Two screens are still wrong. The bottom of Chapter 4 and of Chapter 5 is an empty page, and on the laptop the Julia disk runs past the window, taking the flat-paper line with it. One batch, the six cuts below. After that, this lens can rest.
+
+```
+ROUND 1
+Seen in one second: the circle, with the purple point on the bottom and the green ring on the right. On the laptop the same circle sits in the left of the column.
+Idea (one sentence): e^z is a radius the hand sets and an angle the clock turns, and the sentence under the circle says which.
+Live thing: drag the green ring, or press Play.
+Layout words by section: hero=picture / status=bar / 5.1=list / later=lines / 5.4=list. Chapter 4 is hero=list. Julia is hero=plane beside a rule on the laptop, and a stacked plane on the phone.
+Scores: design 7 · usability 7 · creativity 8 · content 7 → overall 6.5
+Caps applied: the chapter-end pad is a blank stretch taller than half a screen, so design stays at 6.5. The Practice 4.1 prompt is a four-line headline, so overall stays at 6.5. The where-line, the four teaching colours, the 1px card, and the drawn pictures stay; the kit keeps them, and those house caps are not applied. The empty paper to the right of the laptop square is the room that keeps Play inside 800. It is not a second blank screen.
+Top three problems (most visible first), each with the screenshot it shows in and the fix:
+1. p390-light-ch5-end and d1280-light-ch5-end. Under The Book the window is empty paper down to the footer. Shorten the end pad so the last row stays on that screen.
+2. d1280-light-julia. The disk's bottom is past y=800, and the flat-paper line is at y=822. Cap the plane so both end inside the window.
+3. p390-light-julia. "The set" and "Orange on a" repeat the lede and the caption is cut at the fold. Drop the heading and that sentence.
+```
+
+### What I could actually do
+
+`#chapter-5` at 390×844, light and dark. The Book link is 358×44. The title is one line, 25.85px, weight 600. The where-line is the tracked small caps. The lede is two lines, 52px: "Drag the green ring. Play turns the angle. A blank fills when the picture makes it true." The square is 358×358, from y=350 to 708. The claim is two lines, "\(e^{z}\) sits on the bottom of the unit circle." Play is 70×44 and ends at 821. The status card starts at 845, one line under the window. Dark paper is rgb(13, 18, 28). The claim is rgb(233, 237, 245), contrast 16. The lede is rgb(166, 176, 195), contrast 8.6. Light paper is rgb(246, 243, 236). The title is rgb(26, 34, 48), contrast 14.4. The lede is rgb(81, 91, 108), contrast 6.2. The same boxes in the dark.
+
+The green ring is `#chapter-exp-halo`, 44×44, on the right. A drag to the right set the real part to about 0.96, left the angle at \(-\pi/2\), and the claim said the radius is \(e^{x}\), larger than 1. Play stayed at y=777. The stage was focused, `:focus-visible` was false, and the outline was none.
+
+At 1280×800 the column starts at x=304 and the title is 952px, 36px type. The square is 357×357 at x=304, y=344. The claim is one line. Play ends at 788. The paper from the square's right edge to the column edge is the rest of that first screen, in light and in dark.
+
+`#chapter-5-5-1`, both widths. The page scrolls to the square. On the phone the scroll is 241, the square is 358px at y=109, and The Book ends at 101, so the gap is 8px. Play ends at 580. The §5.1 title is an h2, "The Complex Exponential Function," decoration none, and it sits under Play with the status card. At 1280 the scroll is 235, the square is 357px at y=109, the same 8px gap, and Play ends at 553.
+
+The camps run in book order. On the phone, document tops: §5.1 at 955, §5.2 at 1908, §5.3 at 1976, §5.4 at 2044, §5.5 at 2846. §5.2 and §5.3 are 44px lines. §5.5 is a 44px line. `#chapter-5-5-2` puts that line at y=109, 8px under The Book, with a 1px border and no outline. The recipe under the §5.1 title is three numbered lines and no formula paragraph above them. §5.4's five lines keep their pages.
+
+Chapter 4 at 390 opens at scroll 0. The title is two lines, 62px. The status ends inside the window. The two chips, Definition 4.1, and Theorem 4.1 are 44px and on that screen. The stills on `#chapter-4-4-2` are 161 CSS pixels and 161 bitmap pixels on the phone, 174 and 174 at 1280.
+
+`#julia` at 390. The lede is two lines, "Blue means the landing stayed. Orange means it left." The canvas is 322×322 from y=255 to 577, and the bitmap is 322. Zoom +, Zoom −, and Reset are 44px and on that screen. The flat-paper sentence is at y=586. At 1280 the lede is one line. The canvas is 572×572 from y=241 to 813. The flat-paper sentence is at y=822. The rule panel sits in the column beside the plane.
+
+Practice 4.1 opens at scroll 0. The heading is the question, an h2 104px tall, four lines, starting "Assume \(x_n \to u\)…". The source line under it is Theorem 4.1, page 104. The flash deck says "42 new." The card says NEW, then "New card," then "How do you check that a sequence settles?"
+
+### What clicks
+
+The phone's Chapter 5 is one picture. The circle is the width of the page, the claim names the bottom, and Play is on that screen in both themes. The drag owns the radius and leaves the angle. The ring is 44px. A drag leaves the square unframed.
+
+`#chapter-5-5-1` now lands on that circle, 8px under the sticky Book link, at both widths. The section title is a heading. The idea under it is gone. The recipe is the three steps. §5.2 and §5.3 sit between §5.1 and §5.4, and §5.5 sits after §5.4, each a 44px line with one border. The book puts Chapter 4, flagged Next, on the first screen, and Continue is 111×44.
+
+On the phone the Julia disk, the zoom buttons, and the flat-paper sentence are on the first screen. The stills are drawn at the size they are shown. The four colours stay on the marks: blue axes, orange circle and ray, green ring, purple point.
+
+### Ranked cut or fix
+
+1. **The chapter ends on an empty page.** Evidence: `#chapter-5` scrolled to the end, both widths. On the phone the scroll is 3008, the pad is 735px and starts at y=−26, and §5.5 is at y=−162, above the window. The screen is The Book, then empty paper, then the footer. At 1280 the scroll is 2624, the pad is 691px, and §5.5 is at y=−139. Chapter 4 does the same: at the end the pad is 735px from y=−26, and §4.4 has already left the window. The pad is `100dvh` minus the header, one tap, and half a rem, and the end Book link and the footer sit after it, so the last row scrolls away. Change: the pad is only the shortfall that leaves the last row 8px under The Book when the page is at its end, the clearance `#chapter-5-5-5` already uses. The empty screen goes.
+
+2. **On the laptop the Julia disk runs off the first screen.** Evidence: 1280×800, light. The canvas is 572×572, from y=241 to 813, in an 800px window. The flat-paper sentence, "On the flat paper, c is a hollow square," is at y=822. Zoom is on the screen. The rule panel is beside the plane and is cut at the same edge. On the phone the same disk ends at 577 and that sentence is at y=586, inside 844. Change: cap the plane so the disk and the one line under it end inside 800. The rule panel stays beside it.
+
+3. **Julia says orange twice, and the second time is cut off.** Evidence: 390×844. The lede is "Blue means the landing stayed. Orange means it left." Under the source, the heading is "The set," and the caption starts "Green is one start. The orange point is c on this picture only. Orange on a" at y=796, clipped by the 844 edge. The full caption goes on to "Orange on a landing means the walk left. Drag c and let go: the blue region stops being a disk." Change: drop the heading "The set" and the sentence "Orange on a landing means the walk left." Keep the green start, the orange point as c, and the drag sentence.
+
+4. **Chapter 4's lede spends a line on the page's outline.** Evidence: both widths, the lede is 52px and two lines. "An orbit is a sequence. Each section says why, then the work, then the sentence." The four sections already open with their own sentence, then the work. Change: the lede is "An orbit is a sequence."
+
+5. **The Chapter 5 lede points at a blank the first screen does not show.** Evidence: both widths, both themes, the lede's third sentence is "A blank fills when the picture makes it true." On the phone the §5.1 section starts at y=955, under an 844px window. The claim and Play are the sentences on this screen. The blanks are the exercise lines under the recipe. Change: the lede is "Drag the green ring. Play turns the angle." The blanks stay where they fill.
+
+6. **The practice question is a four-line headline.** Evidence: Practice 4.1, 390, light. The h2 is 104px, four lines: "Assume \(x_n \to u\) and \(y_n \to v\), with \(z_n = x_n + iy_n\) and \(\zeta = u + iv\). Show \(z_n \to \zeta\)." The source line under it keeps Theorem 4.1, page 104. The proof steps start under that and run off the window. Change: the prompt stays the question, at the size of the step text under it. The page title stays Test prep. The source line stays the cite.
+
+### What to keep
+
+At scroll 0 the circle is the page. On the phone it is 358×358, the claim is the bottom of the unit circle, and Play ends at 821, in light and in dark. At 1280 the square is 357px and Play ends at 788. Leave that size. The paper beside it is the room Play is using.
+
+The green ring is 44px. A drag sets the radius and leaves the angle, and the claim flips to larger than 1. Play does not move. The square stays unframed after the drag.
+
+`#chapter-5-5-1` lands the square 8px under The Book, at both widths. The §5.1 title is a heading. The recipe is three numbered lines. §5.2, §5.3, and §5.5 are 44px Later lines in book order, one border, and an opened row sits at that same 8px clearance. §5.4's five lines keep their pages.
+
+The where-line stays, tracked small caps under the title. The Book link stays the 44px sticky control. Chapter 4's chips and pins are 44px, and the stills are drawn at the size they are shown. On the phone the Julia disk, the zoom buttons, and the flat-paper sentence share the first screen. The four teaching colours, the paper, the serif title, and the white card stay.
+
+The flash count "42 new." stays. The card's question stays. §§5.2, 5.3, and 5.5 stay Later, with no new picture. No new chrome, no second clock, no slider on the exponential.
