@@ -1831,23 +1831,23 @@
     "chapter": 1,
     "section": "1.6",
     "cite": {
-      "ref": "§1.6, Exercise 9",
-      "page": 41
+      "ref": "Figure 1.30",
+      "page": 39
     },
     "kind": "next-step-mc",
-    "prompt": "Page 38 draws the open annulus $1<|z|<2$. Close the outer edge: $\\{z: 1<|z|\\le 2\\}$. Exercise 9, page 41, asks which terms apply.",
+    "prompt": "Figure 1.30, page 39, draws the open annulus $1<|z|<2$ from page 38. Close the outer edge and leave the inner edge open: $\\{z: 1<|z|\\le 2\\}$.",
     "steps": [
       {
         "text": "This set is ___",
-        "answer": "open on the inner circle and closed on the outer circle, so a region and not a domain",
+        "answer": "a region, and not a domain: the inner circle is out and the outer circle is in",
         "accept": [],
         "choices": [
-          "open on the inner circle and closed on the outer circle, so a region and not a domain",
+          "a region, and not a domain: the inner circle is out and the outer circle is in",
           "a domain, because the set is connected",
           "a closed region",
           "unbounded"
         ],
-        "why": "The inner circle is missing, so the set is not closed. The outer circle is included, so a boundary point is in the set and the set is not open. A domain has to be open. Page 38: a region is a domain plus some, none, or all of its boundary. The set sits inside $|z|\\le 2$.",
+        "why": "The inner circle is missing, so the set is not closed. The outer circle is included, so a boundary point is in the set and the set is not open. A domain has to be open. Page 40: a region is a domain together with some, none, or all of its boundary points. The set sits inside $|z|\\le 2$.",
         "slips": [
           {
             "match": [

@@ -235,13 +235,18 @@ export function generate(seed, params) {
         steps: [argStep],
       };
     }
-    const form = r.tex === '1' && theta !== 0 ? `e^{i${ang.startsWith('-') ? `(${ang})` : ang}}` : (theta === 0 ? r.tex : `${r.tex}\\,e^{i${ang.startsWith('-') ? `(${ang})` : ang}}`);
+    const wrapped = ang.startsWith('-') ? `(${ang})` : ang;
+    const form = r.tex === '1' && theta !== 0 ? `e^{i${wrapped}}` : (theta === 0 ? r.tex : `${r.tex}\\,e^{i${wrapped}}`);
+    // Figure 1.16, page 25, writes the principal value as e^{-iθ}. Both writings are the same number.
+    const euler = ang.startsWith('-')
+      ? [`${r.tex}e^{-i${ang.slice(1)}}`, `${r.tex}\\,e^{-i${ang.slice(1)}}`]
+      : [];
     return {
       prompt: `Write $${fmtCart(re, im)}$ in polar form $re^{i\\theta}$.`,
       steps: [
         step('The modulus is ___', r.tex, r.accept, 'Definition 1.8, page 17.', { real: r.real }),
         argStep,
-        step('The polar form is ___', form, [form, `${r.tex}e^{i${ang}}`, `${r.tex} cis ${ang}`], 'Definition 1.9, page 22, is $r(\\cos\\theta+i\\sin\\theta)$, and Euler writes that as $re^{i\\theta}$.', null),
+        step('The polar form is ___', form, [form, `${r.tex}e^{i${wrapped}}`, `${r.tex}e^{i${ang}}`, `${r.tex} cis ${ang}`, ...euler], 'Definition 1.9, page 22, is $r(\\cos\\theta+i\\sin\\theta)$, and Euler writes that as $re^{i\\theta}$.', null),
       ],
     };
   }

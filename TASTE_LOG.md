@@ -1603,3 +1603,35 @@ ANOTHER BATCH. The six pictures, the type, and the 44px controls are the site’
 ### What to keep
 
 The four colours, the Iowan title, the muted lede, the paper, and the accent button, in light and in dark. Times i on the first screen, at y = 724 on the phone and y = 794 on the laptop, and a sentence that is false until the second press. The 44px coarse hit, the 14px dot, and a drag that leaves the keyboard ring for the key. The 4+3i and 1+i chips at 44px. Check, the choices, Show the back, Got it, Missed, and Mark stage complete, all on the 44px button. The tick stays disabled until both 1.1 blanks are right, and a miss on 5 names the slip and keeps the next blank closed. One card at a time, the back closed until Show. Practice in the stage, with no second border. The memory line at 17px in the body colour. The summit at the tick. The book tally after the tick, “Next is stage 1.2. 1 of 6 stages.”, with 1.1 marked Done. Walk Chapter 1, before any tick, opening `#chapter-1-1-1` with Times i on the screen. The deep link that clears the header. Chapter 1’s Book link at 109×44. Chapter 5 still uses the 17px kicker; that is the older page, and it is the reason to leave Chapter 1’s link at 44.
+
+## reviewer (ch1 batch 3)
+
+Preview https://ch1-preview.complexanalysis.pages.dev, tip `d1c99af`, checked against Howell & Mathews, Complex Analysis, 202 Updated Edition (PDF, 471 pages). Fixes pushed on `cursor/chapter-1`. Did not merge. Did not touch `gh-pages`.
+
+### Verdict
+
+ACCEPT WITH FIXES. The stage arithmetic, the named pages, and the generator values match the print edition. Three sentences did not. Those are corrected. What is left is wording that is thinner than the theorem, not a wrong value.
+
+### What the book says
+
+Equation (1.6), page 3, is \((2+\sqrt{-1})+(2-\sqrt{-1})=4\), and \(4^3-15\cdot 4-4=0\). Definitions 1.1–1.3 are page 10, Definition 1.4 is page 11, and page 13 is \(i=(0,1)\) and \(i^2=-1\). Exercise 1(a) is \(i^{275}=-i\). Exercise 1(f) is \((7-2i)(5+3i)=41+11i\). Exercise 6, page 15, is the real-part sum and product. Identity (1.22), page 18, gives \((1+i)(1-i)=2\). Example 1.6, page 20, is \(|1+2i|=\sqrt{5}\) and \(|\sqrt{3}+2i|=\sqrt{13}\), not the length 5. Exercise 1(a) is \(\sqrt{10}\), Exercise 1(c) is \(2^{25}\), Exercise 2(a) is \(6+4i\) and \(-2+2i\), and Exercise 3(b) sits on \(|z-i|=2\).
+
+Example 1.13, page 27, states that \(1+i\) has length \(\sqrt{2}\) and Arg \(\pi/4\). Exercise 7, page 28, is \(z_1=-1+i\sqrt{3}\) and \(z_2=-\sqrt{3}+i\): the Args sum to \(3\pi/2\), and the product is \(-4i\), whose Arg is \(-\pi/2\). Equation (1.40), page 30, is De Moivre. Equation (1.43), page 31, is \(e^{i 2\pi k/n}\). Equation (1.45), page 32, is the general root. Theorem 1.5 and Example 1.21, page 33, solve \(z^2+(1+i)z+5i=0\) with square roots \(3-3i\) and \(-3+3i\), and the roots are \(1-2i\) and \(-2+i\). \((\sqrt{3}+i)^{10}=512-512\sqrt{3}\,i\).
+
+Equation (1.48), page 35, is \(z(t)=z_0+t(z_1-z_0)\). Equation (1.50), page 37, is the open disk. Example 1.25, page 38, is \(D_1(0)\) with \(\varepsilon=1-|z_0|\). The open annulus \(1<|z|<2\) is named on page 38 and drawn as Figure 1.30 on page 39. A region is defined on page 40. Exercise 6, page 41, is the open disk as a domain and the closed disk not. Exercise 9, pages 41–42, classifies sets (i)–(vii). None of them is \(\{z:1<|z|\le 2\}\). The answer key’s item 7 for §1.4 does not match the Exercise 7 printed on page 28. The page solves the printed exercise.
+
+Every Chapter 1 link’s HTML anchor is present. `js/core/map-route.js` is byte-identical to the kit copy. No live file imports `kit/`.
+
+### Fixes
+
+Example 1.6 no longer says it is the same length as \(4+3i\). It names \(1+2i\) and \(\sqrt{3}+2i\). The half-closed annulus is cited as Figure 1.30, page 39, and the region sentence cites page 40. It no longer says Exercise 9 asks for that set. A negative polar answer accepts \(e^{-i\theta}\), the form Figure 1.16 prints, as well as \(e^{i(-\theta)}\). Next root no longer says the spacing is unfinished while all five points are on the circle.
+
+`node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. A local render of `#chapter-1` shows the Example 1.6 sentence, Figure 1.30, and “This root is not 1.”
+
+### Still open
+
+1. The Theorem 1.4 pin says a degree-n polynomial has n roots. Page 30 says precisely n solutions, not necessarily distinct.
+2. The powers-of-i card cites page 13 for the cycle \(i,-1,-i,1\). Page 13 prints \(i^2=-1\). The cycle is the consequence. \(i^{275}\) is Exercise 1(a), page 15, and that value is \(-i\).
+3. Writing \(1+i\) in polar form is Example 1.7, page 22. Example 1.13 states the same length and Arg, then computes the inverse. The card’s numbers are the ones the example states.
+4. The 1.4 summit says the polar angle is the one value in \((-\pi,\pi]\). Definition 1.9 allows any argument. That one value is Arg, Definition 1.11. The memory sheet already separates them.
+5. Arg and polar still use only the four diagonal directions. Seed 4 is \(\operatorname{Arg}(3-3i)=-\pi/4\). They do not draw an axis point, and they do not draw the book’s \(\pi/3\) or \(\pi/6\).

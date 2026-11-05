@@ -174,7 +174,19 @@ check('eleven chapters, 1, 4, and 5 open', BOOK_CHAPTERS.length === 11 && OPEN_C
     && polarClaim({ re: 1, im: 1 }).holds === true && polarClaim({ re: -1, im: 0 }).holds === false
     && rootClaim(0).holds === true && rootClaim(1).holds === false
     && rootClaim(1).text.includes('2\\pi\\cdot 1/5') && rootClaim(0).text.includes('Five equal turns')
+    && !rootClaim(1).text.includes('not the finished')
     && diskClaim({ re: 0.2, im: 0 }).holds === true && diskClaim({ re: 1, im: 0 }).holds === false && diskClaim({ re: 1.5, im: 0 }).holds === false);
+  {
+    const neg = generateCh1(2, { mode: 'polar' });
+    const book = `${neg.steps[0].answer}e^{-i${neg.steps[1].answer.slice(1)}}`;
+    const ann = practiceCh1.find((item) => item.id === 'ch1-1.6-annulus');
+    const worked = CHAPTER_1.sections.find((s) => s.id === '1.3').worked.body;
+    check('a negative argument keeps the book’s e to the minus i theta',
+      neg.steps[1].answer.startsWith('-') && matchesCh1(book, neg.steps[2]) && matchesCh1(neg.steps[2].answer, neg.steps[2]));
+    check('the half-closed annulus is Figure 1.30, and Example 1.6 is another pair',
+      ann.cite.ref === 'Figure 1.30' && ann.cite.page === 39 && !/Exercise 9/.test(ann.prompt) && /Page 40/.test(ann.steps[0].why)
+      && /1\+2i/.test(worked) && !/same length/.test(worked));
+  }
   {
     let zeroCoord = false;
     for (let seed = 1; seed <= 40; seed++) {

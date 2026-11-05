@@ -103,7 +103,7 @@ export const CHAPTER_1 = deepFreeze({
         pin: 'Page 17, and Figure 1.10 on page 18',
         href: sectionHref(GEO1, 'fig_ch-01-10'),
         title: 'The length of $4+3i$',
-        body: 'Definition 1.8 writes $|4+3i|$ as $\\sqrt{4^2+3^2}$. The legs are the real part and the imaginary part, and Identity (1.21) says each leg is at most the hypotenuse. Example 1.6, page 20, is the same length doing arithmetic on a different pair.',
+        body: 'Definition 1.8 writes $|4+3i|$ as $\\sqrt{4^2+3^2}$. The legs are the real part and the imaginary part, and Identity (1.21) says each leg is at most the hypotenuse. Example 1.6, page 20, multiplies the lengths of a different pair, $1+2i$ and $\\sqrt{3}+2i$.',
       },
       memory: [
         '$|z|=\\sqrt{x^2+y^2}$. That is the distance to $0$. Definition 1.8.',
@@ -258,6 +258,7 @@ const CITE_HREF = {
   'Equation (1.48)': sectionHref(TOP, 'sec_topology-3'),
   'Equation (1.50)': sectionHref(TOP, 'OpenDisk'),
   'Example 1.25': sectionHref(TOP, 'TopologyEx'),
+  'Figure 1.30': sectionHref(TOP, 'fig_ch-01-30'),
   '§1.6, Exercise 6': sectionHref(TOP, 'x1_6_6'),
   '§1.6, Exercise 9': sectionHref(TOP, 'x1_6_9'),
   '§1.6, Exercise 1(a)': sectionHref(TOP, 'x1_6_1'),
@@ -328,14 +329,15 @@ export function polarClaim(z) {
 }
 
 // The fifth roots of unity. Each state names its angle 2πk/5.
-// The spacing sentence is the one that holds, and it holds only at k = 0.
+// All five points stay on the circle. The spacing sentence holds at k = 0.
+// The other states name that root, and they do not deny the spacing.
 export function rootClaim(k) {
   const n = ((Math.round(k) % 5) + 5) % 5;
   const angle = `$2\\pi\\cdot ${n}/5$`;
   if (n === 0) {
     return { holds: true, k: n, text: `Angle ${angle}. Five equal turns, and this one is $1$.` };
   }
-  return { holds: false, k: n, text: `Angle ${angle}. One of the five turns, not the finished spacing.` };
+  return { holds: false, k: n, text: `Angle ${angle}. This root is not $1$.` };
 }
 
 export function rootPoint(k) {
