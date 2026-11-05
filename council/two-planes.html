@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="theme-color" content="#0d121c">
+  <title>Two planes</title>
+  <link rel="icon" href="../favicon.ico" sizes="48x48">
+  <link rel="stylesheet" href="../vendor/katex/katex.min.css">
+  <link rel="stylesheet" href="../css/theme.css">
+  <link rel="stylesheet" href="../css/council-planes.css">
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('mv:theme');
+        if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+  <script src="../vendor/katex/katex.min.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#stage">Skip to the picture</a>
+  <main class="tp">
+    <p class="tp-kicker">Council prototype · Chapter 5, §1</p>
+    <h1>Two sheets, one function</h1>
+    <p class="tp-observe" id="observe">Drag to turn the pair. The green sheet is the z plane. The purple sheet is the w plane. A string runs from z to f(z). Up is the gap between the sheets, not a third coordinate of z.</p>
+    <div class="tp-controls">
+      <div class="tp-chips" role="group" aria-label="Function">
+        <button type="button" class="tp-chip" data-src="z^2" aria-pressed="false">z&#178;</button>
+        <button type="button" class="tp-chip" data-src="exp(z)" aria-pressed="true">e^z</button>
+        <button type="button" class="tp-chip" data-src="log(z)" aria-pressed="false">ln z</button>
+      </div>
+      <label class="tp-field">f(z)
+        <input id="formula" value="exp(z)" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="done" aria-describedby="error">
+      </label>
+    </div>
+    <p class="tp-tex" id="formula-tex"></p>
+    <p class="tp-error" id="error" role="status"></p>
+    <p class="tp-claim" id="claim" aria-live="polite"></p>
+    <div class="tp-stage" id="stage" tabindex="0" role="application" aria-describedby="observe hint claim">
+      <p class="tp-hint" id="hint">Drag to turn.</p>
+    </div>
+    <p class="tp-status" id="status"></p>
+    <div class="tp-key">
+      <canvas id="wheel" width="84" height="84"></canvas>
+      <div>
+        <p id="legend-short">Colour is the angle of w. Brightness is the size of w.</p>
+        <ul class="tp-swatches">
+          <li><span class="tp-dot tp-dot-input"></span> Green rim: the z sheet, where a string starts.</li>
+          <li><span class="tp-dot tp-dot-output"></span> Purple rim: the w sheet, where the string lands.</li>
+          <li><span class="tp-dot tp-dot-cart"></span> Blue: the axes, and the grid, before and after the map.</li>
+          <li><span class="tp-dot tp-dot-polar"></span> Orange: the branch cut, drawn only when the two sides land apart.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="tp-cite" id="cite"></p>
+    <p class="tp-links">
+      <a href="../index.html#lab">Mapping lab</a>
+      <a href="../index.html#branches">Branches</a>
+      <a href="../index.html#graph4d">4D graph</a>
+      <a href="../index.html#home">Story map</a>
+    </p>
+  </main>
+  <script type="module">
+    import { start } from '../js/council/two-planes.js';
+    start();
+  </script>
+</body>
+</html>
