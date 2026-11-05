@@ -1942,3 +1942,75 @@ On the local page, which matches the preview except this grader fix, 390×844 th
 2. Exercise 2’s second step is a choice list on a `next-step-blank` item. The local card grades it as a choice. A shared renderer that keys off the item kind would not.
 3. The Theorem 3.5 flash states the polar equations and not f′ = e^{−iθ}(U_r + i V_r), Equations (3.23) and (3.24), page 91.
 4. Open Chapter 2 is not on the book page. Chapter 2 is not a page on this branch.
+
+## ux-veteran (chapter-3 batch 5)
+
+Preview https://ch3-preview.complexanalysis.pages.dev/#chapter-3, tip `369b9dd`. The served `js/book/chapter3.js`, `js/book/ch3-pictures.js`, `js/stations/book.js`, `css/components.css`, `js/app.js`, `js/data/book-path.js`, and `js/book/ch3-cards.js` match that commit. The branch then moved to `919cb7a`, a grader fix for the order of Exercise 10's polar partials. That commit does not change the chapter chrome, the book, or the nav. Used like a student, touch first: 390×844 light then dark, then 1280×800 light then dark. No product code changed. The page raised no console error on the walk. No sideways scroll (`scrollWidth` equals the window, 390 and 1280). The chapter is 16537px on the phone and 13371px on the laptop.
+
+### Verdict
+
+ANOTHER BATCH
+
+The chapter's first screen is the climb. On the phone the square fills the column, the 45° sentence, the gesture, and Play, and the name under the title stays 3.1 after the stage is marked. At 1280 the why finishes inside 800 and the square shares the sentence's left edge. Back returns the scroll. The book, on that same phone, spends the first screen on an empty card, and the menu's later chapters cannot sit under the header. One batch for the book and the up control. The square, Play, and the 44px chapter controls stay.
+
+### The first screen
+
+**390×844, light and dark.** Same boxes. The header is 56px. The Book is 108.7×44 at y=80. The title is two lines, y=132 to 194, Iowan Old Style 25.85px weight 600. The stage line is one line, y=202 to 218, 12.48px, and it fits: "3.1 · Differentiable and Analytic Functions · 0 of 3". The square is 324×324, x=33, y=259 to 583. The gesture is three lines, y=591 to 670: "Drag the green dot. Green is the step. Purple is where it goes. Orange is the turn." The claim is 52.7px, y=678 to 731: "The turn stays 45° and the stretch stays 2√2, for every direction." z² is 44×44, conj is 59×44, and Play is 69.8×44, all at y=739 to 783. The window closes on Play. WHY YOU'D CARE is at y=871, and the why, both sentences, runs y=894 to 1000. "Three stages" is gone.
+
+In the dark the page is rgb(13, 18, 28) and the sentence is rgb(233, 237, 245). The stage line is rgb(166, 176, 195). The axes stay blue, the short arrow green, the turn orange, the image purple. Same positions. A theme change does not move Play or the square.
+
+Play says Pause, and a second press says Play, with the 45° sentence still the sentence and the angle held. conj, from a fresh point, keeps the claim at 52.7px and Play at y=739: "The purple arrow mirrors the green one. The turn is 0°, and it moves." A press that starts 26px from the dot leaves 1+i and the 45° sentence. A rightward drag stays on the finger, miss 0, imaginary part 1. At real part 1.98 the green step is 7.4px, the purple image is 10.8px, and the orange turn is drawn. At the frame, real part 2.40, the finger has left the square, miss 1.5, and the step, the image, and the turn are hidden. The claim still says "At 2.4 + i, the turn is 23° and the stretch is 5.2."
+
+**1280×800, light and dark.** Same boxes. The menu button is hidden and the sidebar is the list. The square is 304px, x=321, y=240 to 544, the same left edge as the gesture and the claim. The gesture is one line. Play ends at y=691. The why ends at y=783.5, both sentences, inside 800. The status, "Next is 3.1 Differentiable and Analytic Functions. 0 of 3 stages.", starts at y=844.5. Chapters 3 and 4 in the sidebar wrap to 46.8px. The others stay 44.
+
+### The drawer, Back, and the climb
+
+At 390 the menu is 8 rows, each 44×358. Chapter 3 is the current row. The drawer covers the page, body overflow is hidden, and `#view` and the footer are inert. Escape closes it. The rows are The Book and chapters 1 through 7. Chapters 8 through 11 are absent.
+
+`history.scrollRestoration` is manual. From scrollY 900, The Book opens `#book` at 0. Browser Back returns `#chapter-3` at 900. From 1400, Back returns 1400.
+
+The 3.1 flag is 44×44. A tap leaves the title "Chapter 3" and puts the memory list at y=72.5, under the 56px header. `#chapter-3-3-3` puts Harmonic Functions at y=121, with the why, the 324px picture, the drag sentence, the right-angle claim, and Conjugates and Circles. Those chips are 44px tall and end at y=847, so the border meets the 844 edge and the label is on the screen. `#chapter-3-3-2` is the same pattern: the title at y=121, and Turn and Stretch ending at y=847.
+
+A cold `#chapter-3-3-1` is the other landing. Scroll is 186. The stage line, which at scroll 0 sits at y=202, lands at y=16, behind the header. The square starts at y=73. The section title "Differentiable and Analytic Functions" is at y=948, the next screen. The book row for 3.1 uses this hash. `#chapter-3` at scroll 0 still shows the stage line.
+
+Mark stage complete, scrolled into view, renames the button to Stage complete, sets aria-pressed, paints a 4px green left edge rgb(38, 112, 42), and writes `mv:progress.test2` as `{"3.1":true}`. The flag becomes "3.1 · STAGE COMPLETE", 165×44. The summit sentence is already on that screen. 3.2's title is 98px under the button, and its why is on the screen. The status, off this screen, becomes "Next is 3.2 The Cauchy-Riemann Equations. 1 of 3 stages." A reload opens at scroll 0 on the derivative square, z² pressed, the 45° sentence, and the line "3.1 · Differentiable and Analytic Functions · 1 of 3".
+
+The last Mark stage complete button and the chapter source line are 49px apart. The path's bottom padding is 0.
+
+Exercise 1(a) is the prompt, the three steps, and the source line. The answer field is 287×44. Exercise 3's four choices are 287px wide, overflow 0, and each formula is one span inside the button. Two of the buttons are 55.7px because the formulas wrap onto a second line. The rational card's four choices are one line, 44px. At 1280 the Exercise 3 choices are 884×44, overflow 0.
+
+### The book
+
+**390×844, light and dark.** The lede is "Chapters 1–7, in the order Howell and Mathews print them." Open Chapter 3 is 324×44 at y=265, filled rgb(47, 62, 92). Walk Chapter 4 is hidden. The status sentence is "Chapter 3: 0 of 3 stages. Next is 3.1 Differentiable and Analytic Functions." The box around that sentence is 256px tall, y=317 to 573. The card under it is blank. Chapter 1, flagged Later, starts at y=614 and is cut by the window. Chapter 3, flagged Open, starts at y=954. In the dark the status is the same 256px and the card is rgb(21, 28, 43). The roadmap is seven chapters. The footer says chapters 3, 4, and 5 are open and the others are later.
+
+With 3 of 3 stored, Open Chapter 3 hides, the status is still 256px ("Next is §4.1, Exercise 3. 0 of 8 exercises."), and Walk Chapter 4 is 324×44 at y=529. Chapter 4's flag is Next. Chapter 3's flag is Done.
+
+At 1280 the same sentence is 26.3px, sitting beside the 166×44 button. Walk Chapter 4 is hidden. Chapter 1's Later card starts at y=318.
+
+The menu rows for chapters that have no page scroll the roadmap. `#chapter-1` puts that Later card at y=56. `#chapter-2` puts its card at y=56. `#chapter-6` stops at scroll 1354, the end of the page, and the card is at y=441. `#chapter-7` is at y=572 on that same maximum, and the current row is The Book. `#chapter-4` and `#chapter-5` open those chapters and mark the row.
+
+On the phone book, the door "One Point, Two Addresses" under chapter 1 is 245×49. "A Function Is a Motion" under chapter 2 is 178×23. The three section rows under chapter 3 are 44px links.
+
+Chapter 4 and chapter 5, at 390 and at 1280, put the way back in a 69.5×17 control, THE BOOK. Chapter 3's control on those same two windows is the 108.7×44 station link.
+
+### Style
+
+Same system as chapter 4, measured at 390. Light: the paper is rgb(246, 243, 236), the text is rgb(26, 34, 48), a card is white with a 1px rgb(216, 210, 196) border and radius 10px. Dark: the paper is rgb(13, 18, 28), the text is rgb(233, 237, 245), a card is rgb(21, 28, 43). The title is Iowan Old Style. Play is the 44px button, radius 6px. The four teaching colours are the arrows. The drift is the up control: chapter 3 uses the station link, and chapters 4 and 5 keep the 17px label. The header wordmark is 237×30, the existing header. Citation links in the prose are the short lines they already were.
+
+### Ranked
+
+1. **The phone status sizes to the sentence.** Evidence: at 390, light and dark, the status is 256px tall, y=317 to 573, for one two-line sentence. Open Chapter 3 is on that screen, at y=265, and the Open card for the chapter starts at y=954. Chapter 1 Later is the card the window reaches, at y=614. At 1280 the same sentence is 26.3px beside the button. With 3 of 3 stored the phone status is still 256px, and Walk Chapter 4 sits at y=529 under the blank. The 16rem basis is a width in the row and a height in the phone column. Change: on the phone the status is as tall as the sentence. Chapter 3's card then reaches the first screen, under the button and the two lines. Walk Chapter 4 stays hidden until 3 of 3.
+
+2. **A later chapter from the menu sits under the header, and that row stays current.** Evidence: `#chapter-1` and `#chapter-2` put the Later card at y=56. `#chapter-6` is stuck at scroll 1354, the page maximum, with the card at y=441. `#chapter-7` is at y=572 on that same maximum, and the current row is The Book. Chapters 4 and 5 open their pages and mark the row. Change: the roadmap gets the bottom padding the chapter path already uses, so chapters 6 and 7 can sit under the header the way 1 and 2 already do. When the roadmap is focused on a chapter, that row is current, and the row can say Later. The Book is current on `#book`.
+
+3. **Chapters 4 and 5 use Chapter 3's Book control.** Evidence: at 390 and at 1280, Chapter 3's up control is 108.7×44, "The Book". Chapter 4 and Chapter 5 are 69.5×17, THE BOOK, on both windows. Change: the same `.station-link`, min-height 44, label "The Book".
+
+4. **A cold open of 3.1 keeps the camp name on the screen.** Evidence: `#chapter-3` at scroll 0 shows "3.1 · Differentiable and Analytic Functions · 0 of 3" at y=202. `#chapter-3-3-1` from the book row scrolls to 186, so that line lands at y=16, behind the 56px header, and the square starts at y=73. `#chapter-3-3-2` and `#chapter-3-3-3` put the section title at y=121. The flag is a different path: it leaves the hash on `#chapter-3-3-1` and puts the memory list at y=72.5. Change: a cold `#chapter-3-3-1` lands at scroll 0, the first screen that already names 3.1. The flag still scrolls the memory list.
+
+5. **The already-drawn door is 44px.** Evidence: on the phone book, "A Function Is a Motion" is 178×23. "One Point, Two Addresses" wraps to 245×49. Those are the doors on the Later cards for chapters 1 and 2. Change: both doors are the station link, min-height 44.
+
+6. **The drag's last frame still shows the arrows.** Evidence: at real part 1.98 the green step is 7.4px, the purple image is 10.8px, the turn is drawn, and the miss is 0. At real part 2.40 the finger has left the square and the step, the image, and the turn are hidden, while the claim still names a turn of 23° and a stretch of 5.2. Change: the dot stops at the last point inside the square where those three marks are still drawn. Reaching the frame leaves them on the square. No new control.
+
+### Keep
+
+The 324px phone square, the 45° sentence, the gesture line, and Play ending at y=783, in both themes. The why, both sentences, starts whole on the next thumb. The phone square stays 324px. At 1280 the square is 304px at x=321, the why ends at y=783.5, and the status starts at y=844.5, in both themes. conj keeps the claim at 52.7px and Play at one y. The dot stays under the finger inside the square, a press 26px out changes nothing, and at real part 1.98 the three marks are still drawn. The four teaching colours. The Book on this chapter at 44px. Back restoring scrollY 900 and 1400. The 44px flag and the memory list at y=72.5. `#chapter-3-3-2` and `#chapter-3-3-3` with the title at y=121. Mark stage complete, the green edge, and 3.2's title and why 98px under that button. The reload line "3.1 · Differentiable and Analytic Functions · 1 of 3", with "Next is 3.2" on the status. The drawer, chapters 1 through 7, the cover, and Escape. Walk Chapter 4 hidden until 3 of 3, and the lede that counts seven chapters. The seven roadmap cards, and chapter 3's 44px section rows. Exercise 1(a) as the prompt, the steps, and the source line. Exercise 3's formulas, each one piece inside the button, at 390 and at 1280. Shown inputs at 44px. The source line 49px under the last camp. The type, the paper, and the cards, shared with chapter 4. No sideways scroll.
