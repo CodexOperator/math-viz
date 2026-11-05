@@ -1634,3 +1634,63 @@ Analytic and entire are two sentences before Example 3.1. The Cauchy-Riemann equ
 ## Still open
 
 The shared practice renderer is not on this branch, so the chapter still uses its local card. Theorem 3.4 is a statement and a flash, not a fill-in proof. The opening square is small on a phone so the why can finish; the arrows are the same picture, drawn smaller. The book button and the chapter list live in shared files, so the hand-merge with Chapter 2's "Open Chapter 2" still has to put both buttons on `#book`.
+
+## appllama (chapter-3 batch 3)
+
+Preview https://ch3-preview.complexanalysis.pages.dev/#chapter-3, tip `e18c094`. The served `js/book/ch3-pictures.js`, `js/book/chapter3.js`, `css/components.css`, and `js/app.js` match that commit. Phone 390×844 first, touch, light then dark, then 1280×800, mouse, light then dark. A press with no move, a 2px nudge, a 48px drag, a press 18px out and a press 26px out. Play, a pause, a continue, a second tap while Pause was showing, and a drag while the button said Pause. conj, then Play. Reduced motion through four steps, in the dark. The square's green corner along its circle, Stretch, the level point, the origin, and Circles. The menu, The Book, Back from scrollY 900, the 3.1 flag, and `#chapter-3-3-3`. The same opening in the dark, at both widths. A second lap with the CPU slowed to 4×. No console errors. No sideways scroll (the phone's scrollWidth is 390, the laptop's is 1280).
+
+## Verdict
+
+ANOTHER BATCH. The clock holds, and so do the two pictures under it. The opening picture does not. On the phone it is a 156px stamp in a 324px card, so the turn is a 7×17 hook and the handle is 4.5px across. A straight drag then peels that dot off the finger while the finger is still inside the square. One batch. The clock, the claim box, and §3.2 and §3.3 stay as they are.
+
+## The finger
+
+At rest the base point is 1+i, the angle is 0, and the claim is "The turn stays 45° and the stretch stays 2√2, for every direction." A press on the green dot, held, leaves both numbers. A 2px nudge leaves them. The same in the dark, and the same at 1280.
+
+A rightward drag stays on the finger, then leaves it. On the phone the miss along that drag is 0, 0, 0, 0, 0.7, 6, 11.5, and 17px. The peel starts while the finger is still 15px inside the square (finger x = 257, the square ends at 273). The dot has slid down off the horizontal: the point finishes at 1.99 + 0.8i, and the claim is "At 1.99 + 0.8i, the turn is 22° and the stretch is 4.3." The same eight misses in the dark. At 1280 the same 48px stays at miss 0 and the point is 1.76 + i, because each pixel is fewer units. The next drag, starting 18px to the right of the dot, is the peel on the laptop too: the point arrives at 1.98 + 0.84i. A press 26px out changes nothing, at both widths. The hit is a 44px circle. The drawn dot inside it is 4.5px on the phone and 8.9px on the laptop.
+
+The peel is the disk. The plane clamps to a circle of radius 2.15, and 1+i is already at radius √2, so a horizontal move dies at real part about 1.90 and the dot rides the circle away from the finger. The corners of the square are past that circle, so they are drawn and cannot be held.
+
+The square's green corner stays on the finger when the drag follows its circle. Six samples, radius 55px, miss 0, and the claim stays "Right angle, equal sides, and the marked corner still leads. A square." The corner is 9.4px across on a 324px square. Stretch then says "A right angle, and the sides are not equal. Not a square."
+
+The level point stays on the finger, miss 0 on six samples, claim "The two curves cross at a right angle." At the origin the claim is "Both slopes vanish, so there is no angle to read." Circles from there puts the point back at 1 + 0.45i and says the curves do not cross at a right angle.
+
+A touch drag leaves the square unframed. The outline is none, and `:focus-visible` stays false.
+
+## The clock
+
+Play moves the angle and the button says Pause. Over the next 1.5 seconds there were 90 frames, median 16.7ms, maximum 16.8ms, none over 20ms. Pause left the angle at 1.4248836000000018. Five hundred milliseconds later it was the same number, the button said Play, and no further frame had been requested. The next press said Pause and continued from that angle. A second tap in the same breath returns the button to Play and leaves it there.
+
+With the CPU slowed to 4×, one second of Play on z² was 63 frames, median 16.7ms, maximum 16.8ms, and the angle advanced 0.90, which is the clock's own speed. conj, same lap, was 61 frames, median 16.7ms, none over 20. The claim moved from 0° to 152° and the box stayed 52.7px.
+
+In the dark the same hold: the angle was 1.424941200000002, and 500ms later it was that number, and the button said Play.
+
+Reduced motion, in the dark, opens on Step. Four presses advance the angle by a quarter turn each (π/2, π, −π/2, 0), request nothing, and the button stays Step. On z² the claim stays the 45° sentence. conj at that opening says "The purple arrow mirrors the green one. The turn is 0°, and it moves." The claim is 52.7px and Step is at y = 570.5.
+
+A drag that starts while the button says Pause returns the button to Play. Switching to conj leaves the claim at 52.7px and Play at the same y, on the phone (570.5) and on the laptop (647.4), in both themes. During conj's sweep the degree changes and the box does not.
+
+The level drag is the frame that slips. The same 4× lap that held Play at 16.7ms rebuilt the level picture at median 33.3ms, maximum 50ms, every gap over 32ms. Each move replaces the whole grid. On the laptop, unthrottled, that same drag stays at 16.7ms.
+
+## The page
+
+On the phone the opening square is 155.5px, from y = 259 to 415, centered at x = 117 in a 324px card. §3.2 and §3.3 on that same phone are 324px squares. The orange turn is 6.8×16.5. The green arrow is 18px and the purple arrow is 36px. The handle is 4.5px. The gesture line, the 45° sentence, z² (44×44), conj (59×44), and Play (70×44, y = 570 to 614) sit under it. The why ends at y = 759, inside 844. The lede ends at 811. The status line starts at 844.
+
+On the laptop the opening square is 304px, from y = 240 to 544. The turn is 13.4×32.2, the green arrow is 36px, the purple arrow is 71px, and the handle is 8.9px. Play ends at y = 691. The why ends at y = 783, inside 800. The same boxes in the dark. The page is rgb(13, 18, 28) and the sentence is rgb(233, 237, 245). The axes stay blue, the hand stays green, the turn stays orange, and the image stays purple. Theme swaps those surfaces without moving Play or the square.
+
+The Book is 109×44. From scrollY 900 it opens `#book` at 0. Back returns `#chapter-3` at 900. The 3.1 flag is 44×44. It opens `#chapter-3-3-1` and puts the memory list at y = 72. `#chapter-3-3-3` puts Harmonic Functions at y = 121. The chapter path's bottom padding is 0. The source line sits 49px under the last stage button. The drawer is The Book and chapters 1 through 7, each row 44px, the page behind it does not scroll, and Escape closes it.
+
+## Cut
+
+1. **The opening square uses the column, on the phone.** Evidence: at 390 the stage is 155.5×155.5, centered, with 101px of card on either side. The orange turn is 6.8×16.5 and the handle is 4.5px. §3.2 and §3.3 are 324px on that screen, and the corner there is 9.4px. Play already ends at y = 614, so the stamp is what bought the why, which ends at y = 759. At 1280 the stage is 304px, the turn is 13.4×32.2, and the why still ends at y = 783 inside 800. Change: drop the 48% cap on the 3.1 stage for the phone column, and let that square be the 324px width §3.2 already uses. Keep the 1280 cap that holds the why inside 800. Play stays on the first screen. The why goes under Play on the phone. No new control.
+
+2. **The dot stays under the finger until the finger leaves the square.** Evidence: the phone's rightward drag is on the finger for 24px and then misses by 0.7, 6, 11.5, and 17px, the last of those while the finger is at the square's right edge. The point has left the horizontal, 1+i to 1.99+0.8i. At 1280 a longer drag does the same, 1+i to 1.98+0.84i. The clamp is a disk of radius 2.15, and the corners of the drawn square sit outside it. Change: clamp to the rectangle the axes already draw, so a straight drag keeps the dot on the finger for every point inside the frame. Past the frame, the drag ends. No spring.
+
+3. **The level drag keeps the frame Play already keeps.** Evidence: at 4×, Play on z² and on conj stays at median 16.7ms with nothing over 20ms. The level drag in that same lap is median 33.3ms, maximum 50ms, every gap over 32ms. Each move rebuilds every curve. Unthrottled, on the laptop, the same drag is 16.7ms and the miss is 0. Change: draw the faint families when the chip changes, and on a move update the point and the two live curves. One frame, the same clock.
+
+## Keep
+
+The clock. Play, Pause, the hold, the continue, Step under reduced motion, and 60 frames a second with the CPU slowed. A paused picture requests nothing. z² keeps one sentence for the whole turn. conj keeps the claim at 52.7px and Play at one y while the degree changes, at both widths and in both themes. The four teaching colours, in both themes, and a theme change that does not move the square. The square's corner on its circle, miss 0, and Stretch flipping the sentence. The level point on the finger, the snap at the origin, and Circles returning from the origin to 1+0.45i. Two chips and one Play. A press off the dot changes nothing. A 2px nudge changes nothing. A drag leaves the square unframed. The Book at 44px, Back restoring scrollY 900, the 44px flag, the memory list under the header, and `#chapter-3-3-3` at y = 121. The drawer, chapters 1–7, and Escape. No sideways scroll.
+
+## Add
+
+Nothing. No slider, no scrubber, no spring, no second clock, no third chip.
