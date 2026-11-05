@@ -1763,3 +1763,33 @@ Checked in headless Chrome at 390 and 1280, light and dark. No sideways scroll. 
 - On a book chapter the footer colour key is still the Test 1 key.
 - The roadmap page still lists chapters 8–11. The drawer stops at 7.
 - The practice engine on `cursor/practice-engine` still needs `ch2-maps` before its catalog will accept this file.
+
+## unslop (chapter-2 batch 4)
+
+Read heydamir/unslop at `a6f121ee`. Polish only. `kit/SKILL.md` wins where they disagree: the four teaching colours, the book-path kickers, one gesture, one clock, no new picture and no second control. The walk is https://ch2-preview.complexanalysis.pages.dev at tip `8215b05`. Headless Chrome, 390×844 then 1280×800, light then dark, `#book` and `#chapter-2` through the five stages. A drag on §2.1 both ways, a drag on §2.4 to the lower left and to the right of the origin, and a press on §2.5. No product code changed. No console errors. No sideways scroll: `scrollWidth` was 390 and 1280.
+
+The page is already this book. Warm paper, a serif title, four teaching colours on the planes, quiet chrome. Light paper is `rgb(246, 243, 236)`. Dark paper is `#0d121c`. The half-plane shade reads in both themes: right of the blue line is the blue field, above the orange line is the warm field. No gradient, no glow, no emoji, no badge, no pulsing control.
+
+Direction, taken from the page. Product: one drag moves a green point, and the purple point and one sentence change with it. Character: calm, exact, a little warm. World: warm paper and a pair of planes. Moments: those two planes, the shade, the curve, the cut, the circle. Signature: the same four colours on every stage.
+
+### Verdict
+
+ANOTHER BATCH
+
+One polish batch, the five cuts below, then this lens rests. The phone chapter and the book’s first card already hold. What is left is the wide card, the arc the sentence points at, and two draft-math breaks.
+
+### Ranked
+
+1. **On the wide screen, put the claim in the empty half of the card.** At 1280, light and dark, the planes are 268×268. The pair is 544px wide and ends at x = 865. The card ends at x = 1256, so 391px of the card is empty. The claim ends at y = 743, inside the 800px window, under the pair. The same left edge repeats on §2.2 through §2.5, and the practice buttons sit in it: a 158px formula in a 952px card. Change: on the wide layout only, the claim sits in that right half, level with the planes, and the pair grows until the row still ends inside the 800px window. The phone stack stays. Planes 158×158 from y = 473, claim ending at y = 718.
+
+2. **Draw the quarter turn at the size the sentence is pointing at.** At 390, light and dark, the orange arc’s box is 17.2×17.2 on a 158px square. The green mark beside it is 21.5px. At 1280 the arc is 29.3×29.3 on a 268px square, and the green mark is 36.6px. The line above the squares says multiplication by i is a quarter turn. The worked line says “The orange arc is that quarter turn.” Change: the arc’s box is about a third of the square, still on the unshaded side of the blue line. One drag. No second control.
+
+3. **The sector card should use the same math as the sentence above the buttons.** At 390 and at 1280 the parabola buttons are set as math, `u = 16 − v²/64` and the three beside it. The next card’s title is “§2.2, angles under z^n, page 58”, with a caret. Its four buttons read `0 < argw < 3π/2`, `0 < argw < π/2`, `0 < argw < 3π`, and `π/2 < argw < π`: the letters a, r, g run into w. The prompt above those buttons sets `\arg` with a gap. Change: the title is angles under \(z^n\). Each choice is \(0 < \arg w < \cdots\), with the same gap as the prompt.
+
+4. **Let a choice use the width of its card.** At 390 the four parabola formulas are 158×44 at x = 50, in a card 358px wide. The sector buttons are 189×44 in that same card. At 1280 those buttons are 158×44 and 189×44 at x = 338, in a card 952px wide. Another sits at the label’s width under them. The root row is the exception that already works: −i, i, 1, −1, each 51×44, in one row. Change: the stacked choices stretch to the card’s content width, and on the wide layout the four formulas sit in one row, each at least 44px. The root row stays four compact targets.
+
+5. **Keep the period on the circle sentence.** At 390 the §2.5 worked paragraph ends the formula and puts the period on the next line: “which is the circle \(|w − 1/2| = 1/2\)” and then “. At 0, \(1/z\) is not a point of the plane.” Change: the period stays with \(|w − 1/2| = 1/2\). The sentence about 0 and the north pole starts after it.
+
+### Keep
+
+The paper, the serif title, and the four teaching colours, in the light and in the dark. The phone’s first screen: both squares, the captions “z plane” and “w plane”, and a claim that ends at y = 718 and flips. Dragging §2.1 to the left set the claim to “lands below Im w = 2” and the waiting line to “Finish one practice card.” Stage complete stayed hidden. Dragging back brought the first sentence back. The uppercase kickers stay. They are the book path. Show the back stays the card’s full-width button, and the back stays closed. Memory sheet is one 44px control after Practice. The Book and Back to the book are 44px. The book’s first card says “Chapter 2 is open. 0 of 5 stages marked.” The status is 26px. Open Chapter 2 is 44px, and §2.1–§2.5 are 44px rows. At 1280 that status shares the row with the button. The drawer lists The Book and chapters 1–7, and the current chapter is a quiet surface step. The parabola, the disks, the dashed cut, and the orange circle already say their sentences. On §2.4, right of the origin, the claim says “Cross the blue ray.” The green mark is 21.5px on the phone and stays the thing you drag. The footer colour key is off this page (`display: none`, height 0). The lede is the key. The roadmap’s later chapters stay a table of contents. No sideways scroll, and the console stayed quiet.
