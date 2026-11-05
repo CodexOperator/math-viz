@@ -1578,3 +1578,61 @@ The answer is one line, "Your answer", one box, and Check under the box, inside 
 The Book is one status sentence, one Continue at 44px, and Chapter 4 on the phone screen. A closed chapter in the drawer is text. Test prep is a 44px row. The §4.1 door is that section: "1 of 6", a sheet of 4.1, no Endless. Flashcards are one card, the name then the sentence, Again and Got it at 44px, no flip. Test 1 and Test 2 are 44px rows under the card.
 
 The paper, the serif title, the sans text, the accent button, and the dark off-white primary are the station pages. No emoji, no gradient, no glow, no pulse. The small-caps kicker stays. The four teaching colours stay on the pictures. Nothing here asks for a new type, a second clock, or a hero.
+
+## pedagogy (practice-engine batch 4)
+
+Branch `cursor/practice-engine`, tip `189988c`. Preview https://practice-preview.complexanalysis.pages.dev. The practice files on that preview match this tip. Walked as a student who has the chapter open and wants the practice to teach the move. Headless Chrome, touch, fresh storage. Phone first: 390×844, light, then the same doors in the dark. Then 1280×800, light and dark. Chapter 4 into Test prep · 4.1 (worked proof, a wrong line, the hint, a second miss, a right line, the next step, the memory sheet, the cards). Then §4.2 through to the end card, the §4.3 and §4.4 and §5.1 openers, and the mixed set from the drawer, all 16 cards. No product code was changed. `scrollWidth` was 390 on the phone and 1265 at 1280, both themes. No console errors. This walk is that preview. After it, `6505456` landed on the branch and renamed the mixed status to "Chapters 2, 4, and 5," and corrected four memory lines. The queue still contains the closed chapter. The worked proof, the cold sections, and the missed step are the ones walked below.
+
+### Verdict
+
+ANOTHER BATCH. A proof the student has been shown does fade, and the feedback on that fade is a real hint and a real reason. The worked card itself is below the fold, the sections that are not a proof have no model, a miss is written down and left there, and the end of the set does not say what was learned.
+
+### Worked, then faded
+
+§4.1 is the door that has the shape. Status "Section 4.1. 1 of 6.", flag WORKED EXAMPLE, lede "Try these steps." The item is Theorem 4.1, pages 103–104. Pressing the button lands on "2 of 6.", flag PROOF, the same theorem, one blank: the modulus is at most ___. Step 2 stays off the card until step 1 is filled. That second card is the fade.
+
+The first card is not a model the phone can study. At 390×844, scroll 0, light and dark, the step starts at y = 742 and the screen ends at 844, so the line cuts at `|(x_n − u) + i(y_n − v)| = |(x_n −`. The filled bound and both reasons are below that. "Try these steps" is at y = 1167, on a document 1499px tall. The count says "Step 1 of 2" while step 2 is already printed further down. At 1280×800, scroll 0, light and dark, step 1 and its reason fit (y = 622–734), step 2 starts at y = 742 and runs to 827, and the button is at y = 835 in an 800px window. §4.3 is the same shape one size larger: "Step 1 of 3", the geometric series, the button at y = 1285 on the phone and y = 900 at 1280. The phone's first screen cuts the reason at "The middle terms cancel. This is".
+
+§4.2 has no such first card. It opens "Section 4.2. 1 of 1.", lede "Check, then read the reason.", flag NEXT STEP, and the line is already `N(z) = z − f(z)/f'(z)` simplifies to ___. §4.4 opens "1 of 1.", flag RECALL, a seeded series, "The radius is ___", with Endless already in the chip row. §5.1 opens "1 of 2." on Exercise 2(c), the landing of ±iπ, four choices and no filled example. The chapter page is where the model for that one actually sits: the square, Play, and the idea "the modulus is e^x and the angle is y" at y = 1121, under the practice door at y = 1051.
+
+The mixed door, `#test-prep`, says "Chapters 4 and 5. 1 of 16." and opens on the same Theorem 4.1 worked card. Card 2 is that proof faded. Card 3 is Theorem 4.12 already blank. Then Newton's method, a radius, the ±iπ choice, and card 7: "The map is w = 3z + 1. Find w when z = 2." The book's status on this visit reads "Chapters 1, 2, 3, 6, and 7 are closed." The practice status on that preview says "Chapters 4 and 5." New set keeps Theorem 4.1 first and changes the rest.
+
+### Feedback
+
+On the faded line, `idk` clears the box and prints "Not that one." with hint 1, "Split the one modulus into the two coordinates." On the light phone the hint ends at y = 836. In the dark the same words sit under Check, and the verdict is rgb(255, 129, 120) on rgb(13, 18, 28). A second miss, the product `|x_n−u|·|y_n−v|`, fills the blank with `|x_n−u| + |y_n−v|` and gives the page: "The triangle inequality is the step the book asks you to justify on page 104. Then |i| = 1." The choices on the same theorem are the product, the difference, and `|z_n| − |ζ|`. The first wrong choice shows "The bound adds the two pieces." The second fills the sum, and the reason names both usual wrong turns.
+
+A right answer, `|x_n-u|+|y_n-v|`, fills that same line and says "Yes." Light rgb(38, 112, 42), dark rgb(99, 208, 138). On a first try at 390 the Next step button is at y = 843, bottom 887, past the window. After a miss the page is already at scroll 307 and that button sits at y = 764, on screen, in both themes. At 1280 the first-try button is at y = 667.
+
+Finishing §4.2 by missing twice on each line ends on "Set complete. You retrieved this set. The memory sheet is the short version of the same facts." The line under the title still says "Check, then read the reason." The card does not say that Newton's method lands on the root in one step.
+
+### Retrieval
+
+The miss is stored. After one wrong check, `mv:practice.misses` holds `ch4-4.1-thm-4.1-blank` step 0. Reload draws "Section 4.1. 1 of 6." and the worked card again. The record is unchanged, and the missed line is not the next ask.
+
+Flashcards on a first visit to §4.1 say "1 of 17". The front is "Corollary 4.1". Show the back gives "If ∑|z_n| converges, then ∑ z_n converges." and "Corollary 4.1, page 107." Again stores box 1, due 2026-11-06, one lapse. The next front is Definition 4.1, then 4.2 through 4.8, then Theorem 4.1. The corollary does not come back in those nine cards. The prompt stored on the card is "Corollary 4.1, absolute convergence implies convergence." The screen shows the number.
+
+Midway through step 2 of the proof ("strictly less than ___"), Memory sheet opens on the §4.1 formulas, including `|z_n − ζ| ≤ |x_n − u| + |y_n − v|` and `|z_n − ζ| < ε`. Practice returns to the same empty blank, still "2 of 6."
+
+### Cognitive load
+
+The faded card is one line, the label "Your answer", and Check. Check ends at y = 831 on the phone and y = 788 at 1280. Later steps stay hidden. That is the load that fits.
+
+The worked card prints every step and every reason before the attempt, and the count names one step. The chip row on a generator section is Practice, Memory sheet, Flashcards, New set, Endless, above a question that has no filled example. On §5.1 at 390, scroll 0, the four choices start at y = 784 and the fourth is at y = 940. At 1280 the fourth runs y = 828–872, past 800. Chapter 4's first screen already holds the idea, "A sequence settles when its terms eventually sit in every disk around the limit," at y = 612, with "Test prep · 4.1" at y = 542. The practice page never says that sentence back.
+
+### Ranked
+
+1. **Show the worked proof one step at a time, and keep the button on the screen.** At scroll 0 the phone cuts Theorem 4.1 at the start of the modulus and puts "Try these steps" at y = 1167. At 1280 the button is at y = 835 in an 800px window, and the count says "Step 1 of 2" while step 2 is already on the page. §4.3 puts the button at y = 1285 and y = 900. A first-try Yes on the phone leaves Next step at y = 843. Change: the worked card uses the faded card's frame. One step, the filled line, the reason, and the button, all in the window. The next press shows the next worked step. The last press is the faded blank. The count is the step on the card. The Yes card keeps Next step in view the way the second-miss card already does.
+
+2. **A section that is not a proof still needs a filled example first.** §4.2 opens on the Newton blank, "1 of 1." §4.4 opens on "The radius is ___" with Endless already offered. §5.1 opens on the ±iπ choices, and the fourth choice is past the fold at both widths. The identity those choices depend on is on the chapter page, under the door. Change: the first card of §4.2, §4.4, and §5.1 is that item filled in, reason under it, button "Try this." The blank is the next card. The four choices sit in two rows under the sentence.
+
+3. **The mixed set is one model, then whatever the seed draws, including a closed chapter.** Cards 1 and 2 are Theorem 4.1 worked and faded. Card 3 is Theorem 4.12 already blank. Card 7 is w = 3z + 1, while the book says Chapter 2 is closed and the status says "Chapters 4 and 5." Change: the mix is the chapters the book has open. A section enters as its worked card and then its blanks, the way §4.1 already enters.
+
+4. **Ask the miss again this sitting.** The miss record survives a reload, and the reload starts over at the worked card. Again on Corollary 4.1 is due 2026-11-06, and the next card is Definition 4.1. Change: a missed step is asked once more before Set complete can show. Again puts that card later in today's pile and leaves it due today until Got it.
+
+5. **Deal the cards in book order, and use the gloss as the front.** The §4.1 pile runs Corollary 4.1, Definition 4.1, the rest of the definitions, then Theorem 4.1. The front is the number. The prompt on the card is "absolute convergence implies convergence," and the back is the formal sentence. Change: definition, then theorem, then corollary, in the order the pages go. The front is that prompt. The back stays the sentence.
+
+6. **The last card says the fact, and the formula sheet lives there.** Giving up on §4.2 produces "You retrieved this set." The lede still says "Check, then read the reason." It does not say that the method lands in one step. Opening the sheet during step 2 prints `|z_n − ζ| < ε`, which is the blank, and Practice comes back to that empty blank. Change: Set complete quotes the section's memory line, and the lede is that line. A set finished by second-miss reveals says the lines were shown. The formula list opens from that card's button. While a blank is empty, the help on the card is the hint ladder.
+
+### What to keep
+
+The fade after a shown proof is the right shape. §4.1 goes worked example, then the same proof, one blank, later lines hidden, "Your answer", Check on the screen at both widths. A first miss is "Not that one." plus one hint, in view, in both themes, and the box is empty for a second try. A second miss fills the line and gives one sentence with a page. A hit fills the line and "Yes." is the green token, light and dark. The choices are the real mistakes, and the reason names them. The memory sheet is the formulas, the one-line takeaways, the pages, and Print. Flashcards are one card, front then back, Again and Got it, no flip, and the count stays "1 of 17" then "2 of 17". Chapter 4's first screen has the idea sentence and a 44px "Test prep · 4.1". The book says which chapters are closed. The paper, the type, and the dark theme are the station pages' own. Test 1 and Test 2 stay two rows under the card.
