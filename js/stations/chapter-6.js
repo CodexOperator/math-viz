@@ -23,8 +23,7 @@ const PICTURES = {
 const STAGES = [
   {
     id: '6.1',
-    why: 'Purple is the total so far, while green walks the circle.',
-    next: 'Next camp is 6.2, contours.',
+    why: '',
     go: '6.2',
     goLabel: 'Go to 6.2',
     gesture: 'Drag the green point around the orange circle. Purple is the integral.',
@@ -54,7 +53,6 @@ const STAGES = [
     workedPin: 'Example 6.7, page 172',
     workedHref: sectionHref('sec_contour-integrals.html', 'Cont_Int_Ex_1'),
     why: 'Orange dots are pieces of the path. Add them up.',
-    next: 'Next camp is 6.3, Cauchy-Goursat.',
     go: '6.3',
     goLabel: 'Go to 6.3',
     worked: 'The segment from $0$ to $2+i\\pi/4$ is $z(t)=(2+i\\pi/4)t$ for $0\\le t\\le 1$. Theorem 6.1, page 172, says multiply $e^{z(t)}$ by $z\'(t)$ and integrate in $t$.',
@@ -69,7 +67,6 @@ const STAGES = [
   {
     id: '6.3',
     why: '6.2 computes one path. This camp is a closed curve, and the integrand is analytic inside it.',
-    next: 'Next camp is 6.4, the fundamental theorems.',
     go: '6.4',
     goLabel: 'Go to 6.4',
     gesture: 'Play subdivides the triangle. The integrand is analytic.',
@@ -90,13 +87,12 @@ const STAGES = [
       'Only a parametrization: Theorem 6.1, page 172, multiply by $z\'$.',
       '$1/(z-z_0)$ with $z_0$ inside: Corollary 6.1, page 188, $2\\pi i$. Every other integer power is $0$.',
     ],
-    summit: 'Analytic inside and on a simple closed curve: Theorem 6.5, page 183, says the integral is $0$.',
+    summit: 'Analytic inside and on a simple closed curve: Theorem 6.5, page 183.',
     deformSummit: 'Deforming a closed contour through analytic points leaves the integral unchanged.',
   },
   {
     id: '6.4',
     why: '6.3 gives $0$ on a closed curve. Two ends use an antiderivative.',
-    next: 'Next camp is 6.5, the Cauchy integral formulas.',
     go: '6.5',
     goLabel: 'Go to 6.5',
     gesture: 'Drag the green bend. The ends stay put, and the integrand is $z$.',
@@ -117,7 +113,6 @@ const STAGES = [
   {
     id: '6.5',
     why: '6.4 needs an antiderivative. This formula returns the inside value.',
-    next: 'Next camp is 6.6, Morera and Liouville.',
     go: '6.6',
     goLabel: 'Go to 6.6',
     gesture: 'Drag the green point. The integrand is $z/(z-z_0)$ on the unit circle.',
@@ -243,8 +238,6 @@ export function mount(section, ctx) {
   }
 
   function campLine(stage) {
-    const line = h('p', { class: 'ch6-next-camp', id: `chapter-section-${slug(stage.id)}-next` });
-    appendRich(line, stage.next);
     const go = h('button', {
       type: 'button', class: 'btn btn-primary', id: `chapter-go-${slug(stage.id)}`,
     }, stage.goLabel);
@@ -255,27 +248,26 @@ export function mount(section, ctx) {
       }
       ctx.navigate(chapterHash(6, stage.go));
     });
-    return h('div', { class: 'book-next', id: `chapter-go-row-${slug(stage.id)}` }, line, go);
+    const kids = [];
+    if (stage.next) {
+      const line = h('p', { class: 'ch6-next-camp', id: `chapter-section-${slug(stage.id)}-next` });
+      appendRich(line, stage.next);
+      kids.push(line);
+    }
+    kids.push(go);
+    return h('div', { class: 'book-next', id: `chapter-go-row-${slug(stage.id)}` }, ...kids);
   }
 
   const fixed = (answer, accept, miss, why) => () => ({ answer, accept, miss, why });
 
   for (const stage of STAGES) {
     const scope = `chapter-section-${slug(stage.id)}`;
-    const why = h('p', { class: 'section-idea ch6-why', id: `${scope}-why` });
-    appendRich(why, stage.why);
     const gesture = h('p', { class: 'ch6-gesture', id: `${scope}-gesture` });
     appendRich(gesture, stage.gesture);
     const picture = h('div', { class: 'ch6-picture', id: `ch6-picture-${slug(stage.id)}` });
     stops.push(PICTURES[stage.picture](picture));
-    const read = h('ul', { class: 'book-read', id: `${scope}-read` });
-    stage.read.forEach((item, i) => {
-      read.append(h('li', null, h('a', {
-        href: item.href, target: '_blank', rel: 'noopener noreferrer', id: `${scope}-read-${i + 1}`,
-      }, item.pin)));
-    });
-    const worked = h('p', { class: 'section-idea', id: `${scope}-worked` });
-    appendRich(worked, stage.worked);
+    const worked = stage.id === '6.1' ? null : h('p', { class: 'section-idea', id: `${scope}-worked` });
+    if (worked) appendRich(worked, stage.worked);
     const sheet = h('ul', { class: 'ch6-sheet', id: `${scope}-sheet` });
     stage.sheet.forEach((line) => {
       if (!line) return;
@@ -354,10 +346,13 @@ export function mount(section, ctx) {
       h('p', { class: 'book-flag', id: `${scope}-flag` }, stage.id),
       h('h2', { id: `${scope}-title` }, CHAPTER_6.sections.find((s) => s.id === stage.id).title),
       h('p', { class: 'book-page' }, `Page ${CHAPTER_6.sections.find((s) => s.id === stage.id).page}`),
-      why,
-      gesture,
-      picture,
     ];
+    if (stage.why) {
+      const why = h('p', { class: 'section-idea ch6-why', id: `${scope}-why` });
+      appendRich(why, stage.why);
+      head.push(why);
+    }
+    head.push(gesture, picture);
     const sheetBlock = [
       h('p', { class: 'book-label', id: `${scope}-sheet-label` }, 'For the exam'),
       sheet,
@@ -403,26 +398,20 @@ export function mount(section, ctx) {
       appendRich(deformSummit, stage.deformSummit);
       body = [
         ...head,
-        read,
         blankHost,
         ...summitBlock,
         beat,
         beatGesture,
         deform,
-        poleHost,
-        h('p', { class: 'book-label', id: `${scope}-worked-label` }, 'Worked example'),
-        sourceTag({ pin: stage.workedPin, href: stage.workedHref }),
         worked,
+        poleHost,
         deformSummit,
         ...sheetBlock,
       ];
     } else {
       body = [
         ...head,
-        read,
-        h('p', { class: 'book-label', id: `${scope}-worked-label` }, 'Worked example'),
-        sourceTag({ pin: stage.workedPin, href: stage.workedHref }),
-        worked,
+        ...(worked ? [worked] : []),
         blankHost,
         ...summitBlock,
         ...sheetBlock,

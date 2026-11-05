@@ -1903,3 +1903,15 @@ Left as is:
 4. The fundamental-theorem card stops when \(1/P\) is constant. The contradiction with degree at least 1 is the next sentence of the proof on page 206.
 
 Keep: the six pictures, the page cites above, the answer-key values, Example 6.1's \(-5/4\), the eight-step total beside \(\exp(2+i\pi/4)-1\), the semicircle \(-2/3\), Example 6.11's \(1/(2\sqrt{5})\), Cauchy's three proof blanks, Examples 6.14–6.19 and 6.21 and 6.25, Exercise 6.3.1 (a)–(d), the sharp \(1/R\) bounds, and the computed generators.
+
+## Chapter 6, batch 5
+
+Branch `cursor/chapter-6`, on top of `6c49527`. Headless Chrome, fresh storage. 390×844 light and dark, 1280×800 light and dark. No console errors. No failed assets. `scrollWidth` was 390 and 1265.
+
+The 6.1 why line is gone. One gesture sits above the square: "Drag the green point around the orange circle. Purple is the integral." The square is 284px on the phone and 272px on the laptop. Resting Play ends at y = 781 in the 844 window and at y = 703 in the 800 window, both themes. After the point reaches the left side, "A half turn, the left side, integrates to \(2i\)." sits between the claim and Play. On the phone that sentence wraps onto "\(2i\)." and Play ends at y = 842. On the laptop it is one line and Play ends at y = 737. Play says Pause while it runs, and the next press says Play.
+
+A full turn says the point is home. Inside the unit circle the claim is "Inside, the formula applies." Outside, the integral is still 0. After one subdivision the triangle claim is "The midpoints are in." The 6.3 summit names Theorem 6.5, page 183, and does not print 0. The sheet still states the integral.
+
+The 6.1 deck heading is "Flashcard · 1 of 2". Missed closes the back, stays on that card, and adds "Still this card." Check under a picture blank is 85×44. Section rows on the book keep the page on the right of the link; 6.4 and 6.6 wrap the title and stay one row. "Next camp is …" remains only on 6.6, naming Chapter 7. The read lists under the pictures are gone. 6.1 has no worked paragraph. 6.2 through 6.6 keep one worked sentence. Theorem 6.19, page 206, adds the step after \(1/P\) is constant: degree 0 contradicts degree at least 1, so \(P\) has a zero.
+
+Deferred: the shared practice engine is another loop, and this chapter still renders `data/practice/ch6.json` with the local card. Chapter 7 is a Later card, not a page. Chapters 8–11 stay off this loop.

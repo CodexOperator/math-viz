@@ -6,7 +6,7 @@ import { stationsForMap, stationForTopic, stationForProblem, stationById, thread
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
 import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, CHAPTER_6, OPEN_CHAPTERS, chapter4ExerciseIds, chapter5ExerciseIds, chapter6StageIds } from '../js/data/book-path.js';
-import { realIntegral, turnPhase, riemannPartial, exactSegmentExp, fixed2, example69, upperSemicircleZ2, generateCircle, generateSegment, generateCif, quadSegment, circleIntegral, cifExpIntegral, claim63, claim64, claim65, claim66, bendValue } from '../js/book/ch6-math.js';
+import { realIntegral, turnPhase, riemannPartial, exactSegmentExp, fixed2, example69, upperSemicircleZ2, generateCircle, generateSegment, generateCif, quadSegment, circleIntegral, cifExpIntegral, claim61, claim63, claim64, claim65, claim66, bendValue } from '../js/book/ch6-math.js';
 import { generate as circleGenerate } from '../js/practice/gen/ch6-circle.js';
 import { chapterTally, sectionFinished, foldLegacyExercises, saveSharedTicks, toggleTick } from '../js/book/progress.js';
 import { EXP_DURATION, expFrame, finishedStops } from '../js/core/live-film.js';
@@ -217,13 +217,14 @@ check('a junk token on chapter 7 is still not a page', parseRoute('#chapter-7-ex
   const ends = example69();
   check('a half turn of e to the i t is 2i', turnPhase(Math.PI) === 'half' && Math.abs(half.re) < 1e-9 && Math.abs(half.im - 2) < 1e-9);
   check('a full turn of e to the i t is 0', turnPhase(Math.PI * 2) === 'full' && Math.abs(full.re) < 1e-9 && Math.abs(full.im) < 1e-9);
+  check('a full turn says the point is home', claim61(Math.PI * 2).text.indexOf('home') >= 0 && claim61(Math.PI * 2).text.indexOf('0') < 0);
   check('the half-turn window is tighter than 0.12', turnPhase(Math.PI + 0.12) === 'move' && turnPhase(Math.PI * 2 - 0.12) === 'move');
   check('Example 6.6 eight steps round to 4.23 + 5.20i', fixed2(sum.re) === '4.23' && fixed2(sum.im) === '5.20' && Math.abs(exact.re - 4.224851674) < 1e-8 && Math.abs(exact.im - 5.224851674) < 1e-8);
   check('Example 6.9 on the segment is 4+2i', ends && ends.tex === '4+2i');
   check('Exercise 6.2.3 on the semicircle is -2/3', Math.abs(arc.re + 2 / 3) < 1e-4 && Math.abs(arc.im) < 1e-4);
   check('the pole inside both circles holds', claim63(0).holds === true && claim63(1.55).holds === false && claim63(1).where === 'edge' && claim63(0.98).where === 'inside' && claim63(0.999).where === 'inside' && claim63(1.001).where === 'outside' && claim63(1.02).where === 'outside');
   check('a bent path keeps the integral of z', bendValue().tex === '4+2i' && claim64({ re: 1, im: 0 }).bent === false && claim64({ re: 1, im: 1.6 }).holds === true);
-  check('Cauchy formula returns the inside point', claim65({ re: 0.4, im: 0 }).holds === true && claim65({ re: 1, im: 0 }).where === 'edge' && claim65({ re: 1.4, im: 0 }).where === 'outside');
+  check('Cauchy formula returns the inside point', claim65({ re: 0.4, im: 0 }).holds === true && claim65({ re: 0, im: 0 }).text === 'Inside, the formula applies.' && claim65({ re: 1, im: 0 }).where === 'edge' && claim65({ re: 1.4, im: 0 }).where === 'outside' && claim65({ re: 1.4, im: 0 }).text.indexOf('$0$') >= 0);
   check('one Liouville circle does not finish the theorem', claim66(1).holds === false && claim66(3).holds === false && claim66(3, true).holds === true && claim66(4, true).text.indexOf('do not send') >= 0 && claim66(4, true).text.indexOf('$0$') >= 0 && claim66(3.5, true).text.indexOf('origin') < 0 && claim66(1.5).text.indexOf('2/3') >= 0 && claim66(1.75).text.indexOf('4/7') >= 0 && claim66(1.006).text.indexOf('0.99') < 0 && claim66(1.006).text.indexOf('1.00') < 0);
   const seeded = circleGenerate(3, { n: [-4, 4], r: [1, 3], a: [-2, 2], c: [-1, 1] });
   check('the circle generator takes the seed first', seeded && seeded.prompt && circleGenerate(3, { n: [-4, 4], r: [1, 3], a: [-2, 2], c: [-1, 1] }).prompt === seeded.prompt);
@@ -274,7 +275,7 @@ check('a junk token on chapter 7 is still not a page', parseRoute('#chapter-7-ex
       < practice.findIndex((item) => item.id === 'ch6-6.6-morera-flash')
     && practice.some((item) => item.id === 'ch6-6.5-ex25')
     && practice.some((item) => item.id === 'ch6-6.2-ml-11')
-    && practice.some((item) => item.id === 'ch6-6.6-fta')
+    && practice.some((item) => item.id === 'ch6-6.6-fta' && item.steps.some((step) => /degree at least/.test(step.text) && step.answer === 'a zero'))
     && practice.some((item) => item.generator && item.generator.template === 'ch6-cif'));
 }
 check('the shipped route rule matches the kit helper',

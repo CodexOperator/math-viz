@@ -140,22 +140,27 @@ export function mountPractice(host, items) {
 function flashDeck(items, scope) {
   let index = 0;
   let open = false;
+  let stayed = false;
   const front = h('p', { class: 'ch6-flash-front', id: `${scope}-flash-front` });
   const back = h('p', { class: 'ch6-flash-back', id: `${scope}-flash-back`, hidden: '' });
+  const stay = h('p', { class: 'ch6-flash-stay', id: `${scope}-flash-stay`, hidden: '' }, 'Still this card.');
   const why = h('p', { class: 'hint-note', id: `${scope}-flash-why`, hidden: '' });
   const show = h('button', { type: 'button', class: 'btn', id: `${scope}-flash-show` }, 'Show the back');
   const missed = h('button', { type: 'button', class: 'btn', id: `${scope}-flash-miss` }, 'Missed');
   const recalled = h('button', { type: 'button', class: 'btn', id: `${scope}-flash-next` }, 'Recalled');
   const tag = h('div', { id: `${scope}-flash-cite` });
+  const title = h('h3', { id: `${scope}-flash-title` });
   const card = h('article', { class: 'card chapter-card', id: `${scope}-flash` });
   function paint() {
     const item = items[index];
+    title.textContent = `Flashcard · ${index + 1} of ${items.length}`;
     tag.replaceChildren(sourceTag(citeOf(item)));
     fillMath(front, item.prompt);
     fillMath(back, item.steps[0].answer);
     fillMath(why, item.steps[0].why || '');
     back.hidden = !open;
     why.hidden = !open;
+    stay.hidden = !(stayed && !open);
     show.hidden = open;
     missed.hidden = !open;
     recalled.hidden = !open;
@@ -164,13 +169,14 @@ function flashDeck(items, scope) {
   }
   show.addEventListener('click', () => { open = true; paint(); });
   missed.addEventListener('click', () => {
-    // A miss stays at the front. The back closes until it is recalled.
+    // A miss stays on this card. The back closes until it is recalled.
     if (index !== 0) {
       const [item] = items.splice(index, 1);
       items.unshift(item);
       index = 0;
     }
     open = false;
+    stayed = true;
     paint();
   });
   recalled.addEventListener('click', () => {
@@ -178,13 +184,14 @@ function flashDeck(items, scope) {
     items.push(item);
     index = 0;
     open = false;
+    stayed = false;
     paint();
     if (items.length === 1) card.dataset.recalled = 'true';
   });
   paint();
   card.append(
-    h('h3', { id: `${scope}-flash-title` }, 'Flashcard'),
-    tag, front, show, back, why,
+    title,
+    tag, front, stay, show, back, why,
     h('div', { class: 'problem-actions' }, missed, recalled));
   return card;
 }

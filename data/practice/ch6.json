@@ -1106,9 +1106,21 @@
         ],
         "miss": "The missing hypotheses are that $1/P$ is entire and bounded. Do not state the conclusion.",
         "why": "Theorem 6.18 says an entire bounded function is constant, so $P$ is constant."
+      },
+      {
+        "text": "A constant polynomial has degree $0$. That contradicts degree at least $1$, so $P$ has ___ .",
+        "answer": "a zero",
+        "choices": [
+          "a zero",
+          "degree $0$",
+          "no zero",
+          "to stay constant"
+        ],
+        "miss": "The missing fact is that degree $0$ contradicts degree at least $1$. Do not state the conclusion.",
+        "why": "Page 206: $1/P$ constant makes $P$ constant, so the degree is $0$. Degree at least $1$ forbids that, so $P$ has a zero."
       }
     ],
-    "memory": "No zero makes $1/P$ entire and bounded, so Liouville says $1/P$ is constant.",
+    "memory": "No zero makes $1/P$ entire and bounded. Liouville says constant, so the degree is $0$, which contradicts degree at least $1$.",
     "generator": null
   }
 ]

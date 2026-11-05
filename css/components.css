@@ -1237,6 +1237,22 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 }
 
 .book-section-page { margin-left: auto; font-variant-numeric: tabular-nums; }
+/* The title may wrap inside the link. The page stays on the right of the row. */
+#book-sections-6 li {
+  flex-wrap: nowrap;
+  align-items: center;
+  min-height: var(--tap);
+}
+#book-sections-6 a {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: auto;
+  min-height: var(--tap);
+}
+#book-sections-6 .book-section-name { min-width: 0; white-space: normal; }
+#book-sections-6 .book-section-page { flex: 0 0 auto; white-space: nowrap; }
 .book-section-mark { font-size: 0.82rem; font-weight: 700; }
 .book-section-mark:empty { display: none; }
 .book-sections [data-state="next"] .book-section-mark { color: var(--text); }
@@ -1325,6 +1341,15 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .ch6-tick-why { color: var(--text-muted); }
 .ch6-tick-why[hidden] { display: none; }
 .ch6-student { min-width: 0; }
+.ch6-student .problem-actions .btn {
+  flex: 0 0 auto;
+  width: auto;
+  height: var(--tap);
+  min-height: var(--tap);
+}
+.ch6-keep { white-space: nowrap; }
+.ch6-flash-stay { margin: 0; max-width: 62ch; color: var(--text-muted); }
+.ch6-flash-stay[hidden] { display: none; }
 
 .ch6-blank {
   min-height: var(--tap);

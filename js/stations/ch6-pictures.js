@@ -193,7 +193,7 @@ export function mountRealIntegral(parent) {
   trail.setAttribute('r', map.X(1) - map.X(0));
 
   const half = h('p', { id: 'ch6-real-half', class: 'exp-claim', hidden: '' });
-  parent.append(half);
+  play.before(half);
   let latched = false;
   let claimText = '';
   function paint(u) {
@@ -208,7 +208,12 @@ export function mountRealIntegral(parent) {
     stage.dataset.phase = sentence.phase;
     if (sentence.near) latched = true;
     half.hidden = !latched;
-    if (latched && !half.childElementCount) appendRich(half, 'A half turn, the left side, integrates to $2i$.');
+    if (latched && !half.childElementCount) {
+      half.append(document.createTextNode('A half turn, the left side, integrates to '));
+      const tail = h('span', { class: 'ch6-keep' });
+      appendRich(tail, '$2i$.');
+      half.append(tail);
+    }
     if (sentence.text !== claimText) {
       claimText = sentence.text;
       claim.replaceChildren();
@@ -479,7 +484,7 @@ export function mountCauchy(parent) {
     claim: 'ch6-cauchy-claim',
     play: 'ch6-cauchy-play',
     frame: 'ch6-cauchy-frame',
-  }, 'The unit circle and f of z equals z. Drag the green point. Inside, the integral returns that point. Outside, the integral is 0.');
+  }, 'The unit circle and f of z equals z. Drag the green point. Outside, the integral is 0.');
   const span = 3.4;
   const map = world(span, 0, 0);
   const axisX = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2' });
@@ -582,7 +587,7 @@ export function mountGoursat(parent) {
     }
     const sentence = level === 0
       ? 'The triangle is whole. Subdivide it. The integrand is analytic.'
-      : 'The midpoints are in. Theorem 6.5, page 183, says this integral is $0$.';
+      : 'The midpoints are in.';
     stage.dataset.holds = level >= 1 ? 'true' : 'false';
     stage.dataset.subdivided = level >= 1 ? 'true' : 'false';
     stage.dataset.level = String(level);

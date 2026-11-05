@@ -380,7 +380,8 @@ export function turnPhase(T) {
 export function claim61(T) {
   const phase = turnPhase(T);
   const near = nearHalfTurn(T);
-  if (phase === 'full') return { holds: true, phase, near, text: 'A full turn brings the integral back to $0$.' };
+  // The full-turn value is the blank. The claim says where the point is.
+  if (phase === 'full') return { holds: true, phase, near, text: 'A full turn brings the point home.' };
   return { holds: false, phase, near, text: 'The total has left $0$.' };
 }
 
@@ -487,7 +488,8 @@ export function claim64(p) {
   return { holds: true, bent: true, text: 'The path has bent. The integral is the same as on the straight segment.' };
 }
 
-// Theorem 6.10 for f(z)=z on the unit circle. Inside, the formula returns z0.
+// Theorem 6.10 for f(z)=z on the unit circle.
+// Inside, the claim stops before the blank. The student writes the green point.
 export const CAUCHY_EDGE = 3.4 / 480;
 
 export function cauchyWhere(z) {
@@ -499,7 +501,7 @@ export function cauchyWhere(z) {
 export function claim65(z) {
   const where = cauchyWhere(z);
   if (where === 'inside') {
-    return { holds: true, where, text: 'Inside, $\\dfrac{1}{2\\pi i}\\int \\dfrac{z}{z-z_0}\\,dz$ is the green point.' };
+    return { holds: true, where, text: 'Inside, the formula applies.' };
   }
   if (where === 'edge') {
     return { holds: false, where, text: 'The green point is on the circle. The formula stops.' };

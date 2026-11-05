@@ -134,8 +134,11 @@ function mountRoadmap(el, ctx, spec) {
     if (ch.n === 4 || ch.n === 6) {
       const sections = h('ol', { class: 'book-sections', id: `book-sections-${ch.n}` });
       for (const s of ch.sections) {
+        const label = `${s.id} ${s.title}`;
+        const link = h('a', { href: `#${chapterHash(ch.n, s.id)}`, id: `book-section-link-${slug(s.id)}` },
+          ch.n === 6 ? h('span', { class: 'book-section-name' }, label) : label);
         sections.append(h('li', { 'data-section': s.id, id: `book-section-${slug(s.id)}` },
-          h('a', { href: `#${chapterHash(ch.n, s.id)}`, id: `book-section-link-${slug(s.id)}` }, `${s.id} ${s.title}`),
+          link,
           h('span', { class: 'book-section-page' }, `p. ${s.page}`),
           h('span', { class: 'book-section-mark' }, '')));
       }
