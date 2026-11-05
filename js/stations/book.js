@@ -21,7 +21,12 @@ function ticksOf(store) {
 }
 
 function chapter7Ticks(store) {
-  return loadSharedTicks(store, (id) => typeof id === 'string' && id.startsWith('ch7-stage-'), []);
+  return loadSharedTicks(store, (id) => typeof id === 'string' && id.startsWith('ch7-'), []);
+}
+
+function chapter5Ticks(store) {
+  const ids = new Set(chapter5ExerciseIds());
+  return loadSharedTicks(store, (id) => ids.has(id), []);
 }
 
 const SHELL_LAST = 7;
@@ -55,43 +60,67 @@ function mountRoadmap(el, ctx, spec) {
 
   const stages7 = chapter7WalkSections();
   const ticks7 = chapter7Ticks(store);
+  const ticks5 = chapter5Ticks(store);
   const done7 = stages7.filter((s) => ticks7[s.exercises[0]] === true).length;
-  const onChapter7 = done7 > 0;
+  const started7 = Object.keys(ticks7).some((id) => ticks7[id] === true);
+  const ch5Done = chapter5ExerciseIds().every((id) => ticks5[id] === true);
   const status = h('p', { class: 'book-status', id: 'book-status' });
-  const walk = h('a', { class: 'btn btn-primary', id: 'book-walk', href: onChapter7 ? '#chapter-7' : '#chapter-4' }, onChapter7 ? 'Open Chapter 7' : 'Walk Chapter 4');
+  const walk = h('a', { class: 'btn btn-primary', id: 'book-walk', href: '#chapter-4' }, 'Walk Chapter 4');
   const list = h('ol', { class: 'book-path', id: 'book-path' });
+
+  function inProgress() {
+    const t = tally();
+    if (started7) {
+      const next = stages7.find((s) => ticks7[s.exercises[0]] !== true);
+      const at = next ? stages7.indexOf(next) + 1 : stages7.length;
+      return {
+        n: 7,
+        href: '#chapter-7',
+        label: 'Open Chapter 7',
+        status: next
+          ? `${next.title} · Stage ${at} of ${stages7.length}`
+          : `Done · ${stages7.length} of ${stages7.length} stages.`,
+      };
+    }
+    if (!t.complete) {
+      return { n: 4, href: '#chapter-4', label: 'Walk Chapter 4', status: nextSentence(t) };
+    }
+    if (!ch5Done) {
+      const left = chapter5ExerciseIds().filter((id) => ticks5[id] !== true).length;
+      return {
+        n: 5,
+        href: '#chapter-5',
+        label: 'Open Chapter 5',
+        status: `Chapter 5 is next. ${chapter5ExerciseIds().length - left} of ${chapter5ExerciseIds().length} exercises.`,
+      };
+    }
+    return {
+      n: 7,
+      href: '#chapter-7',
+      label: 'Open Chapter 7',
+      status: `Uniform convergence · Stage 1 of ${stages7.length}`,
+    };
+  }
 
   function paint() {
     const t = tally();
-    if (onChapter7) {
-      const next = stages7.find((s) => ticks7[s.exercises[0]] !== true);
-      const at = next ? stages7.indexOf(next) + 1 : stages7.length;
-      status.textContent = next
-        ? `${next.title} · Stage ${at} of ${stages7.length}`
-        : `Done · ${stages7.length} of ${stages7.length} stages.`;
-      walk.textContent = 'Open Chapter 7';
-      walk.setAttribute('href', '#chapter-7');
-    } else if (t.complete) {
-      status.textContent = `${nextSentence(t)} Chapter 5 is next.`;
-      walk.textContent = 'Open Chapter 5';
-      walk.setAttribute('href', '#chapter-5');
-    } else {
-      status.textContent = nextSentence(t);
-      walk.textContent = 'Walk Chapter 4';
-      walk.setAttribute('href', '#chapter-4');
-    }
+    const here = inProgress();
+    status.textContent = here.status;
+    walk.textContent = here.label;
+    walk.setAttribute('href', here.href);
     for (const node of list.querySelectorAll('.book-node')) {
       const n = Number(node.getAttribute('data-chapter'));
       const ch = BOOK_CHAPTERS.find((item) => item.n === n);
       let state = 'later';
-      if (onChapter7 && n === 7) state = 'next';
-      else if (n === 4) state = t.complete ? 'done' : 'next';
+      if (n === here.n) state = (n === 7 && done7 === stages7.length) || (n === 4 && t.complete) ? 'done' : 'next';
+      else if (n === 4 && t.complete) state = 'done';
+      else if (n === 7 && done7 === stages7.length) state = 'done';
       else if (ch && ch.open) state = 'open';
       node.setAttribute('data-state', state);
       const flag = node.querySelector('.book-flag');
       if (!flag) continue;
-      if (onChapter7 && n === 7) flag.textContent = 'Next';
-      else if (n === 4) flag.textContent = t.complete ? 'Done' : 'Next';
+      if (state === 'next') flag.textContent = 'Next';
+      else if (state === 'done') flag.textContent = 'Done';
       else if (ch && ch.open) flag.textContent = 'Open';
       else flag.textContent = 'Later';
     }
@@ -148,7 +177,7 @@ function mountRoadmap(el, ctx, spec) {
       h('h1', { id: 'book-title' }, 'The Book'),
       h('p', { class: 'station-lede', id: 'book-lede' }, 'Chapters 1 to 7, in the order Howell and Mathews print them.'),
       sourceTag({ pin: '202 Updated Edition, table of contents, pages i–ii', href: BOOK.html })),
-    h('div', { class: 'book-next', id: 'book-next' }, status, walk),
+    h('div', { class: 'book-next', id: 'book-next' }, walk, status),
     list);
 
   const focus = spec && spec.chapter;

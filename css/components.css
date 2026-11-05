@@ -1234,27 +1234,15 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   touch-action: none;
 }
 
-.ch7-dot {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 44px;
-  height: 44px;
-  margin-left: -22px;
-  margin-top: -22px;
-  border-radius: 50%;
-  background: var(--input);
-  pointer-events: none;
+/* The opening square uses the same cap as the later camps. The card padding is
+   what makes 7.2 smaller than the column, so the hero matches that width. */
+.ch7-hero .exp-stage {
+  width: min(calc(100% - 2 * var(--space-3)), calc(100dvh - 20rem));
 }
 
-.ch7-hero .exp-stage { width: min(100%, calc(100dvh - 31rem)); }
-@media (max-width: 40rem) {
-  .ch7-hero .exp-stage { width: min(100%, calc(100dvh - 36rem)); }
-}
-
-.ch7-head { margin-bottom: var(--space-2); }
+.ch7-head { margin-bottom: 0; }
 .ch7-head .station-lede { margin-bottom: var(--space-2); }
-.ch7-where { margin: 0 0 var(--space-2); }
+.ch7-where { margin: 0; }
 .ch7-up { width: max-content; max-width: 100%; margin-bottom: var(--space-2); }
 .chapter-path.ch7-path { padding-bottom: var(--space-4); }
 

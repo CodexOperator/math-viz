@@ -120,19 +120,11 @@ export function taylorClaim(re, im, n, revealed = true) {
   const outside = z.snapped || z.mod >= 1 - 1e-9;
   let text;
   let holds;
-  if (!revealed && !outside) {
-    if (err < TAYLOR_SETTLE) {
-      text = 'This partial sum agrees with the function.';
-      holds = true;
-    } else {
-      text = 'Inside the disk, this partial sum has not caught the value yet.';
-      holds = false;
-    }
-  } else if (outside) {
+  if (outside || revealed) {
     text = 'The agreement stops at the circle through $\\pm i$.';
-    holds = false;
+    holds = !outside && err < TAYLOR_SETTLE;
   } else if (err < TAYLOR_SETTLE) {
-    text = 'This partial sum agrees with the function. The agreement stops at the circle through $\\pm i$.';
+    text = 'The partial sum has settled near 0.';
     holds = true;
   } else {
     text = 'Inside the disk, this partial sum has not caught the value yet.';

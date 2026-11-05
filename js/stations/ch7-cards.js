@@ -6,10 +6,14 @@ import { h, appendRich } from './test2-ui.js';
 import { answerMatches } from '../core/ch7-series.js';
 import { generate as laurentGenerate } from '../practice/gen/laurent-annulus.js';
 import { generate as orderGenerate } from '../practice/gen/singularity-order.js';
+import { generate as threeGenerate } from '../practice/gen/laurent-three.js';
+import { generate as classGenerate } from '../practice/gen/singularity-class.js';
 
 const GENERATORS = {
   'laurent-annulus': laurentGenerate,
   'singularity-order': orderGenerate,
+  'laurent-three': threeGenerate,
+  'singularity-class': classGenerate,
 };
 
 function slug(id) {
@@ -78,10 +82,11 @@ export function mountPracticeItem(item, opts) {
           why.hidden = false;
           if (right) rich(why, showMath(step.why));
           else {
+            const specific = step.choiceWhy && step.choiceWhy[c];
             why.replaceChildren();
             why.append(document.createTextNode('Not yet. '));
             const mem = document.createElement('span');
-            rich(mem, showMath(item.memory));
+            rich(mem, showMath(specific || item.memory));
             why.append(mem);
           }
           btn.setAttribute('aria-pressed', 'true');

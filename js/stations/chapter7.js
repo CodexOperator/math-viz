@@ -129,12 +129,10 @@ export function mountChapter7(el, ctx, focus) {
       }
     }
 
+    let picture = null;
     if (stage.picture && PICTURES[stage.picture]) {
-      const picture = h('div', { class: 'ch7-picture', id: `${scope}-picture` });
+      picture = h('div', { class: 'ch7-picture', id: `${scope}-picture` });
       stops.push(PICTURES[stage.picture](picture));
-      const key = h('p', { class: 'ch7-key', id: `${scope}-key` });
-      appendRich(key, stage.key);
-      picture.append(key);
       if (stage.id === '7.1') {
         picture.id = 'chapter-hero';
         picture.classList.add('ch7-hero');
@@ -178,25 +176,36 @@ export function mountChapter7(el, ctx, focus) {
     const sectionItems = practice.filter((item) => item.section === stage.id && item.kind !== 'flash');
     const flashes = practice.filter((item) => item.section === stage.id && item.kind === 'flash');
     const host = h('div', { class: 'chapter-exercises', id: `${scope}-practice` });
+    const ordered = [];
+    function revealNext(itemId) {
+      const at = ordered.findIndex((node) => node.getAttribute('data-practice') === itemId);
+      const nxt = ordered[at + 1];
+      if (nxt) nxt.hidden = false;
+      const flash = host.querySelector('.ch7-flash');
+      if (flash && stageReady(stage.id)) flash.hidden = false;
+    }
     let waiting = false;
     for (const item of sectionItems) {
       const card = mountPracticeItem(item, {
         onDone(itemId) {
           ticks = { ...ticks, [itemId]: true };
           persist();
-          const cards = [...host.querySelectorAll('[data-practice]')];
-          const at = cards.findIndex((node) => node.getAttribute('data-practice') === itemId);
-          const nxt = cards[at + 1];
-          if (nxt) nxt.hidden = false;
-          const flash = host.querySelector('.ch7-flash');
-          if (flash && stageReady(stage.id)) flash.hidden = false;
+          revealNext(itemId);
           paintButtons();
           paintStatus();
         },
       });
       card.hidden = waiting;
       if (ticks[item.id] !== true) waiting = true;
-      host.append(card);
+      const underPlay = picture && item.id.endsWith('-picture');
+      if (underPlay) picture.append(card);
+      else host.append(card);
+      ordered.push(card);
+    }
+    if (picture) {
+      const key = h('p', { class: 'ch7-key', id: `${scope}-key` });
+      appendRich(key, stage.key);
+      picture.append(key);
     }
     if (flashes.length) {
       const deck = mountFlashDeck(flashes, scope);

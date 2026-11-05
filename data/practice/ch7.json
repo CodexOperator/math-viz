@@ -388,6 +388,71 @@
     "memory": "Partial fractions, then a geometric series in $z$ inside the outer pole and in $1/z$ outside the inner pole."
   },
   {
+    "id": "ch7-7.3-ex10-blank",
+    "chapter": 7,
+    "section": "7.3",
+    "cite": { "ref": "§7.3, Exercise 10", "page": 230 },
+    "kind": "next-step-blank",
+    "prompt": "Exercise 10 of §7.3, page 230. The Laurent series of $1/((z-2)(z-3))$ centered at $0$, in $|z|<2$, $2<|z|<3$, and $|z|>3$.",
+    "steps": [
+      {
+        "text": "Partial fractions. The coefficient of $1/(z-2)$ is ___",
+        "answer": "-1",
+        "accept": ["-1"],
+        "why": "Cover $(z-2)$. The value is $1/(2-3)$."
+      },
+      {
+        "text": "In $|z|<2$ the constant term is ___",
+        "answer": "\\frac{1}{6}",
+        "accept": ["\\frac{1}{6}", "1/6"],
+        "why": "Both poles are outside this disk, so $f(0)=1/(2\\cdot 3)$."
+      },
+      {
+        "text": "In $|z|>3$ the coefficient of $z^{-3}$ is ___",
+        "answer": "5",
+        "accept": ["5"],
+        "why": "Both poles are inside. The coefficient of $z^{-k-1}$ is $a^k/(a-b)+b^k/(b-a)$. For $k=2$ that is $2+3$."
+      }
+    ],
+    "generator": {
+      "template": "laurent-three",
+      "params": { "mode": "blank", "a": [1, 4], "b": [3, 8] }
+    },
+    "memory": "Partial fractions, then a geometric series aimed at the region: $z$ inside a pole, $1/z$ outside it."
+  },
+  {
+    "id": "ch7-7.3-ex10-mc",
+    "chapter": 7,
+    "section": "7.3",
+    "cite": { "ref": "§7.3, Exercise 10", "page": 230 },
+    "kind": "next-step-mc",
+    "prompt": "Exercise 10 of §7.3, page 230. The Laurent series of $1/((z-2)(z-3))$ centered at $0$, in $|z|<2$, $2<|z|<3$, and $|z|>3$.",
+    "steps": [
+      {
+        "text": "For $2<|z|<3$, the series uses",
+        "answer": "negative powers from the pole at $2$, and non-negative powers from the pole at $3$",
+        "choices": [
+          "negative powers from the pole at $2$, and non-negative powers from the pole at $3$",
+          "non-negative powers from both poles",
+          "negative powers from both poles",
+          "negative powers from the pole at $3$, and non-negative powers from the pole at $2$"
+        ],
+        "choiceWhy": [
+          "The pole at $2$ is inside this annulus, so it is expanded in $1/z$. The pole at $3$ is outside, so it is expanded in $z$.",
+          "Non-negative powers from both poles is the series for $|z|<2$.",
+          "Negative powers from both poles is the series for $|z|>3$.",
+          "That swap puts the inner pole's series on the outside of the annulus."
+        ],
+        "why": "Partial fractions, then one geometric series per pole. Inside the outer pole, powers of $z$. Outside the inner pole, powers of $1/z$."
+      }
+    ],
+    "generator": {
+      "template": "laurent-three",
+      "params": { "mode": "mc", "a": [1, 4], "b": [3, 8] }
+    },
+    "memory": "Name the annulus first. Each pole is expanded in $z$ when you are inside it, and in $1/z$ when you are outside it."
+  },
+  {
     "id": "ch7-7.3-flash-recipe",
     "chapter": 7,
     "section": "7.3",
@@ -526,6 +591,33 @@
     "memory": "A pole of order $k$ is $h(z)/(z-\\alpha)^k$ with $h$ analytic and $h(\\alpha)\\neq 0$."
   },
   {
+    "id": "ch7-7.4-ex3",
+    "chapter": 7,
+    "section": "7.4",
+    "cite": { "ref": "§7.4, Exercise 3", "page": 238 },
+    "kind": "next-step-mc",
+    "prompt": "Exercise 3 of §7.4, page 238. Classify the singularity of $\\sin(1/z)$ at $0$.",
+    "steps": [
+      {
+        "text": "The singularity is",
+        "answer": "essential",
+        "choices": ["removable", "a pole of order 1", "a pole of order 2", "essential"],
+        "choiceWhy": [
+          "Removable means no negative powers. The computed series still has some.",
+          "A pole has a finite principal part. This series does not stop.",
+          "A pole has a finite principal part. This series does not stop.",
+          "The computed series still has a negative power at the far end of the expansion, so the principal part does not stop."
+        ],
+        "why": "The computed series still has a negative power at the far end of the expansion, so the principal part does not stop."
+      }
+    ],
+    "generator": {
+      "template": "singularity-class",
+      "params": { "a": [0, 0] }
+    },
+    "memory": "No negative powers: removable. Lowest power $-k$: a pole of order $k$. Infinitely many negative powers: essential."
+  },
+  {
     "id": "ch7-7.4-flash-pole",
     "chapter": 7,
     "section": "7.4",
@@ -613,6 +705,24 @@
     ],
     "generator": null,
     "memory": "On a connected domain, an analytic function that is not identically zero has isolated zeros."
+  },
+  {
+    "id": "ch7-7.5-lhopital",
+    "chapter": 7,
+    "section": "7.5",
+    "cite": { "ref": "Corollary 7.11", "page": 240 },
+    "kind": "next-step-blank",
+    "prompt": "Exercise 6(a) of §7.5, page 243. Use Corollary 7.11 on $\\lim_{z\\to 1+i}(z-1-i)/(z^4+4)$.",
+    "steps": [
+      {
+        "text": "Numerator and denominator are both 0 at $1+i$, and the derivative of the denominator is $-8+8i\\neq 0$. The limit equals ___",
+        "answer": "(-1-i)/16",
+        "accept": ["\\frac{-1-i}{16}", "-\\frac{1+i}{16}", "-1/16-i/16", "(-1-i)/16"],
+        "why": "Corollary 7.11, page 240. The quotient of the derivatives is $1/(4(1+i)^3)=1/(-8+8i)=(-1-i)/16$."
+      }
+    ],
+    "generator": null,
+    "memory": "If $f(\\alpha)=g(\\alpha)=0$ and $g'(\\alpha)\\neq 0$, the limit of $f/g$ is $f'(\\alpha)/g'(\\alpha)$."
   },
   {
     "id": "ch7-7.5-flash-zeros",

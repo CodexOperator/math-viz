@@ -142,7 +142,7 @@ export const CHAPTER_7 = deepFreeze({
       why: 'The series tell you two things you can say on an exam: on a connected domain, the zeros of an analytic function that is not identically zero are isolated, and a bounded isolated singularity can be filled in.',
       observe: 'Drag the green point toward 0.',
       key: 'Blue is the axis. Orange is the line at height 1, and the hole at 0. Green is the point you drag. Purple is $\\sin(z)/z$.',
-      summit: 'On a connected domain, an analytic function that is not identically zero has isolated zeros.',
+      summit: 'The singularity at 0 is removable.',
       worked: {
         pin: 'Theorem 7.13, page 239, and Theorem 7.15, page 240',
         href: sectionHref(S75, 'Isolated_Zeros_Thm'),
@@ -151,10 +151,13 @@ export const CHAPTER_7 = deepFreeze({
       memory: [
         'On a connected domain, an analytic function that is not identically zero has isolated zeros (Theorem 7.13, page 239).',
         'A bounded isolated singularity is removable (Theorem 7.15, page 240). $\\sin z/z$ at 0 is filled in by the value 1.',
+        'L\'Hôpital: if $f(\\alpha)=g(\\alpha)=0$ and $g\'(\\alpha)\\neq 0$, then $\\lim f/g = f\'(\\alpha)/g\'(\\alpha)$ (Corollary 7.11, page 240).',
+        'Divide the series when $g(\\alpha)\\neq 0$. The coefficients satisfy $a_n=b_0 c_n+\\cdots+b_n c_0$ (Theorem 7.14, page 240).',
       ],
       read: [
         { pin: 'Theorem 7.13, page 239', href: sectionHref(S75, 'Isolated_Zeros_Thm') },
         { pin: 'Corollary 7.11, page 240', href: sectionHref(S75, 'cor_L_hospital') },
+        { pin: 'Theorem 7.14, page 240', href: sectionHref(S75, 'Pr_Series_Division') },
       ],
     },
   ],

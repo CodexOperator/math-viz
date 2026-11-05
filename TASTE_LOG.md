@@ -1559,3 +1559,17 @@ One lap of the green point on \(z^2\) moves the purple point through \(4\pi\). T
 The uniform sentence says the curve is back only at \(n = 44\), when the drawn edge \(x = 0.92\) is inside the band. Inside the Taylor disk, a partial sum that has not caught the value no longer says that it agrees. The blank grader accepts an equal value (`1/-7` for \(-\frac{1}{7}\)) and rejects "positive" for non-negative powers. Generators stay `generate(seed, params)`. `map-route.js` matches the kit copy. No live import from `kit/`.
 
 `node tools/check_vectors.mjs`, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. Headless Chrome at 390×844 and 1280×800, light and dark: no sideways scroll, no console errors. Play on the first screen ends at y=793 (phone) and y=785 (wide).
+
+## Chapter 7, batch 3
+
+Branch `cursor/chapter-7`, picked up at `36e5e32`. The council list from batch 2.
+
+The green handle is the Chapter 5 dot, radius 6 on the 480 square. The stage is still the drag target. Every camp uses the 7.2 square: 326×326 on the phone, 480×480 at 1280. The 7.1 window now runs up to 14, so \(1/(1-x)\) and the orange band at the right edge stay inside the frame. On a 390×844 phone, Play ends at y=835 and the picture question starts at y=843. Pins and Memory follow that card. At 1280 the shared 480 square fills the window and Play is the next flick.
+
+7.2 opens on "The partial sum has settled near 0." The circle-through-±i sentence appears on the crossing and stays after it. 7.4 draws the image of \(z^2\) as two purple rings. Play again leaves both rings up. 7.5 is cropped to the curve, the hole, and the axis. Play walks from the x on the screen toward 0. It returns to 1.50 only when the button says Play again. The summit under that camp is "The singularity at 0 is removable." Isolated zeros stays in Memory.
+
+§7.3 Exercise 10, page 230, is a next-step blank and a next-step choice for \((z^2-5z+6)^{-1}\) in the three annuli. The generator is `laurent-three`, seed 1 is poles 2 and 3, and the partial sums match the function. §7.4 Exercise 3, page 238, classifies \(\sin(1/z)\) and, on the next seed, \(z\exp(1/z)\), from the computed series, with a why on every choice. \(z^2/(z-\sin z)\) comes out a pole of order 1. The selected answer on page 448 calls it removable. That misses the order-3 zero of \(z-\sin z\). Theorem 7.14, page 240, is pinned. Corollary 7.11 is a next-step blank on Exercise 6(a): the limit is \((-1-i)/16\).
+
+The first button on `#book` opens the chapter that has a mark. A fresh visit still walks Chapter 4. A Chapter 7 tick opens Chapter 7. The phone drawer lists Chapters 1 through 7.
+
+`node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. Headless Chrome at 390×844 and 1280×800, light and dark: no sideways scroll, no console errors.

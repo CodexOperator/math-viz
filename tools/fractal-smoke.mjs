@@ -16,6 +16,8 @@ import { id as laurentGenId } from '../js/practice/gen/laurent-annulus.js';
 import { id as orderGenId } from '../js/practice/gen/singularity-order.js';
 import { generate as laurentProblem, sampleAgrees } from '../js/practice/gen/laurent-annulus.js';
 import { generate as orderProblem } from '../js/practice/gen/singularity-order.js';
+import { generate as threeProblem, sampleAgrees as threeAgrees } from '../js/practice/gen/laurent-three.js';
+import { generate as classProblem } from '../js/practice/gen/singularity-class.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
 import { parsePath, evalPath } from '../js/core/path-expr.js';
 import { smoothLoop, presetById, compileFormula } from '../js/core/path-geom.js';
@@ -246,6 +248,41 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
     && madeOrder.order === 3
     && madeOrder.poleAt === -1
     && answerMatches('pole of order 3', madeOrder.steps[0]));
+  const ex10 = practice.find((item) => item.id === 'ch7-7.3-ex10-blank');
+  const ex10mc = practice.find((item) => item.id === 'ch7-7.3-ex10-mc');
+  const ex3 = practice.find((item) => item.id === 'ch7-7.4-ex3');
+  const made10 = threeProblem(1, ex10.generator.params);
+  const made10mc = threeProblem(1, ex10mc.generator.params);
+  const made3 = classProblem(1, ex3.generator.params);
+  const made3b = classProblem(2, ex3.generator.params);
+  check('exercise 10 is the three annuli of (z^2-5z+6)^{-1}',
+    ex10.cite.page === 230
+    && ex10.kind === 'next-step-blank'
+    && ex10mc.kind === 'next-step-mc'
+    && ex10.prompt === made10.prompt
+    && JSON.stringify(ex10.steps) === JSON.stringify(made10.steps)
+    && JSON.stringify(ex10mc.steps) === JSON.stringify(made10mc.steps)
+    && made10.a === 2 && made10.b === 3
+    && made10.steps[0].answer === '-1'
+    && made10.steps[1].answer === '\\frac{1}{6}'
+    && made10.steps[2].answer === '5'
+    && threeAgrees(1, ex10.generator.params, 80) < 1e-6
+    && threeProblem(2, ex10.generator.params).a !== 2);
+  check('exercise 3 classifies sin(1/z) and z exp(1/z) from the series',
+    ex3.cite.page === 238
+    && ex3.kind === 'next-step-mc'
+    && JSON.stringify(ex3.steps) === JSON.stringify(made3.steps)
+    && made3.kind === 'essential'
+    && made3b.kind === 'essential'
+    && /z\\exp/.test(made3b.prompt)
+    && classProblem(4, ex3.generator.params).kind === 'pole'
+    && classProblem(4, ex3.generator.params).order === 1
+    && ex3.steps[0].choiceWhy.length === 4);
+  check('theorem 7.14 is pinned and L\'Hôpital has a next step',
+    readFileSync(new URL('../js/data/chapter-7.js', import.meta.url), 'utf8').includes('Theorem 7.14, page 240')
+    && practice.some((item) => item.id === 'ch7-7.5-lhopital' && item.cite.page === 240 && item.kind === 'next-step-blank')
+    && answerMatches('(-1-i)/16', practice.find((item) => item.id === 'ch7-7.5-lhopital').steps[0])
+    && /Pr_Series_Division/.test(readFileSync(new URL('../js/data/chapter-7.js', import.meta.url), 'utf8')));
   check('uniform convergence leaves the band near 1 and holds near 0',
     uniformClaim(0.4, 4).holds === true
     && uniformClaim(0.85, 4).holds === false
@@ -254,7 +291,7 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
     taylorClaim(0.3, 0, 1).holds === true
     && taylorClaim(1.3, 0, 8).holds === false
     && /circle through/.test(taylorClaim(1.3, 0, 8).text)
-    && taylorClaim(0.3, 0, 1, false).text === 'This partial sum agrees with the function.'
+    && taylorClaim(0.3, 0, 1, false).text === 'The partial sum has settled near 0.'
     && taylorClaim(1, 0, 4).holds === false);
   check('uniform play changes the sentence at the opening point',
     uniformClaim(0.35, 4).holds === true
@@ -264,7 +301,7 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
   check('taylor agreement is withheld until the partial sum has caught the value',
     taylorClaim(0.9, 0, 0, false).holds === false
     && /not caught/.test(taylorClaim(0.9, 0, 0, false).text)
-    && taylorClaim(0.2, 0, 0, false).text === 'This partial sum agrees with the function.');
+    && taylorClaim(0.2, 0, 0, false).text === 'The partial sum has settled near 0.');
   check('chapter 7 exports five stages and the generators are seed-first',
     chapter7WalkSections().map((s) => s.id).join() === '7.1,7.2,7.3,7.4,7.5'
     && chapter7WalkSections()[0].exercises[0] === 'ch7-stage-7.1'
