@@ -36,6 +36,27 @@ function radiusStep(cx, cy) {
   };
 }
 
+function termStep(centre) {
+  const base = centre === '0' ? 'z' : `(z-(${centre}))`;
+  const shown = `$\\left|\\dfrac{a_{n+1} ${base}^{n+1}}{a_n ${base}^n}\\right|$`;
+  const plain = `|a_{n+1} ${base}^{n+1}/(a_n ${base}^n)|`;
+  const term = centre === '0' ? 'a_n z^n' : 'a_n(z-\\alpha)^n';
+  return {
+    text: 'The ratio test reads the modulus of ___.',
+    answer: shown,
+    accept: [plain, plain.replace(/ /g, '')],
+    why: `The test reads the full term $${term}$, then takes the modulus. Theorem 4.13, page 120.`,
+    hints: ['Include the power of the base, not only $a_n$.', 'The comparison is a modulus.'],
+    misses: [
+      {
+        match: '$\\left|\\dfrac{a_{n+1}}{a_n}\\right|$',
+        accept: ['|a_{n+1}/a_n|', '|a_{n+1}/a_n|'],
+        why: COEFF,
+      },
+    ],
+  };
+}
+
 function evenFactorial(cx, cy) {
   return {
     prompt: 'Use the ratio test on $\\sum_{n=0}^{\\infty} z^n/(2n)!$. Theorem 4.16, page 125.',
@@ -54,20 +75,7 @@ function evenFactorial(cx, cy) {
           },
         ],
       },
-      {
-        text: 'The ratio test reads the modulus of ___.',
-        answer: '$\\left|\\dfrac{a_{n+1} z^{n+1}}{a_n z^n}\\right|$',
-        accept: ['|a_{n+1} z^{n+1}/(a_n z^n)|', '|a_{n+1}z^{n+1}/(a_n z^n)|'],
-        why: 'The test reads the full term $a_n z^n$, then takes the modulus. Theorem 4.13, page 120.',
-        hints: ['Include the power of $z$, not only $a_n$.', 'The comparison is a modulus.'],
-        misses: [
-          {
-            match: '$\\left|\\dfrac{a_{n+1}}{a_n}\\right|$',
-            accept: ['|a_{n+1}/a_n|', '|a_{n+1}/a_n|'],
-            why: COEFF,
-          },
-        ],
-      },
+      termStep('0'),
       radiusStep(cx, cy),
     ],
     witness: { kind: 'even', cx, cy },
@@ -93,20 +101,7 @@ function shiftedFactorial(cx, cy) {
           },
         ],
       },
-      {
-        text: 'The ratio test reads the modulus of ___.',
-        answer: '$\\left|\\dfrac{a_{n+1} z^{n+1}}{a_n z^n}\\right|$',
-        accept: ['|a_{n+1} z^{n+1}/(a_n z^n)|'],
-        why: 'The test reads the full term $a_n z^n$, then takes the modulus. Theorem 4.13, page 120.',
-        hints: ['Include the power of $z$, not only $a_n$.'],
-        misses: [
-          {
-            match: '$\\left|\\dfrac{a_{n+1}}{a_n}\\right|$',
-            accept: ['|a_{n+1}/a_n|'],
-            why: COEFF,
-          },
-        ],
-      },
+      termStep(centre),
       radiusStep(cx, cy),
     ],
     witness: { kind: 'shift', cx, cy },

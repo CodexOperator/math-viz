@@ -462,7 +462,7 @@
       }
     ],
     "generator": null,
-    "memory": "The attracting fixed points of $z^2+c$ are the points inside that cardioid condition."
+    "memory": "$z^2+c$ has an attracting fixed point exactly when $c$ satisfies that cardioid condition."
   },
   {
     "id": "ch4-4.2-definition-4-11",
@@ -1263,7 +1263,7 @@
     ],
     "generator": null,
     "memory": "1. Start at $0$ and iterate $z^2+c$. 2. If that orbit stays bounded, the Julia set is one piece. 3. If it leaves, the Julia set is dust.",
-    "formula": "$K_c$ is connected iff the orbit of $0$ is bounded.",
+    "formula": "The Julia set is connected iff the orbit of $0$ is bounded.",
     "lead": true
   },
   {
@@ -1271,17 +1271,17 @@
     "chapter": 4,
     "section": "4.2",
     "cite": {
-      "ref": "Example 4.9",
-      "page": 113,
-      "href": "https://complexanalysis.org/web/sec_julia-mandelbrot.html#K-0"
+      "ref": "§4.2, Exercise 4(c)",
+      "page": 117,
+      "href": "https://complexanalysis.org/web/sec_julia-mandelbrot.html#x4_2_4"
     },
     "kind": "mc",
-    "prompt": "On the unit circle, $z_0$ is a $2^n$-th root of unity. Its argument is ___. Example 4.9, page 113.",
+    "prompt": "On the unit circle, $z_0$ is a $2^n$-th root of unity. Its argument is ___. Exercise 4(c), page 117.",
     "steps": [
       {
         "text": "The argument is ___.",
         "answer": "$\\dfrac{2\\pi m}{2^n}$",
-        "why": "A $2^n$-th root of unity sits at angle $2\\pi m/2^n$. Example 4.9, page 113, keeps that point on the unit circle.",
+        "why": "A $2^n$-th root of unity sits at angle $2\\pi m/2^n$. That is when the orbit of $z^2$ converges to $1$. Exercise 4(c), page 117.",
         "choices": [
           "$\\dfrac{2\\pi m}{2^n}$",
           "$\\dfrac{m}{2^n}$",
@@ -1305,7 +1305,7 @@
       }
     ],
     "generator": null,
-    "memory": "A $2^n$-th root of unity has argument $2\\pi m/2^n$. Example 4.9, page 113.",
+    "memory": "A $2^n$-th root of unity has argument $2\\pi m/2^n$. That is the test for converging to $1$. Exercise 4(c), page 117.",
     "place": 4
   },
   {
@@ -1617,10 +1617,10 @@
     "steps": [
       {
         "text": "On the unit circle the orbit ___.",
-        "answer": "doubles the argument, and is finite exactly at a $2^n$-th root of unity",
-        "why": "Squaring doubles the argument. The orbit is finite exactly when that angle is $2\\pi m/2^n$. Exercise 4(c), page 117, and Example 4.9, page 113.",
+        "answer": "doubles the argument, and converges to $1$ exactly at a $2^n$-th root of unity",
+        "why": "Squaring doubles the argument. The orbit converges to $1$ exactly when $z_0$ is a $2^n$-th root of unity. A finite cycle, such as argument $2\\pi/3$, never reaches $1$. Exercise 4(c), page 117.",
         "choices": [
-          "doubles the argument, and is finite exactly at a $2^n$-th root of unity",
+          "doubles the argument, and converges to $1$ exactly at a $2^n$-th root of unity",
           "goes to $0$",
           "is unbounded",
           "keeps the same argument"

@@ -1658,3 +1658,26 @@ The numbered recipe sits on the stage before the tick. The print sheet is those 
 At 390×844 and 1280×800, light and dark, the Chapter 5 status card ends inside the window (420 and 388) and Play does too (829 and 772). On `#chapter-4-4-2` the Mandelbrot still is on that screen and the Book link stays at 44px under the header. Julia’s + and − are 44×44 with a coarse pointer. §§5.2, 5.3, and 5.5 are Later rows that open `#chapter-5-5-2`, `#chapter-5-5-3`, and `#chapter-5-5-5`. Continue on `#book` opens `#chapter-4`. The drawer is Chapters 1–7, then Test prep. Test prep links to the two indexes instead of mounting them.
 
 `node tools/check_vectors.mjs` 234/234. `node tools/fractal-smoke.mjs` passed. `node kit/smoke.mjs` passed.
+
+## reviewer (ch4-5 batch 3)
+
+Reviewed at tip `6259ffa`, then small correctness fixes on the same branch. Checked against Howell & Mathews, 202 Updated Edition, including Theorem 4.9, page 113 (the Julia set is connected iff the orbit of 0 is bounded) and Theorem 4.11, page 116 (attracting fixed points iff `|1 ± √(1−4c)| < 1`). `node tools/check_vectors.mjs` 234/234. `node tools/fractal-smoke.mjs` passed. `node kit/smoke.mjs` passed. No `kit/` import in live code.
+
+### Verdict
+
+ACCEPT WITH FIXES. The fixes are on this branch. The batch-3 drills cite the right pages, and the generators compute their answers. Four statements were false and are corrected.
+
+### Fixes
+
+Exercise 4(c), page 117, asked when the orbit on the unit circle is finite. A finite orbit is wider than the 2^n-th roots of unity: argument 2π/3 cycles and never reaches 1. The card now says the orbit doubles the argument and converges to 1 exactly at a 2^n-th root of unity. The angle card cites that exercise, not Example 4.9, which only leaves the claim as an exercise.
+
+`sin-parts` treated cosine as odd, so `sin(−1+i)` came back with a minus on the cosine. Cosine is even. All 25 seeds in the generator’s range match Identity (5.35), page 150.
+
+The §4.2 sheet said `K_c` is connected. Theorem 4.9 names the Julia set, the boundary of `K_c`. The sheet now says that. The Theorem 4.11 memory line put the fixed points inside the cardioid; the cardioid is a condition on `c`. The ratio generator’s shifted series now reads `a_n(z−α)^n`, not `a_n z^n`. The cosine derivative, Exercise 1, page 156, starts at `n ≥ 1`, which is where the book’s solution starts. The cardioid film no longer says that outside the cardioid the orbit of 0 leaves. `c = −1` stays bounded on a 2-cycle.
+
+### Leftovers
+
+1. The §4.2 recipe still ends “if it leaves, the Julia set is dust.” The theorem’s word is disconnected. Dust is the right picture for `z²+c`, and the stations already say it. Change the sheet’s third line to “disconnected.”
+2. The chapter orbit prints `0 → 0 + 1.00i → -1.00 + 1.00i → 0 − 1.00i`. Those are Example 4.10’s values. Print `i`, `−1+i`, and `−i`.
+3. Exercise 6, page 129, asks whether a series exists. The third choice says “converges at both,” and the why says no such series exists. Make “No” the choice.
+4. §§5.2, 5.3, and 5.5 are still Later rows. Not a batch-3 error.

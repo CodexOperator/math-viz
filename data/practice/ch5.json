@@ -174,9 +174,9 @@
     "prompt": "Establish $\\frac{d}{dz}\\cos z=-\\sin z$. Exercise 1, page 156. The method is the one in the proof of Theorem 5.4, page 149.",
     "steps": [
       {
-        "text": "The derivative of the general term $(-1)^n z^{2n}/(2n)!$ is ___.",
+        "text": "For $n\\ge 1$, the derivative of $(-1)^n z^{2n}/(2n)!$ is ___.",
         "answer": "$(-1)^n z^{2n-1}/(2n-1)!$",
-        "why": "Bring down $2n$ and cancel it against $(2n)!$. Theorem 5.4, page 149, does the same for $\\sin z$.",
+        "why": "The constant term, $n=0$, has derivative $0$, so the sum starts at $n=1$. Bring down $2n$ and cancel it against $(2n)!$. The book's solution of Exercise 1, page 156, starts the sum there.",
         "choices": [
           "$(-1)^n z^{2n-1}/(2n-1)!$",
           "$(-1)^n z^{2n-1}/(2n)!$",

@@ -8,8 +8,10 @@ export const id = 'sin-parts';
 function trig(name, n) {
   if (n === 0) return name === 'cos' ? '1' : '0';
   const tex = name === 'sin' ? '\\sin' : '\\cos';
-  if (n < 0) return `-${tex} ${-n}`;
-  return `${tex} ${n}`;
+  const body = `${tex} ${Math.abs(n)}`;
+  // sin is odd. cos is even, so a negative real part does not flip it.
+  if (name === 'cos' || n > 0) return body;
+  return `-${body}`;
 }
 
 function hyp(name, n) {
