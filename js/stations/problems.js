@@ -299,7 +299,7 @@ export function mount(el, ctx) {
 
   // ---- header
   const header = h('header', { class: 'station-header' },
-    h('h1', null, self.title),
+    h('h1', null, (ctx && ctx.embedTitle) || self.title),
     h('p', { class: 'station-lede' },
       'Every problem and proof from the handout is a card. Read the question, say the place, the address and the aha out loud, then reveal the answer. Tick a card when it feels easy.'));
   const badges = h('ul', { class: 'thread-badges', 'aria-label': 'Story threads that pass through this place' });

@@ -4,12 +4,19 @@
 import { readFileSync } from 'node:fs';
 import { stationsForMap, stationForTopic, stationForProblem, stationById, threadsOn, stationPart, STATIONS } from '../js/registry.js';
 import { stationNeighbours } from '../js/stations/problems.js';
-import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
-import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, chapter4ExerciseIds, chapter5ExerciseIds } from '../js/data/book-path.js';
+import { parseRoute, groupStations, mapForcedByRoute, bookModuleFor } from '../js/app.js';
+import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, chapter4ExerciseIds, chapter5ExerciseIds, activeWalk, pictureGroup } from '../js/data/book-path.js';
 import { chapterTally, sectionFinished, foldLegacyExercises, saveSharedTicks, toggleTick } from '../js/book/progress.js';
-import { EXP_DURATION, expFrame, finishedStops } from '../js/core/live-film.js';
+import { EXP_DURATION, expFrame, finishedStops, createLivePlayer, settleFrame } from '../js/core/live-film.js';
 import { compile } from '../js/core/parse.js';
 import { parseBookRoute } from '../js/book/route.js';
+import { answersMatch, parseComplex } from '../js/practice/check.js';
+import { generate as geometricGenerate } from '../js/practice/gen/geometric-series.js';
+import { generate as expGenerate, principalQuarters } from '../js/practice/gen/exp-mod-arg.js';
+import { catalogIssues, PRACTICE } from '../js/practice/catalog.js';
+import { interleave, sectionWalk } from '../js/practice/queue.js';
+import { mergeLeitner, reviewCard, emptyDeck, dueOrder, isDue } from '../js/practice/leitner.js';
+import { questionHeading } from '../js/practice/heading.js';
 import { fillJulia, fillNewton, juliaWalk, newtonWalk, monicCoeffs, effectiveEscape, samplePath } from '../js/core/fractal.js';
 import { parsePath, evalPath } from '../js/core/path-expr.js';
 import { smoothLoop, presetById, compileFormula } from '../js/core/path-geom.js';
@@ -114,6 +121,11 @@ check('#home-t2 is the Test 1 thread, not Test 2', mapForcedByRoute(stationById(
 check('#home-f2 is the Test 2 thread', mapForcedByRoute(stationById('home'), parseRoute('#home-f2')) === 'test2');
 check('an unknown hash forces no map', mapForcedByRoute(null, parseRoute('#nope')) === null);
 check('the book is its own route', parseRoute('#book').station == null && parseRoute('#book').book.kind === 'roadmap' && mapForcedByRoute(null, parseRoute('#book')) == null);
+check('a chapter page is the module named in the book registry',
+  bookModuleFor(parseRoute('#chapter-4').book) === './stations/book.js'
+  && bookModuleFor(parseRoute('#chapter-5').book) === './stations/book.js'
+  && bookModuleFor(parseRoute('#book').book) === './stations/book.js'
+  && bookModuleFor(parseRoute('#test-prep').book) === './stations/book.js');
 check('#chapter-4 opens chapter 4', parseRoute('#chapter-4').book.kind === 'chapter' && parseRoute('#chapter-4').book.chapter === 4 && parseRoute('#chapter-4').book.focus == null);
 check('#chapter-4-4-1-3 focuses exercise 4.1.3', parseRoute('#chapter-4-4-1-3').book.focus === '4.1.3');
 check('#chapter-1 stays on the roadmap', parseRoute('#chapter-1').book.kind === 'roadmap' && parseRoute('#chapter-1').book.chapter === 1);
@@ -126,6 +138,8 @@ check('chapter 4 exercises are the homework set plus 4.4.6', chapter4ExerciseIds
   const href = (pin) => reads.find((r) => r.pin === pin)?.href || '';
   check('Theorem 4.1 opens the limit theorem', href('Theorem 4.1, page 103').endsWith('#Lim_Zn_Thm'));
   check('section 4.2 cites Theorem 4.9 and not Theorem 4.11', CHAPTER_4.sections[1].read.length === 1 && href('Theorem 4.9, page 113').endsWith('#Kc_Connected') && !href('Theorem 4.11, page 116'));
+  check('the 4.1 summit keeps eventually, from Definition 4.1', /eventually sit in every disk/.test(CHAPTER_4.sections[0].summit));
+  check('the 4.2 summit is the quadratic Julia set, Theorem 4.9', /z\^2\+c/.test(CHAPTER_4.sections[1].summit) && /orbit of \$0\$/.test(CHAPTER_4.sections[1].summit));
   check('Theorem 4.15 opens the disk of convergence', href('Theorem 4.15, page 124').endsWith('#Regions_of_Convergence'));
   check('Theorem 4.16 opens the radius formulas', href('Theorem 4.16, page 125').endsWith('#th15'));
 }
@@ -137,6 +151,11 @@ check('One Newton Step keeps Example 4.7', /Example 4\.7, page 110/.test(readFil
     && book.includes('Chapter 5. The exponential')
     && !book.includes('not drawn yet')
     && !book.includes('lesson-progress'));
+  check('the 5.1 row lands on the picture and the title is a heading',
+    parseRoute('#chapter-exp').station == null && parseRoute('#chapter-exp').book == null
+    && book.includes("? 'chapter-exp'")
+    && book.includes("h('h2', { id: `${scope}-title` }, section.title)")
+    && book.includes('later52,\n    later53,\n    stage54,\n    later55'));
 }
 {
   const card1 = CHAPTER_5.cards['5.1.1'];
@@ -146,6 +165,7 @@ check('One Newton Step keeps Example 4.7', /Example 4\.7, page 110/.test(readFil
     && card1.statement.includes('exp(0)')
     && card1.href.endsWith('#x5_1_1')
     && /right-hand point/.test(card1.hint)
+    && !/right-hand point of the unit circle is \$z = 0\$/.test(card1.hint)
     && !/blank stays empty/.test(card1.hint)
     && card2.statement.includes('\\pm i\\pi')
     && !/shading|s_\{1\}/.test(card2.statement)
@@ -154,7 +174,7 @@ check('One Newton Step keeps Example 4.7', /Example 4\.7, page 110/.test(readFil
     && /left-hand point/.test(card2.hint)
     && CHAPTER_5.sections[0].read[0].href.endsWith('#exp_z__Def')
     && CHAPTER_5.sections[0].read[1].href.endsWith('#fig_ch-05-02')
-    && CHAPTER_5.sections[0].idea.includes('Identity (5.1)')
+    && (CHAPTER_5.sections[0].summit.includes('Identity (5.1)'))
     && !readFileSync(new URL('../js/stations/book.js', import.meta.url), 'utf8').includes('vertical segment'));
   check('the index does not gain the section 5.1 cards',
     !readFileSync(new URL('../js/data/test2-problems.js', import.meta.url), 'utf8').includes("id: '5.1.1'")
@@ -170,6 +190,13 @@ check('One Newton Step keeps Example 4.7', /Example 4\.7, page 110/.test(readFil
   saveSharedTicks(store, toggleTick({ '4.1.3': true, '5.1.1': true }, '5.1.1'));
   check('unticking 5.1.1 leaves the chapter 4 tick',
     mem['progress.test2']['5.1.1'] == null && mem['progress.test2']['4.1.3'] === true && mem['progress.test2']['4.2.5'] === true);
+  const walked = activeWalk({ '5.1.2': true });
+  check('ticking 5.1.2 is chapter 5’s own count',
+    walked.chapter === 5 && walked.tally.exercisesTicked === 1 && walked.tally.exerciseTotal === 2 && walked.tally.nextExercise === '5.1.1');
+  check('an untouched book still counts chapter 4',
+    activeWalk({}).chapter === 4 && activeWalk({}).tally.exerciseTotal === 8 && activeWalk({}).tally.exercisesTicked === 0);
+  check('the disk picture opens both section 4.1 exercises',
+    pictureGroup('4.1.3').includes('4.1.3') && pictureGroup('4.1.3').includes('4.1.13') && !pictureGroup('4.2.5').includes('4.2.3'));
 }
 {
   const unit = expFrame(8, { re: 0 });
@@ -190,8 +217,38 @@ check('One Newton Step keeps Example 4.7', /Example 4\.7, page 110/.test(readFil
     && /top of the unit circle/.test(place[2]) && !/real axis/.test(place[2])
     && /left of the unit circle/.test(place[3]) && /real axis/.test(place[3]));
   const between = expFrame(1, { re: 0 });
-  check('between the stops the point is on the unit circle', Math.abs(between.x) < 1e-12 && between.claim.text === 'The point sits on the unit circle.');
+  check('between the stops e^z is on the unit circle', Math.abs(between.x) < 1e-12 && between.claim.text === '$e^{z}$ sits on the unit circle.');
   check('a larger radius stays the radius sentence off the axis', /\$e\^\{x\}\$/.test(expFrame(stops[0], { re: Math.log(2) }).claim.text) && /larger than 1/.test(expFrame(stops[0], { re: Math.log(2) }).claim.text));
+  const opened = createLivePlayer({
+    duration: EXP_DURATION,
+    start: EXP_DURATION / 4,
+    params: { re: 0, im: 0 },
+    reduced: () => true,
+    scene: (t, params) => expFrame(t, params),
+  });
+  check('the exponential opens on the bottom, with exercise 2 still blank',
+    Math.abs(opened.t - EXP_DURATION / 4) < 1e-9 && /bottom of the unit circle/.test(opened.scene().claim.text) && opened.scene().claim.holds === false);
+  opened.step();
+  check('reduced motion steps off that bottom onto the right-hand point',
+    Math.abs(opened.t - EXP_DURATION / 2) < 1e-6 && /right of the unit circle/.test(opened.scene().claim.text));
+  opened.destroy();
+  const fromEnd = createLivePlayer({
+    duration: EXP_DURATION,
+    params: { re: 0, im: 0 },
+    reduced: () => true,
+    scene: (t, params) => expFrame(t, params),
+  });
+  check('a film with no start opens on the last frame', Math.abs(fromEnd.t - EXP_DURATION) < 1e-9);
+  fromEnd.step();
+  check('a film that opens at the end still steps to the first stop',
+    Math.abs(fromEnd.t - EXP_DURATION / 4) < 1e-6 && Math.abs(fromEnd.scene().y + Math.PI / 2) < 1e-6);
+  fromEnd.destroy();
+  const atOne = settleFrame(8, { re: 1, im: 0 });
+  const onCircle = settleFrame(8, { re: Math.SQRT1_2, im: Math.SQRT1_2 });
+  check('z = 1 on the unit circle settles at 1',
+    Math.abs(atOne.mod - 1) < 1e-12 && atOne.claim.holds === true && /Settles at 1/.test(atOne.claim.text) && !/do not settle/.test(atOne.claim.text));
+  check('other unit-circle points do not settle at one point',
+    Math.abs(onCircle.mod - 1) < 1e-9 && onCircle.claim.holds === false && /does not settle at one point/.test(onCircle.claim.text) && !/modulus is 1, so/.test(onCircle.claim.text));
 }
 {
   const legacy = foldLegacyExercises({ '4.2.4': true }, { exercises: { '4.1.3': true, nope: true }, sections: { '4.1': true } }, chapter4ExerciseIds());
@@ -868,6 +925,7 @@ check('the log slider round-trips a fine step', Math.abs(unitToStep(stepToUnit(1
 }
 
 await runViewChecks();
+runPracticeChecks();
 
 if (failed) {
   console.error(`${failed} failed`);
@@ -1113,4 +1171,141 @@ async function runViewChecks() {
   replayAt(5616);
   replay.cancel();
   check('a drive after a pause gap does not spend the idle time', driveDt.length >= 2 && driveDt[0] < 1 && driveDt[1] > 10 && driveDt[1] < 30);
+}
+
+function runPracticeChecks() {
+check('test prep is a book route and does not force a map',
+  parseRoute('#test-prep').book.kind === 'prep'
+  && parseRoute('#test-prep').book.chapter == null
+  && parseRoute('#test-prep-4-4-1').book.chapter === 4
+  && parseRoute('#test-prep-4-4-1').book.focus === '4.1'
+  && parseRoute('#test-prep-5').book.chapter === 5
+  && mapForcedByRoute(null, parseRoute('#test-prep')) == null
+  && parseBookRoute('test-prep-5-5-1').focus === '5.1');
+check('a fraction, a power, and a complex number match their equivalents',
+  answersMatch('  1 / 2 ', '\\frac{1}{2}')
+  && answersMatch('0.5', '\\frac{1}{2}')
+  && answersMatch('e^{x}', '\\exp(x)')
+  && answersMatch('1 + i', '1+i')
+  && answersMatch('\\frac{3-i}{2}', '1.5-0.5i')
+  && answersMatch('\\frac{\\pi}{4}', 'pi/4')
+  && !answersMatch('1+i', '1-i')
+  && !answersMatch('e^{2}', '7.389'));
+{
+  const issues = catalogIssues();
+  check('practice catalog matches the schema', issues.length === 0);
+  const kinds = new Set(PRACTICE.map((it) => it.kind));
+  check('every practice kind is in the pilot set',
+    ['proof-blank', 'proof-mc', 'next-step-blank', 'next-step-mc', 'blank', 'mc', 'flash'].every((k) => kinds.has(k)));
+  const proofs = ['Theorem 4.1', 'Theorem 4.12'];
+  check('each pilot proof is both a blank and a multiple choice',
+    proofs.every((ref) => PRACTICE.some((it) => it.kind === 'proof-blank' && it.cite.ref === ref)
+      && PRACTICE.some((it) => it.kind === 'proof-mc' && it.cite.ref === ref)));
+  check('at least four next-step items and both generators',
+    PRACTICE.filter((it) => it.kind === 'next-step-blank' || it.kind === 'next-step-mc').length >= 4
+    && PRACTICE.some((it) => it.generator && it.generator.template === 'geometric-series' && it.generator.params.kind === 'sum')
+    && PRACTICE.some((it) => it.generator && it.generator.template === 'geometric-series' && it.generator.params.kind === 'radius')
+    && PRACTICE.some((it) => it.generator && it.generator.template === 'exp-mod-arg'));
+  const refs = new Set(PRACTICE.filter((it) => it.kind === 'flash').map((it) => it.cite.ref));
+  const needed = [
+    'Definition 4.1', 'Theorem 4.1', 'Definition 4.2', 'Theorem 4.2', 'Definition 4.3', 'Theorem 4.3',
+    'Definition 4.4', 'Definition 4.5', 'Definition 4.6', 'Definition 4.7', 'Theorem 4.4', 'Theorem 4.5',
+    'Theorem 4.6', 'Definition 4.8', 'Theorem 4.7', 'Theorem 4.8', 'Corollary 4.1',
+    'Theorem 4.9', 'Definition 4.9', 'Definition 4.10', 'Theorem 4.10', 'Theorem 4.11', 'Definition 4.11', 'Definition 4.12',
+    'Theorem 4.12', 'Corollary 4.2', 'Corollary 4.3', 'Theorem 4.13', 'Definition 4.13', 'Theorem 4.14',
+    'Theorem 4.15', 'Theorem 4.16', 'Theorem 4.17',
+    'Definition 5.1', 'Theorem 5.1', 'Identity (5.1)',
+  ];
+  check('a flashcard for every definition and theorem on these pages', needed.every((ref) => refs.has(ref)));
+  check('multiple choice items have one matching choice', PRACTICE.every((it) => {
+    if (!String(it.kind).endsWith('mc') || it.generator) return true;
+    return it.steps.every((step) => step.choices.filter((c) => answersMatch(c, step.answer, step.accept)).length === 1);
+  }));
+  const walk = sectionWalk(PRACTICE.filter((it) => it.id === 'ch4-4.1-thm-4.1-blank'));
+  check('a proof blank opens as a worked example', walk[0] && walk[0].view === 'worked' && walk[1] && walk[1].view === 'faded');
+  const mix = interleave(PRACTICE, 3);
+  check('test prep mixes sections', new Set(mix.slice(0, 4).map((e) => e.source.section)).size >= 2);
+}
+{
+  let sumsOk = true;
+  let sawIn = false;
+  let sawOut = false;
+  for (let seed = 1; seed <= 20; seed++) {
+    const built = geometricGenerate(seed, { kind: 'sum' });
+    const again = geometricGenerate(seed, { kind: 'sum' });
+    if (JSON.stringify(built.steps) !== JSON.stringify(again.steps)) sumsOk = false;
+    const w = built.witness;
+    const inside = w.a * w.a + w.b * w.b < w.den * w.den;
+    if (inside !== w.converges) sumsOk = false;
+    if (inside) {
+      sawIn = true;
+      const zre = w.a / w.den;
+      const zim = w.b / w.den;
+      const den = (1 - zre) * (1 - zre) + zim * zim;
+      const got = parseComplex(built.steps[1].answer);
+      if (!got || Math.abs(got.re - (1 - zre) / den) > 1e-6 || Math.abs(got.im - zim / den) > 1e-6) sumsOk = false;
+    } else {
+      sawOut = true;
+      if (!answersMatch(built.steps[1].answer, 'diverges')) sumsOk = false;
+    }
+  }
+  check('geometric sums are computed and stable', sumsOk && sawIn && sawOut);
+  let radiiOk = true;
+  for (let seed = 1; seed <= 16; seed++) {
+    const built = geometricGenerate(seed, { kind: 'radius' });
+    const w = built.witness;
+    if (Math.abs(Math.hypot(w.p, w.q) - w.rho) > 1e-9) radiiOk = false;
+    if (!answersMatch(built.steps[0].answer, String(w.rho))) radiiOk = false;
+  }
+  check('radii of convergence are the moduli', radiiOk);
+  let expOk = true;
+  for (let seed = 1; seed <= 24; seed++) {
+    const built = expGenerate(seed);
+    const w = built.witness;
+    let y = w.k * Math.PI / 4;
+    while (y > Math.PI + 1e-12) y -= 2 * Math.PI;
+    while (y <= -Math.PI + 1e-12) y += 2 * Math.PI;
+    if (principalQuarters(w.k) !== w.quarters) expOk = false;
+    if (Math.abs(y - w.quarters * Math.PI / 4) > 1e-9) expOk = false;
+    const arg = parseComplex(built.steps[1].answer);
+    if (!arg || Math.abs(arg.re - y) > 1e-6 || Math.abs(arg.im) > 1e-6) expOk = false;
+    if (w.x === 0 && built.steps[0].answer !== '1') expOk = false;
+    if (w.x === 1 && built.steps[0].answer !== 'e') expOk = false;
+    if (w.x > 1 && !answersMatch(built.steps[0].answer, `e^{${w.x}}`)) expOk = false;
+    if (w.x < 0 && !answersMatch(built.steps[0].answer, `e^{${w.x}}`)) expOk = false;
+  }
+  check('modulus and argument of e^z are computed', expOk);
+  const first = reviewCard(emptyDeck(), 'card', 'good', '2026-11-04', 10);
+  const second = reviewCard(first, 'card', 'good', '2026-11-05', 30);
+  const miss = reviewCard(emptyDeck(), 'card', 'again', '2026-11-04', 99);
+  const kept = mergeLeitner(miss, second);
+  check('a Leitner merge keeps the card that was practiced more',
+    kept.cards.card.reviews === 2 && kept.cards.card.box === 2 && first.cards.card.due === '2026-11-05');
+  const flashes = [
+    { id: 'a', kind: 'flash' },
+    { id: 'b', kind: 'flash', lead: true },
+  ];
+  const unseen = dueOrder(flashes, emptyDeck(), '2026-11-05');
+  const seen = reviewCard(emptyDeck(), 'a', 'good', '2026-11-04', 1);
+  const nextDay = dueOrder(flashes, seen, '2026-11-05');
+  check('an unseen card is not due',
+    isDue(null, '2026-11-05') === false && unseen.due.length === 0 && unseen.fresh.length === 2);
+  check('a graded card is due on its day',
+    nextDay.due.length === 1 && nextDay.due[0].item.id === 'a' && nextDay.fresh.length === 1);
+  const thm41 = PRACTICE.find((it) => it.id === 'ch4-4.1-thm-4.1-blank');
+  const ex1a = PRACTICE.find((it) => it.id === 'ch4-4.1-ex-1a');
+  const thmHead = questionHeading(thm41.prompt, thm41.cite);
+  const exHead = questionHeading(ex1a.prompt, ex1a.cite);
+  check('a practice heading is the question',
+    thmHead.startsWith('Assume') && !/pages/.test(thmHead)
+    && /lim/.test(exHead) && !/page/.test(exHead));
+  let headingsOk = true;
+  for (const it of PRACTICE) {
+    if (!it.cite || !it.cite.href) continue;
+    const head = questionHeading(it.prompt, it.cite);
+    if (!head) headingsOk = false;
+    if (/^\s*(?:Theorem|Exercise)\b[^?]{0,80}\bpages?\b/.test(head) && !/[?]/.test(head) && !/___/.test(head)) headingsOk = false;
+  }
+  check('practice headings keep a question', headingsOk);
+}
 }

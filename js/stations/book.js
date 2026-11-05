@@ -1,21 +1,43 @@
-// The book roadmap, Chapter 4, and the §5.1 walk under the exponential.
-// A section is finished when its exercises are ticked. The tick is the same
-// memory as the Test 2 index. Hints stay closed. No answer key on these cards.
+// The book roadmap, Chapter 4, and the Chapter 5 walk under the exponential.
+// Continue, the up link, and Test prep are the shared shell. A section is
+// finished when its exercises are ticked. Chapter 4's tick waits until its
+// picture has been opened. Hints stay closed. No answer key on these cards.
 
-import { stationById } from '../registry.js';
 import { BOOK, sectionHref } from '../data/book.js';
-import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, bookChapter, chapter4ExerciseIds, chapter5ExerciseIds, CHAPTER_PICTURE, pictureHref } from '../data/book-path.js';
+import {
+  shellChapters, CHAPTER_4, CHAPTER_5, bookChapter, chapter4ExerciseIds, chapter5ExerciseIds,
+  CHAPTER_PICTURE, pictureHref, stageNext, activeWalk, OPEN_CHAPTERS,
+} from '../data/book-path.js';
 import { test2ProblemById } from '../data/test2-problems.js';
-import { loadSharedTicks, saveSharedTicks, toggleTick, sectionFinished, chapterTally } from '../book/progress.js';
+import {
+  loadSharedTicks, saveSharedTicks, toggleTick, sectionFinished, chapterTally,
+  justFinished,
+} from '../book/progress.js';
+import { continueSentence, continueTarget, walkSections } from '../book/continue.js';
+import { chapterHash, prepHash } from '../book/route.js';
 import { h, appendRich, sourceTag } from './test2-ui.js';
 import { mountExpPicture } from './exp-picture.js';
+import { mountPrep } from '../practice/mount.js';
+import { paintSetStill } from '../book/stills.js';
+import { PRACTICE } from '../practice/catalog.js';
+import { answersMatch, explainMiss } from '../practice/check.js';
+import { recipeLines } from '../practice/recipe.js';
 
 function slug(id) {
   return String(id).replace(/\./g, '-');
 }
 
+function tickOwned(id) {
+  return !!test2ProblemById(id) || chapter5ExerciseIds().includes(id);
+}
+
 function ticksOf(store) {
-  return loadSharedTicks(store, (id) => !!test2ProblemById(id), chapter4ExerciseIds());
+  return loadSharedTicks(store, tickOwned, chapter4ExerciseIds());
+}
+
+function upLink(id, href, label, extra) {
+  const cls = extra ? `station-link ${extra}` : 'station-link';
+  return h('a', { class: cls, id, href, 'data-dir': 'prev' }, label);
 }
 
 function exerciseHint(section, problem) {
@@ -24,100 +46,308 @@ function exerciseHint(section, problem) {
   return local || '';
 }
 
-function nextSentence(t) {
-  if (t.complete) return `Done. ${t.exercisesTicked} of ${t.exerciseTotal} exercises.`;
-  const problem = test2ProblemById(t.nextExercise);
-  const name = problem ? problem.pin : t.nextExercise;
-  return `Next is ${name}. ${t.exercisesTicked} of ${t.exerciseTotal} exercises.`;
+function linkAttrs(href, id) {
+  const attrs = { href };
+  if (id) attrs.id = id;
+  if (/^https?:/.test(href)) {
+    attrs.target = '_blank';
+    attrs.rel = 'noopener noreferrer';
+  }
+  return attrs;
+}
+
+function ch4Name(id) {
+  const problem = test2ProblemById(id);
+  return problem ? problem.pin : id;
+}
+
+function ch5Name(id) {
+  const card = CHAPTER_5.cards[id];
+  return card ? card.pin : id;
+}
+
+function writeStatus(el, tally, nameOf, stage) {
+  el.dataset.ticked = String(tally.exercisesTicked);
+  el.dataset.total = String(tally.exerciseTotal);
+  el.dataset.next = tally.nextExercise || '';
+  el.replaceChildren();
+  if (stage && stage.summit) {
+    const sentence = h('span', { class: 'chapter-summit' });
+    appendRich(sentence, stage.summit);
+    el.append(sentence);
+    const next = stageNext(stage.id);
+    if (next && next.href && !next.later) {
+      const attrs = linkAttrs(next.href, `${el.id}-next`);
+      el.append(document.createTextNode(' Next is '));
+      el.append(h('a', attrs, next.label));
+      el.append(document.createTextNode('.'));
+    } else if (next && next.label) {
+      el.append(document.createTextNode(` ${next.label}`));
+    }
+    el.append(document.createTextNode(' '));
+  } else if (tally.complete) {
+    el.append(document.createTextNode('Done. '));
+  } else {
+    el.append(document.createTextNode(`Next is ${nameOf(tally.nextExercise)}. `));
+  }
+  el.append(document.createTextNode(`${tally.exercisesTicked} of ${tally.exerciseTotal} exercises.`));
+}
+
+function sectionList(ch) {
+  if (ch.n === 4) return CHAPTER_4.sections;
+  if (ch.n === 5) return bookChapter(5).sections;
+  return ch.sections || [];
+}
+
+function fmtPair(re, im) {
+  const n = (v) => (Math.abs(v) < 0.005 ? '0' : v.toFixed(2));
+  if (n(im) === '0') return n(re);
+  return `${n(re)} ${im < 0 ? '−' : '+'} ${n(Math.abs(im))}i`;
+}
+
+// Example 4.10 prints i, −1+i, and −i, not the two-decimal address.
+function textbookTerm(re, im) {
+  const snap = (v) => {
+    const n = Math.round(v);
+    return Math.abs(v - n) < 0.005 ? n : null;
+  };
+  const r = snap(re);
+  const i = snap(im);
+  if (r === null || i === null) return fmtPair(re, im);
+  const minus = '−';
+  const imag = (n) => {
+    if (n === 1) return 'i';
+    if (n === -1) return `${minus}i`;
+    return n < 0 ? `${minus}${Math.abs(n)}i` : `${n}i`;
+  };
+  if (i === 0) return r < 0 ? `${minus}${Math.abs(r)}` : String(r);
+  if (r === 0) return imag(i);
+  const real = r < 0 ? `${minus}${Math.abs(r)}` : String(r);
+  return i < 0 ? `${real}${imag(i)}` : `${real}+${imag(i)}`;
+}
+
+function sequenceTerms(re, im, count) {
+  const lines = [];
+  let p = { re, im };
+  for (let k = 1; k <= count; k++) {
+    lines.push(fmtPair(p.re, p.im));
+    p = { re: p.re * re - p.im * im, im: p.re * im + p.im * re };
+  }
+  return lines;
+}
+
+function orbitFromZero(cRe, cIm, count) {
+  const lines = ['0'];
+  let z = { re: 0, im: 0 };
+  for (let k = 0; k < count; k++) {
+    z = {
+      re: z.re * z.re - z.im * z.im + cRe,
+      im: 2 * z.re * z.im + cIm,
+    };
+    lines.push(textbookTerm(z.re, z.im));
+  }
+  return lines;
+}
+
+function miniBlank(id, prompt, answer, accept, onRight, step) {
+  const line = h('p', { class: 'exp-blank', id });
+  appendRich(line, prompt);
+  const input = h('input', {
+    id: `${id}-input`, type: 'text', autocomplete: 'off', spellcheck: 'false', 'aria-label': 'Your answer',
+  });
+  const check = h('button', { type: 'button', class: 'btn', id: `${id}-check` }, 'Check');
+  const note = h('p', { class: 'chapter-need', id: `${id}-note`, hidden: '' });
+  check.addEventListener('click', () => {
+    if (answersMatch(input.value, answer, accept)) {
+      note.hidden = true;
+      check.disabled = true;
+      input.disabled = true;
+      onRight();
+      return;
+    }
+    const told = explainMiss(step, input.value);
+    note.hidden = false;
+    note.replaceChildren();
+    appendRich(note, told.why || (step && step.why) || '');
+  });
+  return h('div', { class: 'chapter-blank-work', id: `${id}-work` }, line, input, h('div', { class: 'problem-actions' }, check), note);
+}
+
+function stageMemory(sectionId) {
+  const flash = PRACTICE.find((it) => it.id === `ch4-${sectionId}-stage-flash` || it.id === `ch5-${sectionId}-stage-flash`);
+  const host = h('div', { class: 'card', id: `chapter-memory-${slug(sectionId)}` });
+  if (!flash) {
+    host.hidden = true;
+    return host;
+  }
+  const lines = recipeLines(flash.memory);
+  // Numbered steps only, on §4 and §5. The formula line sat above the steps.
+  const ol = h('ol');
+  for (const step of lines) {
+    const li = h('li');
+    appendRich(li, step);
+    ol.append(li);
+  }
+  host.append(ol);
+  return host;
+}
+
+// Pad only the shortfall that leaves the last row about 8px under the sticky
+// Book link when the page is scrolled to its end. A full-viewport pad pushed
+// that row off the screen.
+function bindEndPad(root) {
+  const pad = root.querySelector('.chapter-end-pad');
+  const rows = root.querySelectorAll('.section-node, a.chapter-later-line');
+  const last = rows[rows.length - 1];
+  if (!pad || !last) return () => {};
+  let frame = 0;
+  const fit = () => {
+    const header = document.getElementById('site-header');
+    const book = root.querySelector('a.chapter-up');
+    const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
+    const bookH = book ? book.getBoundingClientRect().height : 0;
+    const target = headerBottom + bookH + 8;
+    const padH = pad.getBoundingClientRect().height;
+    const lastTop = last.getBoundingClientRect().top + window.scrollY;
+    const docBottom = Math.max(
+      document.documentElement.scrollHeight,
+      document.body ? document.body.scrollHeight : 0,
+    );
+    const fromLast = docBottom - lastTop - padH;
+    const view = document.documentElement.clientHeight;
+    const shortfall = Math.max(0, Math.round(view - target - fromLast));
+    if (Math.abs(padH - shortfall) > 1) pad.style.height = `${shortfall}px`;
+  };
+  const schedule = () => {
+    if (frame) cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(() => {
+      frame = 0;
+      fit();
+    });
+  };
+  fit();
+  const ro = typeof ResizeObserver === 'function' ? new ResizeObserver(schedule) : null;
+  if (ro) {
+    ro.observe(last);
+    const footer = document.getElementById('site-footer');
+    if (footer) ro.observe(footer);
+  }
+  window.addEventListener('resize', schedule);
+  return () => {
+    if (frame) cancelAnimationFrame(frame);
+    if (ro) ro.disconnect();
+    window.removeEventListener('resize', schedule);
+  };
+}
+
+function stageFoot(section) {
+  const box = h('div', { class: 'stage-done', id: `chapter-done-${slug(section.id)}`, hidden: '' });
+  const summit = h('p', { class: 'chapter-summit' });
+  appendRich(summit, section.summit || '');
+  const kids = [summit, h('p', { class: 'book-flag' }, 'Stage complete.')];
+  const next = stageNext(section.id);
+  if (next && next.href && !next.later) {
+    kids.push(h('a', {
+      class: 'btn btn-primary', href: next.href, id: `chapter-done-next-${slug(section.id)}`,
+    }, `Next is ${next.label}`));
+  } else if (next && next.label) {
+    kids.push(h('p', { id: `chapter-done-next-${slug(section.id)}` }, next.label));
+  }
+  box.append(...kids);
+  return box;
 }
 
 export function mount(section, ctx) {
   const spec = ctx.book;
   if (!spec || spec.kind === 'roadmap') return mountRoadmap(section, ctx, spec);
+  if (spec.kind === 'prep') return mountPrep(section, ctx, spec);
   if (spec.chapter === 4) return mountChapter4(section, ctx, spec.focus);
   if (spec.chapter === 5) return mountChapter5(section, ctx, spec.focus);
   return mountRoadmap(section, ctx, { kind: 'roadmap', chapter: null, focus: null });
 }
 
-function mountRoadmap(el, ctx, spec) {
+export function mountBookHome(el, ctx, spec) {
   const store = ctx.store;
-  let ticks = ticksOf(store);
-  const tally = () => chapterTally(CHAPTER_4.sections, ticks);
-
+  const ticks = ticksOf(store);
+  const target = continueTarget(ticks);
+  const tally = target.tally;
   const status = h('p', { class: 'book-status', id: 'book-status' });
-  const walk = h('a', { class: 'btn btn-primary', id: 'book-walk', href: '#chapter-4' }, 'Walk Chapter 4');
+  const walked = activeWalk(ticks);
+  status.dataset.chapter = String(walked.chapter);
+  status.textContent = continueSentence(ticks);
+  const walk = h('a', { class: 'btn btn-primary', id: 'book-continue', href: target.href }, 'Continue');
   const list = h('ol', { class: 'book-path', id: 'book-path' });
 
-  function paint() {
-    const t = tally();
-    if (t.complete) {
-      status.textContent = `${nextSentence(t)} Chapter 5 is next.`;
-      walk.textContent = 'Open Chapter 5';
-      walk.setAttribute('href', '#chapter-5');
-    } else {
-      status.textContent = nextSentence(t);
-      walk.textContent = 'Walk Chapter 4';
-      walk.setAttribute('href', '#chapter-4');
-    }
-    for (const node of list.querySelectorAll('.book-node')) {
-      const n = Number(node.getAttribute('data-chapter'));
-      let state = 'later';
-      if (n === 4) state = t.complete ? 'done' : 'next';
-      else if (n === 5) state = 'open';
-      node.setAttribute('data-state', state);
-      const flag = node.querySelector('.book-flag');
-      if (!flag) continue;
-      if (n === 4) flag.textContent = t.complete ? 'Done' : 'Next';
-      else if (n === 5) flag.textContent = 'Open';
-      else flag.textContent = 'Later';
-    }
-    for (const row of list.querySelectorAll('[data-section]')) {
-      const id = row.getAttribute('data-section');
-      const section = CHAPTER_4.sections.find((s) => s.id === id);
-      if (!section) continue;
-      const finished = sectionFinished(section, ticks);
-      row.setAttribute('data-state', finished ? 'done' : (t.nextId === id ? 'next' : 'ahead'));
-      const mark = row.querySelector('.book-section-mark');
-      if (mark) mark.textContent = finished ? 'Done' : (t.nextId === id ? 'Next' : '');
-    }
-  }
-
-  for (const ch of BOOK_CHAPTERS) {
-    const head = h('div', { class: 'book-node-head' },
+  for (const ch of shellChapters()) {
+    const open = OPEN_CHAPTERS.includes(ch.n);
+    const href = `#chapter-${ch.n}`;
+    const head = h('a', { class: 'book-row', id: `book-open-${ch.n}`, href },
       h('p', { class: 'book-flag', id: `book-flag-${ch.n}` }, 'Later'),
       h('h2', { id: `book-title-${ch.n}` },
         h('span', { class: 'book-num' }, String(ch.n)),
         document.createTextNode(` ${ch.title}`)),
       h('p', { class: 'book-page', id: `book-page-${ch.n}` }, `Page ${ch.page}`));
     const kids = [head];
-    if (ch.n === 4) {
-      const sections = h('ol', { class: 'book-sections', id: 'book-sections-4' });
-      for (const s of ch.sections) {
+    if (open) {
+      const sections = h('ol', { class: 'book-sections', id: `book-sections-${ch.n}` });
+      for (const s of sectionList(ch)) {
+        const sectionHrefHash = `#${chapterHash(ch.n, s.id)}`;
         sections.append(h('li', { 'data-section': s.id, id: `book-section-${slug(s.id)}` },
-          h('span', null, `${s.id} ${s.title}`),
-          h('span', { class: 'book-section-page' }, `p. ${s.page}`),
-          h('span', { class: 'book-section-mark' }, '')));
+          h('a', { class: 'book-section-link', id: `book-section-link-${slug(s.id)}`, href: sectionHrefHash },
+            h('span', null, `${s.id} ${s.title}`),
+            h('span', { class: 'book-section-page' }, `p. ${s.page}`),
+            h('span', { class: 'book-section-mark' }, ''))));
       }
       kids.push(sections);
     }
-    if (!ch.open && ch.door) {
-      const st = stationById(ch.door);
-      if (st) {
-        kids.push(h('p', { class: 'book-door', id: `book-door-${ch.n}` },
-          'Already drawn: ',
-          h('a', { href: `#${st.id}` }, st.title),
-          '.'));
-      }
-    }
-    list.append(h('li', { class: 'book-node', id: `book-node-${ch.n}`, 'data-chapter': String(ch.n), 'data-state': 'later' }, ...kids));
+    list.append(h('li', {
+      class: 'book-node', id: `book-node-${ch.n}`, 'data-chapter': String(ch.n), 'data-state': 'later',
+    }, ...kids));
   }
 
-  paint();
+  for (const node of list.querySelectorAll('.book-node')) {
+    const n = Number(node.getAttribute('data-chapter'));
+    const mine = walkSections().filter((s) => s.chapter === n);
+    let state = 'later';
+    let flag = 'Later';
+    if (mine.length) {
+      const done = mine.every((s) => sectionFinished(s, ticks));
+      const current = mine.some((s) => s.id === tally.nextId);
+      if (done) { state = 'done'; flag = 'Done'; }
+      else if (current || (n === walked.chapter && walked.tally.exercisesTicked > 0 && !walked.tally.complete)) {
+        state = 'next';
+        flag = 'Next';
+      } else { state = 'open'; flag = 'Open'; }
+    }
+    node.setAttribute('data-state', state);
+    const flagEl = node.querySelector('.book-flag');
+    if (flagEl) flagEl.textContent = flag;
+  }
+  for (const row of list.querySelectorAll('[data-section]')) {
+    const id = row.getAttribute('data-section');
+    const section = walkSections().find((s) => s.id === id);
+    const mark = row.querySelector('.book-section-mark');
+    if (!section) {
+      if (id === '5.4') {
+        row.setAttribute('data-state', 'open');
+        if (mark) mark.textContent = 'Open';
+      } else {
+        row.setAttribute('data-state', 'later');
+        if (mark) mark.textContent = 'Later';
+      }
+      continue;
+    }
+    const finished = sectionFinished(section, ticks);
+    const isNext = !finished && tally.nextId === id;
+    row.setAttribute('data-state', finished ? 'done' : (isNext ? 'next' : 'ahead'));
+    if (mark) mark.textContent = finished ? 'Done' : (isNext ? 'Next' : '');
+  }
 
   el.append(
     h('header', { class: 'station-header' },
       h('h1', { id: 'book-title' }, 'The Book'),
-      h('p', { class: 'station-lede', id: 'book-lede' }, 'Eleven chapters, in the order Howell and Mathews print them.'),
+      h('p', { class: 'where-line', id: 'where-line' }, 'The book · Chapters 1–7'),
+      h('p', { class: 'station-lede', id: 'book-lede' }, 'Chapters 1 to 7, in the order Howell and Mathews print them.'),
       sourceTag({ pin: '202 Updated Edition, table of contents, pages i–ii', href: BOOK.html })),
     h('div', { class: 'book-next', id: 'book-next' }, status, walk),
     list);
@@ -131,26 +361,40 @@ function mountRoadmap(el, ctx, spec) {
   return function unmount() {};
 }
 
+function mountRoadmap(el, ctx, spec) {
+  return mountBookHome(el, ctx, spec);
+}
+
 function mountChapter4(el, ctx, focus) {
   const store = ctx.store;
   let ticks = ticksOf(store);
+  const work = { settle: false, stay: false, proof: false, orbit: 0, newton: false, disk: false, sums: false, closer: false };
   const path = h('ol', { class: 'chapter-path', id: 'chapter-path' });
   const cards = [];
+  let proofHost = null;
+  let ex5 = null;
 
-  const status = h('p', { class: 'book-status', id: 'chapter-status' });
-  const nextBtn = h('button', { type: 'button', class: 'btn btn-primary', id: 'chapter-next' }, 'Next');
-
-  function tally() {
-    return chapterTally(CHAPTER_4.sections, ticks);
+  function earned(id) {
+    if (id === '4.1.3' || id === '4.1.13') return work.proof;
+    if (id === '4.2.3') return work.newton;
+    if (id === '4.2.4') return work.disk;
+    if (id === '4.2.5') return work.orbit >= 4;
+    if (id === '4.3.1' || id === '4.3.2') return work.sums;
+    if (id === '4.4.6') return work.closer;
+    return false;
   }
 
+  const status = h('p', { class: 'book-status', id: 'chapter-status' });
+  status.dataset.chapter = '4';
+  const nextBtn = h('button', { type: 'button', class: 'btn btn-primary', id: 'chapter-next' }, 'Next');
+
   function paint() {
-    const t = tally();
-    status.textContent = nextSentence(t);
+    const t = chapterTally(CHAPTER_4.sections, ticks);
+    writeStatus(status, t, ch4Name, justFinished(CHAPTER_4.sections, ticks));
     if (t.complete) {
       nextBtn.hidden = false;
-      nextBtn.textContent = 'Back to the book';
-      nextBtn.dataset.jump = 'book';
+      nextBtn.textContent = 'Open Chapter 5';
+      nextBtn.dataset.jump = '5';
     } else if (t.nextId && t.nextId !== '4.1') {
       nextBtn.hidden = false;
       nextBtn.textContent = `Go to ${t.nextId}`;
@@ -168,15 +412,24 @@ function mountChapter4(el, ctx, focus) {
     for (const card of cards) {
       const id = card.getAttribute('data-problem');
       const on = ticks[id] === true;
+      const ready = earned(id);
+      card._tick.hidden = !on && !ready;
+      card._tick.disabled = false;
       card._tick.setAttribute('aria-pressed', String(on));
       card._tick.textContent = on ? 'Ticked' : 'Tick';
+    }
+    if (proofHost) proofHost.hidden = !(work.settle && work.stay);
+    if (ex5) ex5.hidden = work.orbit < 4;
+    for (const section of CHAPTER_4.sections) {
+      const foot = el.querySelector(`#chapter-done-${slug(section.id)}`);
+      if (foot) foot.hidden = !sectionFinished(section, ticks);
     }
   }
 
   nextBtn.addEventListener('click', () => {
     const jump = nextBtn.dataset.jump;
-    if (jump === 'book') {
-      ctx.navigate('book');
+    if (jump === '5') {
+      ctx.navigate('chapter-5');
       return;
     }
     const node = el.querySelector(`#chapter-section-${slug(jump)}`);
@@ -191,11 +444,19 @@ function mountChapter4(el, ctx, focus) {
     for (const exId of section.exercises) {
       const problem = test2ProblemById(exId);
       if (!problem) continue;
-      exerciseHost.append(exerciseCard(section, problem, () => {
+      const card = exerciseCard(section, problem, () => {
+        const node = cards.find((c) => c.getAttribute('data-problem') === problem.id);
+        if (!node || node._tick.hidden) return;
         ticks = toggleTick(ticks, problem.id);
         saveSharedTicks(store, ticks);
         paint();
-      }));
+      });
+      if (problem.id === '4.2.5') {
+        card.classList.add('chapter-fade');
+        card.hidden = true;
+        ex5 = card;
+      }
+      exerciseHost.append(card);
     }
     const read = h('ul', { class: 'book-read', id: `${scope}-read` });
     section.read.forEach((item, i) => {
@@ -203,15 +464,155 @@ function mountChapter4(el, ctx, focus) {
         href: item.href, target: '_blank', rel: 'noopener noreferrer', id: `${scope}-read-${i + 1}`,
       }, item.pin)));
     });
+    // The title is a heading. The chips and the stills are the doors into the picture.
+    const extra = [];
+    if (section.id === '4.1') extra.push(pair41(), proof41());
+    if (section.id === '4.2') extra.push(sets42(), orbit42(), beatNewton(), beatDisk());
+    if (section.id === '4.3') extra.push(beatSums());
+    if (section.id === '4.4') extra.push(beatCloser());
     path.append(h('li', {
-      class: 'section-node', id: scope, 'data-section': section.id, 'data-state': 'ahead',
+      class: 'section-node chapter-stage', id: scope, 'data-section': section.id, 'data-state': 'ahead',
     },
       h('p', { class: 'book-flag', id: `${scope}-flag` }, section.id),
       h('h2', { id: `${scope}-title` }, section.title),
       h('p', { class: 'book-page' }, `Page ${section.page}`),
       idea,
+      ...extra,
       read,
-      exerciseHost));
+      h('p', { class: 'book-door', id: `${scope}-practice-row` },
+        h('a', { href: `#${prepHash(4, section.id)}`, id: `${scope}-practice` }, `Practice ${section.id}`)),
+      stageMemory(section.id),
+      exerciseHost,
+      stageFoot(section)));
+  }
+
+  function chipPair(id, label, re, im, key) {
+    const note = h('p', { class: 'chapter-orbit', id: `${id}-note`, hidden: '' });
+    const btn = h('button', { type: 'button', class: 'chip', id, 'aria-pressed': 'false' }, label);
+    btn.addEventListener('click', () => {
+      work[key] = true;
+      btn.setAttribute('aria-pressed', 'true');
+      note.hidden = false;
+      note.textContent = sequenceTerms(re, im, 4).join(' → ');
+      paint();
+    });
+    return h('div', null, btn, note);
+  }
+
+  function pair41() {
+    return h('div', { class: 'chips', id: 'chapter-4-1-pair' },
+      chipPair('chapter-4-1-settle', '(1/2 + i/4)^n', 0.5, 0.25, 'settle'),
+      chipPair('chapter-4-1-stay', '((1+i)/√2)^n', Math.SQRT1_2, Math.SQRT1_2, 'stay'));
+  }
+
+  function proof41() {
+    const item = PRACTICE.find((it) => it.id === 'ch4-4.1-yn-blank');
+    const step = item.steps[0];
+    proofHost = miniBlank('chapter-4-1-proof', step.text, step.answer, step.accept, () => {
+      work.proof = true;
+      paint();
+    }, step);
+    proofHost.hidden = true;
+    return proofHost;
+  }
+
+  function orbit42() {
+    const list = h('p', { class: 'chapter-orbit', id: 'chapter-4-2-orbit' }, '0');
+    const line = h('p', { id: 'chapter-4-2-connected', hidden: '' },
+      'The orbit of 0 is bounded, so the Julia set is connected. Theorem 4.9, page 113.');
+    const btn = h('button', { type: 'button', class: 'btn', id: 'chapter-4-2-again' }, 'Next landing');
+    btn.addEventListener('click', () => {
+      if (work.orbit >= 6) return;
+      work.orbit += 1;
+      list.textContent = orbitFromZero(0, 1, work.orbit).join(' → ');
+      if (work.orbit >= 4) line.hidden = false;
+      if (work.orbit >= 6) btn.disabled = true;
+      paint();
+    });
+    return h('div', { id: 'chapter-4-2-orbit-work' },
+      h('p', null, 'The orbit of 0 at c = i. Each press is one landing.'),
+      list,
+      line,
+      h('div', { class: 'problem-actions' }, btn));
+  }
+
+  function sets42() {
+    const sets = h('div', { class: 'chapter-sets', id: 'chapter-sets' });
+    const stills = [
+      { kind: 'julia', label: 'Julia set' },
+      { kind: 'mandelbrot', label: 'Mandelbrot set' },
+    ].map((spec) => {
+      const canvas = h('canvas', { id: `chapter-${spec.kind}-still`, 'aria-hidden': 'true' });
+      sets.append(h('a', { class: 'chapter-set', id: `chapter-set-${spec.kind}`, href: `#${spec.kind}` },
+        canvas, h('span', null, spec.label)));
+      return { canvas, kind: spec.kind };
+    });
+    const redraw = (force) => {
+      for (const still of stills) {
+        if (force) delete still.canvas.dataset.edge;
+        paintSetStill(still.canvas, still.kind, still.canvas.clientWidth);
+      }
+    };
+    const themeObs = new MutationObserver(() => redraw(true));
+    themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    let box = null;
+    if (typeof ResizeObserver === 'function') {
+      box = new ResizeObserver(() => redraw(false));
+      box.observe(sets);
+    }
+    sets._stop = () => {
+      themeObs.disconnect();
+      if (box) box.disconnect();
+    };
+    return sets;
+  }
+
+  function beatNewton() {
+    const item = PRACTICE.find((it) => it.id === 'ch4-4.2-ex-3');
+    const step = item && item.steps[0];
+    return miniBlank(
+      'chapter-4-2-newton',
+      'For $f(z)=az+b$, one Newton step sends every guess to ___.',
+      '-b/a',
+      ['-b/a', '-\\frac{b}{a}'],
+      () => { work.newton = true; paint(); },
+      step,
+    );
+  }
+
+  function beatDisk() {
+    return miniBlank(
+      'chapter-4-2-disk',
+      'At $c=0$ the filled set is a ___. Example 4.9, page 113.',
+      'disk',
+      ['the disk', 'unit disk', 'closed unit disk'],
+      () => { work.disk = true; paint(); },
+      { why: 'Example 4.9, page 113: when $c=0$ the filled set is the closed unit disk.' },
+    );
+  }
+
+  function beatSums() {
+    return miniBlank(
+      'chapter-4-3-sums',
+      'Inside the unit disk the partial sums settle at ___.',
+      '1/(1-z)',
+      ['\\frac{1}{1-z}', '\\dfrac{1}{1-z}'],
+      () => { work.sums = true; paint(); },
+      { why: 'Inside the unit disk the geometric series sums to $1/(1-z)$. Theorem 4.12, page 118.' },
+    );
+  }
+
+  function beatCloser() {
+    const item = PRACTICE.find((it) => it.id === 'ch4-4.4-ex-6');
+    const step = item && item.steps[item.steps.length - 1];
+    return miniBlank(
+      'chapter-4-4-closer',
+      'Theorem 4.15, page 124, spreads convergence to every point ___ the centre.',
+      'closer to',
+      ['closer', 'nearer to', 'inside'],
+      () => { work.closer = true; paint(); },
+      step,
+    );
   }
 
   function exerciseCard(section, problem, onTick) {
@@ -231,7 +632,7 @@ function mountChapter4(el, ctx, focus) {
       show.hidden = true;
       show.setAttribute('aria-expanded', 'true');
     });
-    const tick = h('button', { type: 'button', class: 'btn', id: `chapter-tick-${idSlug}`, 'aria-pressed': 'false' }, 'Tick');
+    const tick = h('button', { type: 'button', class: 'btn', id: `chapter-tick-${idSlug}`, 'aria-pressed': 'false', hidden: '' }, 'Tick');
     tick.addEventListener('click', onTick);
     const pic = CHAPTER_PICTURE[problem.id];
     const kids = [
@@ -240,9 +641,9 @@ function mountChapter4(el, ctx, focus) {
       body,
     ];
     if (pic) {
-      kids.push(h('p', null, h('a', {
+      kids.push(h('a', {
         class: 'chip', href: pictureHref(problem.id), id: `${cardId}-station`,
-      }, pic.label)));
+      }, pic.label));
     }
     if (hintText) kids.push(show, hint);
     kids.push(h('div', { class: 'problem-actions' }, tick));
@@ -255,42 +656,51 @@ function mountChapter4(el, ctx, focus) {
     return card;
   }
 
-  paint();
-
   el.append(
+    upLink('chapter-back', '#book', 'The Book', 'chapter-up'),
     h('header', { class: 'station-header' },
-      h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back' }, 'The Book')),
       h('h1', { id: 'chapter-title' }, 'Chapter 4. Sequences, Series, and Fractals'),
-      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Four sections. Tick an exercise when you have worked it. The hint stays closed until you ask.'),
+      h('p', { class: 'where-line', id: 'where-line' }, 'Chapter 4 · Sequences, Series, and Fractals'),
+      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'An orbit is a sequence.'),
       sourceTag({ pin: CHAPTER_4.pin, href: CHAPTER_4.href })),
     h('div', { class: 'book-next', id: 'chapter-next-row' }, status, nextBtn),
     path,
-    h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
+    upLink('chapter-back-end', '#book', 'The Book'),
+    h('div', { class: 'chapter-end-pad', 'aria-hidden': 'true' }));
+
+  paint();
+  const releasePad = bindEndPad(el);
 
   if (focus) {
-    const card = cards.find((c) => c.getAttribute('data-problem') === focus);
-    const sectionNode = el.querySelector(`#chapter-section-${slug(focus)}`);
-    const target = card || sectionNode;
+    const owner = CHAPTER_4.sections.find((s) => s.id === focus || s.exercises.includes(focus));
+    const sectionNode = owner ? el.querySelector(`#chapter-section-${slug(owner.id)}`) : null;
+    const target = sectionNode || el.querySelector(`#chapter-section-${slug(focus)}`);
     if (target) {
       target.classList.add('is-target');
       target.scrollIntoView({ block: 'start' });
     }
   }
 
-  return function unmount() {};
+  return function unmount() {
+    releasePad();
+    const sets = el.querySelector('#chapter-sets');
+    if (sets && sets._stop) sets._stop();
+  };
 }
 
 function mountChapter5(el, ctx, focus) {
   const store = ctx.store;
-  const owned = new Set([...chapter4ExerciseIds(), ...chapter5ExerciseIds()]);
-  let ticks = loadSharedTicks(store, (id) => owned.has(id), chapter4ExerciseIds());
+  let ticks = ticksOf(store);
   const section = CHAPTER_5.sections[0];
   const picture = h('section', { class: 'exp-picture', id: 'chapter-exp', 'aria-labelledby': 'chapter-title' });
   const stop = mountExpPicture(picture, focus === '5.1.1' ? 'zero' : undefined);
 
   const status = h('p', { class: 'book-status', id: 'chapter-status' });
-  const modulus = blankLine('chapter-blank-modulus', 'The modulus is ');
+  status.dataset.chapter = '5';
   const cards = {};
+  const quarter = blankLine('chapter-blank-quarter', '$e^{i\\pi/2}$ lands at ');
+  const quarterLi = h('li', { id: 'chapter-quarter', hidden: '' }, quarter);
+  const off = h('p', { class: 'chapter-off', id: 'chapter-exp-off', hidden: '' }, 'This question is about the unit circle.');
   const exerciseHost = h('div', { class: 'chapter-exercises', id: 'chapter-section-5-1-exercises' });
   for (const id of section.exercises) {
     cards[id] = exerciseCard5(CHAPTER_5.cards[id], id, () => {
@@ -303,8 +713,6 @@ function mountChapter5(el, ctx, focus) {
   }
 
   const scope = 'chapter-section-5-1';
-  const idea = h('p', { class: 'section-idea', id: `${scope}-idea` });
-  appendRich(idea, section.idea);
   const read = h('ul', { class: 'book-read', id: `${scope}-read` });
   section.read.forEach((item, i) => {
     read.append(h('li', null, h('a', {
@@ -312,37 +720,64 @@ function mountChapter5(el, ctx, focus) {
     }, item.pin)));
   });
   const walk = h('section', {
-    class: 'section-node exp-walk', id: scope, 'data-section': '5.1',
+    class: 'section-node chapter-stage exp-walk', id: scope, 'data-section': '5.1',
   },
     h('p', { class: 'book-flag', id: `${scope}-flag` }, '5.1'),
     h('h2', { id: `${scope}-title` }, section.title),
     h('p', { class: 'book-page' }, `Page ${section.page}`),
-    idea,
     read,
-    h('ul', { class: 'exp-blanks', id: 'chapter-blanks' },
-      h('li', null, modulus)),
-    exerciseHost);
+    h('p', { class: 'book-door', id: 'chapter-section-5-1-practice-row' },
+      h('a', { href: `#${prepHash(5, '5.1')}`, id: 'chapter-section-5-1-practice' }, 'Practice 5.1')),
+    stageMemory('5.1'),
+    h('ul', { class: 'exp-blanks', id: 'chapter-blanks' }, quarterLi),
+    exerciseHost,
+    stageFoot(section));
 
-  const later = h('ol', { class: 'book-path exp-later', id: 'chapter-later-sections' });
-  for (const s of bookChapter(5).sections) {
-    if (s.id === '5.1') continue;
-    later.append(h('li', {
-      class: 'book-node', id: `chapter-later-${slug(s.id)}`, 'data-state': 'later',
+  const trig = bookChapter(5).sections.find((s) => s.id === '5.4');
+  const trigIdea = h('p', { class: 'section-idea', id: 'chapter-section-5-4-idea' });
+  appendRich(trigIdea, 'Sine and cosine are the exponential, written as a series. A vertical line in the strip goes to a hyperbola.');
+  const trigRead = h('ul', { class: 'book-read', id: 'chapter-section-5-4-read' });
+  [
+    { pin: 'Definition 5.5, page 148', href: sectionHref('sec_trig-hyperbolics.html') },
+    { pin: 'Theorem 5.4, page 149', href: sectionHref('sec_trig-hyperbolics.html') },
+    { pin: 'Identity (5.35), page 150', href: sectionHref('sec_trig-hyperbolics.html') },
+    { pin: 'Figure 5.7, page 152', href: sectionHref('sec_trig-hyperbolics.html') },
+  ].forEach((item, i) => {
+    trigRead.append(h('li', null, h('a', {
+      href: item.href, target: '_blank', rel: 'noopener noreferrer', id: `chapter-section-5-4-read-${i + 1}`,
+    }, item.pin)));
+  });
+  const stage54 = h('section', {
+    class: 'section-node chapter-stage', id: 'chapter-section-5-4', 'data-section': '5.4',
+  },
+    h('p', { class: 'book-flag', id: 'chapter-section-5-4-flag' }, '5.4'),
+    h('h2', { id: 'chapter-section-5-4-title' }, trig.title),
+    h('p', { class: 'book-page' }, `Page ${trig.page}`),
+    trigIdea,
+    trigRead,
+    h('p', { class: 'book-door', id: 'chapter-section-5-4-practice-row' },
+      h('a', { href: `#${prepHash(5, '5.4')}`, id: 'chapter-section-5-4-practice' }, 'Practice 5.4')),
+    stageMemory('5.4'));
+
+  function laterLine(s) {
+    return h('a', {
+      class: 'chapter-later-line',
+      id: `chapter-later-${slug(s.id)}`,
+      href: `#chapter-5-${slug(s.id)}`,
+      'data-section': s.id,
+      'data-state': 'later',
     },
-      h('p', { class: 'book-flag' }, 'Later'),
-      h('h2', null, `${s.id} ${s.title}`),
-      h('p', { class: 'book-page' }, `Page ${s.page}`)));
+      h('span', { class: 'book-flag' }, 'Later'),
+      h('span', { class: 'chapter-later-title' }, `${s.id} ${s.title}`),
+      h('span', { class: 'sr-only' }, `Page ${s.page}`));
   }
+  const later52 = laterLine(bookChapter(5).sections.find((s) => s.id === '5.2'));
+  const later53 = laterLine(bookChapter(5).sections.find((s) => s.id === '5.3'));
+  const later55 = laterLine(bookChapter(5).sections.find((s) => s.id === '5.5'));
 
   function paintStatus() {
     const t = chapterTally(CHAPTER_5.sections, ticks);
-    if (t.complete) {
-      status.textContent = `Done. ${t.exercisesTicked} of ${t.exerciseTotal} exercises.`;
-    } else {
-      const card = CHAPTER_5.cards[t.nextExercise];
-      const name = card ? card.pin : t.nextExercise;
-      status.textContent = `Next is ${name}. ${t.exercisesTicked} of ${t.exerciseTotal} exercises.`;
-    }
+    writeStatus(status, t, ch5Name, justFinished(CHAPTER_5.sections, ticks));
     walk.setAttribute('data-state', sectionFinished(section, ticks) ? 'done' : 'next');
   }
 
@@ -352,15 +787,18 @@ function mountChapter5(el, ctx, focus) {
     const y = Number(stage && stage.dataset.probeIm);
     const onCircle = Number.isFinite(x) && Math.abs(x) <= 1e-9;
     const nearRight = onCircle && Number.isFinite(y) && Math.abs(y) <= 0.35;
+    const nearTop = onCircle && Number.isFinite(y) && Math.abs(y - Math.PI / 2) <= 0.35;
     const nearLeft = onCircle && Number.isFinite(y)
       && Math.min(Math.abs(y - Math.PI), Math.abs(y + Math.PI)) <= 0.35;
-    const grown = Number.isFinite(x) && x > 0.06;
-    const shrunk = Number.isFinite(x) && x < -0.06;
-    fillGap(modulus, grown ? '$e^{x}$, larger than 1' : (shrunk ? '$e^{x}$, smaller than 1' : ''));
-    fillGap(cards['5.1.1']._blank, nearRight ? CHAPTER_5.cards['5.1.1'].answer : '');
-    fillGap(cards['5.1.2']._blank, nearLeft ? CHAPTER_5.cards['5.1.2'].answer : '');
-    setTick(cards['5.1.1'], ticks['5.1.1'] === true, nearRight);
-    setTick(cards['5.1.2'], ticks['5.1.2'] === true, nearLeft);
+    off.hidden = !(Number.isFinite(x) && Math.abs(x) > 0.06);
+    if (nearRight) lockGap(cards['5.1.1']._blank, CHAPTER_5.cards['5.1.1'].answer);
+    quarterLi.hidden = cards['5.1.1']._blank.dataset.locked !== 'true';
+    if (nearTop) lockGap(quarter, '$i$');
+    if (nearLeft) lockGap(cards['5.1.2']._blank, CHAPTER_5.cards['5.1.2'].answer);
+    setTick(cards['5.1.1'], ticks['5.1.1'] === true, nearRight || cards['5.1.1']._blank.dataset.locked === 'true');
+    setTick(cards['5.1.2'], ticks['5.1.2'] === true, nearLeft || cards['5.1.2']._blank.dataset.locked === 'true');
+    const foot = el.querySelector('#chapter-done-5-1');
+    if (foot) foot.hidden = !sectionFinished(section, ticks);
     paintStatus();
   }
 
@@ -375,20 +813,36 @@ function mountChapter5(el, ctx, focus) {
   if (observed) observer.observe(observed, { attributes: true, attributeFilter: ['data-probe-re', 'data-probe-im'] });
 
   el.append(
+    upLink('chapter-back', '#book', 'The Book', 'chapter-up'),
     h('header', { class: 'station-header' },
-      h('p', { class: 'book-kicker' }, h('a', { href: '#book', id: 'chapter-back' }, 'The Book')),
-      h('h1', { id: 'chapter-title' }, 'Chapter 5. The exponential')),
+      h('h1', { id: 'chapter-title' }, 'Chapter 5. The exponential'),
+      h('p', { class: 'where-line', id: 'where-line' }, 'Chapter 5 · The exponential'),
+      h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Drag the green ring. Play turns the angle.'),
+      sourceTag({ pin: 'Chapter 5, Elementary Functions, page 130', href: sectionHref('sec_exponential-function.html') })),
     picture,
-    h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Section 5.1. A blank fills when the picture makes it true. The hint stays closed until you ask.'),
+    off,
     h('div', { class: 'book-next', id: 'chapter-next-row' }, status),
     walk,
-    later,
-    sourceTag({ pin: 'Chapter 5, Elementary Functions, page 130', href: sectionHref('sec_exponential-function.html') }),
-    h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
+    later52,
+    later53,
+    stage54,
+    later55,
+    upLink('chapter-back-end', '#book', 'The Book'),
+    h('div', { class: 'chapter-end-pad', 'aria-hidden': 'true' }));
 
   paint();
+  const releasePad = bindEndPad(el);
 
-  const targetId = focus === '5.1' ? scope : (CHAPTER_5.cards[focus] ? `chapter-card-${slug(focus)}` : '');
+  const laterId = focus && focus !== '5.1' && focus !== '5.4' && !CHAPTER_5.cards[focus] ? `chapter-later-${slug(focus)}` : '';
+  // The book row and #chapter-5-5-1 land on the square, the same place a press
+  // on the section title used. The title itself is a heading.
+  const targetId = focus === '5.1'
+    ? 'chapter-exp'
+    : CHAPTER_5.cards[focus]
+      ? scope
+      : focus === '5.4'
+        ? 'chapter-section-5-4'
+        : laterId;
   const target = targetId ? el.querySelector(`#${targetId}`) : null;
   if (target) {
     target.classList.add('is-target');
@@ -396,6 +850,7 @@ function mountChapter5(el, ctx, focus) {
   }
 
   return function unmount() {
+    releasePad();
     observer.disconnect();
     stop();
   };
@@ -423,10 +878,17 @@ function fillGap(line, text) {
   line.dataset.right = key ? 'true' : 'false';
 }
 
+function lockGap(line, text) {
+  if (!line || line.dataset.locked === 'true' || !text) return;
+  fillGap(line, text);
+  line.dataset.locked = 'true';
+}
+
 function setTick(card, on, ready) {
   const tick = card._tick;
   const last = card._last;
   last.dataset.right = ready ? 'true' : 'false';
+  tick.hidden = !on && !ready;
   tick.disabled = !on && !ready;
   tick.setAttribute('aria-pressed', String(on));
   tick.textContent = on ? 'Ticked' : 'Tick';

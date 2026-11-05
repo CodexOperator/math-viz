@@ -71,8 +71,50 @@ export function toggleTick(ticks, id) {
 }
 
 export function sectionFinished(section, ticks) {
-  if (!section) return false;
+  if (!section || !Array.isArray(section.exercises) || section.exercises.length === 0) return false;
   return section.exercises.every((id) => ticks[id] === true);
+}
+
+// The stage you just finished: the previous section, and only while the next
+// one has not been ticked yet. A finished chapter returns its last stage.
+export function justFinished(sections, ticks) {
+  const list = sections || [];
+  const t = chapterTally(list, ticks);
+  if (t.complete) return list[list.length - 1] || null;
+  const idx = list.findIndex((s) => s.id === t.nextId);
+  if (idx <= 0) return null;
+  const prev = list[idx - 1];
+  if (!sectionFinished(prev, ticks)) return null;
+  const started = list[idx].exercises.some((id) => ticks[id] === true);
+  if (started) return null;
+  return prev;
+}
+
+// Pictures the chapter page has been opened on. A tick it does not own stays.
+export const SEEN_KEY = 'book.seen';
+
+export function loadSeen(store) {
+  let raw = {};
+  try { raw = store.get(SEEN_KEY, {}) || {}; } catch { raw = {}; }
+  const out = {};
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+  for (const id of Object.keys(raw)) if (raw[id] === true) out[id] = true;
+  return out;
+}
+
+export function markSeen(store, ids) {
+  const seen = loadSeen(store);
+  const list = Array.isArray(ids) ? ids : [ids];
+  let changed = false;
+  for (const id of list) {
+    if (!id || seen[id] === true) continue;
+    seen[id] = true;
+    changed = true;
+  }
+  if (changed) {
+    try { store.set(SEEN_KEY, seen); } catch { /* this visit still counts */ }
+  }
+  return seen;
 }
 
 // Next is the first unticked exercise, in book order.

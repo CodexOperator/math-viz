@@ -1,7 +1,7 @@
-// js/stations/map-switch.js — the "which test" control on the home page.
-// The nav builds its own copy (app.js keeps its import list small). Both write the same store key.
+// js/stations/map-switch.js — the "which test" control on a thread home.
+// Each test is a hash, so Back returns to the page you left.
 
-import { MAPS, MAP_STORAGE_KEY, normalizeMapId } from '../registry.js';
+import { MAPS, normalizeMapId } from '../registry.js';
 
 export function mapSwitch(ctx, idPrefix) {
   const current = normalizeMapId(ctx && ctx.map);
@@ -30,8 +30,12 @@ export function mapSwitch(ctx, idPrefix) {
     b.textContent = m.title;
     b.addEventListener('click', () => {
       if (m.id === current) return;
-      if (ctx && ctx.store) ctx.store.set(MAP_STORAGE_KEY, m.id);
-      if (ctx && ctx.navigate) ctx.navigate('home');
+      const hash = m.id === 'test2' ? '#home-f2' : '#home-t1';
+      if (location.hash === hash) {
+        if (ctx && ctx.navigate) ctx.navigate(hash);
+      } else {
+        location.hash = hash;
+      }
     });
     wrap.append(b);
   }

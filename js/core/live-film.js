@@ -106,9 +106,20 @@ export function finishedStops(duration, beats) {
   return [...new Set(stops.map((x) => Math.round(x * 1000) / 1000))];
 }
 
-export function settleClaim(fate, termMod, index) {
+// |z| = 1 is not one fate. z = 1 gives 1, 1, 1, … and settles at 1.
+// Every other point on the circle does not settle at one point.
+function atOne(seed) {
+  const re = seed && Number(seed.re);
+  const im = seed && Number(seed.im);
+  return Number.isFinite(re) && Number.isFinite(im) && Math.hypot(re - 1, im) <= 1e-9;
+}
+
+export function settleClaim(fate, termMod, index, seed) {
   if (fate === 'stay') {
-    return { holds: false, text: 'Stays. The modulus is 1, so the terms do not settle.' };
+    if (atOne(seed)) {
+      return { holds: true, text: 'Settles at 1. The powers are 1, 1, 1, ….' };
+    }
+    return { holds: false, text: 'Stays. Every other point on the unit circle does not settle at one point.' };
   }
   if (fate === 'leave') {
     return { holds: false, text: 'Leaves. The modulus is bigger than 1.' };
@@ -141,18 +152,18 @@ export function expClaim(x, snapped, y) {
     const s = Math.sin(y);
     const c = Math.cos(y);
     if (Math.abs(s) <= AXIS && c < 0) {
-      return { holds: true, text: 'The point sits on the left of the unit circle, on the real axis.' };
+      return { holds: true, text: '$e^{z}$ sits on the left of the unit circle, on the real axis.' };
     }
     if (Math.abs(s) <= AXIS) {
-      return { holds: false, text: 'The point sits on the right of the unit circle, on the real axis.' };
+      return { holds: false, text: '$e^{z}$ sits on the right of the unit circle, on the real axis.' };
     }
     if (Math.abs(c) <= AXIS && s < 0) {
-      return { holds: false, text: 'The point sits on the bottom of the unit circle.' };
+      return { holds: false, text: '$e^{z}$ sits on the bottom of the unit circle.' };
     }
     if (Math.abs(c) <= AXIS && s > 0) {
-      return { holds: false, text: 'The point sits on the top of the unit circle.' };
+      return { holds: false, text: '$e^{z}$ sits on the top of the unit circle.' };
     }
-    return { holds: false, text: 'The point sits on the unit circle.' };
+    return { holds: false, text: '$e^{z}$ sits on the unit circle.' };
   }
   if (x > 0) return { holds: false, text: 'The radius is $e^{x}$, larger than 1.' };
   return { holds: false, text: 'The radius is $e^{x}$, smaller than 1.' };
@@ -214,7 +225,7 @@ export function settleFrame(t, params, opts = {}) {
     cursor,
     termMod,
     beats: beatsFor(mod, D, N),
-    claim: settleClaim(fate, termMod, index),
+    claim: settleClaim(fate, termMod, index, seed),
   };
 }
 
@@ -232,7 +243,8 @@ export function createLivePlayer(env = {}) {
     re: env.params && Number.isFinite(+env.params.re) ? +env.params.re : SETTLED.re,
     im: env.params && Number.isFinite(+env.params.im) ? +env.params.im : SETTLED.im,
   };
-  let t = D;
+  // Callers that pass start open on that beat. The default is the end of the walk.
+  let t = env && Number.isFinite(+env.start) ? clamp(+env.start, 0, D) : D;
   let playing = false;
   let watched = false;
   let dead = false;
@@ -303,10 +315,14 @@ export function createLivePlayer(env = {}) {
     motion.cancel();
     playing = false;
     const list = stops();
-    if (!watched || atEnd()) {
+    const onFirst = list.length > 0 && Math.abs(t - list[0]) <= END_EPS;
+    // A fresh film opens on the first stop by stepping there. One that is
+    // already resting on that stop, and is not at the end, moves on.
+    if (atEnd() || (!watched && !onFirst)) {
       watched = true;
       t = list[0];
     } else {
+      watched = true;
       const next = list.find((s) => s > t + END_EPS);
       t = next === undefined ? D : next;
     }

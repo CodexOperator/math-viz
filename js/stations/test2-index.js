@@ -75,7 +75,7 @@ export function mount(el, ctx) {
   }
 
   const header = h('header', { class: 'station-header' },
-    h('h1', null, 'The Problem Index'),
+    h('h1', null, (ctx && ctx.embedTitle) || 'The Problem Index'),
     h('p', { class: 'muted', id: 'index-scope' },
       'The cards follow the map. Homework is the assigned set. The page opens on Core. What is left of sections 4.3 and 4.4 is Likely. Section 3.3 is Possible. A link that names a card opens that card’s scope.'),
     h('ul', { class: 'thread-badges', 'aria-label': 'Story threads that pass through this place' },

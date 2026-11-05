@@ -1330,3 +1330,837 @@ Nothing. No slider, no scrubber, no spring, no second clock.
 Yes. One batch, then stop. It is the one cut above.
 
 The hold, the button, and the frame clock are the lesson, and they hold. Something real is left, and it is the frame a mouse drag draws around the square. A touch does not draw it. After that frame is gone, nothing real is left of this walk's touch.
+
+## Chapter 4 and 5
+
+Batch 1, audit fixes 3–6, on the chapter pages. The site's type, paper, white card, and blue button stay. The drawer, Continue, the up control, and hash routing were left alone.
+
+At 390×844 the Chapter 5 lede is the gesture, "Drag the green dot," under the title and above the source line. The square is still 358px. Play ends at 742, inside the 844 window. The status card ends at 836 and says "0 of 2," which is this chapter. The walk opens on the bottom of the circle, so Exercise 2's blank is empty and its tick is not live. The green handle is a 20px dot inside a 44px ring. At 360×780 the square gives back height (252px) so Play ends at 662 and the status ends at 755.
+
+Chapter 4's first screen holds the Julia disk and the Mandelbrot set, side by side, ending at y = 542. The section title is a door. A proof's tick stays disabled until that picture has been opened. Finishing 4.1 reads "A sequence settles when its terms eventually sit in every disk around the limit. Next is 4.2 Julia and Mandelbrot Sets. 2 of 8 exercises." Ticking 5.1.2 on a fresh book changes the book's line from "Next is §4.1, Exercise 3. 0 of 8 exercises." to "Next is §5.1, Exercise 1, page 135. 1 of 2 exercises."
+
+The section box is no longer a card around the exercise card. Later rows are white. The chapter list's blank tail is gone (`padding-bottom: 0`). Picture chips are 44px. One Next mark on a fresh book: 4.1, not also 5.1.
+
+## Another batch
+
+§5.2–5.5 are still titles. 5.2, 5.3, and 5.5 open the textbook. 5.4 opens the complex-current station. None of them is a stage yet: no picture of its own, no worked example, no summit that a student earns on the page. `data/practice/ch4.json` and `ch5.json` are not written. The practice engine owns `js/practice/`. Memory sheets are not on these pages. A Chapter 4 tick records that the picture was opened, not that the student moved it.
+
+## pedagogy (ch4-5 batch 1)
+
+Preview https://book-preview.complexanalysis.pages.dev at tip `ea7599da`, fresh storage. Phone 390×844 first, then 1280×800, light and then dark. No product code was changed.
+
+### Verdict
+
+ANOTHER BATCH. The five summit sentences are the right ahas, and two of them render after the ticks. The stages do not teach those sentences. A student can finish §4.1 by opening one picture and ticking two proofs, and can miss both §5.1 answers by doing the two things the lede names, drag and Play.
+
+### What the stages do
+
+**Chapter 4, phone, light.** The first screen is the title, the lede "Four sections. Tick an exercise when you have worked it. The hint stays closed until you ask.", the two stills (Julia disk and Mandelbrot set, y = 328, 214px tall), the status "Next is §4.1, Exercise 3. 0 of 8 exercises.", and, at the bottom edge, the §4.1 idea: "A sequence settles when its terms eventually sit in every disk around the limit." The page is 5334px. Each stage is that idea, one or two textbook links, and the homework cards. The idea and the summit are the same sentence. §4.1 drops the word "eventually" once both cards are ticked, and the status then reads "A sequence settles when its terms sit in every disk around the limit. Next is 4.2 Julia and Mandelbrot Sets. 2 of 8 exercises." with Go to 4.2. The stage flag stays "4.1".
+
+Opening the chip "The disk in Definition 4.1" on Exercise 3 wrote `book.seen` for both 4.1.3 and 4.1.13 and enabled both ticks. I ticked both without producing a line of either proof. The station that chip opens, A Sequence Has a Fate, does teach. Its lede is the why: "Section 4.1 is the language for everything after it. An orbit is a sequence. A basin is the set of starts whose sequence settles on a root." The two chips flip the note from "Settles at 0. The modulus is (√5 / 4)^n" to "Stays. The modulus is 1, and the point visits the eighth roots of unity." That note names Exercises 1(a) and 7. The chapter cards are Exercises 3 and 13, the conjugate proof and the missing half of Theorem 4.1.
+
+§4.2's idea is Theorem 4.9. The first card is Exercise 3, Newton's method for a degree-1 polynomial (title at y = 1908). Exercise 5, the orbit of 0 at c = −2, which is the sentence the stage claims to teach, is at y = 3102. With that card on screen the idea is still above it, and Show the hint prints the same theorem: "the Julia set is connected exactly when the orbit of 0 stays bounded." §4.3 and §4.4 restate their summits as the idea line. Nothing on those stages says that a series is a sequence of partial sums, or that the disk is the disk from §4.1.
+
+**Chapter 5, phone, light.** The first screen is the gesture lede, the axes, the unit circle, a purple point at the bottom, the green handle, the claim "The point sits on the bottom of the unit circle.", Play, and the status "0 of 2". The blanks start empty. Identity (5.1) sits at y = 974, under the status. Exercise 1 starts at y = 1140. The question is "explain why exp(0) = 1." The blank is "exp(0) is ______", so the value the blank wants is already in the question, and the blank never asks for the explanation.
+
+Play, with the radius left at 1, writes "1" only while the angle is near 0. I caught it at im ≈ −0.16, and the blank was empty again by im ≈ 0.58. I ticked during that window. At the resting frame, im = π, the button read Ticked and the blank read "exp(0) is" with the gap empty. Exercise 2 filled at the end, "land together at −1", and stayed, because the film rests on that point. Both ticks then produced the summit in the status: "e^z is the radius e^x turned by the angle y, and ±iπ land on the same point. Next is 5.2 The Complex Logarithm. 2 of 2 exercises." The flag stayed "5.1". That next link is the Later row. 5.2, 5.3, and 5.5 leave the site for the textbook. 5.4 opens the complex-current station.
+
+I then dragged the green dot while Play was running. The real part stayed near 0.96 through the resting frame. The modulus line filled with "e^x, larger than 1". Both exercise blanks stayed empty and both ticks stayed disabled, with no line saying this question is the unit-circle case. The lede's first instruction is that drag, and a drag leaves x where the finger put it, so the same lockout is what a student gets by following the lede and then pressing Play.
+
+**Laptop and dark.** At 1280×800 the exponential exercise still starts below the fold (the identity's top is 829 in an 800px window). The lesson is the same. In the dark, at 390, the claim is rgb(233, 237, 245) on rgb(13, 18, 28) and the lede is rgb(166, 176, 195). The sentences can be read. Neither chapter page contains a memory sheet, a flashcard, or a recipe, and `data/practice/ch4.json` and `ch5.json` are absent.
+
+### Ranked cut or fix
+
+1. **Make the §5.1 answer a thing the student produces, and make it stay.** Play writes "1" for a fraction of a second and then erases it, including after the tick. A drag leaves the real part where the finger put it. Mine stayed near 0.96, both ticks stayed disabled, and the only line that filled was "The modulus is e^x, larger than 1". Exercise 1 asks for an explanation and the blank asks for the value already printed in the prompt. Change: rest Play on z = 0 and show "1, because every term of the series after the constant is 0", and leave that line on the card. Then a faded item: the student picks where e^{iπ/2} lands. A drag off radius 1 says "this question is the unit circle; the radius is e^x."
+
+2. **Teach the worked pair that already exists, then fade one step.** Opening the §4.1 disk enabled both proof ticks, and the station's chips are busy teaching Exercises 1(a) and 7, which are not the cards. §4.2 leads with Newton's method for a line and puts the orbit exercise a thousand pixels later, while the idea and the hint both state Theorem 4.9. Change: §4.1 runs the two sequence chips, then one proof-blank for the missing |y_n − v| line of Theorem 4.1, and the tick waits on that blank. §4.2 runs the orbit of 0 at c = i (Example 4.10), then Exercise 5 as the faded case. Move Exercise 4.2.3 onto its own Newton beat.
+
+3. **Put why-you'd-care at the trailhead and the theorem at the summit.** On the phone the §4.1 idea is the summit, printed before any example, and the status repeats it after the ticks. §5.1 prints identity (5.1) above the blanks. The only why on the walk is the sequence lede, one station away. Change: the stage opens with one sentence that is not the theorem. §4.1 can use the sentence it already has: this is the language for everything after it, because an orbit is a sequence. The theorem appears once, as the summit, after the faded item. One flash on that stage has the summit on the back.
+
+4. **Hand each camp the disk it just earned, and stop sending §5.1's "next" into the textbook.** The first screen of Chapter 4 is the Julia disk and the Mandelbrot set, above a student who has not yet seen a sequence. §4.3 and §4.4 never say that their disk is the disk from §4.1. After both §5.1 ticks, "Next is 5.2 The Complex Logarithm" opens a Later row whose link is the textbook. Change: move the two stills onto §4.2, under "the orbit is the sequence from §4.1." On §4.3, one line: the partial sums are a sequence, and this one sums inside the unit disk. Keep 5.2–5.5 marked Later until each has a picture, a worked value, and a summit, and say so on the §5.1 next line.
+
+5. **Put a five-line memory sheet on each stage that already has a summit.** The pages have the summit and, on §4.4, a hint that withholds which point is closer. They have no procedure a student can run on Thursday's question, and no flash. Change: under the summit, the theorem with its page and three steps. For §4.4 those steps are compare |z| with the radius, quote Theorem 4.15 page 124, then say which point is inside. One flash per stage. Spaced repetition can wait for the practice engine. The sheet is part of the stage.
+
+6. **Say "stage complete" on the stage the student just finished.** After the ticks the flag still reads "4.1" or "5.1", and the summit lives in the status card at the top of a 5334px page. The done border is cleared on `.chapter-stage`. Change: the finished stage shows the summit and the words "stage complete", and the next control sits under that sentence.
+
+### What to keep
+
+The summit sentences are the right ones, and they name the next camp. I saw both "a sequence settles…" with Go to 4.2, and "e^z is the radius e^x turned by the angle y…" with Next is 5.2. Hints start closed, and the §4.4 hint still refuses to say which point is closer. The §5.1 blanks start empty, and the walk opens at the bottom of the circle, so Exercise 2 is not answered on arrival. Play, the claim, and one green handle are a real picture of the identity. The sequence station already has the worked contrast, and the sentence flips when the chip flips. The citations are pinned to the edition (Definition 4.1 page 103, Theorem 4.9 page 113, Exercises 1 and 2 page 135). Dark type on the phone stays readable. The laptop layout tells the same lesson.
+
+## taste-skill (ch4-5 batch 1)
+
+Branch `cursor/chapter-4-5-2649`, tip `ea7599da`. Preview https://book-preview.complexanalysis.pages.dev matches this tip (`js/stations/book.js` and `js/stations/exp-picture.js` are the same bytes). Headless Chrome, like a student, `#chapter-4` then `#chapter-5`, at 390×844 and at 1280×800, light and dark. On the phone the finger was a touch-sized pointer. A 2px nudge on the green dot, a drag out, a drag in to the clamp. Play, then Pause, with the radius already off the circle, and the angle held. Reduced motion through the steps, from a fresh load, on the phone. The 4.1.3 chip, the 4.2 title, the Julia still, and the 5.1 title. No console errors. No sideways scroll (`scrollWidth` was 390 and 1280). `inspect.mjs` was not run. Its house rules ban the kicker, the four teaching colours, and the 1px card, and kit/SKILL.md keeps those. The measurements below are from Chrome.
+
+### Verdict
+
+ANOTHER BATCH.
+
+The phone's Chapter 5 is the page: the circle, the sentence, and Play, in both themes. Chapter 4 on the laptop is two soft stamps, and the Chapter 5 title is a door to a page that does not exist. Those are the batch.
+
+```
+ROUND 1
+Seen in one second: on the phone, the circle; on the laptop, a small circle in a wide field (Chapter 5) or two large soft sets (Chapter 4).
+Idea (one sentence): e^z is a radius the hand sets and an angle the clock turns, and the sentence under the circle says which.
+Live thing: drag the green dot, or press Play.
+Layout words by section: hero=picture / status=bar / 5.1=list / later=cards. Chapter 4 is hero=pair / status=bar / four lists.
+Scores: design 6 · usability 6 · creativity 7 · content 7 → overall 6.3
+Caps applied: the laptop Chapter 5 picture sits in the left of a 952px column with the right half empty, so design stays at 6.5 or under. The kicker and the section flags are the site's own uppercase labels; kit keeps them, and this pass does not cut them. The pictures are drawn, which is the picture this subject has.
+Top three problems (most visible first), each with the screenshot it shows in and the fix:
+1. d1280-light-ch4-fold and d1280-dark-ch4-fold. Two 160px stills drawn at 466px, pixelated, and the "0 of 8" line is at y=817 in an 800px window. Cap the stills and move the pair to 4.2.
+2. d1280-light-ch5-fold and d1280-dark-ch5-fold. The square is 272px at x=304 in a column that runs to 1256. Play ends at 623. Let the square use the room above Play.
+3. p390-light-ch5-door-left. The 5.1 title opens "No such place" at #chapter-exp. The title stays on this page.
+```
+
+### What I could actually do
+
+`#chapter-5` at 390×844, light and dark. THE BOOK, then "Chapter 5. The exponential", then "Drag the green dot. Play turns the angle. A blank fills when the picture makes it true.", then the source line, then the square. The square is 358×358, from y=271 to 629. The claim is two lines, "The point sits on the bottom of the unit circle.", from 637 to 690. Play is 44px and ends at 742. The status ends at 836 and reads "Next is §5.1, Exercise 1, page 135. 0 of 2 exercises." The probe is real part 0, angle −π/2. Exercise 2's blank is empty and its Tick is disabled. The green handle is a 20px dot inside a 44px ring, on the right of the circle. The purple point is 12px, on the bottom. Paper is rgb(246, 243, 236) in the light and rgb(13, 18, 28) in the dark. The dark sentence is rgb(233, 237, 245). Same boxes.
+
+A 2px nudge leaves the real part at 0 and Play at y=698. A drag to the right sets the real part to about 0.88, the claim and the modulus blank both say the radius is \(e^{x}\), larger than 1, the claim box stays 53px, and Play stays at 698. A drag the other way clamps the real part at −1.2 and both lines say smaller than 1. Play stays at 698. After that drag the stage is focused, `:focus-visible` is false, and the outline is none. The same radius sentences on the laptop move Play from 579 to 580.
+
+With the radius already at −1.2, Play says Pause and the angle moves. The radius sentence stays "smaller than 1". Pause puts the button back to Play. Four hundred milliseconds later the angle is the same number (−1.204 on the phone, −1.204 on the laptop).
+
+Reduced motion, fresh load, phone, button Next step, radius 1:
+
+- The bottom, angle −π/2. Both blanks empty. Both ticks off.
+- The first press stays on that same angle, −1.5707963267948966, and the claim stays "the bottom of the unit circle."
+- The second press lands on the right. The claim names the right-hand point. Exercise 1 fills with 1 and Tick wakes.
+- The top. That 1 clears.
+- The left. The button says Start again. Exercise 2 reads "land together at −1" and Tick wakes. The button never says Pause.
+
+The stops are t = 2, 4, 6, 8 on an 8 second walk, and the page opens at t = 2. The first Next step sets t to the first stop, which is the frame already on screen.
+
+Ticking Exercise 2 on the bottom does nothing (`mv:progress.test2` stays empty). After Play reaches the left, the blank fills and the tick writes `{"5.1.2": true}`. The status becomes "Next is §5.1, Exercise 1, page 135. 1 of 2 exercises."
+
+The 5.1 card is the question, then the blank, then Tick, then Show the hint. The hint stays closed. Exercise 1 asks why \(\exp(0) = 1\) and the blank is "\(\exp(0)\) is" with an underline.
+
+The 5.1 title is a 44px link to `#chapter-exp`. Tapping it leaves the chapter. The page says "No such place" and "Nothing lives at #chapter-exp."
+
+At 1280×800 the column starts at x=304 and is 952px wide. The square is 272×272, from y=265 to 537. The claim is one line at 545. Play ends at 623. The status is one line at 664, full width, 918px. The same frame in the dark. From 576 to the right edge of the column, the first screen is paper.
+
+`#chapter-4` at 390. The title is two lines, 62px. The lede is "Four sections. Tick an exercise when you have worked it. The hint stays closed until you ask." The two stills are 169×169 from a 160×160 canvas, side by side, ending at y=542. The status is on the screen, "Next is §4.1, Exercise 3. 0 of 8 exercises.", and 4.1 starts at y=651. The page is 5334px. Each picture chip is 44×324. Each Tick is 44×324 and starts disabled. "Open the picture, then tick." sits above the Tick, in the muted ink.
+
+At 1280×800 those stills are 466×466. The pair ends at y=776. The status is at y=817, past the window, in both themes. The disk's edge and the Mandelbrot's filaments are the 160px bitmap scaled up.
+
+The 4.2 title opens `#julia`, "Julia Sets: Square, then Slide". The Julia still opens the same hash. The 4.1.3 chip opens `#sequence-chapter-4-1-3`, "A Sequence Has a Fate", and writes `mv:book.seen` as `{"4.1.3": true, "4.1.13": true}`. On the way back the Tick is live and the sentence is hidden. The 4.1 flag is the only "you are here": it is rgb(26, 34, 48) and the other three flags are rgb(81, 91, 108). The stage itself has no border and no shadow.
+
+### What clicks
+
+On the phone the circle is the first screen, the claim names the frame, and Play is on that screen in both themes. The walk opens on the bottom, so Exercise 2 is not already answered. The question leads the card. A drag fills the radius sentence and does not move Play. Pause holds the angle. The keyboard ring is the page's own; a drag leaves the square unframed.
+
+Chapter 4's chips and ticks are 44px. A tick stays off until that picture has been opened, and the open is remembered. The 4.2 title and the Julia still agree. The four Later rows are titles and pages: 5.2 page 137, 5.3 page 143, 5.4 page 148, 5.5 page 159. Three open the textbook. 5.4 opens `#phasor-current`. They are not pictures of a stage.
+
+The type, the paper, the white card, and the four colours are the site's. This pass leaves them.
+
+### Ranked cut or fix
+
+1. **The 5.1 title leaves the page.** Evidence: the heading "The Complex Exponential Function" is a link to `#chapter-exp`. At 390, light, that tap lands on "No such place. Nothing lives at #chapter-exp." The picture it was meant to reach is already on `#chapter-5`, with id `chapter-exp`, and the hash router does not treat an element id as a route. Change: the 5.1 title is not a hash. It does not navigate. 4.1–4.4 keep their doors, because those open real stations.
+
+2. **Chapter 4's first screen on the laptop is two soft stamps of the wrong camp.** Evidence: both canvases are 160×160 and drawn at 466×466 (`d1280-light-ch4-fold`, and the same pair in the dark). The Julia disk's edge is stair-stepped. The status "0 of 8" is at y=817 in an 800px window. The stamps are Julia and Mandelbrot, and the section under them is 4.1 Sequences. On the phone the same bitmaps are 169px and the status ends at 610, so the phone already fits the tally and the start of 4.1. Change: move the pair to section 4.2, and draw each still at the size it is shown, capped so the "0 of 8" line stays inside the 800px window the way it already does at 390.
+
+3. **The Chapter 5 square gives up height it still has.** Evidence: at 1280×800 the square is 272px (`100dvh - 33rem` under the 800px rule) at x=304, in a 952px column. Play ends at 623, with the window running to 800. The claim is one line. The right of the square, from about x=576 to the column edge, is empty paper, in light and in dark. Change: size the square from the room above Play. At this window that is about 440px, and Play still ends inside 800. Drop the fixed 33rem deduction. The phone's 358px square, at a height of 844, stays.
+
+4. **The first Next step does not move.** Evidence: reduced motion, 390, fresh load. The button says Next step and the point is already on the bottom, angle −π/2. The first press leaves that angle at −1.5707963267948966. The second press is the one that reaches the right and fills \(\exp(0)\) with 1. The walk opens at t = 2, and the first stop is t = 2, so the first press re-lands on the frame in front of you. Change: the first press advances to the next quarter turn. The page can keep opening on the bottom, so Exercise 2 stays empty.
+
+5. **Eight cards say "Open the picture, then tick." above a dead Tick.** Evidence: on 4.1.3 the line is muted, 17px, and the Tick under it is 44×324, opacity 0.55, disabled. The chip above it is already 44×324, "The disk in Definition 4.1". Opening that chip enables the Tick and hides the line. The same stack is on all eight exercises. Change: the chip is the control. The Tick is not drawn until that picture has been opened. The sentence goes.
+
+6. **The modulus blank repeats the claim, one screen down.** Evidence: under the square the claim says "larger than 1" or "smaller than 1" and stays on the first screen. In the 5.1 walk the idea already says the modulus is \(e^{x}\), and the next line is "The modulus is \(e^{x}\), smaller than 1" after a drag. On the phone that line starts with the walk at y=877, below an 844px window, so the fill happens off the picture. Change: cut the modulus blank. The claim under the square is the sentence. The two exercise blanks stay.
+
+### What to keep
+
+The phone's Chapter 5: lede under the title, square at the width of the page, claim, Play, and the status, all inside 844px, light and dark. Opening on the bottom, so Exercise 2 is empty. The question, then the blank, then Tick. The green ring at 44px, the drag that owns the radius, the clock that owns the angle, Pause holding the angle, and a drag that leaves the square unframed. The four colours. Chapter 4's 44px chips and the tick that waits until the picture has been opened, and is then remembered. The 4.2 door opening Julia. The Later rows as titles and pages. The kicker, the paper, the serif title, the white card. No new chrome.
+
+# Practice engine — batch 1
+
+Branch `cursor/practice-engine`. The practice page uses the book cards, the same buttons, and the same type. No new palette. Checked in headless Chrome at 390px and at a wide window: test prep, a worked proof then a wrong step and its reason, the hint ladder, a right choice on §5.1 exercise 2(c), Generate another on a radius, the memory sheet, one Leitner promotion, Chapter 4, Chapter 5, the roadmap, Test 1 `#problems`, and Test 2 `#index`. No console errors. No horizontal scroll at 390px.
+
+## What is on the page
+
+Test prep is a book route, so it does not switch the remembered test. The roadmap, Chapter 4, and Chapter 5 each link to it. A section link walks that section: the proof is filled in, then the same proof is blank, then the choices, then the exercises. The chapter-level Test prep mixes sections. Check is immediate. The reason shows after the attempt. A generator item can draw another seed, and Endless keeps drawing when the fixed list ends. The memory sheet is the `memory` lines plus the formulas, and it prints. Flashcards use five Leitner boxes in `mv:practice.leitner`. `mergeLeitner` keeps the card with more reviews so a later sign-in can merge two devices. Test 1 and Test 2 stay their own maps, linked from the bottom of the prep page.
+
+## What is still thin
+
+The mix does not change from visit to visit. The seed is the chapter number. A student can learn the order. Choices stay in the order they were written. A hint clears whatever was already typed, because the card is drawn again. Practice attempts other than flashcards are not stored. Chapters other than 4 and §5.1 have no items yet. The print sheet was not held up on paper, only opened in the page.
+
+## Next
+
+Vary the interleave by day. Keep the typed answer when a hint opens. Shuffle choices. Store a short record of which steps were missed, in the same mergeable shape as the boxes. Leave chapter files to the chapter loops.
+
+# Practice engine — batch 2, the shell
+
+The drawer is one list on every page: Chapters 1–7, then Test prep. The menu button says Chapters. `#home` opens the status card and one Continue button, and the count is the exercises in Chapters 4 and 5 together (10), not Chapter 4 alone. Chapter and section rows are links. Chapters 8–11 stay in the data and off the list. The line under a title is the part-label type. The way up is the 44px station link. A chapter hash is a history entry, and Back puts the book back where it was scrolled. The site name wraps instead of truncating at 360px. Test prep is the one door: the practice set, then Test 1, then Test 2. `#problems` and `#index` still open, and their ticks stay in `progress` and `progress.test2`. Chapter loops add one line to `js/book/registry.js`.
+
+Checked in headless Chrome at 360×780: the full site name, the seven chapters, Continue, the labelled drawer, the Chapter 5 up control, scroll restored after Back, both indexes inside Test prep, and the 2 of 10 count after a Chapter 4 tick and a Chapter 5 tick. No console errors.
+
+## Next
+
+The home map and the Test 2 map still exist behind a thread hash. Pictures for Chapters 1–3 and 6–7 are not inside those chapter pages yet; those loops register the pages. The interleave seed, choice order, and unsaved practice attempts are unchanged from batch 1.
+
+## skeptical-student (practice batch 2)
+
+Branch `cursor/practice-engine`, tip `e02fc859`. Preview https://practice-preview.complexanalysis.pages.dev. Fresh storage. Headless Chrome, touch, 390×844 light, then the same pages with the theme pinned dark, then 1280×800 light and dark, and the home at 360×780 in the OS dark theme. No product code was changed. No console errors. No failed requests. `scrollWidth` matched the window (390, 360, 1280).
+
+I have never seen this course. I opened the link the way I would on a phone, looking for where I am, where to go next, and how to get to test prep.
+
+### Verdict
+
+ANOTHER BATCH. The home answers the first question. The Chapters drawer answers the third, once I think to open a button that says Chapters. The page Continue opens, and Test prep itself on a phone, answer none of the three. I was asked to prove a theorem I had not been shown, and the old problem indexes start before I have finished the card.
+
+### Cold open, 390×844, light
+
+The first screen is the site name on two lines (the words "One Point, Two Addresses", 37px tall, 141px wide, the full name), a 44×44 theme button, and a 44×118 button that says Chapters. Under that: "THE BOOK · CHAPTERS 1–7", the title The Book, "Chapters 1 to 7, in the order Howell and Mathews print them.", and the source line naming Howell & Mathews, Complex Analysis, the 202 Updated Edition. Then a card: "Next is §4.1, Exercise 3. 0 of 10 exercises." and Continue, 44×111. Then three cards flagged LATER: 1 Complex Numbers (page 1), 2 Complex Functions (page 43), 3 Analytic and Harmonic Functions (page 79, the title wraps). Chapter 4 starts under the 844px edge. The footer that says MAT 412 is below that.
+
+I can tell this is a book of seven chapters of that textbook. I can tell the button wants exercise 3 of §4.1. I cannot tell why the first three chapters, the ones on the screen, say LATER, or what a complex number is. The count "0 of 10" sits next to a §4.1 exercise and the 10 is chapters 4 and 5 together.
+
+Continue goes to `#chapter-4-4-1-3`. The first screen there is the tail of a sentence about disks, two links (Definition 4.1, page 103; Theorem 4.1, page 103), a text link "Practice 4.1" at 91×23, then the card "§4.1, Exercise 3": "Suppose that lim z_n = z_0. Show that the limit of the conjugates is the conjugate of the limit." Then a chip "The disk in Definition 4.1", Show the hint, and Tick, both 44px and the width of the card. The chapter title and the where-line are above the window. Tick is live before I do anything. I still don't know what the bar over z means, and nothing on the screen says what I would have learned if I pressed Tick. Browser Back returned to the book at the top, Continue at y = 325, the same first screen.
+
+Tapping the Chapter 1 card, or "1 Complex Numbers" in the drawer, sets `#chapter-1` and scrolls to 353. "The Book" sits at y = −247. The screen is the same LATER card, "1 Complex Numbers, Page 1", and that card has no section links. I asked for a chapter and got a scrolled table of contents.
+
+Opening Chapter 4 from the drawer is the page that does say where I am: a 44×134 "The Book", the title, "CHAPTER 4 · SEQUENCES, SERIES, AND FRACTALS" (the same words again), and "Four sections. Tick an exercise when you have worked it. The hint stays closed until you ask." Practice 4.1 is on that first screen and it is still 91×23. The same link for 4.2, 4.3, and 4.4 is 91×23 further down (y = 1744, 3547, 4574).
+
+Chapter 5 from the drawer: "The Book", "Chapter 5. The exponential", the same line in small caps, a circle with a purple dot on the left and a green dot on the right, the sentence "The point sits on the left of the unit circle, on the real axis.", and Play (y = 640, 44px tall, on the screen). The lede under Play says a blank fills when the picture makes it true. The blank, and "Practice 5.1" (91×23), start at y = 1202 on a page 2818px tall. The only sentence that says "drag the green dot" is the picture's aria-label. The green dot is the one on the right. The sentence calls the left-hand dot "the point".
+
+### How I got to test prep
+
+The words "test prep" are absent from the home first screen. The Chapters drawer is one list, every row 44×358: chapters 1–7, then "· Test prep" at y = 382, on that same drawer screen. The dot is sitting where the chapter number sits on the other rows. One tap from there opens `#test-prep`. On the 1280 window the same row is in the sidebar at y = 388, so I don't have to open anything.
+
+That is the door. The section links are a second door, with a different first card, and they don't use the words Test prep.
+
+### What test prep did on the phone
+
+Opening it focuses the answer box and moves the page. Measured on arrival, light: "The Book" button at y = −279, the Practice / Memory sheet / Flashcards chips at y = −194, Endless at y = −142. The proof's heading starts at y = 9, under a header that ends at 58, so the screen shows the tail "then ∑ z^n = 1/(1−z)". Check and Hint are on the screen (both 44×324). Under the card, at y = 648, a second page has already started: "Test 1. Every problem and proof from the handout is a card. Read the question, say the place, the address and the aha out loud…" The whole document is 41567px. The Test 1 block starts at y = 1239, is 25558px tall, and holds 41 cards. Test 2 starts at y = 26845, is 14587px tall, and holds 30 cards. The same clip, and the same Test 1 lede, is what the dark phone shows on arrival.
+
+Scrolling back to 0 shows the page I was supposed to land on, in both themes. "THE BOOK" (a 69×17 link), the title Test prep, "TEST PREP", "Items from more than one section, mixed. Check, then read the reason.", "Chapters 4 and 5. 1 of 14.", a 44px The Book button, then the chips. The proof heading is then fully on screen: "Prove the sum half of Theorem 4.12, page 118." Step 1 of 3 is the current line, in rgb(26, 34, 48). Steps 2 and 3 are also blanks, in rgb(81, 91, 108). The box is labelled "Your answer". On the 1280 light window this heading is on screen at scroll 0, and Check starts at y = 819 in an 800px window, so the button is past the bottom edge. `scrollWidth` there is 1280.
+
+I typed `idk` and pressed Check. The card said "Not that one.", filled the first blank with 1 − z^n, and gave the reason: "The middle terms cancel. This is the first identity in the proof on page 118." There is no second try. Next step stays on "1 of 14" and asks for the next blank with the same box label. Hint, opened on a fresh load, says "Multiply the partial sum by z and subtract." and the button becomes Next hint. Test 1 is still directly under that hint.
+
+The chip Memory sheet is the page I would actually use. Status: "The sheet for this set. It prints without the menu." Five blocks: 4.1, 4.2, 4.3, 4.4, 5.1. The first formula is the ε-disk. The first takeaway is a sentence: the terms eventually sit in every disk around ζ, Definition 4.1, page 103. Print is 44×358. On arrival this chip is above the window, so I never saw the sheet until I scrolled up and hunted for it.
+
+Flashcards: the status says "36 due." The card says NEW and "New card", then "Corollary 4.1, absolute convergence implies convergence", which is already the fact. Show the back (44px) reveals "If ∑ |z_n| converges, then ∑ z_n converges." and "Corollary 4.1, page 107." Again and Got it are on the screen. Test 1 starts under this card too. I did not have to remember anything, and the count says I am already behind on 36 cards.
+
+`#test-prep-4-4-1`, which is what Practice 4.1 opens, is a different first screen, and it stays at the top because that card has no box to focus. Title Test prep, lede "A worked proof, then the same proof with the steps missing, then the exercises.", status "Section 4.1. 1 of 6.", back button "Chapter 4" at 44px. The card is flagged WORKED EXAMPLE, Theorem 4.1, pages 103–104, and the button says Try these steps. That is the only door that told me what I was about to do before it asked me to fill a blank. The mixed set, the one in the drawer, skips it and opens on the geometric-series proof.
+
+Dark, pinned, is the same layout. The page is rgb(13, 18, 28) and the text is rgb(233, 237, 245). Light paper is rgb(246, 243, 236) and the title is rgb(26, 34, 48). At 360 the name still wraps onto two lines, in the dark, and the same Continue card is the first screen.
+
+### What to keep
+
+The home is one book, one status line, and one Continue. I could read that I was in chapters 1–7 of Howell and Mathews. The drawer is that same list on every page, rows at 44px, and Test prep is on the first drawer screen. On a wide window it is in the sidebar. Back from the exercise returned to the book at the top. The name wraps. Open chapter pages put a 44px "The Book" over the title. Chapter 4's lede says to tick an exercise after working it. When Test prep is scrolled to the top, the lede says to check and then read the reason, and the reason on the geometric step was one sentence with a page. The memory sheet is five sections of a formula plus a one-line takeaway with a page, and Print is a real button. The section door (Practice 4.1) starts with a worked proof and says so in the lede.
+
+### Ranked fixes
+
+1. **Land Test prep at the top of the page.** On open, the title, the "1 of 14", and the three chips are above the window (The Book button at y = −279, chips at y = −194), the proof starts at y = 9 under a 58px header, and Test 1 is already at y = 648. The answer box took focus and moved the page. Same clip in the dark. Change: opening the page leaves the scroll at 0, which is the screen I got only after scrolling back — title, count, chips, then the question. The box sits under the question and does not pull itself up.
+
+2. **The practice card is the page.** The document is 41567px. Test 1 is 41 cards from y = 1239, and its lede ("say the place, the address and the aha") is on the arrival screen. Test 2 is 30 cards from y = 26845. I thought the handout cards were the next question. Change: under the card, two links, "Test 1" and "Test 2", to the indexes that already open on their own. The indexes stay off this scroll.
+
+3. **Show the worked proof before the blank, and point the box at one blank.** The drawer opens on "Prove the sum half of Theorem 4.12", three blanks, one box labelled "Your answer". Steps 2 and 3 are a quieter grey, rgb(81, 91, 108) against rgb(26, 34, 48), and they still look like blanks. Typing `idk` printed 1 − z^n on the first miss. Practice 4.1 already does the other thing: "A worked proof, then the same proof with the steps missing", card flagged WORKED EXAMPLE, button "Try these steps", status "Section 4.1. 1 of 6." Change: the mixed set leads with that worked card, then the blank. The box's label is the current line, and the other lines wait. The first miss shows the hint ("Multiply the partial sum by z and subtract."). The filled answer shows on the next miss.
+
+4. **Continue opens the chapter at the top, and a closed chapter says it is closed.** Continue is `#chapter-4-4-1-3`. The first screen has the exercise and a live Tick, and the title "Chapter 4" is above the window. The home screen I can see is three LATER chapters and a status line that names §4.1. Tapping chapter 1 sets `#chapter-1`, scrolls to 353, hides The Book (title at y = −247), and the card is still "LATER 1 Complex Numbers Page 1" with no sections. Change: Continue opens `#chapter-4` at the top, where the idea sentence already is. The status line says the first three chapters are closed and names §4.1 as the start. A closed row leaves the title on screen, and the line on the card says the chapter is closed.
+
+5. **Make the section door a button, and drop the dot.** Practice 4.1 and Practice 5.1 are 91×23. Practice 5.1 is at y = 1202, past an 844px screen, so from Chapter 5 the way to test prep is a short text link under a picture. The drawer row reads "· Test prep" because the number slot is a middot; the row itself is 44px and on the first screen at y = 382. Change: the section door is a 44px button, "Test prep · 4.1", beside the section title. The drawer row reads "Test prep", still last, still 44px.
+
+6. **A new flashcard is one new card.** The status says "36 due" on a first visit. The card says NEW and "New card", and the front is already the corollary ("absolute convergence implies convergence"). The back is that sentence in symbols. Test 1 starts under the card. Change: the count is "1 of 36" until a card has been graded. The front is the name, "Corollary 4.1". The back is the sentence. One card fills the screen.
+
+## ux-veteran (practice batch 2)
+
+Preview https://practice-preview.complexanalysis.pages.dev at `e02fc859`. Headless Chrome, touch, fresh storage. Phone first: 390×844 and 360×780, light and dark. Then 1280×800, light and dark. Re-checked fixes 1, 2, 3, and 8 from `## ux-veteran (mobile audit)` on `cursor/ux-veteran-audit`. No product code was changed. No console errors. No sideways scroll (`scrollWidth` matched the window at 360, 390, and 1280, both themes).
+
+The walk, the way a student would do it. Land on the preview. Read the first screen. Open Chapters. Tap a chapter row, a section row, Continue, Test prep, and Back. Then the same shell in the dark and at 1280, where the list is a sidebar and the Chapters button is gone.
+
+### Verdict
+
+ANOTHER BATCH. The drawer, the count, the chapter up control, the wrapped name, and Back are in. Two of the original phone failures are still the first thing a thumb hits: Test prep opens with the question under the header, and the landing still names §4.1 while the screen shows three Later chapters.
+
+### Ranked
+
+1. **Test prep opens on the answer box.** Fresh `#test-prep` at 390×844, scroll is already 559 and the focused control is the answer field. "Test prep", the up link, and the words "Prove the sum half of Theorem" sit above the window. The first line a student can read is "4.12, page 118", then the three blanks, then Your answer, Check, and Hint. The same page at 1280×800 shows the title and the whole prompt, because the card fits. Change: when the card is drawn, leave focus where it is. The first screen is the title, one up control, and the whole question. The field takes focus when the thumb taps it.
+
+2. **The landing names a chapter the phone does not show.** At 390×844 the status says "Next is §4.1, Exercise 3. 0 of 10 exercises." and the only button is Continue, 111×44, to `#chapter-4-4-1-3`. Chapter 4's card starts at y = 841, so the word Next is the sliver at the bottom edge. The cards on the screen are Later: Complex Numbers, Complex Functions, and Analytic and Harmonic Functions. At 360×780 Chapter 4 starts at y = 867, below a 780px window, and Chapter 3 is cut off mid-title. At 1280×800 the Next card just clears the fold. Change: a Later chapter is one line, the number and the title. Book order stays. Chapter 4, with the word Next, then sits under the status card at 390 and at 360.
+
+3. **5.2, 5.3, 5.4, and 5.5 open the exponential.** Each row is a link at least 44px tall. All four point at `#chapter-5`. Tapping "5.2 The Complex Logarithm" lands on "Chapter 5. The exponential", square and Play. The logarithm is a Later heading at y = 1971, and that heading has no link. Change: a section with no page is text, with the Later flag it already has. The row stops being a link. 5.1 keeps its link to `#chapter-5-5-1`.
+
+4. **Test 2 is a heading thirty-two screens down.** On the prep page, Test 1 starts at y = 1239 and Test 2 at y = 26845. The page is 41,567px. The practice set is the first block. The whole Test 1 index is the next block. Test 2 is past every one of those cards. Change: under the practice set, two rows, Test 1 and Test 2, each a 44px link to the index that already opens at `#problems` and `#index`. The indexes stay their own pages.
+
+5. **The Book on Test prep is 69×17.** That is the box the audit measured on Chapter 5. Chapter 4 and Chapter 5 now use the station link: 134×44, label "The Book", on the first screen, under the header. Test prep still has the 17px kicker, and a second control in the status card that also says The Book, this one 113×44. Change: one up control, the station link, 44px, "The Book". The kicker goes.
+
+6. **The Map opens the book.** On Julia, Story Map and The Map both go to `#home`. That page is The Book. The heading is The Book, and Which test is absent. The where-line on Julia already says Chapter 4, and the drawer marks Chapter 4, so the way back is the one the picture does not offer. Change: those two links read The Book and Chapter 4. Chapter 4 goes to `#chapter-4`.
+
+### What to keep
+
+The drawer is the same eight rows on the book, on Chapter 4, on Chapter 5, on Test prep, on both indexes, on Julia, and on the address plane. Chapters 1 through 7, then Test prep. Each row is 44px tall and the width of the phone. Chapters 8–11 are off the list and off the roadmap. The words Residue, Laplace, and "eleven chapters" are absent. `#chapter-8` opens the book. At 1280 the same eight rows are the sidebar, Chapter 5 is marked while you are on it, and Test prep is marked on its own page.
+
+The Chapters button is labeled and is 118×44. The site name wraps to two lines, "One Point, Two" and "Addresses", at 360 and at 390, light and dark. It is the whole name. The where-line is the part-label type, 12.5px, uppercase. On the book it reads "The book · Chapters 1–7". On the chapter it sits under the title and reads "Chapter 5 · The exponential" and "Chapter 4 · Sequences, Series, and Fractals". Contrast is 6.2 on the light paper and 8.6 in the dark. The type, the paper, and the blue Continue button are the ones the station pages already use.
+
+Chapter rows and the section rows that have a page are real doors. 4.1 opens with "Sequences and Series" under the header. Continue, after a Chapter 4 tick and a Chapter 5 tick, says "Next is §4.1, Exercise 13. 2 of 10 exercises" and opens that card with the title at 163px, below the 58px header. A lone 5.1.2 tick is "1 of 10", and Chapter 5 reads Open. Back puts the book back at the 900px it left, and puts a chapter back at the 1600px it left. On `#home-t1`, Test 2 pushes `#home-f2`, and Back returns with Test 1 pressed.
+
+Chapter 5's first screen is the 44px up link, the title, the where-line, the square, and Play, at 390 and at 1280. That screen can stay.
+
+## Chapter 4 and 5, batch 2
+
+Merged `cursor/practice-engine` at `4030750`. Continue, the 44px up link, and Test prep stayed. The chapter stages stayed.
+
+At 390×844, light, the Chapter 4 status ends at y = 392, inside 800. The first section opens "An orbit is a sequence." The Julia and Mandelbrot stills are under "The orbit is the sequence from §4.1." in §4.2. The Julia canvas is 169 CSS pixels and 169 bitmap pixels. Both sequence chips, then the `|y_n-v|` blank, then the ticks. Before that work the tick is `display: none`.
+
+Chapter 5 opens on the bottom. There is no modulus blank. At z = 0 the card keeps "1, because every term of the series after the constant is 0" after the point leaves. `e^{iπ/2}` then lands at i and stays. A drag off radius 1 says "This question is about the unit circle." §§5.2–5.5 are plain Later rows, no link. The phone square is 358px and Play ends at 790.
+
+At 1280×800, light and dark, the square is 400px and Play ends at 798. The cap is 440px when the window is taller. No sideways scroll (`scrollWidth` 1265).
+
+A wrong choice on the rescale, the conjugate product, the missing 2π, the factorial argument, "R goes to ∞", the skipped nth-term step, or `a_n` instead of `a_n z^n` names that slip. Cites stay on the 202 Updated Edition pages.
+
+## test-prep-coach (ch4-5 batch 2)
+
+Branch `cursor/chapter-4-5-2649`, reviewed at tip `4c475a3`. Preview https://book-preview.complexanalysis.pages.dev. A later commit on the branch, `7118034`, only renames the nth-term miss from \(|w|>1\) to \(|z|>1\). That card was not one of the clicks below. Fresh storage. Phone first, 390×844, light, then the same drills in the dark, then 1280×800 light and dark. No product code was changed. No sideways scroll (`scrollWidth` 390, and 1265 at 1280). Dark paper is rgb(13, 18, 28) and the sheet text is rgb(233, 237, 245).
+
+The homework this has to carry is H&M 4.2–4.4 and 5.4: orbit boundedness (Theorem 4.9, page 113), \(z^2\) on the unit circle, a geometric series in \(a+bi\) form, a disk-of-convergence proof, a ratio-test radius, Theorem 4.15, and the §5.4 identities, derivatives, and mappings. A timed paper is fill-in proofs, “what is the next line”, and a stack of problems with the same shape. The rote fallback is a sheet you can run without understanding the picture.
+
+### Verdict
+
+ANOTHER BATCH. Four multiple-choice slips fire and name the mistake, and the geometric proof is a real worked-then-blank. The night-before set still does not cover the paper. §5.4 has no items. Theorem 4.15 and the unit-circle argument are one-line recalls. The ratio generator never computes a radius from a factorial. The memory sheet is a glossary of 53 takeaways, and the three-step recipes sit under it.
+
+### What a timed paper would meet
+
+**§5.4 is a title.** At 390, dark, the row is “LATER 5.4 Trigonometric and Hyperbolic Functions Page 148”, y = 2031, and it is not a link. `#test-prep-5-5-4` says “Nothing filed here yet” and “Chapters 4 and 5, section 5.1, are the sets on this page.” `data/practice/ch5.json` is six §5.1 items. The section the book starts on page 148 asks for \(\frac{d}{dz}\cos z=-\sin z\), \(\sin^2 z+\cos^2 z=1\), \(\sin z=\sin x\cosh y+i\cos x\sinh y\), and the mapping of vertical segments to hyperbolas. None of those is a card, a flash, or a recipe.
+
+**Practice 4.2 is Newton, then one angle.** Status “Section 4.2. 1 of 2.” The first card is Exercise 3, page 117, Newton for \(az+b\). The second card is Example 4.9, page 113: the argument of a \(2^n\)-th root of unity. I picked \(m/2^n\). The card said “Not that one” and “That drops the \(2\pi\).” That is the slip, and it is the whole unit-circle drill. Exercise 4.2.4, the three cases \(|z_0|<1\), \(|z_0|>1\), and \(|z_0|=1\), is not in the queue. On the chapter, four presses of Next landing write the orbit of 0 at \(c=i\) as \(0 \to i \to -1+i \to -i \to -1+i\) and then show Exercise 5 with a live Tick. Nothing on that card asks “bounded, so connected, Theorem 4.9.”
+
+**Practice 4.4 never asks Theorem 4.15.** Status “Section 4.4. 1 of 4.” The lede says “A worked proof, then the same proof with the steps missing,” and the section has no proof. The first card is the factorial ratio. I picked \(n!/(n+2)!\). The why names that replacement. Next card, I picked \(|a_{n+1}/a_n|\). The why says that is the coefficient alone. Next card, I picked “\(R\) goes to \(\infty\)”. The why says write \(R=\infty\). Then the generator: \(\sum (z-(2+2i))^n/(3i)^n\), and typing 0 produced “Not that one. The answer is 3” plus the generic sentence that the centre does not change the radius. The miss on that generator matches the centre’s coordinates, or the words “goes to infinity”, and that one why also talks about coefficients. Exercise 4.4.6, converges at \(4-i\) and the question about \(2+3i\), is not in the four. The chapter blank is “spreads convergence to every point ___ the centre,” and a wrong word on the §4.2 disk blank came back as “Not that line.”
+
+**The disk and the geometric sum are the drills that match the paper.** Practice 4.3 opens on a worked Theorem 4.12, page 118, then the same three blanks, then the choices. The distractors are the early drop of \(z^n\), the sign \(1+z^n\), and \(1/(1+z)\). Exercise 2 is one choice. I picked \((z+i)/2<1\). The why says that compares the complex ratio to 1, and the test is \(|w|<1\). The other two choices are \(|(z+i)/2|<2\) and \(|z+i|<1\). That is the disk question as a recognition item. It is not the written proof: set \(w=(z+i)/2\), inside the disk, then the nth-term test outside it. The nth-term card is a separate item about \(\sum z^n\).
+
+**The sheet and the deck are the glossary.** Chapter 4’s Print sheet, 44px, holds 23 lines for 4.1, 10 for 4.2, 12 for 4.3, and 8 for 4.4. The §4.2 recipe “start at 0, bounded means one piece, leaves means dust” is line 9, under fixed points and the cardioid. The §4.4 three-step recipe is line 5. Flashcards on that chapter say “37 due.” The first front is “Corollary 4.1, absolute convergence implies convergence,” which is already the fact. The stage recipes sort at cards 10, 23, 30, and 34. On the chapter the same recipes sit inside Stage complete, and that block is hidden at 0 of 8. The geometric generator does produce endless \(a+bi\) sums. Twenty-four seeds matched \(1/(1-z)\) when \(|z|<1\), including \((1+2i)/4 \to (12+8i)/13\), and “diverges” otherwise. Endless is a 44px chip on §4.4. It draws \(\sum (z-\alpha)^n/c^n\), whose radius is \(|c|\), so it never asks for \((2n)!/(2n+2)!\).
+
+### Ranked cut or fix
+
+1. **File a §5.4 set on the page that already says page 148.** Evidence: the Later row has no link, and `#test-prep-5-5-4` says nothing is filed. Change: one recipe of five lines, \(\sin z=(e^{iz}-e^{-iz})/(2i)\), \(\cos z=(e^{iz}+e^{-iz})/2\), derivative pair, \(\sin(x+iy)=\sin x\cosh y+i\cos x\sinh y\), vertical segments to hyperbolas. One proof-mc for \(\frac{d}{dz}\cos z=-\sin z\). One next-step for the \(a+bi\) form. A generator seeds integers \(x,y\) and computes the two parts. The circuit pictures stay off this drill.
+
+2. **Make Theorem 4.15 the comparison Exercise 4.4.6 actually is.** Evidence: Practice 4.4 is the factorial, the coefficient, the words \(R=\infty\), and a geometric radius. The chapter blank wants the words “closer to.” Change: a next-step whose lines are \(|4-i|=\sqrt{17}\), \(|2+3i|=\sqrt{13}\), and “converges at both, Theorem 4.15, page 124.” Distractors: “diverges at \(2+3i\)” and “\(R\) goes to \(\infty\)”. A generator seeds two points, computes both moduli, and asks which conclusion the theorem forces. The word “closer” is the last step of that item.
+
+3. **Open Practice 4.2 on the unit circle, and end the \(c=i\) orbit on the theorem.** Evidence: “1 of 2” is Newton, then the angle MC. Four presses reveal Exercise 5 and a Tick, with the orbit \(0, i, -1+i, -i\) already on the page. Change: three next-steps for Exercise 4.2.4: \(|z_0|<1\) goes to 0, \(|z_0|>1\) is unbounded, \(|z_0|=1\) doubles the angle and is finite exactly at argument \(2\pi m/2^n\). Keep the MC that already names the missing \(2\pi\) as the last of those steps. One more line: the \(c=i\) orbit is bounded, so the Julia set is connected, Theorem 4.9, page 113. Newton stays, after that walk. A generator seeds \(\theta=2\pi p/q\) and asks for the next argument.
+
+4. **Generate ratio-test radii, and give each slip its own why.** Evidence: typing 0 on \(\sum (z-(2+2i))^n/(3i)^n\) returned the generic centre sentence and “the answer is 3.” The miss matches the centre, or “goes to infinity”, in one why that also mentions coefficients. Change: a generator kind whose series is \(\sum z^n/(2n)!\) and \(\sum (z-\alpha)^n/(n+1)!\). Steps: the factorial simplification, with the \(n!\) miss that already fired; the modulus of the full term \(a_n z^n\), with the coefficient miss that already fired; then \(R=\infty\) or the number. A typed 0 says “write \(R=0\) only when the series converges only at the centre.” A typed centre says “the centre is not the radius.” The words “goes to” say “write \(R=\infty\).”
+
+5. **Turn the disk MC into the proof, and keep the choices as the fade.** Evidence: Exercise 2, page 122, is one choice, and the why for \((z+i)/2<1\) names the modulus slip. The written argument is still absent. Change: a proof-blank with \(w=(z+i)/2\), converges when \(|w|<1\), which is \(|z+i|<2\), and outside it the terms do not go to 0, Theorem 4.5, page 106. The existing four choices stay as the next card. The geometric generator grows a shifted disk \(\sum ((z-c)/r)^n\), same three misses, one why each. On the sum step, the conjugate miss also catches a denominator written as 0.
+
+6. **Put the five recipes on the sheet the student can open before the tick, and lead the deck with them.** Evidence: 53 takeaways on the Chapter 4 sheet, the §4.2 recipe at line 9, “37 due,” and the first front already stating Corollary 4.1. The stage copy of those recipes is inside a foot that is hidden at 0 of 8. A wrong chapter blank says “Not that line.” Change: the Print sheet and the stage card are the numbered recipe plus the formula, five blocks, visible with the section. Definition lines stay in the deck and start behind the four stage cards. The chapter blank uses the same miss why as the practice step. The §4.4 lede stops promising a worked proof until that section has one.
+
+### What to keep
+
+The geometric proof is the exam shape. Practice 4.3 shows the worked Theorem 4.12, page 118, then the three blanks, and the choices include dropping \(z^n\) too early. The disk choices are the three slips from the homework, and the live why for \((z+i)/2<1\) names the modulus. The factorial choice, the coefficient-only ratio, “\(R\) goes to \(\infty\)”, and \(m/2^n\) each came back, on the phone, with a why that names that one slip. The geometric generator’s closed forms check out, and Endless is on the §4.4 card. The \(c=i\) list on the chapter is the bounded orbit a student should compute. The §5.4 row stays a title and a page, so the circuit station is not pretending to be the trig section. The stage recipes, once the foot opens, are the right three lines, with the page on the card. Dark type on the sheet and on the factorial card can be read, and the choice buttons are 48px at 1280.
+
+## Chapter 4 and 5, batch 3
+
+The batch-2 list, on the same branch. Cites are the 202 Updated Edition.
+
+§5.4 is a stage on the chapter, linked from the book row, with the five-line recipe (Identities (5.34) and (5.36), page 150; the derivative pair, Theorem 5.4, page 149; Identity (5.35), page 150; Figure 5.7, page 152). Practice 5.4 opens on the proof choice for \(d/dz\cos z=-\sin z\) (Exercise 1, page 156), then \(\sin(2i)\) (Exercise 6(c), page 157), then a generator that computes both parts of Identity (5.35). No circuit picture on that stage.
+
+Practice 4.2 opens on Exercise 4(a)(b)(c), page 117, then the \(2\pi m/2^n\) choice, then the bounded-orbit line for Theorem 4.9, page 113, then Newton. Exercise 4.4.6, page 129, leads §4.4: \(|4-i|=\sqrt{17}\), \(|2+3i|=\sqrt{13}\), converges at both, closer last. Typing 0 on \(\sum (z-(2+2i))^n/(3i)^n\) gets the centre why and does not print the answer. The ratio generator asks the factorial, the full term, then \(R=\infty\), with a separate why for the centre, for “goes to infinity”, and for the coefficient alone. Exercise 2, page 122, is a proof blank (\(w=(z+i)/2\), \(|w|<1\), \(|z+i|<2\), terms do not go to 0, Theorem 4.5, page 106) and the old choices stay next. A shifted-disk generator carries the same three misses, and a denominator written as 0 names the conjugate product.
+
+The numbered recipe sits on the stage before the tick. The print sheet is those recipes. Definition cards start behind the stage cards. A chapter blank uses the practice why. §4.4 no longer says a worked proof is coming.
+
+At 390×844 and 1280×800, light and dark, the Chapter 5 status card ends inside the window (420 and 388) and Play does too (829 and 772). On `#chapter-4-4-2` the Mandelbrot still is on that screen and the Book link stays at 44px under the header. Julia’s + and − are 44×44 with a coarse pointer. §§5.2, 5.3, and 5.5 are Later rows that open `#chapter-5-5-2`, `#chapter-5-5-3`, and `#chapter-5-5-5`. Continue on `#book` opens `#chapter-4`. The drawer is Chapters 1–7, then Test prep. Test prep links to the two indexes instead of mounting them.
+
+`node tools/check_vectors.mjs` 234/234. `node tools/fractal-smoke.mjs` passed. `node kit/smoke.mjs` passed.
+
+## reviewer (ch4-5 batch 3)
+
+Reviewed at tip `6259ffa`, then small correctness fixes on the same branch. Checked against Howell & Mathews, 202 Updated Edition, including Theorem 4.9, page 113 (the Julia set is connected iff the orbit of 0 is bounded) and Theorem 4.11, page 116 (attracting fixed points iff `|1 ± √(1−4c)| < 1`). `node tools/check_vectors.mjs` 234/234. `node tools/fractal-smoke.mjs` passed. `node kit/smoke.mjs` passed. No `kit/` import in live code.
+
+### Verdict
+
+ACCEPT WITH FIXES. The fixes are on this branch. The batch-3 drills cite the right pages, and the generators compute their answers. Four statements were false and are corrected.
+
+### Fixes
+
+Exercise 4(c), page 117, asked when the orbit on the unit circle is finite. A finite orbit is wider than the 2^n-th roots of unity: argument 2π/3 cycles and never reaches 1. The card now says the orbit doubles the argument and converges to 1 exactly at a 2^n-th root of unity. The angle card cites that exercise, not Example 4.9, which only leaves the claim as an exercise.
+
+`sin-parts` treated cosine as odd, so `sin(−1+i)` came back with a minus on the cosine. Cosine is even. All 25 seeds in the generator’s range match Identity (5.35), page 150.
+
+The §4.2 sheet said `K_c` is connected. Theorem 4.9 names the Julia set, the boundary of `K_c`. The sheet now says that. The Theorem 4.11 memory line put the fixed points inside the cardioid; the cardioid is a condition on `c`. The ratio generator’s shifted series now reads `a_n(z−α)^n`, not `a_n z^n`. The cosine derivative, Exercise 1, page 156, starts at `n ≥ 1`, which is where the book’s solution starts. The cardioid film no longer says that outside the cardioid the orbit of 0 leaves. `c = −1` stays bounded on a 2-cycle.
+
+### Leftovers
+
+1. The §4.2 recipe still ends “if it leaves, the Julia set is dust.” The theorem’s word is disconnected. Dust is the right picture for `z²+c`, and the stations already say it. Change the sheet’s third line to “disconnected.”
+2. The chapter orbit prints `0 → 0 + 1.00i → -1.00 + 1.00i → 0 − 1.00i`. Those are Example 4.10’s values. Print `i`, `−1+i`, and `−i`.
+3. Exercise 6, page 129, asks whether a series exists. The third choice says “converges at both,” and the why says no such series exists. Make “No” the choice.
+4. §§5.2, 5.3, and 5.5 are still Later rows. Not a batch-3 error.
+
+## unslop (chapter-4-5 batch 3)
+
+Branch `cursor/chapter-4-5-2649`, walked at tip `6259ffa`. Preview https://book-preview.complexanalysis.pages.dev. `js/stations/book.js` on that host matched this tip. Fresh storage. Phone first, 390×844, light and then dark, then 1280×800, light and dark. The book, Chapter 4, Chapter 5, the §5.4 stage, a Later row, Continue, Practice 4.2, Practice 4.4, Practice 5.4 and its memory sheet, Test prep, and Julia. A drag on the green ring. Reduced motion, one Next step, from a fresh load. No product code was changed. No console errors on those pages. `scrollWidth` was 390 and 1280. Commit `fef9ced` landed during this pass. It corrects four statements and leaves `book.js`, the square, and the §5.4 recipe string as they were on the walk. The headlines below are still the prompts.
+
+Unslop at `a6f121ee`, with kit/SKILL.md winning where they differ. This is a light pass. The paper, the serif title, the white card, and the four teaching colours are the brand, and this note leaves them. The page is a textbook: the circle is the moment, and the sentence under it is the signature. No emoji, no gradient text, no glow, no blob.
+
+### Verdict
+
+ANOTHER BATCH. The first screen is still the circle, the sentence, and Play, and the new drills open on the questions the last note asked for. The circle has been capped at 256px so a status card can sit above it, and the new §5.4 recipe prints blank lines and drops its page numbers.
+
+### Ranked cuts
+
+1. **Let the circle be the page.** At 390×844, light and dark, `#chapter-exp-stage` is 256×256, from y = 461 to 717. The claim is two lines at y = 725. Play is 44px and ends at 829. The status card is the white row from y = 350 to 437, "Next is §5.1, Exercise 1, page 135. 0 of 2 exercises." At 1280×800 the column is 952px, from x = 304, and the square is the same 256px, from y = 428 to 684. The claim is one line at 692. Play ends at 771. From x = 560 to the column edge is paper, in the light and in the dark. `.exp-stage` is `min(100%, 16rem)` on the phone and `min(100%, 16.5rem, 100dvh - 34rem)` from 52rem, which is 256px in an 800px window. The comment above that rule says the wide square is about 440px. Change: move `#chapter-next-row` under Play. Size the square from the column on the phone, 358px, and from the room above Play on the laptop. Play still ends inside the window.
+
+2. **The §5.4 recipe is a broken list, on the stage and on the sheet.** The card `#chapter-memory-5-4` is 744px tall at 390 and 532px at 1280. Its list is nine rows. The odd rows are the five facts, each ending "page" with the number gone: Identity (5.34), Identity (5.36), Theorem 5.4, Identity (5.35). The even rows are empty. The last row keeps "Figure 5.7, page 152." The splitter is `\s(?=\d+\.\s)`, so the space in "page 150." becomes a step and the number is the whole of that step. `stageMemory` prints the empty step. `recipeSteps` drops it, and the print sheet still says "Identity (5.34), page" with no 150, then prints \(\sin(x+iy)\) again as the fourth line. The formula at the top of the card is that same identity. Change: split only in front of a step number, with a lookbehind that leaves "page 150." on its line, in both places. Drop an empty item. The card is those five lines, each with its page. The formula line goes, because step 4 already states it.
+
+3. **The open card asks the question under the recipe.** `stageMemory` prints the numbered lines, then the flash front, then Show the card. On §4.1, at y = 790, the three lines are the disk, \(N\), and the smaller disk, and the next line is "How do you check that a sequence settles?" On §5.1 the formula and the three lines say \(e^{z}=e^{x}(\cos y+i\sin y)\), and the next line is "What is \(e^{z}\) for \(z=x+iy\)?" On §5.4 the question is "How do you write \(\sin z\) and \(\cos z\) for an exam?" under the list that writes them. Change: the open card is the numbered lines. Show the card leaves this card. The deck keeps the flash.
+
+4. **The orbit sentence is said three times before a picture.** The Chapter 4 lede is "An orbit is a sequence. Each section says why, then the work, then the sentence." The §4.1 idea opens with the same four words, then "The next landing is the same rule, applied to where you just were." The §4.2 idea is "An orbit is the sequence from §4.1. The picture records every start, not one list." The line above the stills, `#chapter-4-2-orbit-line`, is "The orbit is the sequence from §4.1." The stills are 161×161, bitmap matching the CSS, at y = 2094 when the chapter is at the top. Change: the lede keeps "An orbit is a sequence." §4.1 starts at "The next landing is the same rule, applied to where you just were." §4.2 keeps "The picture records every start, not one list." The line above the stills goes.
+
+5. **The new practice headline is the question plus the pin the source line repeats.** On Practice 5.4 the heading is 22.4px, weight 600: "Establish \(d/dz\cos z=-\sin z\). Exercise 1, page 156. The method is the one in the proof of Theorem 5.4, page 149." The source line under it cites Exercise 1, page 156. Practice 4.2 opens "For \(f_0(z)=z^2\), if \(|z_0|<1\), the iterates ___. Exercise 4(a), page 117." and the step is "The sequence ___." Practice 4.4 opens "Does there exist \(\sum c_n z^n\) that converges at \(4-i\) and diverges at \(2+3i\)? Exercise 6, page 129. Theorem 4.15, page 124." and the step is "\(|4-i|\) equals ___." Change: the heading stops at the question. The exercise, the page, and the theorem stay on the source line. The method sentence on §5.4 becomes the hint. The step stays the blank.
+
+6. **Endless is a fourth chip on its own row.** At 390, Practice, Memory sheet, and Flashcards sit at y = 397, 44px tall. Endless is 44×83 at y = 449, alone. The same row is on Practice 4.2, Practice 4.4, Practice 5.4, and Test prep. A picture keeps at most three controls, and this row is the same shape on a page of choices. Change: the three modes stay on one row. Endless moves onto the card that has a generator, as the control that draws another.
+
+### What to keep
+
+The circle, the claim, and Play are on the first screen at both widths, in both themes. The walk opens on the bottom of the unit circle, so Exercise 2's blank is empty. The green ring is 44×44. A drag of that ring set the real part to about 0.88, left the angle at \(-\pi/2\), and the claim said the radius is \(e^{x}\), larger than 1. The line "This question is about the unit circle." showed. The square's outline stayed none, and `:focus-visible` was false. Reduced motion opens on Next step at the bottom. The first press lands on the right, real part 0, angle 0, and the claim names the right-hand point. The button stays Next step.
+
+Blue is `#0b63ad`, orange `#a84300`, green `#006e53`, purple `#9d3a8a`, on the axes, the dashed circle and the ray, the handle, and the point. Dark paper is rgb(13, 18, 28), the claim is rgb(233, 237, 245), and the lede is rgb(166, 176, 195). The where-line stays, tracked small caps under the title. The Book is 44px. The two §4.1 chips are 44px. Practice 4.1 is 44px tall. Julia's + and − are 44×44, and the disk starts on the phone screen. The §4.2 stills are 161 CSS pixels and 161 bitmap pixels.
+
+§4.1's three recipe lines render as three lines. Continue is `#chapter-4` and opens that chapter at the top. The §5.2 row opens `#chapter-5-5-2`, scrolls the Later card to y = 227, and the card says Later. The book rows for 5.2, 5.3, and 5.5 are 44px. Practice choices are 44×324. Hints start closed. The drawer is Chapters 1–7, then Test prep. The kicker, the paper, the serif title, and the white card stay.
+
+## ux-veteran (chapter-4-5 batch 3)
+
+Preview https://book-preview.complexanalysis.pages.dev at tip `6259ffa`. `js/stations/book.js` and `css/components.css` on that preview are the same bytes as this tip. Fresh storage. Phone first, 390×844, light, then the same walk in the dark, then 1280×800, light and dark. The phone pointer was coarse. The laptop pointer was a mouse. No product code was changed. No console errors. No failed requests. No sideways scroll (`scrollWidth` was 390 and 1280).
+
+`fef9ced` landed after this walk. It leaves `book.js` and the §5.4 recipe string as they were, so the screens below are the same.
+
+Read `## ux-veteran (mobile audit)` on `cursor/ux-veteran-audit` and `## ux-veteran (practice batch 2)`. The bar is the same: a 44px target, one up control, and a first screen that names the next action.
+
+### Verdict
+
+ANOTHER BATCH. The status card, the Book link, the Mandelbrot still, and the coarse zoom are in. The §5.4 recipe a student is supposed to read is nine rows, four of them empty, and the book's first screen still shows three closed chapters while Continue names §4.1. One batch, the five cuts below. After that, this walk can rest.
+
+### What the six checks did
+
+**Chapter 5 status, both themes.** At 390 the card ends at y = 420 and reads "Next is §5.1, Exercise 1, page 135. 0 of 2 exercises." Play is 70×44 and ends at 829. The square is 256×256, from y = 461 to 717. The claim is "The point sits on the bottom of the unit circle." The green disc is 20px inside a 44px ring. At 1280 the same sentence is one line ending at y = 387, the square is the same 256px, and Play ends at 771. Dark paper is rgb(13, 18, 28). The status is rgb(233, 237, 245) on rgb(21, 28, 43), contrast 14.5. The lede is rgb(166, 176, 195) on that paper, contrast 8.6.
+
+**Mandelbrot.** `#chapter-4-4-2` lands with The Book stuck under the header, 44px tall, and the 4.2 flag 8px below it. On the phone the Mandelbrot canvas is 161×161, bitmap 161, bottom 464, inside the window. At 1280 it is 174×174, bitmap 174, bottom 477. The Julia still beside it is the same size. Both cards are the links.
+
+**Julia zoom.** With a coarse pointer, + and − are 44×44, 6px apart, and Reset is 57×44. A press in the center, on the left edge, and on the bottom edge each zooms: units across go 4, then 3.70, then 3.43. A press in the 6px gap leaves the view where it is. On the laptop mouse the same buttons are 32×32, and a center press zooms.
+
+**§5.4.** `#chapter-5-5-4` puts the flag 8px under the Book link. The title is the thing under the finger. Practice 5.4 is 91×44 and opens `#test-prep-5-5-4` at scroll 0, with Chapter 5 as a 116×44 button and the proof on that screen. The recipe under Identity (5.35) is nine numbered rows. Rows 2, 4, 6, and 8 are empty, 26px tall. Row 1 ends at "Identity (5.34), page". The same nine rows are on the 1280 screen, light and dark. The last row keeps "page 152", because nothing follows that period.
+
+**Later rows.** 5.2, 5.3, and 5.5 are white cards, 85px or taller, linking to `#chapter-5-5-2`, `#chapter-5-5-3`, and `#chapter-5-5-5`. A cold open of `#chapter-5-5-2` leaves the Later flag 143px below the Book link. The heading is the thing under the finger.
+
+**Continue and Book.** Continue is 111×44 and its href is `#chapter-4`. The press opens Chapter 4 at scroll 0, the title at y = 158, and The Book at 44px. Back from a book scrolled to 900 returns to `#book` at 900, on the phone and on the laptop, in both themes. On the phone the Chapter 4 card starts at y = 841, so the first screen is Later chapters 1, 2, and 3. At 1280 that card starts at y = 748, and the window shows its top 52px.
+
+### Ranked
+
+1. **The §5.4 recipe breaks at the page number.** On the stage, light and dark, at 390 and at 1280, the list is 1 sin z … page, 2 blank, 3 cos z … page, 4 blank, 5 the derivative pair … page, 6 blank, 7 sin(x+iy) … page, 8 blank, 9 vertical segments, page 152. "page 150." is being read as the next step, so the number becomes an empty row and the line above it loses the page. Change: five rows. Each row keeps its page. The blank rows go.
+
+2. **The book names §4.1 and shows three closed chapters.** At 390 the status says "Next is §4.1, Exercise 3. 0 of 10 exercises." and Continue, 111×44, is on the screen. The cards on that screen are Later: Complex Numbers, Complex Functions, and Analytic and Harmonic Functions. Chapter 4 starts at y = 841. At 1280 the same three cards fill the column, and Chapter 4 starts at y = 748. Change: a Later chapter is one line, the number and the title. Book order stays. Chapter 4, flagged Next, sits under the status card at 390 and at 1280.
+
+3. **On the book, §5.4 looks like a closed section.** The rows for 5.2, 5.3, 5.4, and 5.5 are all state `later`, and the mark is empty, so each row is a title and a page. 5.1 is the only one marked ahead. Tapping 5.4 opens the stage. Tapping 5.2 opens the Later card. Change: the 5.4 row reads Open. The 5.2, 5.3, and 5.5 rows read Later.
+
+4. **The line above the stills repeats the idea.** On `#chapter-4-4-2`, both themes and both widths, the idea says "An orbit is the sequence from §4.1. The picture records every start, not one list." The next line says "The orbit is the sequence from §4.1." Then the two stills. Change: one sentence. The stills stay on this screen.
+
+5. **The last drawer row is "· Test prep".** At 390 the drawer is eight rows, each 44×358: chapters 1–7, then "· Test prep". The same middot is the last row of the 1280 sidebar. Change: the row reads Test prep. It stays last, and it stays 44px.
+
+### What to keep
+
+The Chapter 5 status card and Play are inside the window at 390 and at 1280, light and dark. The square stays 256px so that card and that button both fit. The walk still opens on the bottom of the circle, and the claim names that frame. The green ring is 44px. The Book link is the 44px station link, stuck under the header, with the section flag 8px below it. Continue opens `#chapter-4` at the top, and Back puts the book back where it was scrolled.
+
+The Mandelbrot and Julia stills are drawn at the size they are shown, 161px on the phone and 174px at 1280, and both are on the §4.2 screen. Julia's + and − are 44×44 under a coarse pointer, and a press on the edge of the button zooms. The mouse buttons stay the plane's 32px. §§5.2, 5.3, and 5.5 are Later cards that open those rows, and the flag is clear of the Book link. Practice 5.4 lands at the top of Test prep, with a 44px way back to Chapter 5. The drawer is chapters 1–7, then Test prep, and at 1280 that list is the sidebar, with the chapter you are on marked. The type, the paper, the white card, and the blue Continue button are the station pages' own.
+
+## Chapter 4 and 5, batch 4
+
+Started from `55aa73b` on `cursor/chapter-4-5-2649`, which already has the reviewer fix at `fef9ced`. The merged list from the closed batch-3 council.
+
+The §5.4 recipe splits only after a sentence, so "page 150." and "page 149." stay on the line. The stage card and the print sheet are five rows. The formula line that repeated \(\sin(x+iy)\) is gone. The flash question is not on that card. The deck still has the card.
+
+On the book, §5.4 reads Open and opens the stage. §§5.2, 5.3, and 5.5 read Later and still open their cards. "An orbit is a sequence" is the Chapter 4 lede only. The line above the §4.2 stills is gone. Later chapters are one line, the number and the title. Chapter 4, flagged Next, starts on the first screen at 390×844 (top 590) and at 1280×800 (top 525), light and dark. Continue stays 111×44 and opens `#chapter-4`. The drawer row reads Test prep, with no middot.
+
+The open stage card is the numbered recipe. Practice headlines for the new drills stop at the question. The exercise and the page stay on the source line. The §5.4 method sentence is the hint. Endless sits on the generator card. The three mode chips stay one row.
+
+The status card sits under Play. The square is the phone column, 358px, and about 355px on the laptop, which is the room left above Play. The claim and Play stay on the first screen in both themes. The status card starts just under that screen.
+
+The §4.2 recipe says disconnected. Example 4.10 prints `0 → i → −1+i → −i`. Exercise 6, page 129, answers No.
+
+`node tools/check_vectors.mjs` 234/234. `node tools/fractal-smoke.mjs` passed. `node kit/smoke.mjs` passed. No live `kit/` import.
+
+Still open: §§5.2, 5.3, and 5.5 have no picture. Chapters 1–3, 6, and 7 are roadmap lines. The circuit stations stay off the §5.4 stage. A few older practice prompts, outside the drills this batch opened, still put an exercise citation in the headline. The laptop square does not fill the column. The height of the first screen is the limit.
+
+## ux-veteran (chapter-4-5 batch 4)
+
+Preview https://book-preview.complexanalysis.pages.dev at tip `c0102e6`. `js/stations/book.js`, `js/stations/exp-picture.js`, `css/components.css`, `js/app.js`, `js/practice/mount.js`, and `js/practice/recipe.js` on that preview are the same bytes as this tip. Fresh storage. Phone first, 390×844, light, coarse pointer, then the same walk in the dark, then 1280×800, light and dark, with a mouse. No product code was changed. No console errors. No failed requests. No sideways scroll (`scrollWidth` was 390 and 1280).
+
+Read `## ux-veteran (mobile audit)` on `cursor/ux-veteran-audit` and `## ux-veteran (chapter-4-5 batch 3)`. The bar is the same: a 44px target, one up control, and a first screen that names the next action.
+
+### Verdict
+
+ANOTHER BATCH. The five cuts from batch 3 are on the page. The recipe is five lines, Chapter 4 is on the first screen, §5.4 reads Open, the line above the stills is gone, and the drawer says Test prep. The first screen of Chapter 5 still tells you to drag the green ring, then says the point is on the bottom, and the green ring is on the right. One batch, the five cuts below.
+
+### What the checks did
+
+**The book, both themes.** At 390 the status says "Next is §4.1, Exercise 3. 0 of 10 exercises." Continue is 111×44 at y = 325. Chapters 1, 2, and 3 are one line each, 358×44. Chapter 4, flagged Next, starts at y = 590. The 4.1 row is on that screen, 324×44, and it reads Next. At 1280 the same card starts at y = 524 and the sidebar is the list: chapters 1–7, then Test prep, each row at least 44×263, and the chapter you are on is marked. The Chapters button is gone at that width. Dark paper is rgb(13, 18, 28). The status is rgb(233, 237, 245) on rgb(21, 28, 43), contrast 14.5. The lede is rgb(166, 176, 195) on the paper, contrast 8.6.
+
+**Chapter 4.** `#chapter-4` opens at scroll 0. The Book link is 358×44. The status says "0 of 8 exercises." The two chips are 44px. Practice 4.1 is 91×44. `#chapter-4-4-2` puts the 4.2 flag at y = 109, 8px under the Book link (bottom 101). The same pin holds for 4.1, 4.3, 4.4, 5.1, and 5.4. The stills are on that screen: 161×161 on the phone (bottom 395) and 174×174 at 1280 (bottom 408). The idea is one sentence, then the pictures. Next landing is 358×44.
+
+**Chapter 5.** At 390 the square is 358×358, from y = 350 to 708. The claim is two lines, y = 716 to 769: "The point sits on the bottom of the unit circle." Play is 70×44 and ends at 821. The status card starts at y = 845, one pixel under the window. At 1280 the square is 358×358 at x = 304, the claim is one line at y = 710, and Play ends at 788. The status starts at y = 812. The green ring is 44px across, centered on the right of the circle. The green disc inside it is 20px. The purple disc is 12px, centered on the bottom. Same sentence in the dark, claim contrast 16.
+
+**§5.4 and the later rows.** `#chapter-5-5-4` puts the flag 8px under the Book link. The recipe card is five numbered lines. Each line keeps its page: Identity (5.34), page 150; Identity (5.36), page 150; Theorem 5.4, page 149; Identity (5.35), page 150; Figure 5.7, page 152. No empty row. Practice 5.4 is 91×44 and opens `#test-prep-5-5-4` at scroll 0, with Chapter 5 as a 116×44 button. On the book, the 5.4 mark reads Open. The 5.2, 5.3, and 5.5 marks read Later. `#chapter-5-5-2` is stuck at the bottom of the page: the Later flag is at y = 244, and the Book link ends at 101. `#chapter-5-5-5` lands with that same scroll, the 5.5 title at y = 537, and the 5.2 card still on the screen above it.
+
+**Back.** From the bare URL scrolled to 600, a chapter, then Back, returns to scroll 600. From `#book` at 600, Back returns to 600. From `#chapter-4` at 1500, Practice, then Back, returns to 1500. The practice button itself returns to the chapter at the scroll you left. Continue opens `#chapter-4` at scroll 0.
+
+**Drawer and the station pages.** The drawer is eight rows, each 358×44: chapters 1–7, then Test prep. Julia's + and − are 44×44 with a coarse pointer, 6px apart, and 32×32 with the mouse. The camp title "Julia and Mandelbrot Sets" is a 44px link with no underline, and it opens `#julia`. That page's title is "Julia Sets: Square, then Slide." The disk starts at y = 665 and ends at 987, so an 844px window shows the top of it. "Sequences and Series" opens `#sequence-chapter-4-1-3`, whose title is "A Sequence Has a Fate."
+
+### Ranked
+
+1. **The sentence names a point the green ring is not on.** At 390 and at 1280, light and dark, the lede says "Drag the green dot." The green ring is 44px on the right of the circle, with the 20px green disc inside it. The purple disc is 12px on the bottom. The claim says "The point sits on the bottom of the unit circle." The sentence is true of the purple mark, and it never says purple or \(e^{z}\). Change: the resting sentence names that mark. "\(e^{z}\) sits on the bottom of the unit circle." The green ring stays the radius on the real axis.
+
+2. **The front door counts 10 and the chapter counts 8.** On the book, both widths and both themes, the status is "Next is §4.1, Exercise 3. 0 of 10 exercises." Chapter 4 says "0 of 8 exercises." Chapter 5 says "0 of 2 exercises." The 10 is those two chapters, and the sentence does not say so. Change: the book line names the span. "Next is §4.1, Exercise 3, in Chapters 4 and 5. 0 of 10 exercises." The chapter pages keep their own counts.
+
+3. **The camp title is a silent exit.** "Sequences and Series", "Julia and Mandelbrot Sets", "Geometric Series and Convergence Theorems", and "Power Series Functions" are 44px links, color inherited, no underline. The first opens a page titled "A Sequence Has a Fate." The second opens "Julia Sets: Square, then Slide," with the disk starting at y = 665. The stills on §4.2, and the two §4.1 chips, are already the doors. Change: the camp title is a heading. The stills and the chips stay the way into the picture.
+
+4. **The theorem links between the chips and Practice are 23px.** On the Chapter 4 first screen, Definition 4.1 is 23×189 at y = 663 and Theorem 4.1 is 23×183 at y = 692. The chips above them are 44px and Practice 4.1 below them is 91×44. §5.4 has the same four pins, each 23px: Definition 5.5, Theorem 5.4, Identity (5.35), Figure 5.7. Change: each of those pins is a block link, min-height 44, the same target Practice already is.
+
+5. **The last camps cannot sit under the Book link.** Open camps pin the flag at y = 109, 8px under the Book link. `#chapter-5-5-2` leaves the Later flag at y = 244 because the page is already scrolled to its end (2695). `#chapter-5-5-5` leaves the title at y = 537, with the 5.2 card on the screen above it. The opened row has the target class, and the outline for that class is only on a problem card, so the three Later rows look alike. Change: pad the end of the chapter so the opened row can sit 8px under the Book link. Mark that row. The other rows stay Later.
+
+### What to keep
+
+The five batch-3 cuts are in. The recipe is five lines with the pages on the lines, on the stage, in both themes. Chapter 4 starts at y = 590 on the phone and y = 524 at 1280, flagged Next, with Continue on the screen. §5.4 reads Open. §§5.2, 5.3, and 5.5 read Later. The drawer row reads Test prep. The §4.2 idea is one sentence, and the stills follow it, 161px on the phone and 174px at 1280, both on that screen.
+
+Play stays inside the window: it ends at 821 on the phone and at 788 at 1280. The status card starts just under that window. Leave the square at 358px. The empty field to its right on the laptop is the room Play is using. The walk opens with the purple mark on the bottom and the green ring on the right, and the ring is 44px. The Book link is the 44px station link. A section flag on an open camp sits 8px under it. Continue opens `#chapter-4` at the top. Back returns the book, the bare URL, and the chapter to the scroll you left, and the practice button does the same.
+
+Julia's + and − are 44×44 under a coarse pointer and 32×32 with the mouse. Practice 5.4 lands at the top of Test prep. The mode row is three chips, each 44px. Later chapters are one line and 44px. The type is Iowan Old Style at 25.85px, the paper is rgb(246, 243, 236) in the light and rgb(13, 18, 28) in the dark, and the blue Continue button is the station button. The where-line, the white card, and the 44px up control stay.
+
+## reviewer (ch4-5 batch 4)
+
+Reviewed at tip `c0102e6`, then two small correctness fixes on the same branch. Checked against Howell & Mathews, 202 Updated Edition (PDF title page: 202 Updated Edition, 471 pages). Printed page N is the footer on that page. Preview `book.js` and `data/practice/ch4.json` matched `c0102e6` byte for byte, and that preview still said the orbit repeats. `node tools/check_vectors.mjs` 234/234. `node tools/fractal-smoke.mjs` passed. `node kit/smoke.mjs` passed. No `kit/` import in live code. `js/core/map-route.js` matches `kit/template/js/core/map-route.js`.
+
+### Verdict
+
+ACCEPT WITH FIXES. The fixes are on this branch. The batch-4 statements that were rechecked against the PDF are right, and the generators compute their answers. Two sentences were false or mis-cited and are corrected.
+
+### Fixes
+
+Example 4.10, page 113, computes \(f_i(0)=i\), \(f_i(i)=-1+i\), \(f_i(-1+i)=-i\), \(f_i(-i)=-1+i\). The orbit is \(0, i, -1+i, -i, -1+i, -i, \ldots\). The printed list drops \(i\). The practice prompt, the \(c=i\) chip, and the index note said \(0, i, -1+i, -i\), and then it repeats, which sends the list back to \(0\). Example 4.12, page 116, names the 2-cycle \(\{-1+i, -i\}\). Those three sentences now show the cycle.
+
+The §5.4 flash why cited Identities (5.34)–(5.35) for an answer that also writes \(\cos z=(e^{iz}+e^{-iz})/2\). That formula is Identity (5.36), page 150. The why now names (5.34), (5.35), and (5.36).
+
+### Checked, and left as written
+
+Theorem 4.9, page 113: the Julia set is connected iff the orbit of 0 is bounded. The §4.2 sheet says one piece when that orbit stays bounded, and disconnected when it leaves. Theorem 4.12, page 118: \(|z|<1\) sums to \(1/(1-z)\), and \(|z|\ge 1\) diverges. Theorem 4.15, page 124, pulls convergence in toward the centre. Exercise 6, page 129, is No: \(|2+3i|=\sqrt{13}<\sqrt{17}=|4-i|\). Theorem 4.16, page 125, gives \(R=\infty\) when the coefficient ratio goes to 0. Identity (5.1), page 132, and Equations (5.6)–(5.7), page 133: \(|e^{z}|=e^{x}\), and Arg sits in \((-\pi,\pi]\), with \(\pm\pi\) at \(\pi\). Exercise 2(c), page 135, lands \(\pm i\pi\) at \(-1\). Theorem 5.4, page 149, and the answer key for Exercise 1, page 156, start the cosine derivative at \(n\ge 1\). Identity (5.35), page 150, is \(\sin(x+iy)=\sin x\cosh y+i\cos x\sinh y\). Exercise 6(c), page 157, is \(\sin(2i)=i\sinh 2\). Figure 5.7, page 152, sends vertical segments to hyperbolas. The five generators were recomputed: sine parts on the \(5\times 5\) grid, 400 geometric sums, the radii, the shifted sums, 200 exponential modulus-and-argument seeds, the two-moduli comparison, and the ratio-test factorials.
+
+### Leftovers
+
+1. The §4.1 stay sentence says modulus 1 means the terms do not settle. At \(z=1\) the powers are \(1, 1, 1, \ldots\), which settles at 1. The same line is in `films/film-settle.html`. Split that sentence: \(z=1\) settles at 1, and every other point on the circle does not settle at one point.
+2. The memory line for Exercise 1(a), page 108, states the general fact "if \(|w|<1\), then \(w^n\to 0\)." That exercise is the one limit \(\bigl(\tfrac12+\tfrac i4\bigr)^n=0\), and the answer 0 is right. The general fact is §4.3, Exercise 6, page 123. Point the memory line there.
+3. §§5.2, 5.3, and 5.5 are still Later rows. Not a batch-4 error.
+
+## appllama (chapter-4-5 batch 4)
+
+Branch `cursor/chapter-4-5-2649`, tip `c0102e6`. Preview https://book-preview.complexanalysis.pages.dev. `js/stations/book.js`, `js/stations/exp-picture.js`, `css/components.css`, and `js/practice/recipe.js` on that host are the same bytes as this tip. Fresh storage. Phone first, 390×844, light and then dark, then 1280×800, light and dark. The finger was a touch. A press on the green ring with no move, a 2px nudge, a drag along the axis, a drag straight up, a press off the ring, a press 18px out and a press 26px out. Play through one turn, a pause, a drag while the turn was running. Reduced motion from a fresh load, through the steps and once around again. The book, the drawer, Chapter 4, the §5.4 stage, Practice 5.4, and the section title that scrolls back to the picture. No console errors. No failed requests. `scrollWidth` was 390, and 1265 at 1280.
+
+Appllama app design skill at `dd5caaec`, the mobile-feel and motion laws only. kit/SKILL.md wins where they meet: the four teaching colours, the one clock, the one gesture, and the drag that stays under the finger. No Appllama MCP.
+
+### Verdict
+
+ANOTHER BATCH. The turn, the grab, and the reduced-motion steps are the lesson, and they hold at both sizes in both themes. Two landings are wrong. The §5.1 title scrolls the square under The Book, and a resize while that picture is scrolled changes the square and leaves the new size in place. One batch, those two. Then this lens can rest.
+
+### The finger
+
+At rest the real part is 0 and the angle is −π/2. The claim is "The point sits on the bottom of the unit circle." The purple point is on the bottom of the dashed circle. The green ring is on the right, 44×44, around a 20px dot.
+
+A press on the ring, held, leaves both numbers where they are. A 2px nudge leaves them. A press off the ring, and a drag that starts there, leave the real part where it was. A press 18px from the center picks the ring up. A press 26px from the center does not.
+
+Along the axis the center of the dot stays on the finger, miss 0, and the angle stays −π/2. The claim becomes the radius line, \(e^{x}\), larger than 1. Letting go leaves the real part at 0.88. A quarter of a second later it is the same number. Play stays at y = 777. A drag straight up leaves the dot on the axis, miss in x of 0, and the page stays at scroll 0.
+
+During Play the button says Pause and the angle keeps moving while the dot stays on the finger. The real part went 0, 0.15, 0.28, 0.39, 0.50, 0.59, 0.68, and the angle moved from −1.27 to −0.88 after the release. The button was still Pause.
+
+### The clock
+
+Play from the bottom, radius 1. The claim leaves "the bottom" for "The point sits on the unit circle." and stays that sentence while the point is between the axes. At the end the angle is π, the claim is "The point sits on the left of the unit circle, on the real axis.", and the button says Play again. Play's top stays at y = 777 for the whole turn.
+
+On this machine that turn is a steady 60 frames a second. Ninety frames in the first second and a half, median 16.7ms, 95th percentile 16.7ms, the longest 16.8ms, none over 20ms. The same 1.5 seconds with the CPU slowed to 4× are 89 frames, median 16.7ms, none over 20ms. A pause at angle −1.11 puts the label back to Play. Four hundred milliseconds later the angle is −1.11.
+
+Reduced motion, fresh load, opens on Next step at the bottom. Idle, the picture is still. The presses land on the right (angle 0, "on the right of the unit circle, on the real axis."), the top, and the left, and the button says Start again. The next press is the bottom again. The button never says Pause.
+
+### The page
+
+On the phone the square is 358×358, from y = 350 to 708. The claim is two lines. Play is 70×44 and ends at 821. The status card starts at y = 845, one line under the 844 window. The same boxes in the dark. Dark paper is rgb(13, 18, 28). The claim is rgb(233, 237, 245). The lede is rgb(166, 176, 195). Light paper is rgb(246, 243, 236) and the title is rgb(26, 34, 48).
+
+At 1280×800, scroll 0, the square is the same 358px, from y = 344. The title is on the screen at y = 158. Play ends at 788. The column is 937px, so the paper to the right of the square is the rest of that column. The same frame in the dark.
+
+The book at scroll 0 puts Chapter 4 on the first screen: top 590 at 390, top 524 at 1280. The three closed chapters are one line each, 44px. Continue is 111×44. §5.4 reads Open. §5.2 reads Later. The drawer is eight rows, each 44×358, and the last row reads Test prep. While it is open the page does not scroll.
+
+Chapter 4's two chips are 44px. The stills are 161 CSS pixels and 161 bitmap pixels on the phone, 174 and 174 at 1280. There is no line above them. Six presses of Next landing write `0 → i → −1+i → −i → −1+i → −i → −1+i`, and the connected line appears on the fourth press. The button is 44px tall. The §5.4 card is five rows, each with its page: 150, 150, 149, 150, 152. Practice 5.4 opens at scroll 0. The heading is the derivative question. The three mode chips are 44px on one row. The choices are 44×324.
+
+### Ranked cuts
+
+1. **The section title parks the axes under The Book.** The 5.1 title is a 44px control, "The Complex Exponential Function." On the phone it scrolls the page to 277. The square's top lands at y = 73. The Book link is sticky from y = 57 to 101, so 28px of the square, the top of both axes, sits under that link. The same landing at 1280: square top 73, Book bottom 101, overlap 28, and the title has gone to y = −113. The circle, the claim, and Play stay visible. The first screen, at scroll 0, does not do this. The stage sections already clear the link, by 8px on §5.4 (the flag at y = 109). The picture has no such margin. Change: give the picture the scroll margin the stage already uses, so the square lands clear of The Book. The link stays sticky and 44px.
+
+2. **A resize while the picture is scrolled keeps the wrong square.** The size is taken from the square's viewport top. At 390×844, scroll 0, the square is 358 and Play ends at 821. Scroll the picture up, then set the window to 844×390. The square becomes 229. Scroll back to 0 and it is still 229, with Play ending at 656 in a 390px window. A resize at the top leaves that 229, because the room then comes out under 96px and the measure returns without writing a new size. A scroll by itself does not resize it: the width stayed 358. Change: measure the room from the square's place under the title, the place it has at scroll 0, and write that size. At 390×844 and at 1280×800 that is the 358 already on the first screen, with Play inside the window.
+
+### What to keep
+
+The grab, the clock, and the steps. The ring is 44px. A press keeps the radius until the finger moves, and then the dot stays under the finger. A press off the ring changes nothing. Play turns the angle, Pause holds it, and a drag during the turn leaves the angle running. The frame clock holds 60 frames a second, including at 4×. Reduced motion steps the bottom, the right, the top, and the left, and the button says Next step and Start again. The claim names the bottom at rest, the unit circle while the point is between the axes, and the left when the turn ends. Play does not move when the claim changes.
+
+The phone's first screen: the lede, the 358px square, the claim, and Play, in both themes. The laptop's first screen is that same square, with Play ending at 788, and the paper beside it is the room that keeps Play on the screen. The status card stays under Play.
+
+The book: closed chapters as one line, Chapter 4 on the first screen, Continue at 44px, §5.4 marked Open, the later sections marked Later. The drawer row reads Test prep. Chapter 4's chips, the stills drawn at the size they are shown, and the orbit printed as `i`, `−1+i`, `−i`. The five-line §5.4 recipe, with the page on each line. Practice opening at the top, on the question, with three chips. The four teaching colours, the paper, the serif title, and the white card.
+
+No slider, no scrubber, no second clock, no new chrome. The §§5.2, 5.3, and 5.5 pictures stay out of this fix.
+
+## Chapter 4 and 5, batch 5
+
+Started from `6570a3e` on `cursor/chapter-4-5-2649`. The merged list from the batch-4 council.
+
+The §5.1 picture uses the stage scroll margin, so the title lands the square about 8px under the sticky Book link. The square’s size is the room under the title at scroll 0, so a resize while the picture is scrolled keeps the 358px first screen. The resting claim is “$e^{z}$ sits on the bottom of the unit circle.” The lede says drag the green ring. The book count names the span: “in Chapters 4 and 5.” Camp titles on Chapter 4 are headings. The chips and the stills stay the doors. Definition and theorem pins are 44px. The chapter end is padded, and an opened Later row uses the stage clearance and an outline.
+
+$z=1$ settles at 1. Every other point on the unit circle does not settle at one point. The same split is in `films/film-settle.html`. Exercise 1(a), page 108, is the one limit $\bigl(\tfrac12+\tfrac i4\bigr)^n\to 0$. The general fact $|w|<1\Rightarrow w^n\to 0$ is §4.3, Exercise 6, page 123. §§5.2, 5.3, and 5.5 stay Later. No picture on those sections was already the lesson.
+
+On a local server, 390×844 and 1280×800, light and dark: the phone square is 358px and Play ends at 821; the laptop square is 352px and Play ends at 788. The §5.1 title and an opened Later row both sit 8px under the Book link. Pins are 44px. No console errors.
+
+`node tools/check_vectors.mjs` 234/234. `node tools/fractal-smoke.mjs` passed. `node kit/smoke.mjs` passed. No live `kit/` import. `js/core/map-route.js` matches the kit template.
+
+Theorem 4.9 stays page 113, connectedness. Theorem 4.11 stays page 116, the main cardioid and an attracting fixed point.
+
+Still open: §§5.2, 5.3, and 5.5 have no picture. Chapters 1–3, 6, and 7 are roadmap lines. The circuit stations stay off the §5.4 stage.
+
+## unslop (chapters-4-5 batch 5)
+
+Branch `cursor/chapter-4-5-2649`, walked at tip `1abe4ea`. Preview https://book-preview.complexanalysis.pages.dev. `js/stations/book.js` on that host is the same bytes as this tip. Fresh storage. Phone first, 390×844, light and then dark, then 1280×800, light and dark. The book, Chapter 4, §4.2, Chapter 5 at scroll 0, the §5.1 title, `#chapter-5-5-1`, §5.4, the Later rows 5.2 and 5.5, Practice 4.1, Practice 5.4, the Chapter 4 flash deck, and Test prep’s flash deck. A drag of the green ring from scroll 0. Reduced motion, one look, from a fresh load. No product code was changed. No console errors on those pages. `scrollWidth` was 390 and 1280.
+
+Unslop at `a6f121ee`, with kit/SKILL.md winning where they differ. This is a light pass. The paper, the serif title, the white card, and the four teaching colours are the brand, and this note leaves them. The page is a textbook: the circle is the moment, and the sentence under it is the signature. No emoji, no gradient text, no glow, no blob.
+
+### Verdict
+
+ANOTHER BATCH. At scroll 0 the first screen is the circle, the sentence, and Play, in both themes, at both widths. The door the book uses for §5.1 scrolls that circle off the screen and leaves a second copy of the instruction. The recipe cards then repeat the pin that is already on the page. One batch, the six cuts below. After that, this lens can rest.
+
+### Ranked cuts
+
+1. **The book’s §5.1 row opens under the picture.** `#chapter-5-5-1`, light and dark. At 390 the page is scrolled to 846. The Book link is 44px, from y = 57 to 101. The square is 358px and sits at y = −496. At 1280 the scroll is 787 and the square, 357px, sits at y = −443. The heading on that screen is an `<a>`, 44px tall, "The Complex Exponential Function." The line under it is "Drag changes the radius. Play turns the angle. The value is that radius times a turn." A click of that heading, from scroll 0, does the other thing: the square lands at y = 109, 8px under the Book link. Change: the row and the hash land there, on the square. The heading is a heading, the same as the Chapter 4 camps.
+
+2. **The recipe card repeats the pin on the same screen.** On Chapter 4, both widths and both themes, "Definition 4.1, page 103" is a 44px pin, and the card that follows opens with the same words as an h3, then "Howell & Mathews, Complex Analysis, 202 Updated Edition." At 390 the card starts at y = 782, so the repeated heading is in the window, under the pin. On §5.4 the pins are Definition 5.5, Theorem 5.4, Identity (5.35), and Figure 5.7, each 44px, and the card’s h3 is "Identity (5.35), page 150" again, then the same edition line. The five steps already name their own pages, and step 4 is that identity. Change: the card is the numbered lines. The heading and the edition line go. The pins stay.
+
+3. **The §5.1 card prints the identity, then step 1 prints it again.** The formula paragraph is \(e^{x+iy}=e^{x}(\cos y+i\sin y)\). The first step is "Write \(e^{z}=e^{x}(\cos y+i\sin y)\)." The modulus line and the angle line follow. §5.4 already dropped this extra formula. The §5.4 card is five steps and no formula paragraph. Change: drop the formula line on §5.1. The three steps stay.
+
+4. **The §5.1 idea is the lede again.** The lede, on the first screen, is "Drag the green ring. Play turns the angle. A blank fills when the picture makes it true." The idea under the heading is "Drag changes the radius. Play turns the angle. The value is that radius times a turn." That idea is the sentence `#chapter-5-5-1` leaves you on. Change: the idea goes. The lede is the instruction. The claim is the sentence that moves.
+
+5. **The practice heading is the citation the source line repeats.** Practice 4.1, light and dark. At 390 the heading is 130px, five lines, and it starts "Theorem 4.1, pages 103–104." The source line under it is "Howell & Mathews, Complex Analysis, Theorem 4.1, page 104. CC BY 4.0." At 1280 the same heading is 69px. Practice 5.4 is the one line "Establish \(d/dz\cos z=-\sin z\)." Change: the heading is the question. The theorem, the exercise, and the page stay on the source line. The same cut covers the later prompts in that section, including the one that ends "Exercise 1(a), page 108." That string is the heading when the card comes up. This pass stopped on the theorem card.
+
+6. **The opened Later row wears a second box.** `#chapter-5-5-2` and `#chapter-5-5-5`, both widths, both themes. The opened card is at y = 109, 8px under the Book link, and its outline is 2px solid ink, rgb(26, 34, 48) in the light and rgb(233, 237, 245) in the dark, offset 2px outside a card that already has a border and already says Later. The two cards under it are the same words with the quiet border. Change: one border, the card’s own. The outline goes. The word Later, and the place under The Book, stay.
+
+### What to keep
+
+At scroll 0 the circle is the page. On the phone it is 358×358, from y = 350 to 708. The claim is two lines, "\(e^{z}\) sits on the bottom of the unit circle." Play is 70×44 and ends at 821. The status card starts at 845, one pixel under the window. At 1280 the square is 357×357, from x = 304, y = 344. The claim is one line. Play ends at 788 in the 800px window. The column is 952px. The paper to the right of the square is the room that keeps Play on that screen. Leave the square that size.
+
+The green ring is 44×44 around a 20px dot, on the right. The purple point is on the bottom. A drag of the ring set the real part to about 0.70, left the angle at \(-\pi/2\), and the claim said the radius is \(e^{x}\), larger than 1. The stage was focused, `:focus-visible` was false, and the outline was none. Reduced motion opens on Next step, 44px, at the bottom of the phone.
+
+The Book link is 44px, from y = 57 to 101. Chapter 4’s camp titles are headings. The two chips are 44px and they are the door. On `#chapter-4-4-2` the stills sit under one sentence, 161px on the phone and 174px at 1280. The pins are 44px. §5.4’s five lines keep their pages, with no empty row and no second copy of the formula. The book status is "Next is §4.1, Exercise 3, in Chapters 4 and 5. 0 of 10 exercises." Chapter 4, flagged Next, is on the first screen at 390 and at 1280. Continue is 111×44. §§5.2, 5.3, and 5.5 read Later.
+
+The where-line stays, tracked small caps under the title. Light paper is rgb(246, 243, 236), the title rgb(26, 34, 48) at 25.85px on the phone and 36px at 1280, weight 600, Iowan Old Style. The lede is rgb(81, 91, 108) on that paper, contrast 6.2. Dark paper is rgb(13, 18, 28), the claim rgb(233, 237, 245), contrast 16, the lede rgb(166, 176, 195), contrast 8.6. Blue is `#0b63ad`, orange `#a84300`, green `#006e53`, purple `#9d3a8a` in the light, and `#62adf2`, `#ff9d5c`, `#3fd0a0`, `#e48fd2` in the dark, on the axes, the dashed circle and the ray, the ring, and the point.
+
+The chapter-end pad stays, so an opened row can sit under The Book. The §§5.2, 5.3, and 5.5 pictures stay off this pass. No new chrome, no second clock, no slider.
+
+Test prep’s flash status says "42 due." The card under it says New, and "New card." That count treats every unseen definition as due. It is the line after these six.
+
+## ux-veteran (chapters-4-5 batch 5)
+
+Preview https://book-preview.complexanalysis.pages.dev at tip `1abe4ea`. `js/stations/book.js`, `js/stations/exp-picture.js`, `js/book/continue.js`, `js/data/book-path.js`, and `css/components.css` on that preview are the same bytes as this tip. Fresh storage. Phone first, 390×844, light, coarse pointer, then the same walk in the dark, then 1280×800, light and dark, with a mouse. Section hashes were opened again from a fresh load so a saved scroll could not pretend to be the landing. No product code was changed. No console errors. No failed requests. No sideways scroll (`scrollWidth` was 390 and 1280).
+
+Read `## ux-veteran (mobile audit)` on `cursor/ux-veteran-audit` and `## ux-veteran (chapter-4-5 batch 4)`. The bar is the same: a 44px target, one up control, and a first screen that names the next action.
+
+### Verdict
+
+ANOTHER BATCH. The five cuts from batch 4 are on the page, and a press on the §5.1 title clears The Book. The row the book uses for §5.1 scrolls that picture off the screen, and the camps under it are not in the book's order. One batch, the three cuts below. After that, this walk can rest.
+
+### What the checks did
+
+**The book, both themes.** At 390 the status says "Next is §4.1, Exercise 3, in Chapters 4 and 5. 0 of 10 exercises." Continue is 111×44 at y = 353. Chapters 1, 2, and 3 are one line each, 358×44. Chapter 4, flagged Next, starts at y = 618. At 1280 the same card starts at y = 524, the status is one line, and the sidebar is the list: chapters 1–7, then Test prep, each row at least 44×263, and the chapter you are on is marked. §5.4 reads Open. §§5.2, 5.3, and 5.5 read Later. The book lists them in print order: 5.1, 5.2, 5.3, 5.4, 5.5. Dark paper is rgb(13, 18, 28). The title is rgb(233, 237, 245) on that paper, contrast 16. The lede is rgb(166, 176, 195), contrast 8.6. Light paper is rgb(246, 243, 236), the title rgb(26, 34, 48), contrast 14.4, the lede rgb(81, 91, 108), contrast 6.2.
+
+**Chapter 4.** `#chapter-4` opens at scroll 0. The Book link is 358×44 on the phone and 952×44 at 1280. The status says "Next is §4.1, Exercise 3. 0 of 8 exercises." The camp titles are headings, decoration none. On the phone the two chips are 44px at y = 599, Definition 4.1 and Theorem 4.1 are 44px, and Practice 4.1 is 91×44, all on the first screen. At 1280 the chips are 44px at y = 536 and Practice 4.1 ends at 719, inside the 800px window. `#chapter-4-4-2` puts the 4.2 flag at y = 109, and the Book link ends at 101, on the phone and at 1280. The stills are on that screen: 161×161 on the phone (bottom 378) and 174×174 at 1280. The idea is one sentence, then the pictures.
+
+**Chapter 5.** At 390 the square is 358×358, from y = 350 to 708. The claim is two lines, y = 716 to 769: "$e^{z}$ sits on the bottom of the unit circle." Play is 70×44 and ends at 821. The status card starts at y = 862. At 1280 the square is 357×357 at x = 304, the claim is one line, and Play ends at 788. The green ring is 44×44 on the right. The lede says "Drag the green ring." A press on the §5.1 title scrolls the square to y = 109, and the Book link ends at 101, on the phone and at 1280. The same square in the dark, 358px, Play ending at 823, claim contrast 16. A resize to 844×390 while that picture was scrolled left the square at 358.
+
+**§5.4 and the later rows.** A fresh `#chapter-5-5-4` puts the 5.4 flag at y = 109, Book link ending at 101, on the phone and at 1280. The recipe card is five numbered lines. Each line keeps its page: 150, 150, 149, 150, 152. Practice 5.4 is 91×44. A fresh `#chapter-5-5-2` puts the Later card at y = 109 with a 2px solid outline. `#chapter-5-5-5` does the same for 5.5. On the chapter page those three cards come after §5.4. Their document tops, phone, scroll 0: §5.1 at 955, §5.4 at 2127, §5.2 at 3028, §5.3 at 3163, §5.5 at 3297.
+
+**Back and the drawer.** A fresh Continue opens `#chapter-4` at scroll 0. After that chapter has been scrolled to 700, Continue opens it again at 700. The chips for the exercise the status names sit at y = 599, so that resume is past them. Leave the resume. Browser Back from practice returns the chapter to the scroll you left (800). The Chapter 4 button on practice does the same. The Book link opens `#book` at the scroll the book last had. The drawer is eight rows, each 358×44: chapters 1–7, then Test prep. Chapter 4 is marked while that chapter is open. A wheel on the open drawer leaves the page where it is. At 1280 the Chapters button is not shown.
+
+**The §5.1 row.** A fresh `#chapter-5-5-1` is the hash on the book's 5.1 line. At 390 the page is scrolled to 846. The square is 358px at y = −496, and Play is at y = −69. The 5.1 flag is at y = 109, and the Book link ends at 101, so the heading is what landed, not the picture. At 1280 the scroll is 845, the square is at y = −500, and the flag is at y = 51, above the Book link, which ends at 102.
+
+**The still.** The Julia still on §4.2 opens `#julia` at scroll 0. The lede is 130px tall and ends at 275. It says to open the flat paper, and that c is a hollow square. The canvas is 322×322 from y = 665 to 987, so an 844px window shows the top 179px. Zoom + and − are 44×44, and Reset is 57×44.
+
+### Ranked
+
+1. **The book's §5.1 row hides the picture.** `#chapter-5-5-1`, both widths. At 390 the square is at y = −496 and Play is at y = −69. The flag sits at y = 109, 8px under the Book link, which is the heading, not the circle. At 1280 the square is at y = −500 and the flag is at y = 51, above the Book link. A press on the section title, from scroll 0, already lands the square at y = 109. That title is an anchor, 44px, with no underline. The §5.4 title and the Chapter 4 titles are headings. Change: the row and the hash land the square 8px under The Book, the place that press already uses. The title is a heading.
+
+2. **The chapter climbs in a different order from the book.** On `#chapter-5`, both widths, the camps run §5.1, then §5.4, then Later §5.2, Later §5.3, Later §5.5. On `#book` the same sections run 5.1, 5.2 Later, 5.3 Later, 5.4 Open, 5.5 Later. A student who finishes the picture meets trigonometry next, and the logarithm is a card under that. Change: the chapter uses the book's order. §5.2 and §5.3 are one line each, the number and the title, between §5.1 and §5.4. §5.5 is one line after §5.4. Each line stays 44px and still says Later. The outline and the 8px clearance stay.
+
+3. **The still opens a page whose set starts below the lede.** At 390 the Julia still is 161px and on the §4.2 screen. The press opens "Julia Sets: Square, then Slide" at scroll 0. The canvas starts at y = 665. The lede above it is five lines and names a hollow square this picture does not draw. Change: one line under the title, the colour sentence. The plane follows it, so the disk and the three buttons sit on the first screen. The flat-paper sentence moves under the disk.
+
+### What to keep
+
+The five batch-4 cuts are in. The resting claim names $e^{z}$ on the bottom of the unit circle, and the lede says drag the green ring. The green ring is 44px on the right. The book line names the span, "in Chapters 4 and 5," and the chapter pages keep their own counts, 0 of 8 and 0 of 2. Chapter 4 camp titles are headings. The chips and the stills are the doors. Definition 4.1, Theorem 4.1, and the four §5.4 pins are 44px. An opened Later row sits 8px under the Book link and carries a 2px outline, on the phone and at 1280. The §5.1 title scrolls the square to that same clearance.
+
+Play stays inside the window: it ends at 821 on the phone and at 788 at 1280. The status card starts just under that window. The square is 358px on the phone and 357px at 1280. Leave that size. The paper beside the laptop square is the room Play is using. A resize while the picture is scrolled keeps the 358px square.
+
+Chapter 4 starts on the first screen of the book, y = 618 on the phone and y = 524 at 1280, flagged Next, with Continue on the screen. Closed chapters are one line and 44px. §5.4 reads Open. The §4.2 idea is one sentence, and the stills follow it, drawn at the size they are shown. The §5.4 recipe is five lines, and each line keeps its page. The first screen of Chapter 4 shows the 4.1 flag, the two chips, the pins, and Practice.
+
+The Book link is the 44px station link. A section flag on an open camp sits 8px under it. A fresh Continue opens `#chapter-4` at the top. Browser Back and the practice button return the chapter to the scroll you left. The drawer is chapters 1–7, then Test prep, and at 1280 that list is the sidebar, with the chapter you are on marked. The Chapters button is 118×44 and reads Chapters.
+
+The type is Iowan Old Style, 25.85px on the phone and 36px at 1280. The axes are blue rgb(11, 99, 173), the dashed circle and the ray are orange rgb(168, 67, 0), the ring is green rgb(0, 110, 83), and the point is purple rgb(157, 58, 138). The where-line, the white card, and the 44px up control stay.
+
+## Chapter 4 and 5, batch 6
+
+Started from `1abe4ea` on `cursor/chapter-4-5-2649`. The merged list from the batch-5 council. Product code was at that commit; the two notes after it are the unslop and ux-veteran passes.
+
+`#chapter-5-5-1` scrolls to the square. On a phone the square is 358px at y = 109, 8px under the Book link. The §5.1 title is a heading. The idea under it is gone. The recipe card is the three numbered lines, with no pin heading and no edition line. §5.2 and §5.3 are 44px Later lines between §5.1 and §5.4. §5.5 is a 44px Later line after §5.4. An opened Later row keeps the card border and sits under the Book link. The second outline is gone.
+
+Practice headings are the question. Theorem 4.1, pages 103–104, opens on “Assume \(x_n\to u\)…”. The source line keeps the cite. A fresh flash deck says “42 new.” A wrong check on the Theorem 4.1 blank is stored as a Leitner miss, the same record a flash grade uses.
+
+On `#julia` the colour sentence sits under the title, then the plane. At 390 the disk is 322px from y = 263 to 585, with Zoom on that screen. The flat-paper sentence is under the disk. The sentence wraps to two lines on the phone and is one line at 1280.
+
+`node tools/check_vectors.mjs` 234/234. `node tools/fractal-smoke.mjs` passed. `node kit/smoke.mjs` passed. No live `kit/` import. `js/core/map-route.js` matches the kit template. Walked 390×844 and 1280×800, light and dark. No console errors. `scrollWidth` stayed inside the window.
+
+Theorem 4.9 stays page 113, connectedness. Theorem 4.11 stays page 116, the main cardioid and an attracting fixed point. Howell & Mathews, 202 Updated Edition.
+
+Still open: §§5.2, 5.3, and 5.5 have no picture. Chapters 1–3, 6, and 7 are roadmap lines for their own loops. The circuit stations stay off the §5.4 stage. The shared practice engine was not rebuilt; only the due count and the stored attempt changed. A new card is counted as new until it is graded, and it is due on a later day.
+
+## taste-skill (chapters-4-5 batch 6)
+
+Branch `cursor/chapter-4-5-2649`, tip `dd97fb2`. Preview https://book-preview.complexanalysis.pages.dev. `js/stations/book.js`, `js/stations/exp-picture.js`, and `css/components.css` on that host are the same bytes as this tip. Fresh storage. Phone first, 390×844, light and then dark, then 1280×800, light and dark. The book, Chapter 4, `#chapter-4-4-2`, `#julia`, Chapter 5 at scroll 0, `#chapter-5-5-1`, `#chapter-5-5-4`, `#chapter-5-5-2`, Practice 4.1, and the flash deck. A drag of the green ring from the bottom of the circle. No product code was changed. No console errors. No failed requests. `scrollWidth` was 390 and 1280.
+
+Taste-skill at `12af471f`, the critique passes for hierarchy, spacing, restraint, and what to cut. kit/SKILL.md wins where they meet. `inspect.mjs` was not run. Its house rules ban the kicker, the tracked where-line, the four teaching colours, and the 1px card, and the kit keeps those. The measurements below are from Chrome. This pass does not restyle the page.
+
+### Verdict
+
+ANOTHER BATCH. At scroll 0 the circle is the page, in both themes, at both widths, and `#chapter-5-5-1` lands that circle 8px under The Book. Two screens are still wrong. The bottom of Chapter 4 and of Chapter 5 is an empty page, and on the laptop the Julia disk runs past the window, taking the flat-paper line with it. One batch, the six cuts below. After that, this lens can rest.
+
+```
+ROUND 1
+Seen in one second: the circle, with the purple point on the bottom and the green ring on the right. On the laptop the same circle sits in the left of the column.
+Idea (one sentence): e^z is a radius the hand sets and an angle the clock turns, and the sentence under the circle says which.
+Live thing: drag the green ring, or press Play.
+Layout words by section: hero=picture / status=bar / 5.1=list / later=lines / 5.4=list. Chapter 4 is hero=list. Julia is hero=plane beside a rule on the laptop, and a stacked plane on the phone.
+Scores: design 7 · usability 7 · creativity 8 · content 7 → overall 6.5
+Caps applied: the chapter-end pad is a blank stretch taller than half a screen, so design stays at 6.5. The Practice 4.1 prompt is a four-line headline, so overall stays at 6.5. The where-line, the four teaching colours, the 1px card, and the drawn pictures stay; the kit keeps them, and those house caps are not applied. The empty paper to the right of the laptop square is the room that keeps Play inside 800. It is not a second blank screen.
+Top three problems (most visible first), each with the screenshot it shows in and the fix:
+1. p390-light-ch5-end and d1280-light-ch5-end. Under The Book the window is empty paper down to the footer. Shorten the end pad so the last row stays on that screen.
+2. d1280-light-julia. The disk's bottom is past y=800, and the flat-paper line is at y=822. Cap the plane so both end inside the window.
+3. p390-light-julia. "The set" and "Orange on a" repeat the lede and the caption is cut at the fold. Drop the heading and that sentence.
+```
+
+### What I could actually do
+
+`#chapter-5` at 390×844, light and dark. The Book link is 358×44. The title is one line, 25.85px, weight 600. The where-line is the tracked small caps. The lede is two lines, 52px: "Drag the green ring. Play turns the angle. A blank fills when the picture makes it true." The square is 358×358, from y=350 to 708. The claim is two lines, "\(e^{z}\) sits on the bottom of the unit circle." Play is 70×44 and ends at 821. The status card starts at 845, one line under the window. Dark paper is rgb(13, 18, 28). The claim is rgb(233, 237, 245), contrast 16. The lede is rgb(166, 176, 195), contrast 8.6. Light paper is rgb(246, 243, 236). The title is rgb(26, 34, 48), contrast 14.4. The lede is rgb(81, 91, 108), contrast 6.2. The same boxes in the dark.
+
+The green ring is `#chapter-exp-halo`, 44×44, on the right. A drag to the right set the real part to about 0.96, left the angle at \(-\pi/2\), and the claim said the radius is \(e^{x}\), larger than 1. Play stayed at y=777. The stage was focused, `:focus-visible` was false, and the outline was none.
+
+At 1280×800 the column starts at x=304 and the title is 952px, 36px type. The square is 357×357 at x=304, y=344. The claim is one line. Play ends at 788. The paper from the square's right edge to the column edge is the rest of that first screen, in light and in dark.
+
+`#chapter-5-5-1`, both widths. The page scrolls to the square. On the phone the scroll is 241, the square is 358px at y=109, and The Book ends at 101, so the gap is 8px. Play ends at 580. The §5.1 title is an h2, "The Complex Exponential Function," decoration none, and it sits under Play with the status card. At 1280 the scroll is 235, the square is 357px at y=109, the same 8px gap, and Play ends at 553.
+
+The camps run in book order. On the phone, document tops: §5.1 at 955, §5.2 at 1908, §5.3 at 1976, §5.4 at 2044, §5.5 at 2846. §5.2 and §5.3 are 44px lines. §5.5 is a 44px line. `#chapter-5-5-2` puts that line at y=109, 8px under The Book, with a 1px border and no outline. The recipe under the §5.1 title is three numbered lines and no formula paragraph above them. §5.4's five lines keep their pages.
+
+Chapter 4 at 390 opens at scroll 0. The title is two lines, 62px. The status ends inside the window. The two chips, Definition 4.1, and Theorem 4.1 are 44px and on that screen. The stills on `#chapter-4-4-2` are 161 CSS pixels and 161 bitmap pixels on the phone, 174 and 174 at 1280.
+
+`#julia` at 390. The lede is two lines, "Blue means the landing stayed. Orange means it left." The canvas is 322×322 from y=255 to 577, and the bitmap is 322. Zoom +, Zoom −, and Reset are 44px and on that screen. The flat-paper sentence is at y=586. At 1280 the lede is one line. The canvas is 572×572 from y=241 to 813. The flat-paper sentence is at y=822. The rule panel sits in the column beside the plane.
+
+Practice 4.1 opens at scroll 0. The heading is the question, an h2 104px tall, four lines, starting "Assume \(x_n \to u\)…". The source line under it is Theorem 4.1, page 104. The flash deck says "42 new." The card says NEW, then "New card," then "How do you check that a sequence settles?"
+
+### What clicks
+
+The phone's Chapter 5 is one picture. The circle is the width of the page, the claim names the bottom, and Play is on that screen in both themes. The drag owns the radius and leaves the angle. The ring is 44px. A drag leaves the square unframed.
+
+`#chapter-5-5-1` now lands on that circle, 8px under the sticky Book link, at both widths. The section title is a heading. The idea under it is gone. The recipe is the three steps. §5.2 and §5.3 sit between §5.1 and §5.4, and §5.5 sits after §5.4, each a 44px line with one border. The book puts Chapter 4, flagged Next, on the first screen, and Continue is 111×44.
+
+On the phone the Julia disk, the zoom buttons, and the flat-paper sentence are on the first screen. The stills are drawn at the size they are shown. The four colours stay on the marks: blue axes, orange circle and ray, green ring, purple point.
+
+### Ranked cut or fix
+
+1. **The chapter ends on an empty page.** Evidence: `#chapter-5` scrolled to the end, both widths. On the phone the scroll is 3008, the pad is 735px and starts at y=−26, and §5.5 is at y=−162, above the window. The screen is The Book, then empty paper, then the footer. At 1280 the scroll is 2624, the pad is 691px, and §5.5 is at y=−139. Chapter 4 does the same: at the end the pad is 735px from y=−26, and §4.4 has already left the window. The pad is `100dvh` minus the header, one tap, and half a rem, and the end Book link and the footer sit after it, so the last row scrolls away. Change: the pad is only the shortfall that leaves the last row 8px under The Book when the page is at its end, the clearance `#chapter-5-5-5` already uses. The empty screen goes.
+
+2. **On the laptop the Julia disk runs off the first screen.** Evidence: 1280×800, light. The canvas is 572×572, from y=241 to 813, in an 800px window. The flat-paper sentence, "On the flat paper, c is a hollow square," is at y=822. Zoom is on the screen. The rule panel is beside the plane and is cut at the same edge. On the phone the same disk ends at 577 and that sentence is at y=586, inside 844. Change: cap the plane so the disk and the one line under it end inside 800. The rule panel stays beside it.
+
+3. **Julia says orange twice, and the second time is cut off.** Evidence: 390×844. The lede is "Blue means the landing stayed. Orange means it left." Under the source, the heading is "The set," and the caption starts "Green is one start. The orange point is c on this picture only. Orange on a" at y=796, clipped by the 844 edge. The full caption goes on to "Orange on a landing means the walk left. Drag c and let go: the blue region stops being a disk." Change: drop the heading "The set" and the sentence "Orange on a landing means the walk left." Keep the green start, the orange point as c, and the drag sentence.
+
+4. **Chapter 4's lede spends a line on the page's outline.** Evidence: both widths, the lede is 52px and two lines. "An orbit is a sequence. Each section says why, then the work, then the sentence." The four sections already open with their own sentence, then the work. Change: the lede is "An orbit is a sequence."
+
+5. **The Chapter 5 lede points at a blank the first screen does not show.** Evidence: both widths, both themes, the lede's third sentence is "A blank fills when the picture makes it true." On the phone the §5.1 section starts at y=955, under an 844px window. The claim and Play are the sentences on this screen. The blanks are the exercise lines under the recipe. Change: the lede is "Drag the green ring. Play turns the angle." The blanks stay where they fill.
+
+6. **The practice question is a four-line headline.** Evidence: Practice 4.1, 390, light. The h2 is 104px, four lines: "Assume \(x_n \to u\) and \(y_n \to v\), with \(z_n = x_n + iy_n\) and \(\zeta = u + iv\). Show \(z_n \to \zeta\)." The source line under it keeps Theorem 4.1, page 104. The proof steps start under that and run off the window. Change: the prompt stays the question, at the size of the step text under it. The page title stays Test prep. The source line stays the cite.
+
+### What to keep
+
+At scroll 0 the circle is the page. On the phone it is 358×358, the claim is the bottom of the unit circle, and Play ends at 821, in light and in dark. At 1280 the square is 357px and Play ends at 788. Leave that size. The paper beside it is the room Play is using.
+
+The green ring is 44px. A drag sets the radius and leaves the angle, and the claim flips to larger than 1. Play does not move. The square stays unframed after the drag.
+
+`#chapter-5-5-1` lands the square 8px under The Book, at both widths. The §5.1 title is a heading. The recipe is three numbered lines. §5.2, §5.3, and §5.5 are 44px Later lines in book order, one border, and an opened row sits at that same 8px clearance. §5.4's five lines keep their pages.
+
+The where-line stays, tracked small caps under the title. The Book link stays the 44px sticky control. Chapter 4's chips and pins are 44px, and the stills are drawn at the size they are shown. On the phone the Julia disk, the zoom buttons, and the flat-paper sentence share the first screen. The four teaching colours, the paper, the serif title, and the white card stay.
+
+The flash count "42 new." stays. The card's question stays. §§5.2, 5.3, and 5.5 stay Later, with no new picture. No new chrome, no second clock, no slider on the exponential.
+
+## ux-veteran (chapters-4-5 batch 6)
+
+Preview https://book-preview.complexanalysis.pages.dev at tip `dd97fb2`. `js/stations/book.js`, `js/stations/exp-picture.js`, and `css/components.css` on that preview are the same bytes as this tip. Fresh storage. Phone first, 390×844, light, coarse pointer, then the same walk in the dark, then 1280×800, light and dark, with a mouse. Section hashes were opened from a fresh load. No product code was changed. No console errors. No failed requests. No sideways scroll (`scrollWidth` was 390 and 1280).
+
+Read `## ux-veteran (mobile audit)` on `cursor/ux-veteran-audit` and `## ux-veteran (chapters-4-5 batch 5)`. kit/SKILL.md is the style: the paper, the serif title, the white card, the four teaching colours, a 44px target, one up control, and a first screen that names the next action. `BRIEF.md`, `LENSES.md`, and `loop.md` are not in this tree. The bar is the one those two notes already use.
+
+### Verdict
+
+ANOTHER BATCH. The three cuts from batch 5 are on the page, in both themes, at both widths. The book's §5.1 row lands on the circle. Chapter 5 climbs in the book's order. The Julia colour sentence sits under the title, then the disk, on the phone. Practice headings are the question. The climb still ends on an empty screen, and at 1280 the Julia disk runs past the window. One batch, the two cuts below. After that, this walk can rest.
+
+### What the checks did
+
+**The book, both themes.** At 390 the status says "Next is §4.1, Exercise 3, in Chapters 4 and 5. 0 of 10 exercises." Continue is 111×44 at y = 352. Chapters 1, 2, and 3 are one line each, 44px. Chapter 4, flagged Next, starts at y = 617, and 4.1 is on that screen. At 1280 the status is one line, Continue sits on that card, Chapter 4 starts at y = 524, and the sidebar is the list. The rows run 5.1, 5.2 Later, 5.3 Later, 5.4 Open, 5.5 Later. Dark paper is rgb(13, 18, 28). The title is rgb(233, 237, 245), contrast 16. The lede is rgb(166, 176, 195), contrast 8.6. Light paper is rgb(246, 243, 236), the title rgb(26, 34, 48), contrast 14.4, the lede rgb(81, 91, 108), contrast 6.2.
+
+**Chapter 4.** `#chapter-4` opens at scroll 0. The Book link is 358×44 on the phone and 952×44 at 1280. The status says "Next is §4.1, Exercise 3. 0 of 8 exercises." The two chips are 44px at y = 599. Definition 4.1 and Theorem 4.1 are 44px. Practice 4.1 is on that screen. At 1280 the chips are 44px at y = 535 and Practice 4.1 is at y = 674, inside the 800px window. `#chapter-4-4-2` puts the 4.2 flag at y = 109. The still is 161×161, bottom 378, under one sentence.
+
+**Chapter 5 at the top.** At 390 the square is 358×358, from y = 350 to 708, in the light and in the dark. The claim is two lines: "\(e^{z}\) sits on the bottom of the unit circle." Play is 70×44 and ends at 821. The lede says "Drag the green ring." The green ring is 44×44, with the 20px green dot inside it, on the right of the circle. The purple dot is 12px, on the bottom. At 1280 the square is 357×357 at x = 304, y = 344, the claim is one line, and Play ends at 788. A drag of the ring moved the radius in, and the claim said the radius is \(e^{x}\), smaller than 1.
+
+**§5.1 lands on the circle.** A fresh `#chapter-5-5-1`, light and dark, both widths. At 390 the scroll is 241. The square is 358px at y = 109. The Book link ends at 101, so the axes sit 8px under it. Play ends at 580. The §5.1 title is an h2, decoration none, at y = 738, on that screen, under the status card. The idea under the heading is gone. At 1280 the scroll is 235, the square is 357px at y = 109, and Play ends at 553. The same square in the dark. The target outline is none. A resize to 844×390 while that picture was scrolled left the square at 358.
+
+**The climb is the book's order.** On `#chapter-5`, scroll 0, the camps' document tops are §5.1 at 955, Later §5.2 at 1908, Later §5.3 at 1976, §5.4 at 2044, Later §5.5 at 2846. Each Later line is 44px tall, one border, outline none. A fresh `#chapter-5-5-2` puts that line at y = 109, 8px under the Book link, on the phone and at 1280. §5.3 is the next line. §5.4 follows, and its name is on that screen. `#chapter-5-5-4` puts the 5.4 flag at y = 109. The recipe is five numbered lines, and each line keeps its page. `#chapter-5-5-5` puts the 5.5 line at y = 111. On the phone the title box is 281px wide and the words are 438px, so the line reads "5.5 Inverse Trigonometric and …". At 1280 the same title fits. The line stays 44px and says Later. The book row wraps the full name.
+
+**Julia.** `#julia` at scroll 0. The colour sentence is under the title: "Blue means the landing stayed. Orange means it left." It is 52px, two lines, on the phone, and 26px, one line, at 1280, in both themes. The disk follows. At 390 the canvas is 322×322, from y = 255 to 577. Zoom + and − are 44×44, Reset is 57×44, and all three sit on that disk. The flat-paper sentence starts at y = 586, under the disk. At 1280 the canvas is 572×572 at y = 241, the colour sentence is one line, and the mouse zoom buttons are 32×32. The same frame in the dark.
+
+**Practice headings are the question.** Practice 4.1 opens at scroll 0 on "Assume \(x_n\to u\) and \(y_n\to v\), with \(z_n=x_n+iy_n\) and \(\zeta=u+iv\). Show \(z_n\to\zeta\)." The source line is "Theorem 4.1, page 104." Practice 5.4 opens at scroll 0 on "Establish \(d/dz\cos z=-\sin z\)." The source line is "Exercise 1, page 156." The same heading rule leaves a page cite out of the other non-flash prompts. A fresh `#test-prep` flash deck says "42 new." The card says New, and "New card," and the question is "How do you check that a sequence settles?" The same words in the dark. The up control is the button in that card. The words above the title are a label.
+
+**The end of the climb.** Scrolled to the bottom of `#chapter-5`. At 390 the scroll is 3008. §5.5 is at y = −162. The end Book link is at y = −94. The pad is 735px and starts at y = −26, so the window under the sticky Book link is empty paper. At 1280 the scroll is 2623, §5.5 is at y = −138, and the pad is 690px from y = −2. Chapter 4 does the same: at the bottom the pad is 735px from y = −26, and §4.4 has left the window. The hash `#chapter-5-5-5` still lands the line at y = 111. The pad is taller than the gap that landing needs, and the end Book link sits between the row and the pad, so the bottom of the page goes past the row.
+
+**Back, the drawer, the sidebar.** A book scrolled to 600, then a chapter, then Back, returns to `#book` at 600. Practice, then Back, returns the chapter to 800. The Book link opens `#book` at the scroll the book last had. Continue, after that chapter was scrolled to 700, opens it again at 700. The drawer is eight rows, each 358×44: chapters 1–7, then Test prep. A wheel on the open drawer leaves the page at scroll 0. At 1280 the Chapters button is not shown. The sidebar rows are at least 44×263, and the chapter you are on is marked.
+
+### Ranked
+
+1. **The chapter ends on an empty screen.** At 390, scroll 3008, §5.5 is at y = −162 and the pad is 735px from y = −26. The sticky Book link is the only control on that screen. At 1280, scroll 2623, §5.5 is at y = −138 and the pad is 690px. Chapter 4's end is the same shape. `#chapter-5-5-5` already puts that line at y = 111, 8px under the Book link. Change: the pad is only the shortfall that leaves the last row at that place when the page is at its end. The empty screen goes. The hash landing stays.
+
+2. **At 1280 the Julia disk runs past the window.** The canvas is 572×572, from y = 241 to 813, in an 800px window, light and dark. The flat-paper sentence is at y = 822. Zoom is on the screen. The rule panel beside the plane is cut at the same edge. On the phone the canvas ends at 577 and that sentence starts at 586, inside 844. Change: cap the plane so the disk and the one line under it end inside 800. The phone stays as it is.
+
+### What to keep
+
+The three batch-5 cuts are in. `#chapter-5-5-1` lands the square 8px under the Book link, 358px on the phone and 357px at 1280, light and dark. Play is on that screen. The §5.1 title is a heading. The resting claim names \(e^{z}\) on the bottom of the unit circle, and the chapter's own first screen says drag the green ring. The ring is 44px.
+
+Chapter 5 climbs 5.1, then Later 5.2, Later 5.3, then §5.4, then Later 5.5. An opened Later row sits 8px under the Book link, with the card's own border and no second outline. The §5.1 recipe is three lines. The §5.4 recipe is five lines, and each line keeps its page. The pins are 44px.
+
+On `#julia` the colour sentence is the line under the title, then the disk, and the flat-paper sentence is under the disk. Zoom is on the phone's first screen at 44px. The mouse buttons stay 32px.
+
+Practice headings are the question. The theorem, the exercise, and the page stay on the source line. A fresh deck says "42 new."
+
+The Book link is the 44px station link. A fresh Continue opens `#chapter-4` at the top. Browser Back returns the book and the chapter to the scroll you left. The drawer is chapters 1–7, then Test prep, and at 1280 that list is the sidebar. Chapter 4 starts on the first screen of the book, flagged Next, with Continue on the screen. The first screen of Chapter 4 shows the 4.1 flag, the two chips, the pins, and Practice.
+
+The type is Iowan Old Style, 25.85px on the phone and 36px at 1280. The axes are blue, the dashed circle and the ray are orange, the ring is green, and the point is purple. The where-line, the white card, and the 44px up control stay. The square stays the size that leaves Play on the first screen. §§5.2, 5.3, and 5.5 stay Later, with no picture. Leave the resume.
+
+## Chapters 4–5, batch 7
+
+Started from `dd97fb2` on `cursor/chapter-4-5-2649`. The two passes after that tip only appended this log. Product code for this batch is the end pad, the laptop Julia cap, the shorter ledes, the practice prompt size, the §4 recipe lines, and one Leitner record per practice item.
+
+The chapter-end pad is the shortfall only. On a phone, scrolled to the end of Chapter 5, §5.5 sits at y = 110. The Book link ends at 101, so the gap is 9px. The pad is 463px, not the old 735px. `#chapter-5-5-5` lands on that same row. Chapter 4’s last section is taller than the window, so its pad is 0. The end screen is the §4.4 recipe and Exercise 6, then the end Book link and the footer.
+
+At 1280×800 the Julia plane is capped at 509px. The disk runs y = 240 to 749. The flat-paper line runs y = 757 to 784. The rule panel stays in the column beside it. On a phone the cap is off: the disk ends at 578 and the flat-paper line starts at 586. The heading “The set” is gone. The caption keeps the green start, the orange point as c, and the drag sentence. It no longer says “Orange on a landing.”
+
+Chapter 4’s lede is “An orbit is a sequence.” Chapter 5’s lede is “Drag the green ring. Play turns the angle.” On the phone the square is still 358px and Play ends at 795. At 1280 the shorter lede lets the square grow to 384px, and Play still ends at 788. The claim is still \(e^{z}\) on the bottom of the unit circle.
+
+Practice 4.1’s question is 17px, the same size as the step under it. On the phone the heading is 80px, not 104px. The source line is still Theorem 4.1, page 104. The §4 recipe cards are numbered lines only, the same shape as §5.1 and §5.4. A multi-step practice item writes one Leitner record, when the last step is checked. A miss on any step of that item grades it again. Leaving in the middle writes nothing.
+
+`node tools/check_vectors.mjs` 234/234. `node tools/fractal-smoke.mjs` passed. `node kit/smoke.mjs` passed. No live `kit/` import. `js/core/map-route.js` matches the kit template. Walked 390×844 and 1280×800, light and dark. No console errors. `scrollWidth` was 390 and 1265.
+
+Theorem 4.9 stays page 113. Theorem 4.11 stays page 116. Howell & Mathews, Complex Analysis, 202 Updated Edition.
+
+Still open, and left on purpose:
+
+- §§5.2, 5.3, and 5.5 stay Later. A picture for the logarithm, the exponents, or the inverse trig functions is a new station, not a cut on the pages that already draw.
+- Chapters 1–3, 6, and 7 stay roadmap lines. Those pages belong to their own loops. This track opens 4 and 5.
+- Chapter 8 and later stay out of the shell. The drawer stops at 7.
+- The circuit stations stay off the §5.4 stage. The 5.4 door opens the stage.
+- Under the Chapter 5 end Book link there is still paper, the shortfall that holds §5.5 at the Book clearance. The footer sits at the bottom of that screen.
+- The Julia rule panel is taller than 800. The disk and the flat-paper line end inside the window. The panel stays beside the plane.

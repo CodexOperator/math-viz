@@ -9,10 +9,19 @@
 import { OPEN_CHAPTERS } from '../data/book-path.js';
 
 const CHAPTER_RE = /^chapter-(1[01]|[1-9])(?:-(.+))?$/;
+const PREP_RE = /^test-prep(?:-(1[01]|[1-9])(?:-(.+))?)?$/;
 
 export function parseBookRoute(token) {
   const raw = String(token || '').replace(/^#/, '').toLowerCase();
   if (raw === 'book') return { kind: 'roadmap', chapter: null, focus: null };
+  const prep = PREP_RE.exec(raw);
+  if (prep) {
+    return {
+      kind: 'prep',
+      chapter: prep[1] ? Number(prep[1]) : null,
+      focus: prep[2] ? prep[2].replace(/-/g, '.') : null,
+    };
+  }
   const m = CHAPTER_RE.exec(raw);
   if (!m) return null;
   const chapter = Number(m[1]);
@@ -30,4 +39,10 @@ export function chapterHash(n, focus) {
   const base = `chapter-${n}`;
   if (!focus) return base;
   return `${base}-${String(focus).replace(/\./g, '-')}`;
+}
+
+export function prepHash(chapter, section) {
+  if (!chapter) return 'test-prep';
+  if (!section) return `test-prep-${chapter}`;
+  return `test-prep-${chapter}-${String(section).replace(/\./g, '-')}`;
 }

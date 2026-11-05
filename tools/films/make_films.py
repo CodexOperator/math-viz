@@ -446,12 +446,13 @@ function draw(t){
   txt('r1','z = '+cz(re,im)+',  |z| = '+num(mod));
   txt('r2','terms shown: '+num(shown,4)+', step '+num(step,5));
   txt('r3','|z^n| = '+num(Math.hypot(cx,cy)));
-  txt('r4', mod<1-1e-6?'Settles at 0. The modulus is |z|^n.':(Math.abs(mod-1)<1e-6?'Stays. The modulus is 1, so it does not settle.':'Leaves. The modulus is bigger than 1.'));
+  const atOne=Math.hypot(re-1,im)<1e-9;
+  txt('r4', mod<1-1e-6?'Settles at 0. The modulus is |z|^n.':(Math.abs(mod-1)<1e-6?(atOne?'Settles at 1. The powers are 1, 1, 1, \\u2026.':'Stays. Every other point on the unit circle does not settle at one point.'):'Leaves. The modulus is bigger than 1.'));
   op('r1',1); op('r2',1); op('r3',1); op('r4',1);
 }
 """ + live_finish(D, [("start", 0), ("mid", 4), ("end", D)], "")
     cite = "Howell &amp; Mathews, Complex Analysis &sect;4.1, Definition 4.1.1. CC BY 4.0. PDF Definition 4.1."
-    return "settle", page_of(D, body, js, live_css(), "§4.1", "A sequence settles, or it does not", cite)
+    return "settle", page_of(D, body, js, live_css() + "\n#r4{white-space:normal}\n", "§4.1", "A sequence settles, or it does not", cite)
 
 def film_approach():
     PL = dict(x0=36, y0=78, w=420, h=420, xmin=-1.8, xmax=1.8, ymin=-1.8, ymax=1.8)

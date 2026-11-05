@@ -86,7 +86,8 @@ body {
   position: sticky;
   top: 0;
   z-index: 30;
-  height: var(--header-h);
+  height: auto;
+  min-height: var(--header-h);
   border-bottom: 1px solid var(--border);
   background: var(--bg);
 }
@@ -95,8 +96,9 @@ body {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  height: 100%;
-  padding: 0 var(--gutter);
+  min-height: var(--header-h);
+  height: auto;
+  padding: 0.35rem var(--gutter);
 }
 
 .brand {
@@ -134,13 +136,11 @@ body {
 .brand-mark .mark-dot { fill: var(--text); }
 
 .site-title-text {
-  overflow: hidden;
   font-family: var(--font-display);
-  font-size: clamp(1rem, 0.9rem + 0.9vw, 1.3rem);
+  font-size: clamp(0.95rem, 0.85rem + 0.6vw, 1.3rem);
   font-weight: 600;
-  line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
 }
 
 .header-actions {
@@ -172,10 +172,54 @@ body {
 .icon-btn .icon-sun { display: var(--icon-sun); }
 .icon-btn .icon-moon { display: var(--icon-moon); }
 
+.nav-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  flex: none;
+  min-height: var(--tap);
+  min-width: var(--tap);
+  padding: 0 0.7rem;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.nav-toggle svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .nav-toggle[aria-expanded="true"] {
   background: var(--surface-2);
   border-color: var(--text);
 }
+
+.where-line {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+a.book-row,
+a.book-section-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.75rem;
+  min-height: var(--tap);
+  color: inherit;
+  text-decoration: none;
+}
+a.book-row { flex-direction: column; align-items: stretch; gap: 0; }
+a.book-row h2 { color: inherit; }
+.prep-fold { margin-top: var(--space-4); min-width: 0; }
 
 /* Navigation: a drawer on phones, a sticky sidebar from 900px up. */
 .site-nav {
@@ -642,6 +686,7 @@ body[data-station="wave-phase"] #colour-key-circuit { display: grid; }
 .btn:hover { background: var(--surface-2); }
 .btn:active { transform: translateY(1px); }
 .btn[disabled], .btn[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; transform: none; }
+.btn[hidden] { display: none; }
 .btn-primary { border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
 .btn-primary:hover { background: var(--accent); filter: brightness(1.12); }
 .btn-quiet { border-color: transparent; background: transparent; }
@@ -1055,8 +1100,7 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   gap: var(--space-3);
 }
 
-/* The last section can still scroll its title up under the header. */
-.chapter-path { padding-bottom: calc(100dvh - var(--header-h)); }
+.chapter-path { padding-bottom: 0; }
 
 .exp-picture {
   display: flex;
@@ -1064,15 +1108,26 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   align-items: flex-start;
   gap: var(--space-2);
   min-width: 0;
+  /* html already has scroll-padding for the site header. This extra is the sticky Book link,
+     the same clearance a stage flag uses, so the axes land about 8px under that link. */
+  scroll-margin-top: 2.25rem;
 }
 
 .exp-stage {
-  /* The square takes the column, and stops short of the height that would
-     push Play off the first screen. */
-  width: min(100%, calc(100dvh - 20rem));
+  /* Status sits under Play. The square takes the column on a phone, about
+     358px, unless the claim and Play need the leftover room instead.
+     The picture measures that room once it is on the page. */
+  width: min(100%, calc(100dvh - 30rem));
   max-width: 100%;
   aspect-ratio: 1;
   touch-action: none;
+}
+
+@media (min-width: 52rem) {
+  .exp-stage {
+    width: min(100%, calc(100dvh - 23rem));
+    max-height: none;
+  }
 }
 
 .exp-stage svg {
@@ -1121,8 +1176,6 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   border-bottom-color: transparent;
 }
 
-.exp-later { margin: 0; }
-
 .section-node.exp-walk { scroll-margin-top: calc(var(--header-h) + var(--space-3)); }
 
 .book-node,
@@ -1149,8 +1202,7 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 }
 
 .book-node[data-state="later"] {
-  background: transparent;
-  box-shadow: none;
+  background: var(--surface);
 }
 
 .book-node[data-state="open"] { border-style: dashed; }
@@ -1190,25 +1242,209 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   margin: 0;
   color: var(--text-muted);
 }
+.book-door a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+}
 
 .book-sections { display: flex; flex-direction: column; gap: var(--space-1); margin-top: var(--space-2); }
 
 .book-sections li {
+  display: block;
+  min-width: 0;
+}
+
+.book-row-link {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0.35rem 0.75rem;
+  width: 100%;
+  min-height: var(--tap);
+  color: inherit;
+  text-decoration: none;
+}
+
+.book-node > .book-row-link {
+  display: block;
+  min-height: var(--tap);
+}
+
+.chapter-door {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  color: inherit;
+  text-decoration: none;
+}
+
+.section-node.chapter-stage {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  /* html already has scroll-padding for the site header. This extra is the sticky Book link. */
+  scroll-margin-top: 2.25rem;
+}
+
+a.station-link.chapter-up {
+  position: sticky;
+  top: var(--header-h);
+  z-index: 6;
+  margin-bottom: var(--space-2);
+  background: var(--bg);
+}
+
+.section-node.chapter-stage[data-state="next"],
+.section-node.chapter-stage[data-state="done"] {
+  border-left: 0;
+  box-shadow: none;
+}
+
+.chapter-card a.chip { min-height: var(--tap); }
+
+.chapter-need { margin: 0; color: var(--text-muted); }
+.chapter-need[hidden] { display: none; }
+
+.stage-done { margin-top: var(--space-3); }
+.stage-done[hidden] { display: none; }
+.chapter-fade[hidden] { display: none; }
+.chapter-orbit { margin: 0; font-family: var(--font-mono); font-size: 0.92rem; }
+.chapter-off { margin: 0; color: var(--text-muted); }
+.chapter-off[hidden] { display: none; }
+
+.chapter-sets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
   min-width: 0;
+}
+
+.chapter-set {
+  display: flex;
+  flex-direction: column;
+  width: min(11rem, calc(50% - var(--space-3)));
+  min-width: 0;
+  min-height: var(--tap);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: inherit;
+  text-decoration: none;
+}
+
+.chapter-set canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  background: var(--surface-2);
+}
+
+.chapter-set span {
+  padding: 0.45rem 0.75rem 0.6rem;
 }
 
 .book-section-page { margin-left: auto; font-variant-numeric: tabular-nums; }
 .book-section-mark { font-size: 0.82rem; font-weight: 700; }
 .book-section-mark:empty { display: none; }
-.book-sections [data-state="next"] .book-section-mark { color: var(--text); }
+.book-sections [data-state="next"] .book-section-mark,
+.book-sections [data-state="open"] .book-section-mark { color: var(--text); }
 .book-sections [data-state="done"] .book-section-mark { color: var(--ok); }
+.book-sections [data-state="later"] .book-section-mark { color: var(--text-muted); }
+
+/* A later section is one line: Later, the number, and the title. The card's own
+   border is the mark. The row sits about 8px under the sticky Book link. */
+a.chapter-later-line {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--tap);
+  min-height: var(--tap);
+  padding: 0 0.75rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: inherit;
+  text-decoration: none;
+  scroll-margin-top: 2.25rem;
+}
+
+a.chapter-later-line .book-flag {
+  margin: 0;
+  flex: none;
+}
+
+a.chapter-later-line .chapter-later-title {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The chapter page sizes this to the shortfall only, so the last row can sit
+   about 8px under the sticky Book link. A full-viewport height left an empty screen. */
+.chapter-end-pad {
+  height: 0;
+  pointer-events: none;
+}
+
+/* A later chapter on the roadmap is one line: the number and the title.
+   The Next card stays a card, so it can sit under the status on the first screen. */
+#book-path > .book-node[data-state="later"] {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+#book-path > .book-node[data-state="later"] > a.book-row {
+  position: relative;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  min-height: var(--tap);
+  gap: 0.5rem;
+}
+
+#book-path > .book-node[data-state="later"] .book-flag,
+#book-path > .book-node[data-state="later"] .book-page {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+#book-path > .book-node[data-state="later"] h2 {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 1.02rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
 
 .book-read { margin: 0; padding-left: 1.2rem; }
 .book-read li { margin: 0.15rem 0; }
+.book-read a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+}
 .book-label {
   margin: var(--space-3) 0 var(--space-1);
   font-family: var(--font);
@@ -1225,3 +1461,91 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
 .chapter-card p { min-width: 0; }
 .section-mark { margin-top: var(--space-2); }
 .book-footer-link { margin-top: var(--space-2); }
+
+/* Test prep. Same cards and buttons as the book pages. */
+.practice-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  min-width: 0;
+}
+.practice-toolbar .chips { min-width: 0; }
+#practice-endless[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
+.practice-stage,
+.practice-card,
+.practice-sheet,
+.practice-doors { min-width: 0; max-width: 100%; }
+.practice-card h2,
+.practice-step-text,
+.practice-back,
+.practice-reveal { overflow-wrap: anywhere; }
+/* The question stays the heading. Its size is the step under it, not a title. */
+.practice-card[data-kind] #practice-prompt {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font);
+  font-size: 1.0625rem;
+  font-weight: 400;
+  line-height: 1.55;
+  text-wrap: wrap;
+}
+.practice-field { width: 100%; }
+.practice-field input { width: 100%; font-family: var(--font-mono); }
+.practice-choices { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.practice-choice {
+  width: 100%;
+  height: auto;
+  justify-content: flex-start;
+  text-align: left;
+  white-space: normal;
+}
+.practice-choice[data-mark="right"] { border-color: var(--ok); }
+.practice-choice[data-mark="wrong"] { border-color: var(--danger); }
+.practice-steps { margin: 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: var(--space-2); }
+.practice-steps li[data-state="ahead"] { color: var(--text-muted); }
+.practice-why {
+  margin: var(--space-2) 0 0;
+  padding: var(--space-2) var(--space-3);
+  border-left: 4px solid var(--ok);
+  background: var(--surface-2);
+}
+.practice-verdict { margin: 0; font-weight: 700; }
+.practice-verdict[data-right="false"] { color: var(--danger); }
+.practice-filled { font-weight: 700; }
+.practice-sheet { display: flex; flex-direction: column; gap: var(--space-3); }
+.practice-sheet-section h3 { margin-bottom: var(--space-2); }
+.practice-memories,
+.practice-formulas { margin: 0; padding-left: 1.2rem; }
+.practice-memories li,
+.practice-formulas li { margin: 0.35rem 0; }
+.practice-doors {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.practice-doors .btn { width: 100%; justify-content: flex-start; }
+.practice-doors h2 { margin-bottom: var(--space-2); }
+
+@media (pointer: coarse) {
+  #station-julia .plane-btn {
+    min-width: var(--tap);
+    height: var(--tap);
+    padding: 0 0.5rem;
+  }
+  #station-julia .plane-btn[id$="-zoom-in"],
+  #station-julia .plane-btn[id$="-zoom-out"] {
+    width: var(--tap);
+    padding: 0;
+  }
+}
+.practice-hint-line { margin: 0.2rem 0; }
+
+@media print {
+  .site-header, .site-nav, .site-footer, .practice-toolbar, .book-next, .practice-doors, .skip-link { display: none !important; }
+  .practice-sheet { display: flex !important; }
+  body { background: white; }
+}

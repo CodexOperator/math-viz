@@ -80,18 +80,32 @@ export function mount(el, ctx) {
   const page = mountFractalPage(el, ctx, {
     id: 'julia',
     source: JULIA_SOURCE,
-    lede: 'Square, then slide by c. Blue means the landing stayed. Orange means it left. The orange point is c on this picture only. On the flat paper, c is a hollow square.',
+    lede: 'Blue means the landing stayed. Orange means it left.',
     ruleTitle: 'The rule',
     ruleText: 'c is the same slide at every step. Drag the orange point. While you drag, the picture and the numbers stay on the old c. Let go, and the set plays the path you drew.',
     chipLabel: 'Values of c',
     fields: true,
     step: true,
     film: true,
-    pictureTitle: 'The set',
-    pictureCaption: 'Green is one start. The orange point is c on this picture only. Orange on a landing means the walk left. On the flat paper, c is a hollow square. Drag c and let go: the blue region stops being a disk.',
+    pictureTitle: '',
+    pictureCaption: 'Green is one start. The orange point is c on this picture only. Drag c and let go: the blue region stops being a disk.',
     earlier: JULIA_EARLIER,
   });
-  page.lede.append(document.createTextNode(' '), h('a', { href: '#paper', id: 'julia-link-paper' }, 'Open the flat paper'));
+  // The colour sentence sits under the title. The plane follows it, so the disk
+  // and the zoom buttons are on the first phone screen. The flat-paper sentence
+  // sits under the disk.
+  const paper = h('p', { class: 'muted fractal-note', id: 'julia-paper-note' }, 'On the flat paper, c is a hollow square. ');
+  paper.append(h('a', { href: '#paper', id: 'julia-link-paper' }, 'Open the flat paper'));
+  const picture = page.stage.parentElement;
+  const pictureTitle = picture.querySelector('#julia-picture-title');
+  if (pictureTitle) pictureTitle.remove();
+  picture.removeAttribute('aria-labelledby');
+  picture.setAttribute('aria-label', 'Julia set');
+  picture.insertBefore(page.stage, picture.firstChild);
+  page.stage.after(paper);
+  const badges = page.lede.parentElement.querySelector('#julia-threads');
+  paper.after(page.source);
+  if (badges) page.source.after(badges);
   tex(page.formula, 'z_{n+1} = z_n^2 + c', { display: true });
 
   const reInput = h('input', { type: 'number', id: 'julia-c-re', step: '0.001', min: String(-C_LIM), max: String(C_LIM), value: '0', inputmode: 'decimal' });
@@ -956,6 +970,30 @@ export function mount(el, ctx) {
   writeReadout();
   if (parts.fractal) parts.fractal.request(false);
 
+  // On a wide window the rule sits beside the plane. Cap the square so the
+  // disk and the flat-paper line end inside the window. A phone stays uncapped.
+  function capLaptopPlane() {
+    const plane = document.getElementById('julia-plane-viewport');
+    const note = document.getElementById('julia-paper-note');
+    if (!plane || !note) return;
+    const wide = window.matchMedia('(min-width: 52rem)').matches;
+    if (!wide) {
+      if (plane.style.maxWidth) plane.style.maxWidth = '';
+      return;
+    }
+    plane.style.maxWidth = '';
+    const limit = document.documentElement.clientHeight - 16;
+    const noteBottom = note.getBoundingClientRect().bottom + window.scrollY;
+    const overflow = noteBottom - limit;
+    if (overflow > 1) {
+      const next = Math.max(220, Math.floor(plane.getBoundingClientRect().width - overflow));
+      plane.style.maxWidth = `${next}px`;
+    }
+  }
+  capLaptopPlane();
+  const capFrame = requestAnimationFrame(capLaptopPlane);
+  window.addEventListener('resize', capLaptopPlane);
+
   const api = {
     setC(re, im) { pushC(re, im); },
     getC: () => ({ re: state.c.re, im: state.c.im }),
@@ -975,6 +1013,8 @@ export function mount(el, ctx) {
   mv.julia = api;
 
   return function unmount() {
+    cancelAnimationFrame(capFrame);
+    window.removeEventListener('resize', capLaptopPlane);
     animToken += 1;
     stopFilmClock();
     clearTimeout(loadTimer);
