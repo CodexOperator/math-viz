@@ -5,6 +5,7 @@ import { h, appendRich, sourceTag } from './test2-ui.js';
 import { sectionHref } from '../data/book.js';
 import { generate as generateCircle } from '../practice/gen/ch6-circle.js';
 import { generate as generateSegment } from '../practice/gen/ch6-segment.js';
+import { sameComplex } from '../book/ch6-math.js';
 
 const GENS = {
   'ch6-circle': generateCircle,
@@ -13,12 +14,22 @@ const GENS = {
 
 const HREF = {
   'Definition 6.1': sectionHref('sec_complex-integrals.html', 'Integral_Def_1'),
+  'Example 6.1': sectionHref('sec_complex-integrals.html', 'sec_complex-integrals-5'),
   'Theorem 6.1': sectionHref('sec_contour-integrals.html', 'thm_contour-integral'),
+  'Theorem 6.3': sectionHref('sec_contour-integrals.html', 'ML_Inequality_Thm'),
   'Example 6.7': sectionHref('sec_contour-integrals.html', 'Cont_Int_Ex_1'),
   '§6.2, Exercise 3': sectionHref('sec_contour-integrals.html', 'x6_2_3'),
   'Theorem 6.5': sectionHref('sec_cauchy-goursat.html', 'CG_Thm'),
   'Theorem 6.6': sectionHref('sec_cauchy-goursat.html', 'Deformation_of_Contour'),
   'Corollary 6.1': sectionHref('sec_cauchy-goursat.html', 'x2Pi_or_zero'),
+  'Example 6.14': sectionHref('sec_cauchy-goursat.html', 'sec_cauchy-goursat-29'),
+  'Example 6.15': sectionHref('sec_cauchy-goursat.html', 'sec_cauchy-goursat-30'),
+  'Example 6.16': sectionHref('sec_cauchy-goursat.html', 'Prob_Ex'),
+  'Theorem 6.9': sectionHref('sec_integration-theorems.html', 'DInt_Thm'),
+  'Theorem 6.10': sectionHref('sec_cauchy-integral-formulas.html', 'Cauchy_Int_Formula'),
+  'Example 6.21': sectionHref('sec_cauchy-integral-formulas.html', 'sec_cauchy-integral-formulas-5'),
+  'Theorem 6.13': sectionHref('sec_morera-liouville.html', 'Morera_s_Thm'),
+  'Theorem 6.18': sectionHref('sec_morera-liouville.html', 'Liouville_s_Thm'),
 };
 
 function dollars(src) {
@@ -50,7 +61,8 @@ function matches(step, typed) {
   const got = canon(typed);
   if (!got) return false;
   const ok = [step.answer, ...(step.accept || [])];
-  return ok.some((item) => item && canon(item) === got);
+  if (ok.some((item) => item && canon(item) === got)) return true;
+  return ok.some((item) => item && sameComplex(item, typed));
 }
 
 function citeOf(item) {

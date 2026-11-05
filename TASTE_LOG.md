@@ -1604,3 +1604,31 @@ ANOTHER BATCH. The sentences you would memorize the night before are on the page
 ### Keep
 
 The half-period flash, \(2ie^{i\alpha}\), and the Definition 6.1 flash, both page 163. The semicircle choices for Exercise 6.2.3, page 178, all 44px at 390, and the value \(-2/3\). The which-theorem card, and the miss that names deformation and leaves the buttons on. Cauchy's three proof blanks on page 184, and the first miss, which says Equation (6.28) splits the integral and does not write \(v\,dx+u\,dy\). The four \(e^{z}\) choices and the miss that says the modulus grows. The segment miss that names the antiderivative and withholds the value. The sheet lines that are the statements, once the computed examples are off them. The arrival on every picture, Play on the first screen in both themes and both widths, and Stage complete disabled until the picture holds.
+
+## reviewer (Ch6 batch 2)
+
+Branch `cursor/chapter-6`, draft PR #45, reviewed at `d49927c` against Howell & Mathews, Complex Analysis, 202 Updated Edition (the 471-page PDF). The HTML edition uses different example numbers; each link below was opened and matched to the PDF statement, not to the HTML's number.
+
+Verdict: **ACCEPT WITH FIXES**. The fixes are on this branch.
+
+Checked against the printed pages. Section openers 163, 167, 181, 193, 197, 203 match the contents. Definition 6.1 and Example 6.1 are page 163, and \(\int_0^1(t-i)^3\,dt=-5/4\). Definition 6.2 and Example 6.6 are page 170; the eight-step midpoint total rounds to \(4.23+5.20i\), and the exact value on page 171 is \(\exp(2+i\pi/4)-1\). Theorem 6.1 and Example 6.7 are page 172. Theorem 6.3, the ML inequality, is page 177. Exercise 6.2.3 starts on page 178, and the answer key on page 443 gives \(-2/3\) for the upper unit semicircle. Theorem 6.5 is stated on page 183. Cauchy's proof, Equation (6.28), and the continuous-\(f'\) hypothesis are on page 184. Example 6.12 is page 186. Theorem 6.6 is page 187. Corollary 6.1 is page 188: \(2\pi i\) for \(1/(z-z_0)\), and \(0\) for every other integer power. Examples 6.14, 6.15, and 6.16 are pages 189, 190, and 190, and the book states the values \(4\pi i\), \(2\pi i\), and \(-6\pi i\). The figure-eight arithmetic on page 191 is \(-4\pi i\) from \(2/z\) and \(-2\pi i\) from \(-1/(z-1)\). Theorems 6.8 and 6.9 are pages 193 and 194. Example 6.9 is the same ends, \(-1-i\) to \(3+i\), and the same \(4+2i\). Theorem 6.10 is page 197. Example 6.21 is page 198, and \(i2\pi e\) is \(2\pi i\, e\). Theorem 6.12, the derivative formulas, is page 199. Theorem 6.13 is page 203 and requires every closed contour, not every triangle. Theorem 6.17, Cauchy's inequalities, is page 205: \(|f'(z_0)|\le M/R\). Theorem 6.18 is page 206.
+
+Circle and segment generators match an independent quadrature on 200 seeds, including the straight-segment logarithm. A polynomial no longer refuses an endpoint that is not a singularity, so the segment fallback \(\int_0^{1+i} z^2\,dz=(-2+2i)/3\) computes instead of throwing. `node tools/check_vectors.mjs`, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed. Live code does not import `kit/`. `js/core/map-route.js` still matches the kit copy.
+
+What was wrong, and the change:
+
+1. The read link labeled Example 6.1 opened `Int_ex`, which is \(\int_0^{\pi/2}\exp(t+it)\,dt\), the book's Example 6.2. It now opens the \((t-i)^3\) example. The link labeled Example 6.21 opened the power-integral display that is not that example. It now opens \(\int_{|z|=2} e^{z}/(z-1)\,dz\). Theorem 6.10's link opened the section top; it now opens the formula.
+2. Practice cards for Examples 6.1, 6.14, 6.15, 6.16, and 6.21, and for Theorems 6.3, 6.9, 6.10, 6.13, and 6.18, fell through to the complex-integrals section. Each cite now opens the statement it names.
+3. Morera's flash and the 6.6 sheet said every triangle integrates to 0. Theorem 6.13 says every closed contour in a simply connected domain. The card and the sheet now say that.
+4. A non-negative power with the sample point inside the circle was explained by Corollary 6.1. That corollary is the integral of \(1/(z-z_0)^n\). An entire power is Theorem 6.5, page 183, whether or not the sample point is inside.
+5. The radius picture draws \(1/R\) without saying that is the case \(M=1\) of Theorem 6.17, page 205. The gesture, the picture label, the worked line, and a read link now name that bound.
+6. The 6.3 worked tag said Example 6.12, page 186, over the paragraph about \(1/z\). Example 6.12 is \(e^{z}\), \(\cos z\), and \(z^{n}\) integrating to 0. The tag is now Corollary 6.1, page 188, and Example 6.12 is a read link to that example.
+7. A correct value in another handwriting was marked wrong: \(2+(\pi/4)i\), \(e^{(8+i\pi)/4}-1\), and \(2+11i/3\). The checker now accepts a typed value that parses to the same complex number, and it still rejects a nearby wrong one, including the book's rounded sum \(4.23+5.20i\) for the exact exponential.
+
+Left as is:
+
+1. At radius 3 the purple mark is still \(1/3\), and the blank says the derivative is 0. Theorem 6.18 needs the bound on every circle. One circle only gives \(|f'|\le 1/3\). The tick still turns on at that radius.
+2. Theorem 6.12, page 199, equation (6.48), is not stated on stage 6.5. Example 6.25, page 200, is \(\int_{|z|=2} e^{z^{2}}/(z-i)^{4}\,dz=-4\pi/(3e)\), recomputed from \(n=3\) and \(f'''(i)=4i/e\). That card is not on the page. The sheet still prints the finished value of Example 6.21 above the card that asks for it.
+3. The half-turn and full-turn sentences snap inside 0.12 radians. At the edge of the half-turn window the integral is about \(-0.12+1.99i\), and the blank already reads \(2i\).
+
+Keep: the six pictures, the page cites above, Example 6.1's \(-5/4\), the eight-step total beside \(\exp(2+i\pi/4)-1\), the semicircle \(-2/3\), Cauchy's proof blanks (the split, Green's theorem, Cauchy-Riemann, and 0), Examples 6.14–6.16, and the computed generators.

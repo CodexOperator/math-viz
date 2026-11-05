@@ -25,7 +25,7 @@ const STAGES = [
     picture: 'real',
     read: [
       { pin: 'Definition 6.1, page 163', href: sectionHref('sec_complex-integrals.html', 'Integral_Def_1') },
-      { pin: 'Example 6.1, page 163', href: sectionHref('sec_complex-integrals.html', 'Int_ex') },
+      { pin: 'Example 6.1, page 163', href: sectionHref('sec_complex-integrals.html', 'sec_complex-integrals-5') },
     ],
     workedPin: 'Definition 6.1, page 163',
     workedHref: sectionHref('sec_complex-integrals.html', 'Integral_Def_1'),
@@ -62,11 +62,12 @@ const STAGES = [
     picture: 'deform',
     read: [
       { pin: 'Theorem 6.5, page 183', href: sectionHref('sec_cauchy-goursat.html', 'CG_Thm') },
+      { pin: 'Example 6.12, page 186', href: sectionHref('sec_cauchy-goursat.html', 'sec_cauchy-goursat-18') },
       { pin: 'Theorem 6.6, page 187', href: sectionHref('sec_cauchy-goursat.html', 'Deformation_of_Contour') },
       { pin: 'Corollary 6.1, page 188', href: sectionHref('sec_cauchy-goursat.html', 'x2Pi_or_zero') },
     ],
-    workedPin: 'Example 6.12, page 186',
-    workedHref: sectionHref('sec_cauchy-goursat.html', 'sec_cauchy-goursat-18'),
+    workedPin: 'Corollary 6.1, page 188',
+    workedHref: sectionHref('sec_cauchy-goursat.html', 'x2Pi_or_zero'),
     worked: 'Both circles are positively oriented and the integrand is $1/z$. While the pole stays inside both, both integrals are $2\\pi i$. When the green circle drops the pole, its integral is $0$ and the purple circle stays $2\\pi i$.',
     sheet: [
       'Analytic inside and on a simple closed curve: Theorem 6.5, page 183, the integral is $0$.',
@@ -98,11 +99,11 @@ const STAGES = [
     gesture: 'Drag the green point. The integrand is $z/(z-z_0)$ on the unit circle.',
     picture: 'cauchy',
     read: [
-      { pin: 'Theorem 6.10, page 197', href: sectionHref('sec_cauchy-integral-formulas.html') },
-      { pin: 'Example 6.21, page 198', href: sectionHref('sec_cauchy-integral-formulas.html', 'Cauchy_Int_Ex') },
+      { pin: 'Theorem 6.10, page 197', href: sectionHref('sec_cauchy-integral-formulas.html', 'Cauchy_Int_Formula') },
+      { pin: 'Example 6.21, page 198', href: sectionHref('sec_cauchy-integral-formulas.html', 'sec_cauchy-integral-formulas-5') },
     ],
     workedPin: 'Theorem 6.10, page 197',
-    workedHref: sectionHref('sec_cauchy-integral-formulas.html'),
+    workedHref: sectionHref('sec_cauchy-integral-formulas.html', 'Cauchy_Int_Formula'),
     worked: 'For $f(z)=z$ on the unit circle, $\\dfrac{1}{2\\pi i}\\int \\dfrac{z}{z-z_0}\\,dz$ equals the green point while it stays inside, and equals $0$ once the point leaves the circle.',
     sheet: [
       'Theorem 6.10, page 197: $f(z_0)=\\dfrac{1}{2\\pi i}\\int_C \\dfrac{f(z)}{z-z_0}\\,dz$ when $z_0$ is inside $C$.',
@@ -112,17 +113,18 @@ const STAGES = [
   },
   {
     id: '6.6',
-    gesture: 'Drag the green radius. Purple is the estimate $1/R$ of the derivative.',
+    gesture: 'Drag the green radius. When $|f|\\le 1$, purple is the bound $1/R$ on $|f\'|$.',
     picture: 'liouville',
     read: [
       { pin: 'Theorem 6.13, page 203', href: sectionHref('sec_morera-liouville.html', 'Morera_s_Thm') },
+      { pin: 'Theorem 6.17, page 205', href: sectionHref('sec_morera-liouville.html', 'Cauchy_Ineqs') },
       { pin: 'Theorem 6.18, page 206', href: sectionHref('sec_morera-liouville.html', 'Liouville_s_Thm') },
     ],
     workedPin: 'Theorem 6.18, page 206',
     workedHref: sectionHref('sec_morera-liouville.html', 'Liouville_s_Thm'),
-    worked: 'If $|f|\\le M$ on every circle, Cauchy\'s estimate says $|f\'(z_0)|\\le M/R$. Let the radius grow. The only number that survives every $R$ is $0$, so $f$ is constant.',
+    worked: 'If $|f|\\le M$ on every circle, Theorem 6.17, page 205, says $|f\'(z_0)|\\le M/R$. Let the radius grow. The only number that survives every $R$ is $0$, so $f$ is constant.',
     sheet: [
-      'Theorem 6.13, page 203: if $f$ is continuous and every triangle integrates to $0$, then $f$ is analytic.',
+      'Theorem 6.13, page 203: if $f$ is continuous in a simply connected domain and every closed contour integrates to $0$, then $f$ is analytic.',
       'Theorem 6.18, page 206: a bounded entire function is constant.',
     ],
     summit: 'An entire function that stays bounded is constant.',

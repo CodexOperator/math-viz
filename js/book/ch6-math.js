@@ -100,6 +100,235 @@ export function cnum(z) {
   return { re: z.re.n / z.re.d, im: z.im.n / z.im.d };
 }
 
+// Two written answers are the same complex value when both parse.
+// A phrase that is not a value stays null, and the card compares text.
+export function sameComplex(a, b) {
+  const x = readComplex(a);
+  const y = readComplex(b);
+  if (!x || !y) return false;
+  return Math.abs(x.re - y.re) < 1e-6 && Math.abs(x.im - y.im) < 1e-6;
+}
+
+function readComplex(src) {
+  const s = prepComplex(src);
+  if (!s) return null;
+  const tokens = lexComplex(s);
+  if (!tokens) return null;
+  const parsed = parseComplex(tokens);
+  return parsed && parsed.pos === tokens.length ? parsed.value : null;
+}
+
+function prepComplex(src) {
+  let s = String(src || '');
+  s = s.replace(/\\\(|\\\)/g, '').replace(/\$/g, '');
+  s = s.replace(/\\,/g, '').replace(/\\ /g, '').replace(/\\!/g, '');
+  s = s.replace(/\\left|\\right/g, '');
+  s = s.replace(/\\cdot/g, '*').replace(/\\times/g, '*');
+  s = s.replace(/\\exp/g, 'exp');
+  s = s.replace(/\\pi/g, 'pi').replace(/π/g, 'pi');
+  let prev;
+  do {
+    prev = s;
+    s = s.replace(/\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, '($1)/($2)');
+  } while (s !== prev);
+  s = liftExp(s, 'e^');
+  if (s == null) return null;
+  s = liftExp(s, 'exp^');
+  if (s == null) return null;
+  s = s.replace(/[{}]/g, '');
+  return s;
+}
+
+function liftExp(s, head) {
+  let out = '';
+  let i = 0;
+  while (i < s.length) {
+    const at = s.indexOf(head, i);
+    if (at < 0) return out + s.slice(i);
+    out += s.slice(i, at);
+    let j = at + head.length;
+    while (j < s.length && /\s/.test(s[j])) j += 1;
+    if (s[j] !== '{') {
+      out += head;
+      i = at + head.length;
+      continue;
+    }
+    let depth = 0;
+    const start = j;
+    for (; j < s.length; j += 1) {
+      if (s[j] === '{') depth += 1;
+      else if (s[j] === '}') {
+        depth -= 1;
+        if (depth === 0) { j += 1; break; }
+      }
+    }
+    if (depth !== 0) return null;
+    out += `exp(${s.slice(start + 1, j - 1)})`;
+    i = j;
+  }
+  return out;
+}
+
+function lexComplex(s) {
+  const tokens = [];
+  let i = 0;
+  while (i < s.length) {
+    const c = s[i];
+    if (/\s/.test(c)) { i += 1; continue; }
+    if ('+-*/^()'.includes(c)) { tokens.push(c); i += 1; continue; }
+    if (/[0-9.]/.test(c)) {
+      let j = i + 1;
+      while (j < s.length && /[0-9.]/.test(s[j])) j += 1;
+      tokens.push(s.slice(i, j));
+      i = j;
+      continue;
+    }
+    if (/[a-zA-Z]/.test(c)) {
+      const words = takeWords(s, i);
+      if (!words) return null;
+      tokens.push(...words.tokens);
+      i = words.i;
+      continue;
+    }
+    return null;
+  }
+  const withTimes = [];
+  for (const tok of tokens) {
+    const prevTok = withTimes[withTimes.length - 1];
+    if (prevTok && juxtapose(prevTok, tok)) withTimes.push('*');
+    withTimes.push(tok);
+  }
+  return withTimes;
+}
+
+function takeWords(s, i) {
+  const tokens = [];
+  while (i < s.length && /[a-zA-Z]/.test(s[i])) {
+    const rest = s.slice(i).toLowerCase();
+    const word = ['exp', 'pi', 'i', 'e'].find((name) => rest.startsWith(name));
+    if (!word) return null;
+    tokens.push(word);
+    i += word.length;
+  }
+  return { tokens, i };
+}
+
+function juxtapose(left, right) {
+  const atom = (t) => t === 'pi' || t === 'i' || t === 'e' || /^[0-9.]+$/.test(t);
+  const leftOk = atom(left) || left === ')';
+  const rightOk = atom(right) || right === '(' || right === 'exp';
+  return leftOk && rightOk;
+}
+
+function parseComplex(tokens) {
+  let pos = 0;
+  const peek = () => tokens[pos];
+  function eat(t) {
+    if (tokens[pos] !== t) return false;
+    pos += 1;
+    return true;
+  }
+  function expr() {
+    let left = term();
+    if (!left) return null;
+    while (peek() === '+' || peek() === '-') {
+      const op = tokens[pos];
+      pos += 1;
+      const right = term();
+      if (!right) return null;
+      left = op === '+'
+        ? { re: left.re + right.re, im: left.im + right.im }
+        : { re: left.re - right.re, im: left.im - right.im };
+    }
+    return left;
+  }
+  function term() {
+    let left = factor();
+    if (!left) return null;
+    while (peek() === '*' || peek() === '/') {
+      const op = tokens[pos];
+      pos += 1;
+      const right = factor();
+      if (!right) return null;
+      if (op === '*') left = { re: left.re * right.re - left.im * right.im, im: left.re * right.im + left.im * right.re };
+      else {
+        const d = right.re * right.re + right.im * right.im;
+        if (d === 0) return null;
+        left = { re: (left.re * right.re + left.im * right.im) / d, im: (left.im * right.re - left.re * right.im) / d };
+      }
+    }
+    return left;
+  }
+  function factor() {
+    if (eat('+')) return factor();
+    if (eat('-')) {
+      const v = factor();
+      return v && { re: -v.re, im: -v.im };
+    }
+    let base = primary();
+    if (!base) return null;
+    if (eat('^')) {
+      const expn = factor();
+      if (!expn || Math.abs(expn.im) > 1e-9) return null;
+      const n = Math.round(expn.re);
+      if (Math.abs(n - expn.re) > 1e-9 || Math.abs(n) > 12) return null;
+      let r = { re: 1, im: 0 };
+      const steps = Math.abs(n);
+      for (let k = 0; k < steps; k += 1) {
+        const re = r.re * base.re - r.im * base.im;
+        const im = r.re * base.im + r.im * base.re;
+        r = { re, im };
+      }
+      if (n < 0) {
+        const d = r.re * r.re + r.im * r.im;
+        if (d === 0) return null;
+        r = { re: r.re / d, im: -r.im / d };
+      }
+      base = r;
+    }
+    return base;
+  }
+  function primary() {
+    const t = peek();
+    if (t == null) return null;
+    if (t === '(') {
+      pos += 1;
+      const v = expr();
+      if (!v || !eat(')')) return null;
+      return v;
+    }
+    if (t === 'exp') {
+      pos += 1;
+      if (!eat('(')) return null;
+      const v = expr();
+      if (!v || !eat(')')) return null;
+      const e = Math.exp(v.re);
+      return { re: e * Math.cos(v.im), im: e * Math.sin(v.im) };
+    }
+    if (t === 'e') {
+      pos += 1;
+      if (eat('^')) {
+        const v = factor();
+        if (!v) return null;
+        const e = Math.exp(v.re);
+        return { re: e * Math.cos(v.im), im: e * Math.sin(v.im) };
+      }
+      return { re: Math.E, im: 0 };
+    }
+    if (t === 'pi') { pos += 1; return { re: Math.PI, im: 0 }; }
+    if (t === 'i') { pos += 1; return { re: 0, im: 1 }; }
+    if (/^[0-9.]+$/.test(t)) {
+      pos += 1;
+      const n = Number(t);
+      if (!Number.isFinite(n)) return null;
+      return { re: n, im: 0 };
+    }
+    return null;
+  }
+  const value = expr();
+  return value ? { value, pos } : null;
+}
+
 function fadd(a, b) { return { re: a.re + b.re, im: a.im + b.im }; }
 function fmul(a, b) { return { re: a.re * b.re - a.im * b.im, im: a.re * b.im + a.im * b.re }; }
 function fpow(z, n) {
@@ -296,8 +525,9 @@ export function onSegment(pole, start, end) {
 // ∫_start^end (z − pole)^n dz, n an integer other than a point on the segment.
 // n = −1 uses the straight-segment logarithm. Every other n uses the antiderivative.
 export function segmentIntegral(start, end, pole, n) {
-  if (onSegment(pole, start, end)) return null;
   if (start.re === end.re && start.im === end.im) return null;
+  // A non-negative power is a polynomial, so the sample point may lie on the segment.
+  if (n < 0 && onSegment(pole, start, end)) return null;
   if (n === -1) {
     const u = { re: start.re - pole.re, im: start.im - pole.im };
     const v = { re: end.re - pole.re, im: end.im - pole.im };
@@ -310,8 +540,8 @@ export function segmentIntegral(start, end, pole, n) {
   }
   const a = csub(C(start.re, start.im), C(pole.re, pole.im));
   const b = csub(C(end.re, end.im), C(pole.re, pole.im));
-  if (a.re.n === 0 && a.im.n === 0) return null;
-  if (b.re.n === 0 && b.im.n === 0) return null;
+  if (n < 0 && a.re.n === 0 && a.im.n === 0) return null;
+  if (n < 0 && b.re.n === 0 && b.im.n === 0) return null;
   const k = rat(1, n + 1);
   const val = csub(cscale(cpow(b, n + 1), k), cscale(cpow(a, n + 1), k));
   const num = cnum(val);
@@ -401,6 +631,9 @@ export function generateCircle(seed, params) {
 }
 
 function circleWhy(n, inside) {
+  if (n >= 0) {
+    return 'A non-negative power is entire. Theorem 6.5, page 183, says the integral over this circle is $0$.';
+  }
   if (n === -1 && inside) {
     return 'Corollary 6.1, page 188: the pole is inside and the power is $-1$, so the integral is $2\\pi i$.';
   }
@@ -409,9 +642,6 @@ function circleWhy(n, inside) {
   }
   if (n === -1) {
     return 'The pole is outside the circle, so $1/(z-a)$ is analytic inside and on $C$. Theorem 6.5, page 183, says the integral is $0$.';
-  }
-  if (n >= 0) {
-    return 'A non-negative power is entire. Theorem 6.5, page 183, says the integral over this circle is $0$.';
   }
   return 'The pole is outside the circle, so this negative power is analytic inside and on $C$. Theorem 6.5, page 183, says the integral is $0$.';
 }
@@ -457,6 +687,9 @@ export function generateSegment(seed, params) {
     return segmentCard(start, end, pole, n, value.tex, value);
   }
   const fallback = segmentIntegral({ re: 0, im: 0 }, { re: 1, im: 1 }, { re: 0, im: 0 }, 2);
+  if (!fallback) {
+    return segmentCard({ re: 0, im: 0 }, { re: 1, im: 0 }, { re: 0, im: 0 }, 1, '1/2', { re: 0.5, im: 0 });
+  }
   return segmentCard({ re: 0, im: 0 }, { re: 1, im: 1 }, { re: 0, im: 0 }, 2, fallback.tex, fallback);
 }
 

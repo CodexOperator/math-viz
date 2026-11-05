@@ -545,7 +545,7 @@ export function mountLiouville(parent) {
     claim: 'ch6-liouville-claim',
     play: 'ch6-liouville-play',
     frame: 'ch6-liouville-frame',
-  }, 'A circle whose radius you drag. Purple is the estimate 1 over R of the derivative. It collapses as the circle grows.');
+  }, 'A circle whose radius you drag. When the modulus is at most 1, purple is the bound 1 over R on the derivative.');
   const span = 10;
   const map = world(span, 0, 0);
   const axisX = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2' });

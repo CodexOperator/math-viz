@@ -601,7 +601,7 @@
       "page": 203
     },
     "kind": "flash",
-    "prompt": "Morera's theorem. \\(f\\) is continuous, and the integral of \\(f\\) over every closed triangle in the domain is \\(0\\). What follows?",
+    "prompt": "Morera's theorem. \\(f\\) is continuous in a simply connected domain, and \\(\\int_C f(z)\\,dz=0\\) for every closed contour in that domain. What follows?",
     "steps": [
       {
         "text": "",
@@ -610,7 +610,7 @@
       }
     ],
     "generator": null,
-    "memory": "Integrals of triangles vanish, and \\(f\\) is continuous: \\(f\\) is analytic."
+    "memory": "Every closed contour integrates to \\(0\\), and \\(f\\) is continuous on a simply connected domain: \\(f\\) is analytic."
   },
   {
     "id": "ch6-6.6-liouville-flash",
