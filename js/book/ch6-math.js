@@ -361,6 +361,15 @@ export function wrapTurn(T) {
 // still about −0.12 + 1.99i, so that edge must not read 2i.
 const TURN_TOL = 0.01;
 
+// A thumb on the phone square, along the orange circle: about 44px of chord
+// when the stage is ~284px. The half-turn line latches inside this window.
+export const HALF_THUMB = 0.8;
+
+export function nearHalfTurn(T) {
+  const u = wrapTurn(T);
+  return Math.abs(u - Math.PI) <= HALF_THUMB;
+}
+
 export function turnPhase(T) {
   const w = realIntegral(wrapTurn(T));
   if (Math.hypot(w.re, w.im) <= TURN_TOL) return 'full';
@@ -370,9 +379,9 @@ export function turnPhase(T) {
 
 export function claim61(T) {
   const phase = turnPhase(T);
-  if (phase === 'full') return { holds: true, phase, text: 'A full turn brings the integral back to $0$.' };
-  if (phase === 'half') return { holds: false, phase, text: 'Half a turn leaves the integral at $2i$.' };
-  return { holds: false, phase, text: 'The integral has left $0$. The real part and the imaginary part are still separate.' };
+  const near = nearHalfTurn(T);
+  if (phase === 'full') return { holds: true, phase, near, text: 'A full turn brings the integral back to $0$.' };
+  return { holds: false, phase, near, text: 'The total has left $0$.' };
 }
 
 // Example 6.6. Midpoint Riemann sum for exp along 0 to 2 + iπ/4, n = 8.
@@ -411,7 +420,7 @@ export function claim62(k) {
   const im = fixed2(s.im);
   const sum = Number(im) < 0 ? `${fixed2(s.re)}${im}i` : `${fixed2(s.re)}+${im}i`;
   if (n === 8) {
-    return { holds: true, steps: 8, sum, text: `Eight steps sit on $${sum}$, beside $\\exp(2+i\\pi/4)-1$.` };
+    return { holds: true, steps: 8, sum, text: 'Eight pieces are on the path. The exact value stays in the blank.' };
   }
   return { holds: false, steps: n, sum, text: `The sum has used ${n} of 8 steps.` };
 }
@@ -420,8 +429,9 @@ export function claim62(k) {
 export const DEFORM_RADIUS = 1;
 export const DEFORM_OUT = 1.55;
 
-// The deformation plane is span 5.6 on a 480 viewBox. One pixel of that plane.
-export const DEFORM_EDGE = 5.6 / 480;
+// Exactly on the circle the integral of 1/z is undefined. A hair inside is
+// still 2πi. The old band was one pixel of this plane, so 0.99 read as "on it".
+export const DEFORM_EDGE = 1e-6;
 
 export function deformEdgeU() {
   return 1 - DEFORM_RADIUS / DEFORM_OUT;
@@ -439,12 +449,12 @@ export function deformState(cx) {
 export function claim63(cx) {
   const where = deformState(cx);
   if (where === 'inside') {
-    return { holds: true, where, text: 'The pole of $1/z$ stays inside both circles, so both integrals are $2\\pi i$.' };
+    return { holds: true, where, text: 'The pole of $1/z$ stays inside the green circle.' };
   }
   if (where === 'edge') {
     return { holds: false, where, text: 'The pole of $1/z$ is on the green circle. The integral over that circle is not defined.' };
   }
-  return { holds: false, where, text: 'The green circle has dropped the pole of $1/z$. Its integral is $0$. The purple circle still encloses the pole, so its integral is $2\\pi i$.' };
+  return { holds: false, where, text: 'The green circle has dropped the pole of $1/z$. The purple circle still encloses it.' };
 }
 
 // Theorem 6.9. Ends fixed, integrand z, so every path gives the same value.
@@ -474,7 +484,7 @@ export function claim64(p) {
   if (bendStraight(p)) {
     return { holds: false, bent: false, text: 'The path is the straight segment. Bend the green point.' };
   }
-  return { holds: true, bent: true, text: 'The path has bent. The ends are still $-1-i$ and $3+i$.' };
+  return { holds: true, bent: true, text: 'The path has bent. The integral is the same as on the straight segment.' };
 }
 
 // Theorem 6.10 for f(z)=z on the unit circle. Inside, the formula returns z0.
@@ -513,15 +523,41 @@ function boundFrac(n, d) {
   return dd === 1 ? String(nn) : `${nn}/${dd}`;
 }
 
-// The printed number is a true upper bound. A nearest tenth can fall under 1/R,
-// and |f'| ≤ 0.99 is false when Cauchy's estimate is 1/1.006.
+// A hundredth ceiling is a true upper bound and is looser than 1/R
+// (|f'| ≤ 1.00 when the estimate is 1/1.006). Print the sharp quotient.
+function sharpBound(R) {
+  const target = 1 / R;
+  let loN = 0;
+  let loD = 1;
+  let hiN = Math.max(1, Math.ceil(target));
+  let hiD = 1;
+  if (Math.abs(hiN / hiD - target) <= 1e-12) return boundFrac(hiN, hiD);
+  for (let i = 0; i < 40; i++) {
+    const n = loN + hiN;
+    const d = loD + hiD;
+    if (d > 20000) break;
+    const v = n / d;
+    if (Math.abs(v - target) <= 1e-10 * Math.max(1, target)) return boundFrac(n, d);
+    if (v < target) {
+      loN = n;
+      loD = d;
+    } else {
+      hiN = n;
+      hiD = d;
+    }
+  }
+  return boundFrac(hiN, hiD);
+}
+
 export function liouvilleBoundTex(radius) {
   const R = Math.max(0.4, Number(radius) || 0);
-  const twice = Math.round(R * 2);
-  if (Math.abs(R * 2 - twice) < 1e-6 && twice > 0) return boundFrac(2, twice);
-  const v = LIOUVILLE_M / R;
-  const up = Math.ceil((v - 1e-12) * 100) / 100;
-  return up.toFixed(2);
+  const quarters = Math.round(R * 4);
+  if (Math.abs(R * 4 - quarters) < 1e-6 && quarters > 0) return boundFrac(4, quarters);
+  const milli = Math.round(R * 1000);
+  if (milli > 0 && Math.abs(R * 1000 - milli) < 1e-6 && 1000 / milli + 1e-12 >= 1 / R) {
+    return boundFrac(1000, milli);
+  }
+  return sharpBound(R);
 }
 
 export function claim66(radius, every) {
@@ -533,7 +569,7 @@ export function claim66(radius, every) {
       collapsed: false,
       every: true,
       radius: R,
-      text: 'The bound $1/R$ has been read on every circle in the picture.',
+      text: 'The purple bound shrank to the origin, so the derivative is $0$.',
     };
   }
   return {

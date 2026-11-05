@@ -3,6 +3,7 @@
 // lives in the same memory as the other chapters.
 
 import { sectionHref } from '../data/book.js';
+import { chapterHash } from '../book/route.js';
 import { CHAPTER_6, chapter4ExerciseIds, chapter5ExerciseIds, chapter6StageIds } from '../data/book-path.js';
 import { loadSharedTicks, saveSharedTicks, toggleTick, sectionFinished, chapterTally } from '../book/progress.js';
 import { h, appendRich, sourceTag } from './test2-ui.js';
@@ -22,7 +23,7 @@ const PICTURES = {
 const STAGES = [
   {
     id: '6.1',
-    why: 'Later integrals come back to this real integral.',
+    why: 'Purple is the total so far, while green walks the circle.',
     next: 'Next camp is 6.2, contours.',
     go: '6.2',
     goLabel: 'Go to 6.2',
@@ -52,7 +53,7 @@ const STAGES = [
     ],
     workedPin: 'Example 6.7, page 172',
     workedHref: sectionHref('sec_contour-integrals.html', 'Cont_Int_Ex_1'),
-    why: 'A contour is the real integral from 6.1, after a parametrization.',
+    why: 'Orange dots are pieces of the path. Add them up.',
     next: 'Next camp is 6.3, Cauchy-Goursat.',
     go: '6.3',
     goLabel: 'Go to 6.3',
@@ -67,7 +68,7 @@ const STAGES = [
   },
   {
     id: '6.3',
-    why: '6.2 computes one path. An analytic function on a simple closed curve integrates to $0$.',
+    why: '6.2 computes one path. This camp is a closed curve, and the integrand is analytic inside it.',
     next: 'Next camp is 6.4, the fundamental theorems.',
     go: '6.4',
     goLabel: 'Go to 6.4',
@@ -137,7 +138,7 @@ const STAGES = [
   },
   {
     id: '6.6',
-    why: '6.5 bounds a derivative on one circle. Liouville needs every circle.',
+    why: 'Purple is a bound on the derivative. Watch it as the circle grows.',
     next: 'Next camp is Chapter 7, Taylor and Laurent series.',
     go: 'book',
     goLabel: 'Back to the book',
@@ -153,9 +154,10 @@ const STAGES = [
     worked: 'If $|f|\\le M$ on every circle, Theorem 6.17, page 205, says $|f\'(z_0)|\\le M/R$. One circle is not every circle.',
     sheet: [
       'Theorem 6.13, page 203: if $f$ is continuous in a simply connected domain and every closed contour integrates to $0$, then $f$ is analytic.',
-      'Theorem 6.18, page 206: a bounded entire function is constant.',
+      '',
     ],
-    summit: 'An entire function that stays bounded is constant.',
+    summit: 'One circle is not every circle.',
+    summitOpen: 'An entire function that stays bounded is constant.',
   },
 ];
 
@@ -200,12 +202,16 @@ function studentBlank(id, prompt, readStep, onGrade) {
   return wrap;
 }
 
-function setTick(tick, on, ready) {
+function setTick(tick, why, on, ready, reason) {
   if (!tick) return;
   tick.disabled = !on && !ready;
   tick.setAttribute('aria-pressed', String(on));
   tick.textContent = on ? 'Completed' : 'Stage complete';
   tick.dataset.done = on ? 'true' : 'false';
+  if (!why) return;
+  const show = tick.disabled && !!reason;
+  why.hidden = !show;
+  why.textContent = show ? reason : '';
 }
 
 export function mount(section, ctx) {
@@ -215,15 +221,18 @@ export function mount(section, ctx) {
   const stops = [];
   let dead = false;
 
-  const status = h('p', { class: 'book-status', id: 'chapter-status' });
   const path = h('ol', { class: 'chapter-path ch6-path', id: 'chapter-path' });
   const blanks = {};
   const ticksBtn = {};
+  const tickWhys = {};
 
   function paintStatus() {
     const t = chapterTally(liveSections(), ticks);
-    if (t.complete) status.textContent = `Done. ${t.exercisesTicked} of ${t.exerciseTotal} stages.`;
-    else status.textContent = `Next is ${t.nextId || '6.1'}. ${t.exercisesTicked} of ${t.exerciseTotal} stages.`;
+    const count = `${t.exercisesTicked} of ${t.exerciseTotal}`;
+    for (const stage of STAGES) {
+      const flag = section.querySelector(`#chapter-section-${slug(stage.id)}-flag`);
+      if (flag) flag.textContent = `${stage.id} · ${count}`;
+    }
     for (const node of path.querySelectorAll('.section-node')) {
       const id = node.getAttribute('data-section');
       const spec = CHAPTER_6.sections.find((s) => s.id === id);
@@ -244,8 +253,7 @@ export function mount(section, ctx) {
         ctx.navigate('book');
         return;
       }
-      const node = section.querySelector(`#chapter-section-${slug(stage.go)}`);
-      if (node) node.scrollIntoView({ block: 'start' });
+      ctx.navigate(chapterHash(6, stage.go));
     });
     return h('div', { class: 'book-next', id: `chapter-go-row-${slug(stage.id)}` }, line, go);
   }
@@ -270,10 +278,14 @@ export function mount(section, ctx) {
     appendRich(worked, stage.worked);
     const sheet = h('ul', { class: 'ch6-sheet', id: `${scope}-sheet` });
     stage.sheet.forEach((line) => {
+      if (!line) return;
       const li = h('li');
       appendRich(li, line);
       sheet.append(li);
     });
+    if (stage.id === '6.6') {
+      sheet.append(h('li', { id: 'ch6-sheet-constant', hidden: '' }));
+    }
     const blankHost = h('div', { class: 'exp-blanks', id: `${scope}-blanks` });
     if (stage.id === '6.1') {
       blanks.half = studentBlank('ch6-blank-half', 'From $0$ to $\\pi$ the integral is ', fixed(
@@ -318,7 +330,7 @@ export function mount(section, ctx) {
     } else {
       blanks.liouville = studentBlank('ch6-blank-liouville', 'If the bound holds on every circle, $f$ is ', fixed(
         'constant', ['a constant', 'Constant', 'A constant'],
-        'The bound has to hold on every circle, not one radius. Name what that forces $f$ to be. The word stays covered.',
+        'A derivative of $0$ means $f$ does not change. The word stays covered.',
         'Theorem 6.18, page 206: a bound on every circle forces $f$ to be constant.',
       ), () => paintAll());
       blankHost.append(blanks.liouville);
@@ -335,7 +347,9 @@ export function mount(section, ctx) {
       saveSharedTicks(store, ticks);
       paintAll();
     });
+    const tickWhy = h('p', { class: 'ch6-tick-why', id: `chapter-tick-${slug(stage.id)}-why`, hidden: '' });
     ticksBtn[stage.id] = tick;
+    tickWhys[stage.id] = tickWhy;
     const head = [
       h('p', { class: 'book-flag', id: `${scope}-flag` }, stage.id),
       h('h2', { id: `${scope}-title` }, CHAPTER_6.sections.find((s) => s.id === stage.id).title),
@@ -344,14 +358,16 @@ export function mount(section, ctx) {
       gesture,
       picture,
     ];
-    if (stage.id === '6.1') head.push(h('div', { class: 'book-next', id: 'chapter-next-row' }, status));
-    const tail = [
+    const sheetBlock = [
       h('p', { class: 'book-label', id: `${scope}-sheet-label` }, 'For the exam'),
       sheet,
       practice,
+    ];
+    const summitBlock = [
       summit,
       campLine(stage),
       h('div', { class: 'problem-actions' }, tick),
+      tickWhy,
     ];
     let body;
     if (stage.id === '6.3') {
@@ -389,8 +405,7 @@ export function mount(section, ctx) {
         ...head,
         read,
         blankHost,
-        summit,
-        h('div', { class: 'problem-actions' }, tick),
+        ...summitBlock,
         beat,
         beatGesture,
         deform,
@@ -399,10 +414,7 @@ export function mount(section, ctx) {
         sourceTag({ pin: stage.workedPin, href: stage.workedHref }),
         worked,
         deformSummit,
-        h('p', { class: 'book-label', id: `${scope}-sheet-label` }, 'For the exam'),
-        sheet,
-        practice,
-        campLine(stage),
+        ...sheetBlock,
       ];
     } else {
       body = [
@@ -412,7 +424,8 @@ export function mount(section, ctx) {
         sourceTag({ pin: stage.workedPin, href: stage.workedHref }),
         worked,
         blankHost,
-        ...tail,
+        ...summitBlock,
+        ...sheetBlock,
       ];
     }
     path.append(h('li', {
@@ -434,12 +447,44 @@ export function mount(section, ctx) {
     const phase = real && real.dataset.phase;
     const steps = sum ? Number(sum.dataset.steps) : 0;
     const spot = cauchy && cauchy.dataset.where;
-    setTick(ticksBtn['6.1'], ticks['6.1'] === true, phase === 'full' && ready(blanks.half) && ready(blanks.full));
-    setTick(ticksBtn['6.2'], ticks['6.2'] === true, steps === 8 && ready(blanks.exact));
-    setTick(ticksBtn['6.3'], ticks['6.3'] === true, goursat && goursat.dataset.subdivided === 'true' && ready(blanks.zero));
-    setTick(ticksBtn['6.4'], ticks['6.4'] === true, bend && bend.dataset.bent === 'true' && ready(blanks.bend));
-    setTick(ticksBtn['6.5'], ticks['6.5'] === true, spot === 'inside' && ready(blanks.cauchy));
-    setTick(ticksBtn['6.6'], ticks['6.6'] === true, liouville && liouville.dataset.every === 'true' && ready(blanks.liouville));
+    const fullTurn = phase === 'full';
+    const bothLines = ready(blanks.half) && ready(blanks.full);
+    setTick(ticksBtn['6.1'], tickWhys['6.1'], ticks['6.1'] === true, fullTurn && bothLines,
+      fullTurn ? 'Fill both lines' : 'Bring the point all the way around');
+    setTick(ticksBtn['6.2'], tickWhys['6.2'], ticks['6.2'] === true, steps === 8 && ready(blanks.exact),
+      steps === 8 ? 'Fill the line' : 'Take all eight steps');
+    const cut = !!(goursat && goursat.dataset.subdivided === 'true');
+    setTick(ticksBtn['6.3'], tickWhys['6.3'], ticks['6.3'] === true, cut && ready(blanks.zero),
+      cut ? 'Fill the line' : 'Subdivide the triangle');
+    const bent = !!(bend && bend.dataset.bent === 'true');
+    setTick(ticksBtn['6.4'], tickWhys['6.4'], ticks['6.4'] === true, bent && ready(blanks.bend),
+      bent ? 'Fill the line' : 'Bend the path');
+    const inside = spot === 'inside';
+    setTick(ticksBtn['6.5'], tickWhys['6.5'], ticks['6.5'] === true, inside && ready(blanks.cauchy),
+      inside ? 'Fill the line' : 'Bring the point inside');
+    const every = !!(liouville && liouville.dataset.every === 'true');
+    const named = ready(blanks.liouville);
+    setTick(ticksBtn['6.6'], tickWhys['6.6'], ticks['6.6'] === true, every && named,
+      every ? 'Fill the line' : 'Cross every circle');
+    const constantLi = section.querySelector('#ch6-sheet-constant');
+    if (constantLi) {
+      constantLi.hidden = !named;
+      if (named && !constantLi.dataset.filled) {
+        appendRich(constantLi, 'Theorem 6.18, page 206: a bounded entire function is constant.');
+        constantLi.dataset.filled = 'true';
+      }
+    }
+    const summit66 = section.querySelector('#chapter-section-6-6-summit');
+    if (summit66) {
+      const next = named
+        ? 'An entire function that stays bounded is constant.'
+        : (every ? 'The bound on every circle sends the derivative to $0$.' : 'One circle is not every circle.');
+      if (summit66.dataset.line !== next) {
+        summit66.dataset.line = next;
+        summit66.replaceChildren();
+        appendRich(summit66, next);
+      }
+    }
     paintStatus();
   }
 
@@ -468,8 +513,13 @@ export function mount(section, ctx) {
   watch('#ch6-liouville-stage');
   paintAll();
 
+  const restoreScroll = ctx.restoreScroll;
+  function applyRestore() {
+    if (restoreScroll == null) return;
+    window.scrollTo(0, restoreScroll);
+  }
   const focus = ctx.book && ctx.book.focus;
-  if (focus) {
+  if (restoreScroll == null && focus) {
     const target = section.querySelector(`#chapter-section-${slug(focus)}`)
       || section.querySelector(`#chapter-section-${slug(String(focus).split('.').slice(0, 2).join('.'))}`);
     if (target) {
@@ -490,7 +540,10 @@ export function mount(section, ctx) {
       const mine = items.filter((item) => item && item.section === stage.id);
       stops.push(mountPractice(host, mine));
     }
+    applyRestore();
+    requestAnimationFrame(applyRestore);
   }).catch(() => {
+    applyRestore();
     if (dead) return;
     const host = section.querySelector('#ch6-practice-6-1');
     if (host && !host.childElementCount) {

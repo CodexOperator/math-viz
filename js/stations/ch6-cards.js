@@ -243,11 +243,14 @@ function stepView(item, step, index) {
   }
   const bits = String(step.text || '').split('___');
   if (step.choices && step.choices.length) {
-    bits.forEach((bit, i) => {
-      if (bit) appendRich(line, dollars(bit));
-      if (i < bits.length - 1) line.append(document.createTextNode(' '));
-    });
-    if (!step.text) fillMath(line, 'Choose one.');
+    const stem = bits.some((bit) => bit.trim());
+    if (!stem) line.hidden = true;
+    if (stem) {
+      bits.forEach((bit, i) => {
+        if (bit) appendRich(line, dollars(bit));
+        if (i < bits.length - 1) line.append(document.createTextNode(' '));
+      });
+    }
     const choices = h('div', { class: 'ch6-choices', id: `ch6-choices-${id}` });
     for (const choice of step.choices) {
       const btn = h('button', { type: 'button', class: 'btn ch6-choice', 'data-choice': canon(choice) }, '');

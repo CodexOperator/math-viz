@@ -1771,3 +1771,17 @@ The arrival on the next camp. Go to 6.2 puts the flag under the header, the why 
 The book drawer and the laptop sidebar: chapters 1 through 7, every row at least 44px, chapter 6 current. The landing Places list still opens on The Book, 44px, as its first row. Buttons, Stage complete, Check, and the icon buttons in the header are 44px. The green point's hit is a 44px circle. The mark itself is 19px across on the 284px square, which is enough to see which point moves.
 
 The type and the paper. The title is Iowan Old Style, 25.85px at 390 and 36px at 1280, weight 600. The lede is 16.8px. Light paper is `rgb(246, 243, 236)`, ink `rgb(26, 34, 48)`, muted `rgb(81, 91, 108)`. Dark paper is `rgb(13, 18, 28)`, ink `rgb(233, 237, 245)`, muted `rgb(166, 176, 195)`. The button radius is 6px and the card radius is 10px, the same on chapter 4 and chapter 5. The square stays the size that keeps Play on the first screen. Four colours, one gesture, one Play.
+
+## Chapter 6, batch 4
+
+Branch `cursor/chapter-6`, on top of `31fc16b` (reviewer product `a79c996`). Headless Chrome, fresh storage. 390×844 light and dark, 1280×800 light and dark. No console errors. No sideways scroll. Play ends at y = 834 in the 844 window and at y = 729 in the 800 window, in both themes.
+
+The flag carries the count (`6.1 · 0 of 6`). Under each camp's blanks: the summit, Go, then Stage complete. The sheet and the cards follow. On 6.3, Go and the tick sit with the triangle, before the deformation beat and the cards. Go to 6.2 sets `#chapter-6-6-2` and leaves the 6.1 blanks mounted. Back from that hash returns to the scroll it left. From 6.4, The Book and then Back returns to the same scroll, with the 6.4 flag at y = 73.
+
+A long choice wraps. "Theorem 6.1, so parametrize both curves" is the whole sentence. Example 6.7 stays one 44px line. The "Reach for" stem is gone on Theorem 6.6. The half-turn line latches at `2i` inside a thumb of the left side and stays after the point moves on. While Stage complete is disabled it says "Bring the point all the way around" or "Fill both lines". The eight-step claim does not print the sum or the exact value. The 6.3 line under the title does not say 0. "Constant" stays off the 6.6 sheet until that check is right. After the bend, the claim says the integral matches the straight segment. After every circle, the claim says the purple bound shrank to the origin, so the derivative is 0.
+
+Walk Chapter 6 is a 163×44 button. Section rows link to `#chapter-6-6-1` and the rest. Drawer rows that open a Later card say Later, including Chapter 7. The Book and Back to the book keep their type size and take a 44px hit. A hair inside the green circle is inside, so the integral of \(1/z\) is not called undefined. A radius that is not a half-step prints the sharp \(1/R\), including \(4/7\) at 1.75 and \(500/503\) at 1.006. Exercise 6.3.1 (b) and (d) are on the card.
+
+## Still open
+
+A missed flash stays at the front. There is no longer schedule than that. The shared practice engine is not in the tree. Chapter 7 is named, marked Later, and is not a page. Chapters 8–11 stay Later on the book. The 6.5 claim still ends on the green point. The full-turn claim still says the integral is back at 0.

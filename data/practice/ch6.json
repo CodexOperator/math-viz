@@ -413,7 +413,7 @@
     "prompt": "The pole sits inside both closed contours, and \\(f\\) is analytic between them. The two integrals are equal. Which result is that?",
     "steps": [
       {
-        "text": "Reach for ___ .",
+        "text": "",
         "answer": "Theorem 6.6, deformation of contour",
         "choices": [
           "Theorem 6.6, deformation of contour",
@@ -512,6 +512,16 @@
         "why": "Each pole contributes $\\pi i/2$. The sum is $\\pi i$."
       },
       {
+        "text": "\\(\\int_C 1/(z^2+2z+2)\\,dz\\) equals ___ .",
+        "answer": "0",
+        "accept": [
+          "0",
+          "0+0i"
+        ],
+        "miss": "The poles are $-1\\pm i$. Both lie outside the unit circle. The value stays covered.",
+        "why": "Both poles lie outside the unit circle, so Theorem 6.5 says the integral is $0$."
+      },
+      {
         "text": "\\(\\int_C \\tan z\\,dz\\) equals ___ .",
         "answer": "0",
         "accept": [
@@ -520,6 +530,16 @@
         ],
         "miss": "Where is $\\tan z$ not analytic, and does that point lie inside the unit circle?",
         "why": "The poles of $\\tan z$ are outside the unit circle, so Theorem 6.5 says the integral is $0$."
+      },
+      {
+        "text": "\\(\\int_C \\operatorname{Log}(z+5)\\,dz\\) equals ___ .",
+        "answer": "0",
+        "accept": [
+          "0",
+          "0+0i"
+        ],
+        "miss": "The branch cut of $\\operatorname{Log}(z+5)$ starts at $-5$, outside the unit circle. The value stays covered.",
+        "why": "$\\operatorname{Log}(z+5)$ is analytic inside and on the unit circle, so the integral is $0$."
       }
     ],
     "memory": "Poles inside: split and quote Corollary 6.1. Poles outside: Theorem 6.5, the integral is $0$.",
@@ -1005,7 +1025,7 @@
     "prompt": "\\(e^{z}\\) is entire. Does Liouville say it is constant?",
     "steps": [
       {
-        "text": "Reach for ___ .",
+        "text": "",
         "answer": "No. \\(e^{z}\\) is unbounded",
         "choices": [
           "No. \\(e^{z}\\) is unbounded",

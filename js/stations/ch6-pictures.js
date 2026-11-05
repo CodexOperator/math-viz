@@ -174,7 +174,7 @@ export function mountRealIntegral(parent) {
     claim: 'ch6-real-claim',
     play: 'ch6-real-play',
     frame: 'ch6-real-frame',
-  }, 'The integral of e to the i t. Drag the green point around the orange circle. Purple is the integral.');
+  }, 'The integral of e to the i t. Drag the green point around the orange circle. Purple is the total so far.');
   const map = world(5.2, 0, 0);
   const axisX = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2' });
   const axisY = svgEl('line', { stroke: 'var(--cart)', 'stroke-width': '2' });
@@ -192,6 +192,9 @@ export function mountRealIntegral(parent) {
   trail.setAttribute('cy', map.Y(1));
   trail.setAttribute('r', map.X(1) - map.X(0));
 
+  const half = h('p', { id: 'ch6-real-half', class: 'exp-claim', hidden: '' });
+  parent.append(half);
+  let latched = false;
   let claimText = '';
   function paint(u) {
     const T = wrapTurn(u * Math.PI * 2);
@@ -203,6 +206,9 @@ export function mountRealIntegral(parent) {
     value.setAttribute('cy', map.Y(w.im));
     stage.dataset.holds = sentence.holds ? 'true' : 'false';
     stage.dataset.phase = sentence.phase;
+    if (sentence.near) latched = true;
+    half.hidden = !latched;
+    if (latched && !half.childElementCount) appendRich(half, 'Half a turn: $2i$.');
     if (sentence.text !== claimText) {
       claimText = sentence.text;
       claim.replaceChildren();
@@ -404,7 +410,7 @@ export function mountBend(parent) {
     claim: 'ch6-bend-claim',
     play: 'ch6-bend-play',
     frame: 'ch6-bend-frame',
-  }, 'A path from -1 minus i to 3 plus i. Drag the green bend. The integral of z stays 4 plus 2 i.');
+  }, 'A path from -1 minus i to 3 plus i. Drag the green bend. The integral of z matches the straight segment.');
   const span = 6.5;
   const cx = 1;
   const cy = 0.4;
@@ -545,7 +551,7 @@ export function mountGoursat(parent) {
     claim: 'ch6-goursat-claim',
     play: 'ch6-goursat-play',
     frame: 'ch6-goursat-frame',
-  }, 'Goursat subdivides a triangle. The integrand is analytic, so the integral over the boundary is 0.');
+  }, 'Goursat subdivides a triangle. The integrand is analytic.');
   const A = [70, 360];
   const B = [410, 360];
   const C = [240, 80];

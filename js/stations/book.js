@@ -3,6 +3,7 @@
 // memory as the Test 2 index. Hints stay closed. No answer key on these cards.
 
 import { stationById } from '../registry.js';
+import { chapterHash } from '../book/route.js';
 import { BOOK, sectionHref } from '../data/book.js';
 import { BOOK_CHAPTERS, CHAPTER_4, CHAPTER_5, CHAPTER_6, bookChapter, chapter4ExerciseIds, chapter5ExerciseIds, chapter6StageIds, CHAPTER_PICTURE, pictureHref } from '../data/book-path.js';
 import { mount as mountChapter6 } from './chapter-6.js';
@@ -134,15 +135,14 @@ function mountRoadmap(el, ctx, spec) {
       const sections = h('ol', { class: 'book-sections', id: `book-sections-${ch.n}` });
       for (const s of ch.sections) {
         sections.append(h('li', { 'data-section': s.id, id: `book-section-${slug(s.id)}` },
-          h('span', null, `${s.id} ${s.title}`),
+          h('a', { href: `#${chapterHash(ch.n, s.id)}`, id: `book-section-link-${slug(s.id)}` }, `${s.id} ${s.title}`),
           h('span', { class: 'book-section-page' }, `p. ${s.page}`),
           h('span', { class: 'book-section-mark' }, '')));
       }
       kids.push(sections);
       if (ch.n === 6) {
         kids.push(h('p', { class: 'book-door', id: 'book-door-6' },
-          h('a', { href: '#chapter-6', id: 'book-open-6' }, 'Walk Chapter 6'),
-          '.'));
+          h('a', { class: 'btn btn-primary', href: '#chapter-6', id: 'book-open-6' }, 'Walk Chapter 6')));
       }
     }
     if (!ch.open && ch.door) {
@@ -312,7 +312,8 @@ function mountChapter4(el, ctx, focus) {
     path,
     h('p', { class: 'book-footer-link' }, h('a', { href: '#book', id: 'chapter-back-end' }, 'Back to the book')));
 
-  if (focus) {
+  if (ctx.restoreScroll != null) window.scrollTo(0, ctx.restoreScroll);
+  else if (focus) {
     const card = cards.find((c) => c.getAttribute('data-problem') === focus);
     const sectionNode = el.querySelector(`#chapter-section-${slug(focus)}`);
     const target = card || sectionNode;
@@ -433,11 +434,14 @@ function mountChapter5(el, ctx, focus) {
 
   paint();
 
-  const targetId = focus === '5.1' ? scope : (CHAPTER_5.cards[focus] ? `chapter-card-${slug(focus)}` : '');
-  const target = targetId ? el.querySelector(`#${targetId}`) : null;
-  if (target) {
-    target.classList.add('is-target');
-    target.scrollIntoView({ block: 'start' });
+  if (ctx.restoreScroll != null) window.scrollTo(0, ctx.restoreScroll);
+  else {
+    const targetId = focus === '5.1' ? scope : (CHAPTER_5.cards[focus] ? `chapter-card-${slug(focus)}` : '');
+    const target = targetId ? el.querySelector(`#${targetId}`) : null;
+    if (target) {
+      target.classList.add('is-target');
+      target.scrollIntoView({ block: 'start' });
+    }
   }
 
   return function unmount() {
