@@ -14,12 +14,24 @@ export function watchDiskMove(fn) {
   try { fn(); } catch { /* a detached card still waits for the next move */ }
 }
 
+const KEEP_NOT_FIVE = 'It is not $5.$';
+
 function say(el, text, holds) {
   if (el.dataset.claim === text) return;
   el.dataset.claim = text;
   el.dataset.holds = holds ? 'true' : 'false';
   el.replaceChildren();
-  appendRich(el, text);
+  const at = text.indexOf(KEEP_NOT_FIVE);
+  if (at < 0) {
+    appendRich(el, text);
+    return;
+  }
+  if (at > 0) appendRich(el, text.slice(0, at));
+  const run = document.createElement('span');
+  run.className = 'ch1-keep';
+  appendRich(run, KEEP_NOT_FIVE);
+  el.append(run);
+  if (at + KEEP_NOT_FIVE.length < text.length) appendRich(el, text.slice(at + KEEP_NOT_FIVE.length));
 }
 
 function plane(parent, id, range, label) {

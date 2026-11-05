@@ -336,14 +336,22 @@ export function start() {
     return document.body.dataset.navOpen === 'true';
   }
 
+  function syncNavName(open) {
+    const book = document.body.dataset.book === 'true';
+    const noun = book ? 'chapters' : 'places';
+    if (navToggle) {
+      navToggle.setAttribute('aria-label', book ? 'Chapters' : 'Places');
+      navToggle.setAttribute('title', `${open ? 'Hide' : 'Show'} the ${noun}`);
+    }
+    nav.setAttribute('aria-label', book ? 'Chapters' : 'Places on the map');
+  }
+
   function setNavOpen(open, { restoreFocus = false } = {}) {
+    syncNavName(open);
     if (open === navIsOpen()) return;
     const hadFocus = nav.contains(document.activeElement);
     document.body.dataset.navOpen = String(open);
-    if (navToggle) {
-      navToggle.setAttribute('aria-expanded', String(open));
-      navToggle.setAttribute('title', open ? 'Hide the places' : 'Show the places');
-    }
+    if (navToggle) navToggle.setAttribute('aria-expanded', String(open));
     // While the phone drawer covers the page, the page behind it must not take Tab stops
     // (the CSS also stops it scrolling). The header and the drawer stay live.
     for (const node of [view, footer]) if (node) node.toggleAttribute('inert', open);

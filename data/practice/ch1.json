@@ -1220,7 +1220,7 @@
       "page": 22
     },
     "kind": "next-step-blank",
-    "prompt": "Write $1+i$ in polar form $re^{i\\theta}$.",
+    "prompt": "Write $1+i$ as $re^{i\\theta}$.",
     "steps": [
       {
         "text": "The modulus is ___",
@@ -1272,7 +1272,7 @@
         "miss": "Measure from the positive real axis. The two legs are equal."
       },
       {
-        "text": "The polar form is ___",
+        "text": "The exponential form is ___",
         "answer": "\\sqrt{2}\\,e^{i\\pi/4}",
         "accept": [
           "\\sqrt{2} e^{i\\pi/4}",
@@ -1280,7 +1280,7 @@
           "sqrt(2)e^{i pi/4}",
           "sqrt(2) e^{ipi/4}"
         ],
-        "why": "Definition 1.9, page 22, and Euler's formula, page 25.",
+        "why": "Equation (1.35), page 25, is $re^{i\\theta}$. Definition 1.9, page 22, is $r(\\cos\\theta+i\\sin\\theta)$.",
         "miss": "The length times $e$ to the $i$ times the angle from the previous blank."
       }
     ],
@@ -1472,7 +1472,7 @@
         "text": "Polar form.",
         "answer": "$z=r(\\cos\\theta+i\\sin\\theta)=re^{i\\theta}$.",
         "accept": [],
-        "why": "Definition 1.9, page 22, and Euler, page 25."
+        "why": "Definition 1.9, page 22, is $r(\\cos\\theta+i\\sin\\theta)$. Equation (1.35), page 25, is $re^{i\\theta}$."
       }
     ],
     "generator": null,
@@ -1561,12 +1561,12 @@
         "miss": "Square both legs, add, and take the square root."
       },
       {
-        "text": "Ten times the argument $\\pi/6$ is $5\\pi/3$, and $2^{10}=$ ___",
+        "text": "Ten times $\\pi/6$ is $5\\pi/3$, an argument. Arg wraps it to $-\\pi/3$, and $2^{10}=$ ___",
         "answer": "1024",
         "accept": [
           "1024"
         ],
-        "why": "Equation (1.40) raises the length to the tenth and multiplies the angle by $10$.",
+        "why": "Equation (1.40) raises the length to the tenth. $10\\cdot\\pi/6=5\\pi/3$ is an argument. Arg, in $(-\\pi,\\pi]$, is $-\\pi/3$. The blank is the length.",
         "value": {
           "real": 1024
         },

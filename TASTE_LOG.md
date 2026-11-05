@@ -1916,3 +1916,19 @@ The four colours, the Iowan title, the muted lede, the paper, and the button, in
 Yes. One batch, then this lens rests. It is the six cuts above.
 
 The picture already teaches the turn, and the sentence follows the point. When the plane and the sentence share an edge, the stage title is a whole line, and each locator is said once, nothing real is left of this pass.
+
+## Chapter 1, batch 6
+
+Started from `fb33e4b` (product), on `cursor/chapter-1` at `e3e1a9d`. Headless Chrome, 390×844 and 1280×800, light and dark. No sideways scroll (`scrollWidth` matched the window). Not merged. `gh-pages` was not touched.
+
+From the sidebar breakpoint up, the in-page Book link is hidden and the sidebar row is the way back. The phone keeps the 109×44 button. The Book at the end of 1.6 stays. The plane cap stays `calc(100dvh - 25rem)`: 400×400 on the 800px screen, 324×324 on the phone. Times i ends at y = 742 on the laptop and y = 724 on the phone. The stage title is a whole line, y = 742 to 769 on the laptop and y = 724 to 751 on the phone. Page 1 sits on the 800 edge. At 1280 the plane and the claim share x = 321.
+
+One Next. With nothing marked, only the 1.1 row says Next, and the button is Walk Chapter 1. After the six stages, only 4.1 says Next, and the button is Walk Chapter 4. The chapter flag under the status is gone. Later and Open are sentence case, weight 500, tracking normal. Chapter 1’s “Already drawn” line is gone. Chapters 2 and 3 keep theirs.
+
+On the phone the 1.3 claim breaks as “The length is the distance to 0.” and then “It is not 5.” The drawer button on a book route is named Chapters. The map still says Places.
+
+The worked paragraph starts at the rule or the verb. The source tag still carries the book, the licence, and the cite. The first cards of 1.2 and 1.3 no longer repeat the worked heading. On 1.3–1.6 the formula in the memory line is the link, and that pin is not listed again. Stage 1.1 keeps its three pins. “The first two unlock the stage.” is gone. The opener sentence in the action row stays.
+
+The length card names the Arg wrap, \(-\pi/3\), and the blank is still 1024. Example 1.9, page 23, is \(\operatorname{Arg}(1+i)=\pi/4\). Example 1.7, page 22, stays the angle. The 1.4 summit calls polar form Definition 1.9, \(r(\cos\theta+i\sin\theta)\), and Equation (1.35), page 25, the exponential form.
+
+The shared practice engine is not on this branch, so Chapter 1 still renders the schema with the local card. Progress is still localStorage. Sign-in is not on this branch. Chapters 8 and later were not touched.

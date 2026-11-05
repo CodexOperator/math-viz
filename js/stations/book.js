@@ -70,16 +70,20 @@ function mountRoadmap(el, ctx, spec) {
     for (const node of list.querySelectorAll('.book-node')) {
       const n = Number(node.getAttribute('data-chapter'));
       let state = 'later';
-      if (n === 1) state = t1.complete ? 'open' : 'next';
-      else if (n === 4) state = t.complete ? 'done' : (target.chapter === 4 ? 'next' : 'open');
-      else if (n === 5) state = 'open';
+      let word = 'Later';
+      if (n === 1) {
+        state = t1.complete ? 'open' : 'next';
+        word = t1.complete ? 'Open' : '';
+      } else if (n === 4) {
+        state = t.complete ? 'done' : (target.chapter === 4 ? 'next' : 'open');
+        word = t.complete ? 'Done' : (target.chapter === 4 ? '' : 'Open');
+      } else if (n === 5) {
+        state = 'open';
+        word = 'Open';
+      }
       node.setAttribute('data-state', state);
       const flag = node.querySelector('.book-flag');
-      if (!flag) continue;
-      if (n === 1) flag.textContent = t1.complete ? 'Open' : 'Next';
-      else if (n === 4) flag.textContent = t.complete ? 'Done' : (target.chapter === 4 ? 'Next' : 'Open');
-      else if (n === 5) flag.textContent = 'Open';
-      else flag.textContent = 'Later';
+      if (flag) flag.textContent = word;
     }
     for (const row of list.querySelectorAll('[data-section]')) {
       const id = row.getAttribute('data-section');
@@ -91,18 +95,20 @@ function mountRoadmap(el, ctx, spec) {
           if (mark) mark.textContent = 'Later';
           continue;
         }
-        const t1 = ch1Tally();
+        const here = ch1Tally();
         const finished = sectionFinished(section1, ch1Ticks);
-        row.setAttribute('data-state', finished ? 'done' : (t1.nextId === id ? 'next' : 'ahead'));
-        if (mark) mark.textContent = finished ? 'Done' : (t1.nextId === id ? 'Next' : '');
+        const walking = target.chapter === 1 && here.nextId === id;
+        row.setAttribute('data-state', finished ? 'done' : (walking ? 'next' : 'ahead'));
+        if (mark) mark.textContent = finished ? 'Done' : (walking ? 'Next' : '');
         continue;
       }
       const section = CHAPTER_4.sections.find((s) => s.id === id);
       if (!section) continue;
       const finished = sectionFinished(section, ticks);
-      row.setAttribute('data-state', finished ? 'done' : (t.nextId === id ? 'next' : 'ahead'));
+      const walking = target.chapter === 4 && t.nextId === id;
+      row.setAttribute('data-state', finished ? 'done' : (walking ? 'next' : 'ahead'));
       const mark = row.querySelector('.book-section-mark');
-      if (mark) mark.textContent = finished ? 'Done' : (t.nextId === id ? 'Next' : '');
+      if (mark) mark.textContent = finished ? 'Done' : (walking ? 'Next' : '');
     }
   }
 
@@ -133,7 +139,7 @@ function mountRoadmap(el, ctx, spec) {
       }
       kids.push(sections);
     }
-    if (ch.door && (!ch.open || ch.n === 1)) {
+    if (ch.door && !ch.open) {
       const st = stationById(ch.door);
       if (st) {
         kids.push(h('p', { class: 'book-door', id: `book-door-${ch.n}` },

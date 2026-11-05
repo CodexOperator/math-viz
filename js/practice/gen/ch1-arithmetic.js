@@ -268,11 +268,11 @@ export function generate(seed, params) {
       ? [`${r.tex}e^{-i${ang.slice(1)}}`, `${r.tex}\\,e^{-i${ang.slice(1)}}`]
       : [];
     return {
-      prompt: `Write $${written}$ in polar form $re^{i\\theta}$.`,
+      prompt: `Write $${written}$ as $re^{i\\theta}$.`,
       steps: [
         step('The modulus is ___', r.tex, r.accept, 'Definition 1.8, page 17.', { real: r.real }),
         argStep,
-        step('The polar form is ___', form, [form, `${r.tex}e^{i${wrapped}}`, `${r.tex}e^{i${ang}}`, `${r.tex} cis ${ang}`, ...euler], 'Definition 1.9, page 22, is $r(\\cos\\theta+i\\sin\\theta)$, and Euler writes that as $re^{i\\theta}$.', null),
+        step('The exponential form is ___', form, [form, `${r.tex}e^{i${wrapped}}`, `${r.tex}e^{i${ang}}`, `${r.tex} cis ${ang}`, ...euler], 'Equation (1.35), page 25, is $re^{i\\theta}$. Definition 1.9, page 22, is $r(\\cos\\theta+i\\sin\\theta)$.', null),
       ],
     };
   }

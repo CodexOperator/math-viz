@@ -2,7 +2,7 @@
 // Mark stage complete stays off until the faded blank and the next item are right.
 // Flashcards are outside that gate.
 
-import { CHAPTER_1, chapter1Walk } from '../data/chapter1.js';
+import { CHAPTER_1, chapter1Walk, citeHref } from '../data/chapter1.js';
 import { loadSharedTicks, saveSharedTicks, toggleTick, sectionFinished, chapterTally } from '../book/progress.js';
 import { h, appendRich, sourceTag } from './test2-ui.js';
 import { mountTurn, mountTimes, mountModulus, mountPolar, mountRoots, mountDisk } from './ch1-pictures.js';
@@ -98,12 +98,12 @@ export function mountChapter1(el, ctx, focus) {
         : undefined;
       stops.push(mount(picture, onClaim));
     }
-    const read = linkList(section.read, `${scope}-read`);
+    const read = linkList(sheetRead(section), `${scope}-read`);
     const worked = workedBlock(section, scope);
     const sheet = h('ul', { class: 'ch1-sheet', id: `${scope}-sheet` });
     for (const line of section.memory) {
       const li = h('li');
-      appendRich(li, line);
+      appendLinked(li, line);
       sheet.append(li);
     }
     const items = practiceItems(section.id);
@@ -141,9 +141,6 @@ export function mountChapter1(el, ctx, focus) {
     const actions = h('div', { class: 'problem-actions ch1-done', id: `${scope}-actions` }, where, tick, go);
     const head = [...lead, why, worked];
     const tail = [
-      openers.length > 1
-        ? h('p', { class: 'book-status', id: `${scope}-unlock` }, 'The first two unlock the stage.')
-        : null,
       practice,
       summit,
       actions,
@@ -171,7 +168,57 @@ export function mountChapter1(el, ctx, focus) {
       h('p', { class: 'book-flag' }, 'Later'),
       h('h2', { id: `${scope}-title` }, section.title),
       h('p', { class: 'book-page' }, `Page ${section.page}`),
-      linkList(section.read, `${scope}-read`));
+      linkList(sheetRead(section), `${scope}-read`));
+  }
+
+  function linkRe() {
+    return /\[\[([\s\S]*?)@@([^\]]+)\]\]/g;
+  }
+
+  function memoryRefs(lines) {
+    const refs = new Set();
+    for (const line of lines) {
+      for (const m of String(line).matchAll(linkRe())) refs.add(m[2].trim());
+    }
+    return refs;
+  }
+
+  // A memory line that already links a formula does not list that pin again.
+  // Stage 1.1 names none of its three pins, so the list stays.
+  function sheetRead(section) {
+    const refs = memoryRefs(section.memory);
+    const drop = [];
+    const prefix = {
+      'Definition 1.8': 'Definition 1.8',
+      'Identity (1.22)': 'Identity (1.22)',
+      'Theorem 1.2': 'Theorem 1.2',
+      'Definition 1.9': 'Definition 1.9',
+      'Definition 1.11': 'Definition 1.11',
+      'Theorem 1.3': 'Theorem 1.3',
+      'Equation (1.40)': "De Moivre",
+      'Equation (1.43)': 'Equation (1.43)',
+      'Equation (1.45)': 'Equation (1.45)',
+      'Equation (1.48)': 'Equation (1.48)',
+      'Equation (1.50)': 'Equation (1.50)',
+      'Equations (1.51) and (1.52)': 'Equations (1.51)',
+    };
+    for (const ref of refs) if (prefix[ref]) drop.push(prefix[ref]);
+    if (refs.has('Identity (1.24)') && refs.has('Identities (1.25) and (1.26)')) drop.push('Identities (1.24)');
+    if (!drop.length) return section.read;
+    return section.read.filter((item) => !drop.some((p) => item.pin.startsWith(p)));
+  }
+
+  function appendLinked(el, text) {
+    const src = String(text);
+    let at = 0;
+    for (const m of src.matchAll(linkRe())) {
+      if (m.index > at) appendRich(el, src.slice(at, m.index));
+      const a = h('a', { href: citeHref(m[2].trim()), target: '_blank', rel: 'noopener noreferrer' });
+      appendRich(a, m[1]);
+      el.append(a);
+      at = m.index + m[0].length;
+    }
+    if (at < src.length) appendRich(el, src.slice(at));
   }
 
   function linkList(items, id) {
@@ -257,7 +304,7 @@ export function mountChapter1(el, ctx, focus) {
 
   el.append(
     h('header', { class: 'station-header' },
-      h('a', { class: 'station-link', id: 'chapter-back', href: '#book' }, 'The Book'),
+      h('a', { class: 'station-link ch1-book-top', id: 'chapter-back', href: '#book' }, 'The Book'),
       h('h1', { id: 'chapter-title' }, 'Chapter 1. Complex Numbers'),
       h('p', { class: 'station-lede', id: 'chapter-lede' }, 'Press Times i. The purple point turns.'),
       sourceTag({ pin: CHAPTER_1.pin, href: CHAPTER_1.href })),

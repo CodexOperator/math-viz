@@ -1193,6 +1193,14 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   text-transform: uppercase;
 }
 
+.book-node-head .book-flag {
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.book-node-head .book-flag:empty { display: none; }
+
 .book-node[data-state="next"] > .book-node-head .book-flag,
 .section-node[data-state="next"] > .book-flag { color: var(--text); }
 
@@ -1249,6 +1257,13 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   width: min(100%, calc(100dvh - 25rem));
   max-width: min(100%, 32rem, calc(100dvh - 25rem));
 }
+
+@media (min-width: 56.25rem) {
+  .ch1-book-top { display: none; }
+  .ch1-picture .plane { margin-inline: 0; }
+}
+
+.ch1-keep { white-space: nowrap; }
 
 .ch1-item { min-width: 0; }
 .ch1-practice { gap: var(--space-4); }

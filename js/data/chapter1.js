@@ -71,7 +71,7 @@ export const CHAPTER_1 = deepFreeze({
         pin: 'Page 13, from Definition 1.3',
         href: sectionHref(ALG1, 'sec_algebra-1-24'),
         title: 'Multiply $(0,1)$ by itself',
-        body: 'Definition 1.3 says $(x_1,y_1)(x_2,y_2)=(x_1 x_2-y_1 y_2,\\, x_1 y_2+x_2 y_1)$. Apply that rule to $(0,1)$ and $(0,1)$. Page 13 identifies the resulting pair with a real number, and that real number is what $i^2$ is. Example 1.1, page 10, is addition on a different pair, $(3,7)+(5,-6)$.',
+        body: '$(x_1,y_1)(x_2,y_2)=(x_1 x_2-y_1 y_2,\\, x_1 y_2+x_2 y_1)$. Apply that rule to $(0,1)$ and $(0,1)$. The resulting pair is a real number, and that real number is what $i^2$ is. Example 1.1 is addition on a different pair, $(3,7)+(5,-6)$.',
       },
       memory: [
         'Add or subtract coordinate by coordinate. Definitions 1.1 and 1.2.',
@@ -106,11 +106,11 @@ export const CHAPTER_1 = deepFreeze({
         body: 'Definition 1.8 writes $|4+3i|$ as $\\sqrt{4^2+3^2}$. The legs are the real part and the imaginary part, and Identity (1.21) says each leg is at most the hypotenuse. Example 1.6, page 20, multiplies the lengths of a different pair, $1+2i$ and $3+2i$.',
       },
       memory: [
-        '$|z|=\\sqrt{x^2+y^2}$. That is the distance to $0$. Definition 1.8.',
-        'The distance from $z_1$ to $z_2$ is $|z_1-z_2|.$ Page 18.',
-        '$|z|^2=z\\overline{z}$. Identity (1.22). Use it when you want to avoid the square root.',
-        'Triangle: $|z_1+z_2|\\le |z_1|+|z_2|$. Reverse: $|z_1+z_2|\\ge |z_1|-|z_2|$.',
-        'Moduli multiply and divide. Identities (1.25) and (1.26).',
+        '[[$|z|=\\sqrt{x^2+y^2}$@@Definition 1.8]]. That is the distance to $0$. Definition 1.8.',
+        'The distance from $z_1$ to $z_2$ is [[$|z_1-z_2|.$@@Distance formula]] Page 18.',
+        '[[$|z|^2=z\\overline{z}$@@Identity (1.22)]]. Identity (1.22). Use it when you want to avoid the square root.',
+        'Triangle: [[$|z_1+z_2|\\le |z_1|+|z_2|$@@Theorem 1.2]]. Reverse: [[$|z_1+z_2|\\ge |z_1|-|z_2|$@@Identity (1.24)]].',
+        'Moduli multiply and divide. [[Identities (1.25) and (1.26)@@Identities (1.25) and (1.26)]].',
       ],
       exercises: ['1.3'],
       picture: 'modulus',
@@ -120,8 +120,8 @@ export const CHAPTER_1 = deepFreeze({
       title: 'The Geometry of Complex Numbers, Part II',
       page: 22,
       why: 'Multiplication has a direction. The modulus is the length you already have, and Arg is the angle from the positive real axis, kept in $(-\\pi,\\pi]$.',
-      summit: 'Polar form is the length times $e^{i\\theta}$. Definition 1.9 allows any argument. The one value in $(-\\pi,\\pi]$ is Arg, Definition 1.11.',
-      idea: 'Example 1.7, page 22: $1+i$ has length $\\sqrt{2}$ and Arg $\\pi/4$.',
+      summit: 'Polar form is $r(\\cos\\theta+i\\sin\\theta)$, Definition 1.9. The exponential form is $re^{i\\theta}$, Equation (1.35), page 25. Arg is the one value in $(-\\pi,\\pi]$, Definition 1.11.',
+      idea: 'Example 1.7, page 22, writes $1+i$ with length $\\sqrt{2}$ and angle $\\pi/4$. Example 1.9, page 23: $\\operatorname{Arg}(1+i)=\\pi/4$.',
       read: [
         { pin: 'Definition 1.9, polar representation, page 22', href: sectionHref(GEO2, 'def_polar_rep') },
         { pin: 'Definition 1.10, $\\arg z$, page 23', href: sectionHref(GEO2, 'arg_z') },
@@ -133,14 +133,14 @@ export const CHAPTER_1 = deepFreeze({
         pin: 'Example 1.7, page 22',
         href: sectionHref(GEO2, 'sec_geometry-2-6'),
         title: '$1+i$ in polar form',
-        body: '$1+i$ sits one unit right and one unit up. Definition 1.8 is the length, Definition 1.11 is the angle in $(-\\pi,\\pi]$, and Definition 1.9 is the polar form. Euler\'s formula, page 25, writes the same point.',
+        body: '$1+i$ sits one unit right and one unit up. The length is $\\sqrt{2}$ and the angle is $\\pi/4$, written $r(\\cos\\theta+i\\sin\\theta)$. $\\operatorname{Arg}(1+i)=\\pi/4$ is Example 1.9, page 23. Equation (1.35), page 25, writes $\\sqrt{2}\\,e^{i\\pi/4}$.',
       },
       memory: [
-        'Arg $z$ is the one angle in $(-\\pi,\\pi]$. Definition 1.11, page 23. It is undefined at $0$.',
-        'Polar form is $r(\\cos\\theta+i\\sin\\theta)$, and Euler writes $re^{i\\theta}$. Definition 1.9, page 22.',
-        'An argument of a product is the sum of arguments. Theorem 1.3, page 26.',
+        '[[Arg $z$@@Definition 1.11]] is the one angle in $(-\\pi,\\pi]$. Definition 1.11, page 23. It is undefined at $0$.',
+        'Polar form is [[$r(\\cos\\theta+i\\sin\\theta)$@@Definition 1.9]]. The exponential form is [[$re^{i\\theta}$@@Equation (1.35)]]. Definition 1.9, page 22. Equation (1.35), page 25.',
+        'An argument of a product is the sum of arguments. [[Theorem 1.3@@Theorem 1.3]], page 26.',
         'Wrap that sum back into $(-\\pi,\\pi]$ before you call it Arg.',
-        'The sum of the two Args can leave the interval. Exercise 7, page 28.',
+        'The sum of the two Args can leave the interval. [[Exercise 7@@§1.4, Exercise 7]], page 28.',
       ],
       exercises: ['1.4'],
       picture: 'polar',
@@ -163,13 +163,13 @@ export const CHAPTER_1 = deepFreeze({
         pin: '§1.5, Exercise 2, page 34',
         href: sectionHref(ALG2, 'x1_5_2a'),
         title: '$(\\sqrt{3}+i)^4$ by De Moivre',
-        body: 'Exercise 2, page 34, raises $\\sqrt{3}+i$ to the fourth power. Read the length and the argument, then Equation (1.40) multiplies the angle by $4$ and raises the length to the fourth. The practice below uses a different exponent.',
+        body: 'Raise $\\sqrt{3}+i$ to the fourth power. Read the length and the argument, then Equation (1.40) multiplies the angle by $4$ and raises the length to the fourth. The practice below uses a different exponent.',
       },
       memory: [
-        'De Moivre, Equation (1.40), page 30: $(\\cos\\theta+i\\sin\\theta)^n=\\cos n\\theta+i\\sin n\\theta$. The length becomes $r^n$.',
-        'The $n$th roots have length $r^{1/n}$ and angles $(\\theta+2\\pi k)/n$. Equation (1.45), page 32.',
-        'The $n$th roots of unity are $e^{i 2\\pi k/n}$. Equation (1.43), page 31.',
-        'A quadratic has both square roots of the discriminant. Theorem 1.5, page 33.',
+        'De Moivre, Equation (1.40), page 30: [[$(\\cos\\theta+i\\sin\\theta)^n=\\cos n\\theta+i\\sin n\\theta$@@Equation (1.40)]]. The length becomes $r^n$.',
+        'The $n$th roots have length $r^{1/n}$ and angles [[$(\\theta+2\\pi k)/n$@@Equation (1.45)]]. Equation (1.45), page 32.',
+        'The $n$th roots of unity are [[$e^{i 2\\pi k/n}$@@Equation (1.43)]]. Equation (1.43), page 31.',
+        'A quadratic has both square roots of the discriminant. [[Theorem 1.5@@Theorem 1.5]], page 33.',
       ],
       exercises: ['1.5'],
       picture: 'roots',
@@ -191,14 +191,14 @@ export const CHAPTER_1 = deepFreeze({
         pin: 'Example 1.25, page 38',
         href: sectionHref(TOP, 'TopologyEx'),
         title: 'The open unit disk',
-        body: '$S=D_1(0)=\\{z:\\,|z|<1\\}$. Example 1.25 takes a point inside and chooses $\\varepsilon=1-|z_0|$, so a whole disk about that point stays in $S$. The exterior is $|z|>1$ and the boundary is the circle $|z|=1.$',
+        body: 'Take a point inside and choose $\\varepsilon=1-|z_0|$, so a whole disk about that point stays in $D_1(0)$. The exterior is $|z|>1$ and the boundary is the circle $|z|=1.$',
       },
       memory: [
-        'A segment from $z_0$ to $z_1$ is $z(t)=z_0+t(z_1-z_0)$ for $0\\le t\\le 1$. Equation (1.48), page 35.',
-        'The open disk is $|z-z_0|<\\varepsilon$. Equation (1.50), page 37. The boundary is not included.',
-        'The closed disk is $|z-z_0|\\le\\varepsilon$. Equation (1.51). The punctured disk leaves out the center.',
+        'A segment from $z_0$ to $z_1$ is [[$z(t)=z_0+t(z_1-z_0)$@@Equation (1.48)]] for $0\\le t\\le 1$. Equation (1.48), page 35.',
+        'The open disk is [[$|z-z_0|<\\varepsilon$@@Equation (1.50)]]. Equation (1.50), page 37. The boundary is not included.',
+        'The closed disk is [[$|z-z_0|\\le\\varepsilon$@@Equations (1.51) and (1.52)]]. Equation (1.51). The punctured disk leaves out the center.',
         'A boundary point has every neighborhood meeting the set and its complement.',
-        'A domain is open and connected. Exercise 6, page 41: $D_1(0)$ is one, and the closed disk is not.',
+        'A domain is open and connected. [[Exercise 6@@§1.6, Exercise 6]], page 41: $D_1(0)$ is one, and the closed disk is not.',
       ],
       exercises: ['1.6'],
       picture: 'disk',
@@ -250,6 +250,8 @@ const CITE_HREF = {
   'Definition 1.11': sectionHref(GEO2, 'Arg_z'),
   'Theorem 1.3': sectionHref(GEO2, 'thm_arg-sum'),
   'Example 1.7': sectionHref(GEO2, 'sec_geometry-2-6'),
+  'Example 1.9': sectionHref(GEO2, 'sec_geometry-2-13'),
+  'Equation (1.35)': sectionHref(GEO2, 'Exponential_Form'),
   'Example 1.13': sectionHref(GEO2, 'sec_geometry-2-43'),
   'Definitions 1.1 and 1.2': sectionHref(ALG1, 'def_addition'),
   'Identities (1.25) and (1.26)': sectionHref(GEO1, 'ModProduct'),
@@ -326,12 +328,12 @@ export function modulusClaim(z) {
   return { holds: false, text: 'The length is the distance to $0$. It is not $5.$' };
 }
 
-// True only at the book's 1+i, Example 1.7, page 22. A nearby point does not have length √2.
+// True only at the book's 1+i. Example 1.7, page 22, is the angle. Example 1.9, page 23, is Arg.
 export function polarClaim(z) {
   const re = Number(z && z.re);
   const im = Number(z && z.im);
   if (near(re, 1, 1e-4) && near(im, 1, 1e-4)) {
-    return { holds: true, text: 'Length $\\sqrt{2}$, Arg $\\pi/4$. Example 1.7, page 22.' };
+    return { holds: true, text: 'Length $\\sqrt{2}$, angle $\\pi/4$. Example 1.7, page 22. Arg $\\pi/4$. Example 1.9, page 23.' };
   }
   return { holds: false, text: 'Arg is the angle from the positive real axis, in $(-\\pi,\\pi]$. This point is not $1+i$.' };
 }

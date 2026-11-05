@@ -150,10 +150,13 @@ function practiceCard(item, onItem) {
   const memory = h('p', { class: 'ch1-note', id: `ch1-memory-${slug}` });
   appendRich(memory, item.memory || '');
   memory.hidden = true;
-  const title = h('h3', { id: `ch1-title-${slug}` });
-  appendRich(title, taskHeading(item));
+  const copied = item.id === 'ch1-1.2-ii' || item.id === 'ch1-1.3-len';
+  if (!copied) {
+    const title = h('h3', { id: `ch1-title-${slug}` });
+    appendRich(title, taskHeading(item));
+    card.append(title);
+  }
   card.append(
-    title,
     sourceTag({ pin: `${item.cite.ref}, page ${item.cite.page}`, href: citeHref(item.cite.ref) }),
     prompt,
     stepsHost,
