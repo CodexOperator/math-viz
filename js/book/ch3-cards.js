@@ -36,13 +36,18 @@ const HREF = Object.freeze({
   'Theorem 3.8': sectionHref(S33, 'Harmonic_Theorem'),
   'Theorem 3.9': sectionHref(S33, 'Conjugate_Construction'),
   '§3.1, Exercise 1(a)': sectionHref(S31, 'x3_1_1'),
+  '§3.1, Exercise 1(b)': sectionHref(S31, 'x3_1_1'),
   '§3.1, Exercise 2(a)': sectionHref(S31, 'x3_1_2'),
+  '§3.1, Exercise 3': sectionHref(S31, 'x3_1_3'),
   '§3.1, Exercise 7(a)': sectionHref(S31, 'x3_1_7'),
   '§3.1, Exercise 11': sectionHref(S31, 'x3_1_11'),
   'Example 3.6': sectionHref(S32, 'CR_but_not_diff'),
   '§3.2, Exercise 1(a)': sectionHref(S32, 'x3_2_1'),
+  '§3.2, Exercise 1(b)': sectionHref(S32, 'x3_2_1'),
   '§3.2, Exercise 1': sectionHref(S32, 'x3_2_1'),
+  '§3.2, Exercise 3': sectionHref(S32, 'x3_2_3'),
   '§3.2, Exercise 7(b)': sectionHref(S32, 'x3_2_7'),
+  '§3.3, Exercise 2': sectionHref(S33, 'x3_3_2'),
   '§3.3, Exercise 5(a)': sectionHref(S33, 'x3_3_5'),
   '§3.3, Exercise 5': sectionHref(S33, 'x3_3_5'),
 });
@@ -152,7 +157,8 @@ function card(source, cleanups) {
     const current = item.steps[index];
     if (!current) return;
     const right = accepted(current, given);
-    write(why, right ? (current.why || 'Yes.') : (current.why || 'Not that line.'));
+    const line = right ? (current.why || 'Yes.') : (current.miss || current.why || 'Not that line.');
+    write(why, line);
     why.hidden = false;
     const node = hostOf();
     if (node) node.dataset.right = right ? 'true' : 'false';
@@ -201,10 +207,13 @@ function card(source, cleanups) {
     });
   }
 
+  const note = source.note ? h('p', { class: 'book-page', id: `${source.id}-note` }) : null;
+  if (note) write(note, source.note);
   const kids = [
     h('h3', { id: `${source.id}-title` }, cite.pin),
     sourceTag(cite),
     prompt,
+    note,
     count,
     step,
     field,

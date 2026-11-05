@@ -1231,9 +1231,11 @@ sup.prose-sup { font-size: 0.85em; line-height: 0; }
   width: min(100%, calc(100dvh - 24rem));
 }
 
-/* The opening square has to leave room for the gesture line, Play, and the why. */
+/* Phone: the opening square uses the column, the same width §3.2 already uses.
+   The height cap is the 1280 size that keeps the why inside an 800px window.
+   On a phone the why sits under Play. */
 #chapter-section-3-1-picture .exp-stage {
-  width: min(48%, calc(100dvh - 31rem));
+  width: min(100%, calc(100dvh - 31rem));
   align-self: center;
 }
 

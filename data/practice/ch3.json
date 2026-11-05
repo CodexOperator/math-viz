@@ -23,11 +23,79 @@
         "text": "So g'(z) =",
         "answer": "5(z^2 - iz + 9)^4(2z - i)",
         "accept": ["5(z^2-iz+9)^4(2z-i)", "5(z^{2}-iz+9)^{4}(2z-i)"],
-        "why": "Multiply the two factors. Equation (3.12), page 81."
+        "why": "Multiply the two factors. Equation (3.12), page 81. The derivative stays \\(5(z^{2}-iz+9)^{4}(2z-i)\\)."
       }
     ],
     "generator": null,
+    "note": "The selected-answers key on page 435 prints \\(15z^{2}-8z+7\\) for this derivative, and it labels \\(h'(z)=3/(z+2)^{2}\\) as 1(c). \\(h\\) is Exercise 1(b).",
     "memory": "A power of a polynomial: n[inside]^{n-1} times the inside derivative."
+  },
+  {
+    "id": "ch3-3.1-quot-001",
+    "chapter": 3,
+    "section": "3.1",
+    "cite": {"ref": "§3.1, Exercise 1(b)", "page": 83},
+    "kind": "next-step-blank",
+    "prompt": "Find the derivative of \\(h(z) = (2z+1)/(z+2)\\), and name the singular point.",
+    "steps": [
+      {
+        "text": "The numerator of the quotient rule, \\((g f' - f g')/g^{2}\\), is",
+        "answer": "3",
+        "accept": ["3"],
+        "why": "Take \\(f = 2z+1\\) and \\(g = z+2\\). Then \\(g f' - f g' = 2(z+2) - (2z+1) = 3\\).",
+        "miss": "Apply \\((g f' - f g')/g^{2}\\) with \\(f = 2z+1\\) and \\(g = z+2\\)."
+      },
+      {
+        "text": "So \\(h'(z) =\\)",
+        "answer": "3/(z+2)^2",
+        "accept": ["3/(z+2)^{2}", "3(z+2)^{-2}", "3(z+2)^-2"],
+        "why": "The denominator is \\((z+2)^{2}\\). §3.1 Exercise 1(b), page 83.",
+        "miss": "Not that derivative. The denominator of the quotient rule is \\((z+2)^{2}\\)."
+      },
+      {
+        "text": "The singular point is \\(z =\\)",
+        "answer": "-2",
+        "accept": ["z=-2", "z = -2"],
+        "why": "\\(h\\) is undefined at \\(-2\\). A quotient fails where the denominator is 0. Page 81.",
+        "miss": "Where is the denominator zero?"
+      }
+    ],
+    "generator": null,
+    "memory": "The quotient is (g f' − f g')/g². It fails where the denominator is 0, here at z = −2."
+  },
+  {
+    "id": "ch3-3.1-entire-001",
+    "chapter": 3,
+    "section": "3.1",
+    "cite": {"ref": "§3.1, Exercise 3", "page": 83},
+    "kind": "next-step-mc",
+    "prompt": "\\(f\\) and \\(g\\) are entire. Which of \\([f(z)]^{3}\\), \\(f(z)g(z)\\), \\(f(z)/g(z)\\), \\(f(1/z)\\), \\(f(z-1)\\), and \\(f(g(z))\\) must be entire?",
+    "steps": [
+      {
+        "text": "These must be entire:",
+        "answer": "\\([f]^{3}\\), \\(fg\\), \\(f(z-1)\\), and \\(f(g(z))\\)",
+        "choices": [
+          "\\([f]^{3}\\), \\(fg\\), \\(f(z-1)\\), and \\(f(g(z))\\)",
+          "\\([f]^{3}\\), \\(fg\\), \\(f/g\\), and \\(f(g(z))\\)",
+          "\\([f]^{3}\\), \\(fg\\), \\(f(1/z)\\), and \\(f(z-1)\\)",
+          "\\(f/g\\), \\(f(1/z)\\), \\(f(z-1)\\), and \\(f(g(z))\\)"
+        ],
+        "why": "A power, a product, a shift, and a composition of entire functions stay entire. §3.1 Exercise 3, page 83."
+      },
+      {
+        "text": "These need not be entire:",
+        "answer": "\\(f/g\\) and \\(f(1/z)\\)",
+        "choices": [
+          "\\(f/g\\) and \\(f(1/z)\\)",
+          "\\(f(z-1)\\) and \\(f(g(z))\\)",
+          "\\([f]^{3}\\) and \\(fg\\)",
+          "\\(f/g\\) and \\(f(g(z))\\)"
+        ],
+        "why": "\\(g\\) may vanish, so \\(f/g\\) need not be entire. \\(f(1/z)\\) need not be analytic at 0. \\(f(z-1)\\) and \\(f(g(z))\\) do stay entire."
+      }
+    ],
+    "generator": null,
+    "memory": "Entire is closed under powers, products, shifts, and composition. The traps are f/g and f(1/z)."
   },
   {
     "id": "ch3-3.1-re-001",
@@ -143,7 +211,8 @@
         "text": "So the limit equals",
         "answer": "-4i",
         "accept": ["-4*i", "0 - 4i"],
-        "why": "\\(4i^3 = 4(-i) = -4i\\)."
+        "why": "\\(4i^3 = 4(-i) = -4i\\).",
+        "miss": "Not that value. The quotient of the derivatives is \\(4z^3\\). Plug in \\(z = i\\)."
       }
     ],
     "generator": null,
@@ -371,6 +440,67 @@
     "memory": "Write u and v, test both equations, then f' = u_x + i v_x."
   },
   {
+    "id": "ch3-3.2-rat-001",
+    "chapter": 3,
+    "section": "3.2",
+    "cite": {"ref": "§3.2, Exercise 1(b)", "page": 93},
+    "kind": "next-step-mc",
+    "prompt": "Use the Cauchy-Riemann equations on \\(f(x, y) = (y + ix)/(x^{2} + y^{2})\\). Where is it differentiable, and what is \\(f'\\)?",
+    "steps": [
+      {
+        "text": "Off the origin, \\(f(z)\\) equals",
+        "answer": "\\(i/z\\)",
+        "choices": ["\\(i/z\\)", "\\(-i/z\\)", "\\(1/z\\)", "\\(i z\\)"],
+        "why": "\\((y + ix)/(x^{2} + y^{2}) = i/z\\) for \\(z \\neq 0\\). At 0 the denominator is 0."
+      },
+      {
+        "text": "The equations hold off 0, and \\(f'(z) =\\)",
+        "answer": "\\(-i/z^{2}\\)",
+        "choices": ["\\(-i/z^{2}\\)", "\\(i/z^{2}\\)", "\\(-i/z\\)", "\\(1/z^{2}\\)"],
+        "why": "\\(u = y/(x^{2}+y^{2})\\) and \\(v = x/(x^{2}+y^{2})\\). Off 0 the partials are continuous and \\(u_x = v_y\\), \\(u_y = -v_x\\). Then \\(f' = u_x + i v_x = -i/z^{2}\\). The sign \\(i/z^{2}\\) is the miss."
+      },
+      {
+        "text": "So \\(f\\) is",
+        "answer": "differentiable for every \\(z \\neq 0\\), and not at 0",
+        "choices": [
+          "differentiable for every \\(z \\neq 0\\), and not at 0",
+          "entire",
+          "differentiable only at 0",
+          "nowhere differentiable"
+        ],
+        "why": "The equations hold on the punctured plane, so there is a derivative there. At 0 the formula is undefined, so 0 is a singular point. This is not the \\(|z|^{2}\\) pattern, which is differentiable only at 0."
+      }
+    ],
+    "generator": null,
+    "memory": "(y + ix)/(x² + y²) = i/z off 0, and f' = −i/z². Not entire, and not only at 0."
+  },
+  {
+    "id": "ch3-3.2-const-001",
+    "chapter": 3,
+    "section": "3.2",
+    "cite": {"ref": "§3.2, Exercise 3", "page": 93},
+    "kind": "next-step-blank",
+    "prompt": "Find the constants \\(a\\) and \\(b\\) so that \\(f(z) = (2x - y) + i(ax + by)\\) is differentiable for every \\(z\\).",
+    "steps": [
+      {
+        "text": "\\(u_x = 2\\) and \\(v_y = b\\). The first Cauchy-Riemann equation forces \\(b =\\)",
+        "answer": "2",
+        "accept": ["b=2", "b = 2"],
+        "why": "\\(u_x = v_y\\), so \\(b = 2\\). The swapped pair \\(b = 1\\) and a sign change both fail.",
+        "miss": "Not that constant. Match \\(v_y\\) to \\(u_x\\), and keep the sign."
+      },
+      {
+        "text": "\\(u_y = -1\\) and \\(v_x = a\\). Then \\(u_y = -v_x\\) forces \\(a =\\)",
+        "answer": "1",
+        "accept": ["a=1", "a = 1"],
+        "why": "\\(u_y = -1 = -a\\), so \\(a = 1\\). With \\(b = 2\\), \\(f\\) is differentiable for every \\(z\\). §3.2 Exercise 3, page 93.",
+        "miss": "Not that constant. The equation is \\(u_y = -v_x\\), not \\(u_y = v_x\\)."
+      }
+    ],
+    "generator": null,
+    "memory": "u_x = v_y forces b = 2. u_y = −v_x forces a = 1."
+  },
+  {
     "id": "ch3-3.2-fail-001",
     "chapter": 3,
     "section": "3.2",
@@ -495,6 +625,36 @@
     ],
     "generator": null,
     "memory": "Analytic and f' = 0 means constant."
+  },
+  {
+    "id": "ch3-3.3-im-001",
+    "chapter": 3,
+    "section": "3.3",
+    "cite": {"ref": "§3.3, Exercise 2", "page": 100},
+    "kind": "next-step-blank",
+    "prompt": "Does an analytic function \\(f = u + iv\\) exist for which the imaginary part is \\(v(x, y) = x^{3} + y^{3}\\)?",
+    "steps": [
+      {
+        "text": "\\(v_{xx} + v_{yy}\\) equals",
+        "answer": "6x + 6y",
+        "accept": ["6y + 6x", "6(x+y)", "6(x + y)"],
+        "why": "\\(v_{xx} = 6x\\) and \\(v_{yy} = 6y\\). The sum is \\(6x + 6y\\), not 0.",
+        "miss": "Take both second partials. Laplace is what you are testing, not a value to assume."
+      },
+      {
+        "text": "So an analytic \\(f\\) with this imaginary part",
+        "answer": "does not exist",
+        "choices": [
+          "does not exist",
+          "exists, and \\(f'(z) = 3z^{2}\\)",
+          "exists only at 0",
+          "exists, because a real part can still be chosen"
+        ],
+        "why": "Theorem 3.8, page 95: the imaginary part of an analytic function is harmonic. \\(6x + 6y\\) is not identically 0, so no such \\(f\\) exists. §3.3 Exercise 2, page 100."
+      }
+    ],
+    "generator": null,
+    "memory": "An analytic function's imaginary part is harmonic. x³ + y³ has Laplacian 6x + 6y, so it cannot be one."
   },
   {
     "id": "ch3-3.3-conj-001",

@@ -1,7 +1,7 @@
 // The three Chapter 3 pictures. Each has one gesture, at most three controls, and the site's clock.
 
 import { createFrame, createMotion, prefersReducedMotion } from '../core/anim.js';
-import { derivativeScene, squareScene, levelScene, clampPlane, wrapPi, circleComparePoint } from './ch3-math.js';
+import { derivativeScene, squareScene, levelScene, clampRect, wrapPi, circleComparePoint } from './ch3-math.js';
 import { h, appendRich } from '../stations/test2-ui.js';
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -27,6 +27,11 @@ function clientMath(stage, span, ev) {
     re: -span + (px / SIZE) * span * 2,
     im: span - (py / SIZE) * span * 2,
   };
+}
+
+function leftStage(stage, ev) {
+  const rect = stage.getBoundingClientRect();
+  return ev.clientX < rect.left || ev.clientX > rect.right || ev.clientY < rect.top || ev.clientY > rect.bottom;
 }
 
 function dotClient(stage, el) {
@@ -257,11 +262,18 @@ export function mountDerivativePicture(parent) {
     return Math.hypot(ev.clientX - dot.x, ev.clientY - dot.y) <= HIT;
   }
   function place(re, im) {
-    return clampPlane(re, im, span - 0.25);
+    return clampRect(re, im, span);
   }
   function moveTo(ev) {
     const p = clientMath(shell.stage, span, ev);
     z = place(p.re, p.im);
+  }
+  function finishDrag() {
+    const id = drag && drag.id;
+    drag = null;
+    frame.stop();
+    if (id == null) return;
+    try { shell.stage.releasePointerCapture(id); } catch { /* already released */ }
   }
   function onDown(ev) {
     if (ev.button != null && ev.button !== 0) return;
@@ -278,6 +290,11 @@ export function mountDerivativePicture(parent) {
     drag.moved = true;
     stopPlay();
     moveTo(ev);
+    if (leftStage(shell.stage, ev)) {
+      paint();
+      finishDrag();
+      return;
+    }
     frame.arm(() => paint());
   }
   function onUp(ev) {
@@ -287,8 +304,7 @@ export function mountDerivativePicture(parent) {
       frame.stop();
       paint();
     }
-    drag = null;
-    try { shell.stage.releasePointerCapture(ev.pointerId); } catch { /* already released */ }
+    finishDrag();
   }
   shell.stage.addEventListener('pointerdown', onDown);
   shell.stage.addEventListener('pointermove', onMove);
@@ -488,14 +504,23 @@ function circleBranch(r2, limit) {
   return [branch];
 }
 
+function stroke(node, color, width, opacity) {
+  node.setAttribute('stroke', color);
+  node.setAttribute('stroke-width', width);
+  if (opacity) node.setAttribute('opacity', opacity);
+  return node;
+}
+
 export function mountLevelPicture(parent) {
   const span = 2.15;
   const shell = mountShell(parent, 'chapter-level-stage', 'Level curves. Drag the green point. Orange is u. Purple is the other family.');
   axes(shell.stage, span);
-  const grid = svgEl('g', {});
+  const faint = svgEl('g', { id: 'chapter-level-faint' });
+  const live = svgEl('g', { id: 'chapter-level-live' });
   const point = svgEl('circle', { r: '7', fill: 'var(--input)' });
-  shell.stage.append(grid, point);
+  shell.stage.append(faint, live, point);
   let mode = 'conj';
+  let faintFor = '';
   let z = { re: 1, im: 0.45 };
   const frame = createFrame();
   const conj = chip('chapter-level-conj', 'Conjugates', true, () => { mode = 'conj'; paint(); });
@@ -506,41 +531,36 @@ export function mountLevelPicture(parent) {
   });
   shell.controls.append(conj, circles);
 
-  function paint() {
-    const scene = levelScene(mode, z.re, z.im);
-    grid.replaceChildren();
+  function drawFaint() {
+    faint.replaceChildren();
     const limit = span - 0.04;
     const uGrid = [-2, -1, 1, 2];
     const vGrid = mode === 'circles' ? [0.4, 1, 2, 3.2] : [-2, -1, 1, 2];
     for (const c of uGrid) {
-      if (Math.abs(c - scene.u) < 0.15) continue;
       for (const branch of uBranches(c, limit)) {
-        const node = pathOf(grid, span, branch);
-        node.setAttribute('stroke', 'var(--polar)');
-        node.setAttribute('stroke-width', '1.25');
-        node.setAttribute('opacity', '0.45');
+        stroke(pathOf(faint, span, branch), 'var(--polar)', '1.25', '0.45');
       }
     }
     for (const c of vGrid) {
-      if (Math.abs(c - scene.v) < 0.15) continue;
       const branches = mode === 'circles' ? circleBranch(c, limit) : vBranches(c, limit);
       for (const branch of branches) {
-        const node = pathOf(grid, span, branch);
-        node.setAttribute('stroke', 'var(--output)');
-        node.setAttribute('stroke-width', '1.25');
-        node.setAttribute('opacity', '0.4');
+        stroke(pathOf(faint, span, branch), 'var(--output)', '1.25', '0.4');
       }
     }
+    faintFor = mode;
+  }
+
+  function paint() {
+    if (faintFor !== mode) drawFaint();
+    const scene = levelScene(mode, z.re, z.im);
+    live.replaceChildren();
+    const limit = span - 0.04;
     for (const branch of uBranches(scene.u, limit)) {
-      const node = pathOf(grid, span, branch);
-      node.setAttribute('stroke', 'var(--polar)');
-      node.setAttribute('stroke-width', '3');
+      stroke(pathOf(live, span, branch), 'var(--polar)', '3');
     }
-    const live = mode === 'circles' ? circleBranch(scene.v, limit) : vBranches(scene.v, limit);
-    for (const branch of live) {
-      const node = pathOf(grid, span, branch);
-      node.setAttribute('stroke', 'var(--output)');
-      node.setAttribute('stroke-width', '3');
+    const curves = mode === 'circles' ? circleBranch(scene.v, limit) : vBranches(scene.v, limit);
+    for (const branch of curves) {
+      stroke(pathOf(live, span, branch), 'var(--output)', '3');
     }
     const { X, Y } = plane(span);
     point.setAttribute('cx', X(z.re));
@@ -563,13 +583,20 @@ export function mountLevelPicture(parent) {
     return Math.hypot(ev.clientX - dot.x, ev.clientY - dot.y) <= HIT;
   }
   function place(re, im) {
-    const next = clampPlane(re, im, span - 0.12);
+    const next = clampRect(re, im, span);
     if (Math.hypot(next.re, next.im) < 0.12) return { re: 0, im: 0 };
     return next;
   }
   function moveTo(ev) {
     const p = clientMath(shell.stage, span, ev);
     z = place(p.re, p.im);
+  }
+  function finishDrag() {
+    const id = drag && drag.id;
+    drag = null;
+    frame.stop();
+    if (id == null) return;
+    try { shell.stage.releasePointerCapture(id); } catch { /* already released */ }
   }
   function onDown(ev) {
     if (ev.button != null && ev.button !== 0) return;
@@ -585,6 +612,11 @@ export function mountLevelPicture(parent) {
     if (!drag.moved && Math.hypot(ev.clientX - drag.x0, ev.clientY - drag.y0) < PICK) return;
     drag.moved = true;
     moveTo(ev);
+    if (leftStage(shell.stage, ev)) {
+      paint();
+      finishDrag();
+      return;
+    }
     frame.arm(() => paint());
   }
   function onUp(ev) {
@@ -594,8 +626,7 @@ export function mountLevelPicture(parent) {
       frame.stop();
       paint();
     }
-    drag = null;
-    try { shell.stage.releasePointerCapture(ev.pointerId); } catch { /* already released */ }
+    finishDrag();
   }
   shell.stage.addEventListener('pointerdown', onDown);
   shell.stage.addEventListener('pointermove', onMove);

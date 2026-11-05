@@ -6,7 +6,7 @@ import { stationsForMap, stationForTopic, stationForProblem, stationById, thread
 import { stationNeighbours } from '../js/stations/problems.js';
 import { parseRoute, groupStations, mapForcedByRoute } from '../js/app.js';
 import { BOOK_CHAPTERS, CHAPTER_3, CHAPTER_4, CHAPTER_5, OPEN_CHAPTERS, chapter3StageIds, chapter4ExerciseIds, chapter5ExerciseIds } from '../js/data/book-path.js';
-import { derivativeScene, squareScene, levelScene, circleComparePoint } from '../js/book/ch3-math.js';
+import { derivativeScene, squareScene, levelScene, circleComparePoint, clampRect } from '../js/book/ch3-math.js';
 import { answersMatch } from '../js/book/ch3-grade.js';
 import { selfCheck as crPolyChecks } from '../js/practice/gen/cr-poly.js';
 import { selfCheck as harmonicChecks } from '../js/practice/gen/harmonic-conjugate.js';
@@ -263,7 +263,46 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
     && answersMatch('x^3 - 3xy^2 + C', ['v = x^3 - 3xy^2 + C'], 'v(x,y) = x^3 - 3xy^2 + c')
     && !answersMatch('x^3 - 3xy^2 + C', [], 'v = x^3 - 3xy^2 + C(x)')
     && answersMatch('both 0', ['0, 0'], '0, 0')
-    && !answersMatch('both 0', [], '0, 0'));
+    && !answersMatch('both 0', [], '0, 0')
+    && answersMatch('3/(z+2)^2', ['3(z+2)^{-2}'], '3/(z+2)^{2}')
+    && answersMatch('3/(z+2)^2', ['3(z+2)^{-2}'], '3(z+2)^{-2}')
+    && answersMatch('2', ['b=2'], 'b = 2')
+    && !answersMatch('2', ['b=2'], '1')
+    && !answersMatch('2', ['b=2'], 'b=1')
+    && answersMatch('1', ['a=1'], 'a=1')
+    && !answersMatch('1', ['a=1'], '-1')
+    && !answersMatch('1', ['a=1'], '2')
+    && answersMatch('6x + 6y', ['6(x+y)'], '6y + 6x')
+    && answersMatch('6x + 6y', ['6(x+y)'], '6(x+y)')
+    && answersMatch('-2', ['z=-2'], 'z = -2'));
+  const edge = clampRect(2.25, 1, 2.5);
+  const corner = clampRect(4, -3, 2.5);
+  const near = (a, b) => Math.abs(a - b) < 1e-9;
+  check('a drag stays on the drawn square, including the corner',
+    near(edge.re, 2.25) && near(edge.im, 1) && near(corner.re, 2.5) && near(corner.im, -2.5));
+  const ch3Items = JSON.parse(readFileSync(new URL('../data/practice/ch3.json', import.meta.url), 'utf8'));
+  const chain = ch3Items.find((item) => item.id === 'ch3-3.1-chain-001');
+  const hop = ch3Items.find((item) => item.id === 'ch3-3.1-lhopital-001');
+  const cardIds = ['ch3-3.1-quot-001', 'ch3-3.1-entire-001', 'ch3-3.2-rat-001', 'ch3-3.2-const-001', 'ch3-3.3-im-001'];
+  const choicesFit = ch3Items.every((item) => (item.steps || []).every((step) => !step.choices || step.choices.includes(step.answer)));
+  check('exercise 1(a) keeps the derivative and names the key trap',
+    chain.steps[2].answer === '5(z^2 - iz + 9)^4(2z - i)'
+    && /15z/.test(chain.note) && /1\(c\)/.test(chain.note));
+  check('a L Hopital miss does not print the value',
+    hop.steps[0].accept.includes('0, 0')
+    && hop.steps[2].why.includes('-4i')
+    && !hop.steps[2].miss.includes('-4i')
+    && !hop.steps[2].miss.includes('−4i'));
+  check('the five exercise cards are on the page',
+    choicesFit && cardIds.every((id) => ch3Items.some((item) => item.id === id)));
+  const lines = CHAPTER_3.sections.map((section) => [...section.recipes, ...(section.extras || [])].join('\n'));
+  check('memory carries the quotient, the neighborhood, and a given v',
+    lines[0].includes("(g f' - f g')/g^2")
+    && /neighborhood/.test(lines[1])
+    && /four partials are continuous/.test(lines[1])
+    && /Theorem 3\.4/.test(lines[1])
+    && /exam gives \$v\$/.test(lines[2])
+    && lines[2].includes('-v_x'));
   const mem = { 'progress.test2': { '4.1.3': true } };
   const store = {
     get(key, fallback) { return Object.prototype.hasOwnProperty.call(mem, key) ? mem[key] : fallback; },

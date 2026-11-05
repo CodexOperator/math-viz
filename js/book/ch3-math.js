@@ -156,16 +156,16 @@ export function levelScene(mode, x, y) {
   };
 }
 
-export function clampPlane(x, y, limit) {
+// The axes draw a square. A drag stays on that square: each coordinate stops at the frame.
+// Past the frame the picture ends the drag. The point does not ride a disk.
+export function clampRect(x, y, limit) {
   const cap = limit > 0 ? limit : 1.6;
-  let px = Number(x);
-  let py = Number(y);
-  if (!Number.isFinite(px)) px = 0;
-  if (!Number.isFinite(py)) py = 0;
-  const m = Math.hypot(px, py);
-  if (m > cap) {
-    px = (px / m) * cap;
-    py = (py / m) * cap;
-  }
-  return { re: px, im: py };
+  const cut = (v) => {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return 0;
+    if (n > cap) return cap;
+    if (n < -cap) return -cap;
+    return n;
+  };
+  return { re: cut(x), im: cut(y) };
 }
