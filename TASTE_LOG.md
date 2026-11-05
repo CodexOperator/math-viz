@@ -1911,3 +1911,34 @@ The phone’s first screen is the square, the claim, and Play, and the why start
 ## What to keep
 
 The phone square at 324px, Play ending at y=783, and the why, both sentences, starting at y=894. The 72px padding that keeps a sliced why off the 844 fold. At 1280 the why ending at y=783, in both themes. Dark matches light: page rgb(13, 18, 28), claim rgb(233, 237, 245), square and Play on the same coordinates. The kicker on a fresh load names 3.1 over the derivative square. z² and conj, Turn and Stretch, Conjugates and Circles. The claim box that holds two lines so Play stays put. The four teaching colours. Exercise 1(a) as the prompt, the steps, and the source line. Exercise 3’s formulas inside the buttons, one piece each, at 390 and at 1280. The book lede, Chapters 1–7. Walk Chapter 4 hidden. The Book at 109×44. The source line under the last camp, then the footer, with no empty viewport between them. The book’s small caps, the serif title, the paper, and the cards. No sideways scroll.
+
+## reviewer (ch3 batch 5)
+
+Reviewed `369b9dd` on `cursor/chapter-3` (PR #46) against Howell & Mathews, *Complex Analysis*, 202 Updated Edition (professor PDF, 471 pages, title page “202 Updated Edition”). One fix is on the branch: Exercise 10 no longer accepts the partials in the wrong order. Not merged. gh-pages untouched.
+
+### Verdict
+
+ACCEPT WITH FIXES
+
+Checked against printed pages 79–101 and the selected answers on 435–436. HTML anchors open the same statements; the HTML numbers them 3.1.n / 3.2.n / 3.3.n. Pins match those pages: Equation (3.1) and Example 3.1 on 79; Example 3.2 and Remark 3.1 on 80; Definitions 3.1 and 3.2, singular points, and (3.4)–(3.12) on 81; Theorem 3.1 on 82; Theorem 3.2 (proof deferred to Corollary 7.11) and Exercises 1–3 on 83; Exercises 7 and 11 on 84; Theorem 3.3 and (3.14)–(3.16) on 86; Example 3.4 on 87; Example 3.6 on 88; Theorem 3.4 on 89; Theorem 3.5 and (3.22)–(3.24) on 91; Theorem 3.6 and (3.25) on 92; Theorem 3.7 and Exercises 1, 3, and 7 on 93; Exercise 10 on 94; Laplace (3.26), Theorem 3.8, and the conjugate definition on 95; Example 3.11 on 96; Theorem 3.9 and (3.27) on 97; Exercises 2 and 5 on 100.
+
+### Fixed
+
+Exercise 10(a), page 94, asks for ∂x/∂r and ∂y/∂r, then ∂x/∂θ and ∂y/∂θ, in that order. The book’s results are cos θ and sin θ, then −r sin θ and r cos θ. The blank treated “and” as a set, and the accept list named the swapped pair, so “sin θ and cos θ” and “r cos θ and −r sin θ” were marked right. An “and” of two expressions now keeps the sentence’s order. An “and” of equations is still a set, so the Theorem 3.6 system can be written either way, and u = −y and v = x + 4 still matches the labeled form. The swapped unlabeled pair for u and v fails. `5(z^2−iz+9)^45` still fails.
+
+### Checked and left as is
+
+The cards compute the book’s answers. Exercise 1(a) is 5(z²−iz+9)⁴(2z−i). Equation (3.12), page 81, is that factor; the chain rule proper is (3.10). The selected answer on page 435 prints 15z²−8z+7 and files h′ under 1(c). The card does not. Exercise 1(b) is 3/(z+2)², singular at −2. Exercise 3: [f]³, fg, f(z−1), and f(g(z)) must be entire. Exercise 7(a) is −4i; a wrong last step does not print it. |z|²: horizontal limit 2x₀, vertical limit −2iy₀, agree only at 0 with f′(0) = 0. Example 3.6: u_x = v_y = 1 and u_y = −v_x = 0 at the origin, paths 1 and −1. Exercise 1(a) of §3.2 is f′ = i. Exercise 1(b) is i/z off 0, f′ = −i/z². Exercise 1(g), the generator’s real-axis family, is f′ = 2x only for y = 0 (answer key, page 436). Exercise 3 is a = 1, b = 2. Exercise 7(b) is nowhere differentiable. Exercise 10(b) is r U_r = V_θ and r V_r = −U_θ, the form the book says verifies (3.22). Theorem 3.6’s system is u u_x − v u_y = 0 and v u_x + u u_y = 0, then both partials of u are 0 (pages 92–93). Exercise 2 of §3.3 has Laplacian 6x+6y, so no such analytic f. Exercise 5(a) is x³ − 3xy² + c (page 436). Theorem 3.4’s flash and the §3.2 recipe state the neighborhood, the four partials continuous at the point, and the equations at the point.
+
+At 1+i, z² turns by 45° and stretches by 2√2 for every direction. At 2.4+i the turn is 23° and the stretch is 5.2. A turned square stays a square through a half-turn of samples. Stretch never does. Conjugate levels of x²−y² and 2xy meet at a right angle off the origin. Circles do that on the diagonal and not at 1+0.45i. Four hundred generator seeds threw nothing, and each answer sat in its choices. The real-axis seed is u = x²+y², v = 2xy.
+
+On the local page, which matches the preview except this grader fix, 390×844 then 1280×800, light and dark: Play ends at y=783 on the phone and the why starts at y=894. At 1280 the why ends at y=783.5 and the status starts at y=844.5. The phone square is 324px. The laptop square is 304px at x=321, the claim’s edge. After 3.1 is marked, the kicker stays 3.1 and the status says next is 3.2. Arrows stay drawn at Re 1.99, 2.13, and 2.28. At Re 2.40 they hide. Walk Chapter 4 is hidden until 3 of 3, then it returns, and a Chapter 4 tick survives. The roadmap is chapters 1–7. No console errors. No sideways scroll. Exercise 3’s formulas stay inside the button (scroll width equals the button).
+
+`node tools/check_vectors.mjs` 234/234, `node tools/fractal-smoke.mjs`, and `node kit/smoke.mjs` passed after the fix. No live file imports `kit/`. `js/core/map-route.js` is byte-identical to `kit/template/js/core/map-route.js`.
+
+### Leftovers
+
+1. At Re 2.40 the claim still names the turn and the stretch, and the arrows are hidden. Inside the square, through Re 2.28, they stay drawn.
+2. Exercise 2’s second step is a choice list on a `next-step-blank` item. The local card grades it as a choice. A shared renderer that keys off the item kind would not.
+3. The Theorem 3.5 flash states the polar equations and not f′ = e^{−iθ}(U_r + i V_r), Equations (3.23) and (3.24), page 91.
+4. Open Chapter 2 is not on the book page. Chapter 2 is not a page on this branch.

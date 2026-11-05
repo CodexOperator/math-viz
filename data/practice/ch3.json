@@ -557,7 +557,7 @@
       {
         "text": "In \\(\\theta\\), \\(\\partial x/\\partial\\theta\\) and \\(\\partial y/\\partial\\theta\\) are",
         "answer": "-r sin theta and r cos theta",
-        "accept": ["-r\\sin\\theta and r\\cos\\theta", "r cos theta and -r sin theta"],
+        "accept": ["-r\\sin\\theta and r\\cos\\theta", "-r sin(theta) and r cos(theta)"],
         "why": "So \\(U_\\theta = -u_x r\\sin\\theta + u_y r\\cos\\theta\\). Exercise 10(a), page 94."
       },
       {

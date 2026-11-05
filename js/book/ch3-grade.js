@@ -88,9 +88,28 @@ function partKey(part) {
   return eqKey(body) || sumKey(body) || body;
 }
 
-function andKey(s) {
+function andParts(s) {
   if (!s.includes('and')) return null;
-  return s.split('and').map(partKey).sort().join('&&');
+  return s.split('and').map(partKey);
+}
+
+// Two equations joined by "and" are a set: either order is the same system.
+// Two expressions joined by "and" keep the order the sentence asked for.
+// ∂x/∂θ and ∂y/∂θ are not the same pair written backwards.
+function andKey(s) {
+  const parts = andParts(s);
+  if (!parts) return null;
+  return parts.join('&&');
+}
+
+function andKeySorted(s) {
+  const parts = andParts(s);
+  if (!parts) return null;
+  return parts.slice().sort().join('&&');
+}
+
+function equationList(s) {
+  return s.split('and').every((part) => part.includes('='));
 }
 
 function constValue(token) {
@@ -335,6 +354,7 @@ function same(a, b) {
   const andL = andKey(left);
   const andR = andKey(right);
   if (andL && andL === andR) return true;
+  if (andL && andR && equationList(left) && equationList(right) && andKeySorted(left) === andKeySorted(right)) return true;
   const facL = factorKey(left);
   const facR = factorKey(right);
   if (facL && facL === facR) return true;

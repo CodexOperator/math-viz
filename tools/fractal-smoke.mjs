@@ -242,6 +242,7 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
     && answersMatch('u_y = -v_x', [], '-v_x = u_y')
     && !answersMatch('u_y = -v_x', [], 'u_y = v_x')
     && answersMatch('-y and x + 4', ['u=-y, v=x+4'], 'u=-y and v=x+4')
+    && !answersMatch('-y and x + 4', [], 'x + 4 and -y')
     && !answersMatch('-y and x + 4', [], 'u=y and v=x+4')
     && answersMatch('-4i', ['-4*i'], '4(-i)')
     && !answersMatch('-4i', [], '4(i)')
@@ -301,8 +302,10 @@ check('book route parser matches the router', parseBookRoute('chapter-5').kind =
     polar && polar.kind === 'proof-blank' && polar.cite.page === 94
     && modulus && modulus.kind === 'proof-blank' && modulus.cite.page === 92
     && t35 && t35.kind === 'flash'
-    && answersMatch(polar.steps[0].answer, polar.steps[0].accept, 'sin theta and cos theta')
-    && answersMatch(polar.steps[1].answer, polar.steps[1].accept, 'r cos theta and -r sin theta')
+    && answersMatch(polar.steps[0].answer, polar.steps[0].accept, 'cos theta and sin theta')
+    && !answersMatch(polar.steps[0].answer, polar.steps[0].accept, 'sin theta and cos theta')
+    && answersMatch(polar.steps[1].answer, polar.steps[1].accept, '-r sin theta and r cos theta')
+    && !answersMatch(polar.steps[1].answer, polar.steps[1].accept, 'r cos theta and -r sin theta')
     && answersMatch(polar.steps[2].answer, polar.steps[2].accept, 'V_θ')
     && answersMatch(polar.steps[3].answer, polar.steps[3].accept, '-Uθ')
     && answersMatch(modulus.steps[0].answer, modulus.steps[0].accept, 'u^2+v^2=K^2')
